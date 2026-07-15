@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-fraunces: "Fraunces", serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+html, body {
+  background-color: #FAF6EC;
+  background-image:
+    linear-gradient(#FAF6EC 0px, #FAF6EC 27px, #E4DCC6 27px, #E4DCC6 28px);
+  background-size: 100% 28px;
+}
+
+@media (prefers-color-scheme: dark) {
+  html, body { background-image: none; }
+}
+
+::selection {
+  background: #1F6F72;
+  color: #FAF6EC;
+}
+
+/* checkbox المخصص شكل ختم */
+.task-check {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border: 2px solid #54574F;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  background: #FAF6EC;
+  transition: all 0.15s ease;
+}
+
+.task-check:checked {
+  background: #6E8F5C;
+  border-color: #6E8F5C;
+}
+
+.task-check:checked::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: 2px;
+  width: 6px;
+  height: 11px;
+  border: solid #FAF6EC;
+  border-width: 0 2px 2px 0;
+  transform: rotate(35deg);
+}
+
+.task-title {
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.task-title.done {
+  color: #9C9A8F;
+  text-decoration: line-through;
+  text-decoration-color: #B4552F;
+  text-decoration-thickness: 1.5px;
+}
+
+.tab-btn {
+  position: relative;
+}
+
+.tab-btn.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: #1F6F72;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.2s ease; }
