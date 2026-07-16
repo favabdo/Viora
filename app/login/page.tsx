@@ -10,6 +10,7 @@ type Mode = "signin" | "signup";
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("signin");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,13 +38,23 @@ export default function LoginPage() {
         if (error) throw error;
         router.replace("/");
       } else {
+        const trimmedName = name.trim();
+        if (!trimmedName) {
+          setError("اكتب اسمك");
+          setLoading(false);
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: { full_name: trimmedName },
+          },
         });
         if (error) throw error;
         setInfo("تم إنشاء الحساب بنجاح. تحقق من بريدك الإلكتروني لتأكيد الحساب ثم سجّل دخولك.");
         setMode("signin");
+        setName("");
       }
     } catch (err: any) {
       setError(err?.message || "حصل خطأ، حاول تاني");
@@ -77,6 +88,22 @@ export default function LoginPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === "signup" && (
+              <div className="fade-in">
+                <label className="block text-sm font-medium text-inkSoft mb-1.5">
+                  الاسم
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="اسمك"
+                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder:text-inkSoft/60 outline-none transition-colors focus:border-teal"
+                />
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-inkSoft mb-1.5">
                 البريد الإلكتروني

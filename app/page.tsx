@@ -8,11 +8,11 @@ import TasksSection from "@/components/TasksSection";
 import LinksSection from "@/components/LinksSection";
 import { supabase } from "@/lib/supabase";
 
-type Tab = "tasks" | "links";
+type Tab = "home" | "tasks" | "links";
 
 export default function Home() {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("tasks");
+  const [tab, setTab] = useState<Tab>("home");
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
 
@@ -38,6 +38,11 @@ export default function Home() {
     await supabase.auth.signOut();
     router.replace("/login");
   }
+
+  const displayName =
+    (session?.user.user_metadata?.full_name as string | undefined) ||
+    session?.user.email?.split("@")[0] ||
+    "";
 
   if (checking || !session) {
     return (
@@ -74,6 +79,14 @@ export default function Home() {
 
         <nav className="flex gap-6 border-b border-line mb-8">
           <button
+            onClick={() => setTab("home")}
+            className={`tab-btn pb-3 text-sm font-medium transition-colors ${
+              tab === "home" ? "active text-ink" : "text-inkSoft hover:text-ink"
+            }`}
+          >
+            الرئيسية
+          </button>
+          <button
             onClick={() => setTab("tasks")}
             className={`tab-btn pb-3 text-sm font-medium transition-colors ${
               tab === "tasks" ? "active text-ink" : "text-inkSoft hover:text-ink"
@@ -91,7 +104,18 @@ export default function Home() {
           </button>
         </nav>
 
-        {tab === "tasks" ? <TasksSection /> : <LinksSection />}
+        {tab === "home" && (
+          <section className="fade-in">
+            <h1 className="font-display text-3xl md:text-4xl font-semibold mb-2">
+              أهلاً، {displayName} 👋
+            </h1>
+            <p className="text-inkSoft text-sm">
+              يومك النهارده جاهز؟ روح لتاب المهام عشان تنجز، أو الروابط عشان تلاقي اللي حفظته.
+            </p>
+          </section>
+        )}
+        {tab === "tasks" && <TasksSection />}
+        {tab === "links" && <LinksSection />}
       </div>
     </main>
   );
