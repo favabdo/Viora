@@ -11,11 +11,14 @@ export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("signin");
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+
+  const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -44,17 +47,46 @@ export default function LoginPage() {
           setLoading(false);
           return;
         }
+
+        const normalizedUsername = username.trim().toLowerCase();
+        if (!USERNAME_RE.test(normalizedUsername)) {
+          setError("اسم اليوزر لازم يكون من 3 لـ 20 حرف، وحروف إنجليزي صغيرة أو أرقام أو _ بس");
+          setLoading(false);
+          return;
+        }
+
+        // نتأكد إن اليوزرنيم متاح قبل ما نبعت طلب التسجيل
+        const { data: exists, error: checkError } = await supabase.rpc(
+          "username_exists",
+          { check_username: normalizedUsername }
+        );
+        if (checkError) throw checkError;
+        if (exists) {
+          setError("اليوزر ده متسجل بالفعل، جرّب واحد تاني");
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { full_name: trimmedName },
+            data: { full_name: trimmedName, username: normalizedUsername },
           },
         });
-        if (error) throw error;
+        if (error) {
+          // لو حصل تعارض لحظي على نفس اليوزرنيم (اتسجل من حد تاني في نفس اللحظة)
+          if (/duplicate|unique|already exists/i.test(error.message)) {
+            setError("اليوزر ده متسجل بالفعل، جرّب واحد تاني");
+            setLoading(false);
+            return;
+          }
+          throw error;
+        }
         setInfo("تم إنشاء الحساب بنجاح. تحقق من بريدك الإلكتروني لتأكيد الحساب ثم سجّل دخولك.");
         setMode("signin");
         setName("");
+        setUsername("");
       }
     } catch (err: any) {
       setError(err?.message || "حصل خطأ، حاول تاني");
@@ -101,6 +133,30 @@ export default function LoginPage() {
                   placeholder="اسمك"
                   className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder:text-inkSoft/60 outline-none transition-colors focus:border-teal"
                 />
+              </div>
+            )}
+
+            {mode === "signup" && (
+              <div className="fade-in">
+                <label className="block text-sm font-medium text-inkSoft mb-1.5">
+                  اسم اليوزر
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) =>
+                    setUsername(
+                      e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
+                    )
+                  }
+                  placeholder="username"
+                  dir="ltr"
+                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder:text-inkSoft/60 outline-none transition-colors focus:border-teal text-left"
+                />
+                <p className="text-xs text-inkSoft mt-1">
+                  حروف إنجليزي صغيرة أو أرقام أو _ بس، من 3 لـ 20 حرف
+                </p>
               </div>
             )}
 
@@ -166,6 +222,7 @@ export default function LoginPage() {
                 setMode(mode === "signin" ? "signup" : "signin");
                 setError(null);
                 setInfo(null);
+                setUsername("");
               }}
               className="text-teal font-medium hover:underline"
             >

@@ -17,14 +17,23 @@ export const supabase = createClient(
   supabaseAnonKey || "placeholder-anon-key"
 );
 
+export type Profile = {
+  id: string;
+  username: string;
+  full_name: string;
+  created_at: string;
+};
+
 export type Project = {
   id: string;
+  user_id: string;
   name: string;
   created_at: string;
 };
 
 export type Task = {
   id: string;
+  user_id: string;
   project_id: string;
   title: string;
   is_done: boolean;
@@ -33,6 +42,7 @@ export type Task = {
 
 export type LinkItem = {
   id: string;
+  user_id: string;
   url: string;
   description: string;
   created_at: string;
