@@ -82,7 +82,8 @@ alter table projects
   add column if not exists user_id uuid references auth.users(id) on delete cascade;
 alter table projects
   alter column user_id set default auth.uid();
-update projects set user_id = auth.uid() where user_id is null; -- مفيدة لو الجدول كان موجود قبل كده
+-- الصفوف القديمة (لو موجودة من قبل تفعيل تسجيل الدخول) مالهاش صاحب معروف، فبنشيلها
+delete from projects where user_id is null;
 alter table projects
   alter column user_id set not null;
 
@@ -98,7 +99,7 @@ alter table tasks
   add column if not exists user_id uuid references auth.users(id) on delete cascade;
 alter table tasks
   alter column user_id set default auth.uid();
-update tasks set user_id = auth.uid() where user_id is null;
+delete from tasks where user_id is null;
 alter table tasks
   alter column user_id set not null;
 
@@ -113,7 +114,7 @@ alter table links
   add column if not exists user_id uuid references auth.users(id) on delete cascade;
 alter table links
   alter column user_id set default auth.uid();
-update links set user_id = auth.uid() where user_id is null;
+delete from links where user_id is null;
 alter table links
   alter column user_id set not null;
 

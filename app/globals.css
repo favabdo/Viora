@@ -80,6 +80,19 @@ html, body {
   background: #1F6F72;
 }
 
+/* اسم Viora جمب اللوجو، بألوان مسحوبة من نفس تدرّج اللوجو */
+.viora-wordmark {
+  font-family: "Poppins", var(--font-sans, sans-serif);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, #066EFD 0%, #7823F9 55%, #0AD5F2 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  line-height: 1;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }

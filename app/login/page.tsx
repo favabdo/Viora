@@ -98,15 +98,16 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center px-5 py-10">
       <div className="w-full max-w-sm">
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center items-center gap-2.5 mb-8">
           <Image
             src="/logo-full.png"
             alt="Viora"
-            width={220}
-            height={70}
+            width={64}
+            height={56}
             priority
-            className="h-auto w-[200px]"
+            className="h-[52px] w-auto"
           />
+          <span className="viora-wordmark text-4xl">Viora</span>
         </div>
 
         <div className="bg-paper border border-line rounded-2xl shadow-card p-6 fade-in">

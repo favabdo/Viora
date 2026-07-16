@@ -56,15 +56,16 @@ export default function Home() {
     <main className="min-h-screen px-5 py-10 md:px-10">
       <div className="max-w-4xl mx-auto">
         <header className="mb-8 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <Image
               src="/logo-full.png"
               alt="Viora"
-              width={160}
-              height={51}
+              width={48}
+              height={42}
               priority
-              className="h-auto w-[140px]"
+              className="h-10 w-auto"
             />
+            <span className="viora-wordmark text-2xl">Viora</span>
           </div>
           <button
             onClick={handleSignOut}
