@@ -415,6 +415,127 @@ end;
 $$;
 
 -- ============================================================
+-- 15) مغادرة عضو لمشروع مشترك (مش صاحب المشروع الأصلي)
+-- ============================================================
+create or replace function public.leave_project(p_project_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_owner uuid;
+begin
+  if auth.uid() is null then
+    raise exception 'لازم تسجل دخول الأول';
+  end if;
+
+  select user_id into v_owner from projects where id = p_project_id;
+  if v_owner is null then
+    raise exception 'المشروع غير موجود';
+  end if;
+
+  if v_owner = auth.uid() then
+    raise exception 'أنت صاحب هذا المشروع، لا يمكنك مغادرته، يمكنك حذفه بدلاً من ذلك';
+  end if;
+
+  delete from project_members
+  where project_id = p_project_id and user_id = auth.uid();
+end;
+$$;
+
+grant execute on function public.leave_project(uuid) to authenticated;
+
+-- ============================================================
+-- 16) حذف الحساب (Soft delete): مش بيمسح الداتا فعليًا، بس بيصفّر
+--     هوية صاحب الحساب (الاسم والصورة) وبيخفيه عن باقي الأعضاء، وبيمنع
+--     أي حد من دعوته تاني باسم المستخدم بتاعه
+-- ============================================================
+alter table profiles
+  add column if not exists is_deleted boolean not null default false;
+
+create or replace function public.delete_own_account()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'لازم تسجل دخول الأول';
+  end if;
+
+  update profiles
+  set is_deleted = true,
+      full_name = '',
+      avatar_url = null
+  where id = auth.uid();
+end;
+$$;
+
+grant execute on function public.delete_own_account() to authenticated;
+
+-- حسابات محذوفة متقدرش تتدعى تاني باسم المستخدم بتاعها
+create or replace function public.invite_user_by_username(p_project_id uuid, p_username text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_target uuid;
+begin
+  if not public.is_project_member(p_project_id) then
+    raise exception 'مش عضو في المشروع ده';
+  end if;
+
+  select id into v_target
+  from profiles
+  where username = lower(p_username) and not is_deleted;
+
+  if v_target is null then
+    raise exception 'مفيش يوزر بالاسم ده';
+  end if;
+
+  if v_target = auth.uid() then
+    raise exception 'متقدرش تدعي نفسك';
+  end if;
+
+  if exists (
+    select 1 from project_members
+    where project_id = p_project_id and user_id = v_target and status = 'accepted'
+  ) then
+    raise exception 'اليوزر ده عضو بالفعل في المشروع';
+  end if;
+
+  insert into project_members (project_id, user_id, status, invited_by)
+  values (p_project_id, v_target, 'pending', auth.uid())
+  on conflict (project_id, user_id) do update set status = 'pending', invited_by = auth.uid();
+end;
+$$;
+
+grant execute on function public.invite_user_by_username(uuid, text) to authenticated;
+
+-- حساب محذوف مش هيظهر بروفايله لأي عضو تاني، حتى لو عضو معاه في نفس المشروع
+-- (يفضل يشوف بروفايله هو بس، مش هيتحاجله عمليًا لأنه بيتسجل خروجه بعد الحذف)
+drop policy if exists "profiles select shared" on profiles;
+create policy "profiles select shared" on profiles
+  for select using (
+    auth.uid() = id
+    or (
+      not is_deleted
+      and exists (
+        select 1 from project_members pm1
+        join project_members pm2 on pm1.project_id = pm2.project_id
+        where pm1.user_id = auth.uid()
+          and pm1.status = 'accepted'
+          and pm2.user_id = profiles.id
+          and pm2.status = 'accepted'
+      )
+    )
+  );
+
+-- ============================================================
 -- 13) البروفايل الشخصي: إيميل (للعرض فقط) + صورة، وتعديل الاسم/اليوزرنيم/الباسورد من الواجهة
 -- ============================================================
 alter table profiles

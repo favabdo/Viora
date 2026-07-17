@@ -11,7 +11,7 @@ import { Input } from "./ui/Input";
 import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 import ProgressBar from "./ui/ProgressBar";
-import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check } from "lucide-react";
+import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import ClickableName from "./ClickableName";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
@@ -39,6 +39,8 @@ export default function TasksSection({
   const [deleteTarget, setDeleteTarget] = useState<
     { type: "project"; id: string; name: string } | { type: "task"; id: string; name: string } | null
   >(null);
+  const [leaveTarget, setLeaveTarget] = useState<{ id: string; name: string } | null>(null);
+  const [leavingProject, setLeavingProject] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -116,6 +118,25 @@ export default function TasksSection({
         setActiveProjectId(remaining.length > 0 ? remaining[0].id : null);
       }
     }
+  }
+
+  function requestLeaveProject(project: Project) {
+    setLeaveTarget({ id: project.id, name: project.name });
+  }
+
+  async function performLeaveProject() {
+    if (!leaveTarget) return;
+    setLeavingProject(true);
+    const { error } = await supabase.rpc("leave_project", { p_project_id: leaveTarget.id });
+    if (!error) {
+      const remaining = projects.filter((p) => p.id !== leaveTarget.id);
+      setProjects(remaining);
+      if (activeProjectId === leaveTarget.id) {
+        setActiveProjectId(remaining.length > 0 ? remaining[0].id : null);
+      }
+      setLeaveTarget(null);
+    }
+    setLeavingProject(false);
   }
 
   function startEditProjectName(project: Project) {
@@ -248,7 +269,7 @@ export default function TasksSection({
                     />
                   )}
                 </button>
-                {p.user_id === currentUserId && (
+                {p.user_id === currentUserId ? (
                   <IconButton
                     size="sm"
                     tone="danger"
@@ -257,6 +278,16 @@ export default function TasksSection({
                     className="shrink-0"
                   >
                     <X size={13} strokeWidth={2} />
+                  </IconButton>
+                ) : (
+                  <IconButton
+                    size="sm"
+                    tone="danger"
+                    aria-label={`مغادرة مشروع ${p.name}`}
+                    onClick={() => requestLeaveProject(p)}
+                    className="shrink-0"
+                  >
+                    <LogOut size={13} strokeWidth={2} />
                   </IconButton>
                 )}
               </li>
@@ -451,6 +482,32 @@ export default function TasksSection({
             setDeleteTarget(null);
           }}
         />
+      )}
+
+      {leaveTarget && (
+        <div
+          className="fixed inset-0 bg-ink/45 flex items-center justify-center p-4 z-50 fade-in"
+          onClick={() => !leavingProject && setLeaveTarget(null)}
+        >
+          <div
+            className="bg-paper border border-line rounded-lg shadow-modal max-w-xs w-full p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-display text-lg font-medium mb-2">مغادرة المشروع؟</h3>
+            <p className="text-sm text-inkSoft mb-5 leading-relaxed">
+              هل أنت متأكد أنك تريد مغادرة مشروع "{leaveTarget.name}"؟ لن تظهر لك مهامه بعد ذلك، ويمكنك
+              الانضمام إليه مرة أخرى لو دعاك أحد الأعضاء مجددًا.
+            </p>
+            <div className="flex gap-2">
+              <Button variant="secondary" fullWidth disabled={leavingProject} onClick={() => setLeaveTarget(null)}>
+                إلغاء
+              </Button>
+              <Button variant="danger" fullWidth loading={leavingProject} onClick={performLeaveProject}>
+                مغادرة
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

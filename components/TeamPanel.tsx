@@ -6,7 +6,7 @@ import Button from "./ui/Button";
 import IconButton from "./ui/IconButton";
 import Badge from "./ui/Badge";
 import { Input } from "./ui/Input";
-import { Link2, X } from "lucide-react";
+import { Check, Link2, X } from "lucide-react";
 import ClickableName from "./ClickableName";
 
 export default function TeamPanel({
@@ -26,10 +26,46 @@ export default function TeamPanel({
   const [inviting, setInviting] = useState(false);
   const [linkMsg, setLinkMsg] = useState("");
   const [copyingLink, setCopyingLink] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [justCopied, setJustCopied] = useState(false);
 
   useEffect(() => {
     loadMembers();
+    prepareInviteLink();
   }, [projectId]);
+
+  // بنجهّز رابط الدعوة مقدمًا عشان لما المستخدم يدوس "نسخ" ينسخ فورًا من أول ضغطة
+  async function prepareInviteLink() {
+    const { data, error } = await supabase.rpc("get_or_create_invite_link", {
+      p_project_id: projectId,
+    });
+    if (!error && data) {
+      setInviteUrl(`${window.location.origin}/join/${data}`);
+    }
+  }
+
+  async function copyText(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // فولباك لمتصفحات/ويبفيوهات مش داعمة لـ Clipboard API
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      } catch {
+        return false;
+      }
+    }
+  }
 
   async function loadMembers() {
     setLoading(true);
@@ -63,23 +99,31 @@ export default function TeamPanel({
   }
 
   async function copyInviteLink() {
-    setCopyingLink(true);
     setLinkMsg("");
-    const { data, error } = await supabase.rpc("get_or_create_invite_link", {
-      p_project_id: projectId,
-    });
-    if (!error && data) {
-      const url = `${window.location.origin}/join/${data}`;
-      try {
-        await navigator.clipboard.writeText(url);
-        setLinkMsg("تم نسخ رابط الدعوة، يمكنك إرساله إلى أي شخص تريد مشاركته المشروع");
-      } catch {
-        setLinkMsg(url);
+    let url = inviteUrl;
+
+    if (!url) {
+      setCopyingLink(true);
+      const { data, error } = await supabase.rpc("get_or_create_invite_link", {
+        p_project_id: projectId,
+      });
+      setCopyingLink(false);
+      if (error || !data) {
+        setLinkMsg("حدث خطأ أثناء إنشاء الرابط");
+        return;
       }
-    } else {
-      setLinkMsg("حدث خطأ أثناء إنشاء الرابط");
+      url = `${window.location.origin}/join/${data}`;
+      setInviteUrl(url);
     }
-    setCopyingLink(false);
+
+    const ok = await copyText(url);
+    if (ok) {
+      setLinkMsg("تم النسخ بنجاح");
+      setJustCopied(true);
+      setTimeout(() => setJustCopied(false), 2000);
+    } else {
+      setLinkMsg(url);
+    }
   }
 
   const accepted = members.filter((m) => m.status === "accepted");
@@ -103,10 +147,10 @@ export default function TeamPanel({
 
         <div className="mb-5">
           <Button variant="secondary" fullWidth loading={copyingLink} onClick={copyInviteLink}>
-            <Link2 size={14} strokeWidth={1.75} />
-            نسخ رابط دعوة للمشروع
+            {justCopied ? <Check size={14} strokeWidth={2} /> : <Link2 size={14} strokeWidth={1.75} />}
+            {justCopied ? "تم النسخ بنجاح" : "نسخ رابط دعوة للمشروع"}
           </Button>
-          {linkMsg && <p className="text-xs text-inkSoft mt-1.5">{linkMsg}</p>}
+          {linkMsg && !justCopied && <p className="text-xs text-inkSoft mt-1.5">{linkMsg}</p>}
         </div>
 
         <div className="mb-5 border-t border-line pt-4">

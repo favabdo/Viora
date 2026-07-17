@@ -124,16 +124,19 @@ function LoginPageInner() {
   return (
     <main className="min-h-screen flex items-center justify-center px-5 py-10">
       <div className="w-full max-w-sm">
-        <div className="flex justify-center items-center gap-2 mb-8">
-          <Image
-            src="/logo-full.png"
-            alt="Viora"
-            width={52}
-            height={45}
-            priority
-            className="h-10 w-auto"
-          />
-          <span className="viora-wordmark text-2xl">Viora</span>
+        <div className="flex flex-col items-center gap-1.5 mb-8">
+          <div className="flex justify-center items-center gap-2">
+            <Image
+              src="/logo-full.png"
+              alt="Viora"
+              width={52}
+              height={45}
+              priority
+              className="h-10 w-auto"
+            />
+            <span className="viora-wordmark text-2xl">Viora</span>
+          </div>
+          <span className="text-xs text-inkFaint tracking-wide">Save. Organize. Build Together</span>
         </div>
 
         <div className="bg-surface border border-line rounded-lg shadow-raised p-6 fade-in">

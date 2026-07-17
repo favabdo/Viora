@@ -24,6 +24,7 @@ export type Profile = {
   email: string | null;
   avatar_url: string | null;
   created_at: string;
+  is_deleted?: boolean;
 };
 
 export type Project = {

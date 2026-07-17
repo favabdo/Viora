@@ -9,6 +9,7 @@ import IconButton from "@/components/ui/IconButton";
 import { Input } from "@/components/ui/Input";
 import { ArrowRight, Camera, Loader2 } from "lucide-react";
 import AvatarCropModal from "@/components/AvatarCropModal";
+import ConfirmPasswordModal from "@/components/ConfirmPasswordModal";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 
@@ -37,6 +38,9 @@ export default function ProfilePage() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [passwordMsg, setPasswordMsg] = useState("");
   const [passwordError, setPasswordError] = useState("");
+
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deleteAccountError, setDeleteAccountError] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -217,6 +221,17 @@ export default function ProfilePage() {
     }
   }
 
+  async function performDeleteAccount() {
+    setDeleteAccountError("");
+    const { error } = await supabase.rpc("delete_own_account");
+    if (error) {
+      setDeleteAccountError(error.message || "حدث خطأ، يُرجى المحاولة مرة أخرى");
+      return;
+    }
+    await supabase.auth.signOut();
+    router.replace("/login");
+  }
+
   if (checking || !session || loadingProfile || !profile) {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -376,7 +391,33 @@ export default function ProfilePage() {
             </Button>
           </div>
         </section>
+
+        {/* منطقة الخطر: حذف الحساب */}
+        <section className="bg-surface border border-clay/30 rounded-lg p-5 mt-5 fade-in">
+          <h2 className="text-2xs font-semibold tracking-wide text-clay uppercase mb-3">منطقة الخطر</h2>
+          <p className="text-sm text-inkSoft mb-4 leading-relaxed">
+            حذف الحساب هيخفي اسمك وصورتك عن كل الأعضاء في أي مشروع مشترك، ومش هيقدر حد يدعوك لمشروع تاني
+            باستخدام اسم المستخدم بتاعك. بياناتك مش بتتمسح نهائيًا من قاعدة البيانات.
+          </p>
+          {deleteAccountError && (
+            <p className="text-sm text-clay bg-claySoft rounded-md px-3 py-2 mb-3">{deleteAccountError}</p>
+          )}
+          <Button variant="danger" onClick={() => setShowDeleteAccount(true)}>
+            حذف الحساب
+          </Button>
+        </section>
       </div>
+
+      {showDeleteAccount && (
+        <ConfirmPasswordModal
+          email={profile.email || session.user.email || ""}
+          title="حذف الحساب؟"
+          message="أدخل كلمة المرور لتأكيد حذف حسابك. لن يظهر اسمك أو صورتك لأي حد بعد ذلك، ولن يقدر حد يدعوك مرة أخرى باستخدام اسم المستخدم، لكن بياناتك تبقى محفوظة ولا تُمسح نهائيًا."
+          confirmLabel="حذف الحساب"
+          onCancel={() => setShowDeleteAccount(false)}
+          onConfirm={performDeleteAccount}
+        />
+      )}
     </main>
   );
 }

@@ -26,6 +26,7 @@ function HomeInner() {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
+  const [currentUserName, setCurrentUserName] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -45,6 +46,18 @@ function HomeInner() {
     return () => listener.subscription.unsubscribe();
   }, [router]);
 
+  useEffect(() => {
+    if (!session) return;
+    supabase
+      .from("profiles")
+      .select("full_name, username")
+      .eq("id", session.user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) setCurrentUserName((data.full_name && data.full_name.trim()) || data.username || "");
+      });
+  }, [session]);
+
   async function handleSignOut() {
     await supabase.auth.signOut();
     router.replace("/login");
@@ -63,24 +76,32 @@ function HomeInner() {
       <main className="min-h-screen px-5 py-6 md:px-10 md:py-8">
         <div className="max-w-4xl mx-auto">
           <header className="mb-7 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Image
-                src="/logo-full.png"
-                alt="Viora"
-                width={40}
-                height={35}
-                priority
-                className="h-8 w-auto"
-              />
-              <span className="viora-wordmark text-lg">Viora</span>
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-2">
+                <Image
+                  src="/logo-full.png"
+                  alt="Viora"
+                  width={40}
+                  height={35}
+                  priority
+                  className="h-8 w-auto"
+                />
+                <span className="viora-wordmark text-lg">Viora</span>
+              </div>
+              <span className="text-2xs text-inkFaint tracking-wide">Save. Organize. Build Together</span>
             </div>
-            <div className="flex items-center gap-1">
-              <IconButton aria-label="الملف الشخصي" onClick={() => router.push("/profile")} tone="default">
-                <UserCircle size={17} strokeWidth={1.75} />
-              </IconButton>
-              <IconButton aria-label="تسجيل الخروج" onClick={handleSignOut} tone="default">
-                <LogOut size={16} strokeWidth={1.75} />
-              </IconButton>
+            <div className="flex items-center gap-3">
+              {currentUserName && (
+                <span className="text-sm text-inkSoft font-medium hidden sm:inline">{currentUserName}</span>
+              )}
+              <div className="flex items-center gap-1">
+                <IconButton aria-label="الملف الشخصي" onClick={() => router.push("/profile")} tone="default">
+                  <UserCircle size={17} strokeWidth={1.75} />
+                </IconButton>
+                <IconButton aria-label="تسجيل الخروج" onClick={handleSignOut} tone="default">
+                  <LogOut size={16} strokeWidth={1.75} />
+                </IconButton>
+              </div>
             </div>
           </header>
 
