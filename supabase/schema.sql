@@ -590,18 +590,18 @@ as $$
 begin
   if tg_op = 'INSERT' then
     insert into link_activity_log (link_id, user_id, message)
-    values (new.id, auth.uid(), 'إضافة اللينك');
+    values (new.id, auth.uid(), 'تمت إضافة الرابط');
     return new;
   elsif tg_op = 'UPDATE' then
     if new.url is distinct from old.url and new.description is distinct from old.description then
       insert into link_activity_log (link_id, user_id, message)
-      values (new.id, auth.uid(), 'تعديل الرابط والوصف');
+      values (new.id, auth.uid(), 'تم تعديل الرابط والوصف');
     elsif new.url is distinct from old.url then
       insert into link_activity_log (link_id, user_id, message)
-      values (new.id, auth.uid(), 'تعديل الرابط');
+      values (new.id, auth.uid(), 'تم تعديل الرابط');
     elsif new.description is distinct from old.description then
       insert into link_activity_log (link_id, user_id, message)
-      values (new.id, auth.uid(), 'تعديل الوصف');
+      values (new.id, auth.uid(), 'تم تعديل الوصف');
     end if;
     return new;
   end if;
@@ -615,8 +615,8 @@ create trigger on_link_change
   for each row execute function public.log_link_activity();
 
 -- ============================================================
--- 12) الأهم: اسم اليوزر (username) هو اللي بيتسجل في كل حاجة، مش الاسم الكامل
---     وربط tasks.user_id بـ profiles عشان الفرونت يقدر يعرض "بواسطة @username" على الكارت مباشرة
+-- 12) الاسم الكامل (full_name) هو اللي بيتسجل في كل حدث، وليس اسم المستخدم
+--     وربط tasks.user_id بـ profiles حتى تستطيع الواجهة عرض اسم صاحب المهمة مباشرة
 -- ============================================================
 alter table tasks
   drop constraint if exists tasks_user_id_fkey;
@@ -632,28 +632,28 @@ as $$
 declare
   v_name text;
 begin
-  select coalesce(username, 'حد ما') into v_name from profiles where id = auth.uid();
-  v_name := coalesce(v_name, 'حد ما');
+  select coalesce(nullif(full_name, ''), username, 'مستخدم') into v_name from profiles where id = auth.uid();
+  v_name := coalesce(v_name, 'مستخدم');
 
   if tg_op = 'INSERT' then
     insert into activity_log (project_id, task_id, actor_id, actor_name, message)
-    values (new.project_id, new.id, auth.uid(), v_name, '@' || v_name || ' أضاف مهمة: ' || new.title);
+    values (new.project_id, new.id, auth.uid(), v_name, v_name || ' أضاف مهمة جديدة: ' || new.title);
     return new;
   elsif tg_op = 'UPDATE' then
     if new.is_done is distinct from old.is_done then
       insert into activity_log (project_id, task_id, actor_id, actor_name, message)
       values (
         new.project_id, new.id, auth.uid(), v_name,
-        '@' || v_name || (case when new.is_done then ' خلّص المهمة' else ' رجّع المهمة معلّقة' end)
+        v_name || (case when new.is_done then ' أكمل المهمة' else ' أعاد فتح المهمة' end)
       );
     elsif new.title is distinct from old.title then
       insert into activity_log (project_id, task_id, actor_id, actor_name, message)
-      values (new.project_id, new.id, auth.uid(), v_name, '@' || v_name || ' عدّل عنوان المهمة إلى "' || new.title || '"');
+      values (new.project_id, new.id, auth.uid(), v_name, v_name || ' عدّل عنوان المهمة إلى "' || new.title || '"');
     end if;
     return new;
   elsif tg_op = 'DELETE' then
     insert into activity_log (project_id, actor_id, actor_name, message)
-    values (old.project_id, auth.uid(), v_name, '@' || v_name || ' حذف مهمة: ' || old.title);
+    values (old.project_id, auth.uid(), v_name, v_name || ' حذف مهمة: ' || old.title);
     return old;
   end if;
   return null;
@@ -673,9 +673,10 @@ begin
      and (tg_op = 'INSERT' or old.status is distinct from 'accepted')
      and new.invited_by is distinct from new.user_id
   then
-    select coalesce(username, 'حد ما') into v_name from profiles where id = new.user_id;
+    select coalesce(nullif(full_name, ''), username, 'مستخدم') into v_name from profiles where id = new.user_id;
+    v_name := coalesce(v_name, 'مستخدم');
     insert into activity_log (project_id, actor_id, actor_name, message)
-    values (new.project_id, new.user_id, coalesce(v_name, 'حد ما'), '@' || coalesce(v_name, 'حد ما') || ' انضم للمشروع');
+    values (new.project_id, new.user_id, v_name, v_name || ' انضم إلى المشروع');
   end if;
   return new;
 end;

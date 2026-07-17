@@ -16,7 +16,7 @@ function ConfirmPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<Status>("loading");
-  const [message, setMessage] = useState<string>("بنتأكد من حسابك...");
+  const [message, setMessage] = useState<string>("جارٍ التحقق من حسابك...");
 
   useEffect(() => {
     let redirectTimer: ReturnType<typeof setTimeout>;
@@ -27,7 +27,7 @@ function ConfirmPageInner() {
 
       if (!tokenHash || !type) {
         setStatus("error");
-        setMessage("رابط التأكيد ناقص أو غير صالح. جرّب تفتح الرابط من الإيميل تاني.");
+        setMessage("رابط التأكيد غير مكتمل أو غير صالح. يُرجى فتح الرابط من البريد الإلكتروني مرة أخرى.");
         return;
       }
 
@@ -40,14 +40,14 @@ function ConfirmPageInner() {
         setStatus("error");
         setMessage(
           /expired/i.test(error.message)
-            ? "انتهت صلاحية رابط التأكيد. اطلب رابط جديد وجرّب تاني."
-            : "مقدرناش نأكد حسابك. الرابط ممكن يكون مستخدم قبل كده أو غير صالح."
+            ? "انتهت صلاحية رابط التأكيد. يُرجى طلب رابط جديد والمحاولة مرة أخرى."
+            : "تعذّر تأكيد حسابك. قد يكون الرابط مستخدمًا من قبل أو غير صالح."
         );
         return;
       }
 
       setStatus("success");
-      setMessage("تم تأكيد حسابك بنجاح! هنحولك دلوقتي...");
+      setMessage("تم تأكيد حسابك بنجاح، سيتم تحويلك الآن...");
 
       redirectTimer = setTimeout(() => {
         router.replace(data.session ? "/" : "/login?confirmed=1");
@@ -69,7 +69,7 @@ function ConfirmPageInner() {
         </div>
 
         <div className="bg-surface border border-line rounded-lg shadow-raised p-6 fade-in">
-          {status === "loading" && <StatusScreen kind="loading" title="لحظة واحدة..." message={message} />}
+          {status === "loading" && <StatusScreen kind="loading" title="لحظة من فضلك..." message={message} />}
 
           {status === "success" && <StatusScreen kind="success" title="تم التأكيد" message={message} />}
 
@@ -77,7 +77,7 @@ function ConfirmPageInner() {
             <>
               <StatusScreen kind="error" title="فشل التأكيد" message={message} />
               <Button variant="primary" fullWidth onClick={() => router.replace("/login")} className="mt-5">
-                الرجوع لتسجيل الدخول
+                العودة إلى تسجيل الدخول
               </Button>
             </>
           )}

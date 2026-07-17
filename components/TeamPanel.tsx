@@ -52,7 +52,7 @@ export default function TeamPanel({
       p_username: trimmed,
     });
     if (error) {
-      setInviteError(error.message || "حصل خطأ، حاول تاني");
+      setInviteError(error.message || "حدث خطأ، يُرجى المحاولة مرة أخرى");
     } else {
       setInviteMsg(`تم إرسال دعوة لـ ${trimmed}`);
       setUsername("");
@@ -71,12 +71,12 @@ export default function TeamPanel({
       const url = `${window.location.origin}/join/${data}`;
       try {
         await navigator.clipboard.writeText(url);
-        setLinkMsg("تم نسخ رابط الدعوة! ابعته لأي حد عايز يشاركك المشروع");
+        setLinkMsg("تم نسخ رابط الدعوة، يمكنك إرساله إلى أي شخص تريد مشاركته المشروع");
       } catch {
         setLinkMsg(url);
       }
     } else {
-      setLinkMsg("حصل خطأ في إنشاء اللينك");
+      setLinkMsg("حدث خطأ أثناء إنشاء الرابط");
     }
     setCopyingLink(false);
   }
@@ -110,7 +110,7 @@ export default function TeamPanel({
 
         <div className="mb-5 border-t border-line pt-4">
           <label className="block text-sm font-medium text-inkSoft mb-1.5">
-            ادعِ حد باسم اليوزر بتاعه
+            ادعُ عضوًا باسم المستخدم الخاص به
           </label>
           <div className="flex gap-2">
             <Input
@@ -144,7 +144,7 @@ export default function TeamPanel({
                   <span dir="ltr" className="font-mono">
                     @{m.profiles?.username || "?"}
                     {m.user_id === currentUserId && (
-                      <span className="text-inkFaint text-xs font-sans"> (إنت)</span>
+                      <span className="text-inkFaint text-xs font-sans"> (أنت)</span>
                     )}
                   </span>
                   <Badge tone="sage">عضو</Badge>

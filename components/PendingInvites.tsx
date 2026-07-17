@@ -43,7 +43,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
           <p className="flex items-center gap-2 text-sm text-ink min-w-0">
             <Mail size={14} strokeWidth={1.75} className="text-teal shrink-0" />
             <span className="truncate">
-              عندك دعوة تنضم لمشروع{" "}
+              لديك دعوة للانضمام إلى مشروع{" "}
               <span className="font-medium">{inv.projects?.name || "مشروع"}</span>
             </span>
           </p>

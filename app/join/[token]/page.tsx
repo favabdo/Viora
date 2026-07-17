@@ -27,7 +27,7 @@ export default function JoinPage() {
       const row = Array.isArray(info) ? info[0] : info;
       if (!row || !row.valid) {
         setStatus("error");
-        setErrorMsg("رابط الدعوة ده مش شغال أو منتهي");
+        setErrorMsg("رابط الدعوة هذا غير صالح أو منتهي الصلاحية");
         return;
       }
       setProjectName(row.project_name || "");
@@ -48,7 +48,7 @@ export default function JoinPage() {
     const { error } = await supabase.rpc("join_project_by_invite", { p_token: token });
     if (error) {
       setStatus("error");
-      setErrorMsg(error.message || "حصل خطأ، حاول تاني");
+      setErrorMsg(error.message || "حدث خطأ، يُرجى المحاولة مرة أخرى");
       return;
     }
     localStorage.removeItem(INVITE_KEY);
@@ -71,15 +71,15 @@ export default function JoinPage() {
 
         <div className="bg-surface border border-line rounded-lg shadow-raised p-6 fade-in">
           {status === "checking" && (
-            <StatusScreen kind="loading" title="بنتأكد من رابط الدعوة..." />
+            <StatusScreen kind="loading" title="جارٍ التحقق من رابط الدعوة..." />
           )}
 
           {status === "needsAuth" && (
             <div className="text-center">
               <h1 className="font-display text-lg font-medium mb-2">دعوة للانضمام</h1>
               <p className="text-inkSoft text-sm mb-6 leading-relaxed">
-                إنت متدعي تنضم لمشروع <span className="font-medium text-ink">{projectName}</span>. سجّل دخولك أو
-                اعمل حساب عشان تقدر تنضم.
+                أنت مدعوّ للانضمام إلى مشروع <span className="font-medium text-ink">{projectName}</span>. يُرجى
+                تسجيل الدخول أو إنشاء حساب للانضمام.
               </p>
               <Button variant="primary" fullWidth onClick={goToLogin}>
                 تسجيل الدخول / إنشاء حساب
@@ -88,21 +88,21 @@ export default function JoinPage() {
           )}
 
           {status === "joining" && (
-            <StatusScreen kind="loading" title="بتنضم للمشروع..." />
+            <StatusScreen kind="loading" title="جارٍ الانضمام إلى المشروع..." />
           )}
 
           {status === "done" && (
-            <StatusScreen kind="success" title="تم الانضمام" message={`إنت دلوقتي عضو في مشروع ${projectName}`} />
+            <StatusScreen kind="success" title="تم الانضمام" message={`أنت الآن عضو في مشروع ${projectName}`} />
           )}
 
           {status === "error" && (
             <div className="text-center">
-              <StatusScreen kind="error" title="حصلت مشكلة" message={errorMsg} />
+              <StatusScreen kind="error" title="حدثت مشكلة" message={errorMsg} />
               <button
                 onClick={() => router.replace("/")}
                 className="text-teal text-sm hover:underline mt-5"
               >
-                الرجوع للرئيسية
+                العودة إلى الصفحة الرئيسية
               </button>
             </div>
           )}

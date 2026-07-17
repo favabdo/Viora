@@ -49,7 +49,7 @@ export default function LinksSection() {
     try {
       new URL(normalizedUrl);
     } catch {
-      setError("اللينك مش صحيح");
+      setError("الرابط غير صحيح");
       return;
     }
     setError("");
@@ -80,21 +80,21 @@ export default function LinksSection() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && addLink()}
-            placeholder="الصق اللينك هنا"
+            placeholder="الصق الرابط هنا"
             dir="ltr"
             className="font-mono text-left"
           />
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="اكتب وصف قصير — ليه سيّبت اللينك ده؟"
+            placeholder="أضف وصفًا موجزًا — لماذا حفظت هذا الرابط؟"
             rows={2}
           />
         </div>
         {error && <p className="text-clay text-xs mb-2">{error}</p>}
         <Button variant="primary" onClick={addLink}>
           <Plus size={15} strokeWidth={2} />
-          حفظ اللينك
+          حفظ الرابط
         </Button>
       </div>
 
@@ -103,8 +103,8 @@ export default function LinksSection() {
       ) : links.length === 0 ? (
         <EmptyState
           icon={Link2}
-          title="مفيش لينكات محفوظة لسه"
-          hint="الصق أي لينك في الحقل اللي فوق واحفظه."
+          title="لا توجد روابط محفوظة بعد"
+          hint="الصق أي رابط في الحقل أعلاه واحفظه."
         />
       ) : (
         <ul className="border-t border-b border-line divide-y divide-line">
@@ -123,7 +123,7 @@ export default function LinksSection() {
                 <IconButton
                   size="sm"
                   tone="danger"
-                  aria-label="حذف اللينك"
+                  aria-label="حذف الرابط"
                   onClick={() => deleteLink(link.id)}
                   className="opacity-0 group-hover:opacity-100 shrink-0"
                 >

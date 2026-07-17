@@ -38,7 +38,7 @@ export type Task = {
   title: string;
   is_done: boolean;
   created_at: string;
-  profiles?: { username: string } | null;
+  profiles?: { username: string; full_name: string } | null;
 };
 
 export type LinkItem = {

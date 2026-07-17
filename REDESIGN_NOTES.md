@@ -217,3 +217,49 @@ package.json                       + lucide-react
 ```
 
 Verified with `tsc --noEmit` and `next build` — both clean.
+
+## Follow-up pass
+
+Four targeted changes on top of the initial redesign:
+
+1. **Task titles no longer truncate.** `truncate` (ellipsis + `min-w-0`) is
+   replaced with `break-words`, and the row switched from `items-center` to
+   `items-start` so the checkbox and the delete button stay aligned to the
+   first line when a title wraps to two or three lines.
+2. **"النشاط الأخير" (recent activity) is now collapsed by default**, using
+   the exact same disclosure pattern as the per-item "السجل" (history)
+   toggle — a rotating chevron, closed until clicked. It keeps loading and
+   subscribing in the background either way, so live updates still land the
+   moment you open it; it just doesn't take up space unasked.
+3. **Names instead of usernames, and "أنت" for yourself.** Added
+   `lib/displayName.ts`, a single shared helper used by both the task list
+   and the activity/history feeds:
+   - The small tag next to each task (`task.profiles`) now shows the
+     person's real name — falling back to their username only if they never
+     set one — and shows **أنت** instead of their own name when the task
+     belongs to the person currently looking at it.
+   - Activity-log entries (`"سارة أضافت مهمة: كذا"`) are generated
+     server-side as full sentences with the name baked in at the start, so
+     the client rewrites that leading name to **أنت** whenever `actor_id`
+     matches the current user — same rule applied consistently in both the
+     project-level activity feed and the per-task history.
+   - `supabase/schema.sql` was also corrected: the *active* trigger
+     functions (`log_task_activity`, `log_member_join` — Postgres uses the
+     last `create or replace` in the file) were writing `@username` into
+     every activity message. They now write the full name (falling back to
+     username), without the `@` prefix, matching the two profile columns
+     that actually exist for this purpose. **This requires re-running
+     `supabase/schema.sql` against the project's database** for existing
+     deployments — the SQL functions can't be changed by shipping frontend
+     code alone.
+4. **Formal register (فصحى) throughout.** Every user-facing string in every
+   page and component — placeholders, buttons, empty/loading/error states,
+   confirm dialogs, the two DB-generated activity/link message sets — was
+   rewritten from Egyptian colloquial Arabic to standard formal Arabic (e.g.
+   `"مفيش مهام... لسه"` → `"لا توجد مهام... بعد"`, `"اليوزر ده متسجل"` →
+   `"اسم المستخدم هذا مسجّل"`, `"بنتأكد من حسابك..."` →
+   `"جارٍ التحقق من حسابك..."`). Loanwords were swapped for their Arabic
+   equivalents where a clean one exists (`اللينك` → `الرابط`, `اليوزر` →
+   `المستخدم`). RTL layout and the underlying interaction model are
+   unchanged — this was a tone pass, not a content or layout pass.
+

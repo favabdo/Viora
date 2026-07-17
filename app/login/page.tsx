@@ -34,7 +34,7 @@ function LoginPageInner() {
 
   useEffect(() => {
     if (searchParams.get("confirmed") === "1") {
-      setInfo("تم تأكيد حسابك بنجاح! سجّل دخولك دلوقتي.");
+      setInfo("تم تأكيد حسابك بنجاح، يمكنك تسجيل الدخول الآن.");
     }
   }, [searchParams]);
 
@@ -61,14 +61,14 @@ function LoginPageInner() {
       } else {
         const trimmedName = name.trim();
         if (!trimmedName) {
-          setError("اكتب اسمك");
+          setError("يُرجى إدخال اسمك");
           setLoading(false);
           return;
         }
 
         const normalizedUsername = username.trim().toLowerCase();
         if (!USERNAME_RE.test(normalizedUsername)) {
-          setError("اسم اليوزر لازم يكون من 3 لـ 20 حرف، وحروف إنجليزي صغيرة أو أرقام أو _ بس");
+          setError("يجب أن يتكوّن اسم المستخدم من 3 إلى 20 حرفًا، ويُسمح فقط بأحرف إنجليزية صغيرة أو أرقام أو الشرطة السفلية (_)");
           setLoading(false);
           return;
         }
@@ -80,7 +80,7 @@ function LoginPageInner() {
         );
         if (checkError) throw checkError;
         if (exists) {
-          setError("اليوزر ده متسجل بالفعل، جرّب واحد تاني");
+          setError("اسم المستخدم هذا مسجّل بالفعل، يُرجى تجربة اسم آخر");
           setLoading(false);
           return;
         }
@@ -96,7 +96,7 @@ function LoginPageInner() {
         if (error) {
           // لو حصل تعارض لحظي على نفس اليوزرنيم (اتسجل من حد تاني في نفس اللحظة)
           if (/duplicate|unique|already exists/i.test(error.message)) {
-            setError("اليوزر ده متسجل بالفعل، جرّب واحد تاني");
+            setError("اسم المستخدم هذا مسجّل بالفعل، يُرجى تجربة اسم آخر");
             setLoading(false);
             return;
           }
@@ -109,13 +109,13 @@ function LoginPageInner() {
           return;
         }
 
-        setInfo("تم إنشاء الحساب بنجاح. تحقق من بريدك الإلكتروني لتأكيد الحساب ثم سجّل دخولك.");
+        setInfo("تم إنشاء الحساب بنجاح. يُرجى التحقق من بريدك الإلكتروني لتأكيد الحساب، ثم تسجيل الدخول.");
         setMode("signin");
         setName("");
         setUsername("");
       }
     } catch (err: any) {
-      setError(err?.message || "حصل خطأ، حاول تاني");
+      setError(err?.message || "حدث خطأ، يُرجى المحاولة مرة أخرى");
     } finally {
       setLoading(false);
     }
@@ -142,9 +142,9 @@ function LoginPageInner() {
           </h1>
           <p className="text-inkSoft text-sm text-center mb-6">
             {hasInvite
-              ? "بعد ما تسجل هتنضم للمشروع اللي اتدعيت له تلقائي"
+              ? "بعد تسجيل الدخول ستنضم تلقائيًا إلى المشروع الذي دُعيت إليه"
               : mode === "signin"
-              ? "أهلاً بيك تاني في Viora"
+              ? "مرحبًا بعودتك إلى Viora"
               : "ابدأ رحلتك مع Viora"}
           </p>
 
@@ -167,7 +167,7 @@ function LoginPageInner() {
             {mode === "signup" && (
               <div className="fade-in">
                 <label className="block text-sm font-medium text-inkSoft mb-1.5">
-                  اسم اليوزر
+                  اسم المستخدم
                 </label>
                 <Input
                   type="text"
@@ -183,7 +183,7 @@ function LoginPageInner() {
                   className="font-mono text-left"
                 />
                 <p className="text-xs text-inkFaint mt-1">
-                  حروف إنجليزي صغيرة أو أرقام أو _ بس، من 3 لـ 20 حرف
+                  يُسمح فقط بأحرف إنجليزية صغيرة أو أرقام أو الشرطة السفلية (_)، من 3 إلى 20 حرفًا
                 </p>
               </div>
             )}
@@ -236,7 +236,7 @@ function LoginPageInner() {
           </form>
 
           <p className="text-center text-sm text-inkSoft mt-5">
-            {mode === "signin" ? "لسه معملتش حساب؟" : "عندك حساب بالفعل؟"}{" "}
+            {mode === "signin" ? "ليس لديك حساب بعد؟" : "لديك حساب بالفعل؟"}{" "}
             <button
               onClick={() => {
                 setMode(mode === "signin" ? "signup" : "signin");

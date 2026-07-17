@@ -12,6 +12,7 @@ import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 import ProgressBar from "./ui/ProgressBar";
 import { Plus, Users, X, ListChecks, FolderPlus } from "lucide-react";
+import { displayName } from "@/lib/displayName";
 
 export default function TasksSection({ currentUserId }: { currentUserId: string }) {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -63,7 +64,7 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
     setLoadingTasks(true);
     const { data, error } = await supabase
       .from("tasks")
-      .select("*, profiles!tasks_user_id_fkey(username)")
+      .select("*, profiles!tasks_user_id_fkey(username, full_name)")
       .eq("project_id", projectId)
       .order("created_at", { ascending: true });
     if (!error && data) setTasks(data as Task[]);
@@ -87,7 +88,7 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
   }
 
   async function deleteProject(id: string) {
-    if (!confirm("تحذف المشروع ده مع كل المهام اللي فيه؟")) return;
+    if (!confirm("هل تريد حذف هذا المشروع مع جميع المهام الموجودة فيه؟")) return;
     const { error } = await supabase.from("projects").delete().eq("id", id);
     if (!error) {
       const remaining = projects.filter((p) => p.id !== id);
@@ -104,7 +105,7 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
     const { data, error } = await supabase
       .from("tasks")
       .insert({ title, project_id: activeProjectId, is_done: false })
-      .select("*, profiles!tasks_user_id_fkey(username)")
+      .select("*, profiles!tasks_user_id_fkey(username, full_name)")
       .single();
     if (!error && data) {
       setTasks((prev) => [...prev, data as Task]);
@@ -206,7 +207,7 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
                 className="w-full flex items-center gap-2 text-inkFaint hover:text-inkSoft text-sm py-2 transition-colors"
               >
                 <FolderPlus size={14} strokeWidth={1.75} />
-                ضيف أول مشروع
+                أضف أول مشروع
               </button>
             </li>
           )}
@@ -233,7 +234,7 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addTask()}
-                placeholder="اكتب مهمة جديدة واضغط Enter"
+                placeholder="أدخل مهمة جديدة ثم اضغط Enter"
               />
               <Button variant="primary" onClick={addTask}>
                 <Plus size={15} strokeWidth={2} />
@@ -246,26 +247,26 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
             ) : tasks.length === 0 ? (
               <EmptyState
                 icon={ListChecks}
-                title="مفيش مهام في المشروع ده لسه"
-                hint="اكتب أول مهمة في الحقل اللي فوق وابدأ."
+                title="لا توجد مهام في هذا المشروع بعد"
+                hint="أدخل أول مهمة في الحقل أعلاه لتبدأ."
               />
             ) : (
               <ul className="border-t border-b border-line divide-y divide-line">
                 {tasks.map((task) => (
                   <li key={task.id} className="group px-1 py-2.5">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
-                        className="task-check"
+                        className="task-check mt-0.5"
                         checked={task.is_done}
                         onChange={() => toggleTask(task)}
                       />
-                      <span className={`task-title flex-1 text-sm min-w-0 truncate ${task.is_done ? "done" : ""}`}>
+                      <span className={`task-title flex-1 text-sm min-w-0 break-words ${task.is_done ? "done" : ""}`}>
                         {task.title}
                       </span>
-                      {task.profiles?.username && (
-                        <span className="text-2xs text-inkFaint font-mono shrink-0" dir="ltr">
-                          @{task.profiles.username}
+                      {task.profiles && (
+                        <span className="text-2xs text-inkFaint shrink-0 pt-0.5">
+                          {displayName(task.user_id, task.profiles, currentUserId)}
                         </span>
                       )}
                       <IconButton
@@ -279,18 +280,18 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
                       </IconButton>
                     </div>
                     <div className="pr-[34px]">
-                      <ItemHistory table="activity_log" column="task_id" id={task.id} />
+                      <ItemHistory table="activity_log" column="task_id" id={task.id} currentUserId={currentUserId} />
                     </div>
                   </li>
                 ))}
               </ul>
             )}
-            <ActivityFeed projectId={activeProject.id} />
+            <ActivityFeed projectId={activeProject.id} currentUserId={currentUserId} />
           </>
         ) : (
           <EmptyState
             icon={FolderPlus}
-            title="ضيف مشروع الأول عشان تبدأ تضيف مهام"
+            title="أضف مشروعًا أولًا لتتمكن من إضافة المهام"
           />
         )}
       </section>
