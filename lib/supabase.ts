@@ -38,6 +38,7 @@ export type Task = {
   title: string;
   is_done: boolean;
   created_at: string;
+  profiles?: { username: string } | null;
 };
 
 export type LinkItem = {
@@ -45,5 +46,44 @@ export type LinkItem = {
   user_id: string;
   url: string;
   description: string;
+  created_at: string;
+};
+
+export type MemberStatus = "accepted" | "pending";
+
+export type ProjectMember = {
+  id: string;
+  project_id: string;
+  user_id: string;
+  status: MemberStatus;
+  invited_by: string | null;
+  created_at: string;
+  profiles?: { username: string; full_name: string } | null;
+};
+
+export type PendingInvite = {
+  id: string;
+  project_id: string;
+  status: MemberStatus;
+  invited_by: string | null;
+  created_at: string;
+  projects?: { name: string } | null;
+};
+
+export type ActivityEntry = {
+  id: string;
+  project_id: string;
+  task_id: string | null;
+  actor_id: string | null;
+  actor_name: string;
+  message: string;
+  created_at: string;
+};
+
+export type LinkLogEntry = {
+  id: string;
+  link_id: string;
+  user_id: string;
+  message: string;
   created_at: string;
 };

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase, LinkItem } from "@/lib/supabase";
+import ItemHistory from "./ItemHistory";
 
 function getDomain(url: string) {
   try {
@@ -125,6 +126,7 @@ export default function LinksSection() {
               {link.description && (
                 <p className="text-sm text-ink mt-1.5 leading-relaxed">{link.description}</p>
               )}
+              <ItemHistory table="link_activity_log" column="link_id" id={link.id} />
             </li>
           ))}
         </ul>

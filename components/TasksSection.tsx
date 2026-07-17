@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { supabase, Project, Task } from "@/lib/supabase";
+import TeamPanel from "./TeamPanel";
+import ActivityFeed from "./ActivityFeed";
+import ItemHistory from "./ItemHistory";
 
-export default function TasksSection() {
+export default function TasksSection({ currentUserId }: { currentUserId: string }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -11,6 +14,7 @@ export default function TasksSection() {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
+  const [showTeam, setShowTeam] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -19,6 +23,22 @@ export default function TasksSection() {
   useEffect(() => {
     if (activeProjectId) loadTasks(activeProjectId);
     else setTasks([]);
+  }, [activeProjectId]);
+
+  // لايف: أي تعديل على المهام من أي عضو تاني في المشروع يظهر عندك على طول
+  useEffect(() => {
+    if (!activeProjectId) return;
+    const channel = supabase
+      .channel(`tasks-${activeProjectId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tasks", filter: `project_id=eq.${activeProjectId}` },
+        () => loadTasks(activeProjectId)
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [activeProjectId]);
 
   async function loadProjects() {
@@ -36,7 +56,7 @@ export default function TasksSection() {
     setLoadingTasks(true);
     const { data, error } = await supabase
       .from("tasks")
-      .select("*")
+      .select("*, profiles!tasks_user_id_fkey(username)")
       .eq("project_id", projectId)
       .order("created_at", { ascending: true });
     if (!error && data) setTasks(data as Task[]);
@@ -77,7 +97,7 @@ export default function TasksSection() {
     const { data, error } = await supabase
       .from("tasks")
       .insert({ title, project_id: activeProjectId, is_done: false })
-      .select()
+      .select("*, profiles!tasks_user_id_fkey(username)")
       .single();
     if (!error && data) {
       setTasks((prev) => [...prev, data as Task]);
@@ -148,14 +168,19 @@ export default function TasksSection() {
                 }`}
               >
                 {p.name}
+                {p.user_id !== currentUserId && (
+                  <span className="text-xs opacity-70 mr-1">🤝</span>
+                )}
               </button>
-              <button
-                onClick={() => deleteProject(p.id)}
-                className="opacity-0 group-hover:opacity-100 text-inkSoft hover:text-clay px-2 transition-opacity"
-                aria-label="حذف المشروع"
-              >
-                ×
-              </button>
+              {p.user_id === currentUserId && (
+                <button
+                  onClick={() => deleteProject(p.id)}
+                  className="opacity-0 group-hover:opacity-100 text-inkSoft hover:text-clay px-2 transition-opacity"
+                  aria-label="حذف المشروع"
+                >
+                  ×
+                </button>
+              )}
             </li>
           ))}
           {projects.length === 0 && (
@@ -170,11 +195,19 @@ export default function TasksSection() {
           <>
             <div className="flex items-baseline justify-between mb-4 border-b border-line pb-3">
               <h2 className="font-display text-2xl font-medium">{activeProject.name}</h2>
-              {tasks.length > 0 && (
-                <span className="text-xs font-mono text-inkSoft">
-                  {doneCount}/{tasks.length} خلصت
-                </span>
-              )}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowTeam(true)}
+                  className="text-xs text-teal hover:text-tealDark border border-line hover:border-teal rounded px-2.5 py-1 transition-colors"
+                >
+                  الفريق
+                </button>
+                {tasks.length > 0 && (
+                  <span className="text-xs font-mono text-inkSoft">
+                    {doneCount}/{tasks.length} خلصت
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-2 mb-5">
@@ -202,33 +235,50 @@ export default function TasksSection() {
                 {tasks.map((task) => (
                   <li
                     key={task.id}
-                    className="group flex items-center gap-3 bg-white border border-line rounded px-3 py-3 shadow-card"
+                    className="group bg-white border border-line rounded px-3 py-3 shadow-card"
                   >
-                    <input
-                      type="checkbox"
-                      className="task-check"
-                      checked={task.is_done}
-                      onChange={() => toggleTask(task)}
-                    />
-                    <span className={`task-title flex-1 text-sm ${task.is_done ? "done" : ""}`}>
-                      {task.title}
-                    </span>
-                    <button
-                      onClick={() => deleteTask(task.id)}
-                      className="opacity-0 group-hover:opacity-100 text-inkSoft hover:text-clay transition-opacity"
-                      aria-label="حذف المهمة"
-                    >
-                      ×
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="task-check"
+                        checked={task.is_done}
+                        onChange={() => toggleTask(task)}
+                      />
+                      <span className={`task-title flex-1 text-sm ${task.is_done ? "done" : ""}`}>
+                        {task.title}
+                      </span>
+                      {task.profiles?.username && (
+                        <span className="text-xs text-teal font-mono shrink-0" dir="ltr">
+                          @{task.profiles.username}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => deleteTask(task.id)}
+                        className="opacity-0 group-hover:opacity-100 text-inkSoft hover:text-clay transition-opacity"
+                        aria-label="حذف المهمة"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <ItemHistory table="activity_log" column="task_id" id={task.id} />
                   </li>
                 ))}
               </ul>
             )}
+            <ActivityFeed projectId={activeProject.id} />
           </>
         ) : (
           <p className="text-inkSoft text-sm">ضيف مشروع الأول عشان تبدأ تضيف مهام.</p>
         )}
       </section>
+
+      {showTeam && activeProject && (
+        <TeamPanel
+          projectId={activeProject.id}
+          currentUserId={currentUserId}
+          onClose={() => setShowTeam(false)}
+        />
+      )}
     </div>
   );
 }

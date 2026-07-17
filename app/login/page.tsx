@@ -1,14 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 
 type Mode = "signin" | "signup";
 
-export default function LoginPage() {
+const INVITE_KEY = "viora_invite_token";
+
+function nextDestination() {
+  if (typeof window === "undefined") return "/";
+  const token = localStorage.getItem(INVITE_KEY);
+  return token ? `/join/${token}` : "/";
+}
+
+function LoginPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<Mode>("signin");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -19,10 +28,17 @@ export default function LoginPage() {
   const [info, setInfo] = useState<string | null>(null);
 
   const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+  const hasInvite = searchParams.get("invite") === "1";
+
+  useEffect(() => {
+    if (searchParams.get("confirmed") === "1") {
+      setInfo("تم تأكيد حسابك بنجاح! سجّل دخولك دلوقتي.");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) router.replace("/");
+      if (data.session) router.replace(nextDestination());
     });
   }, [router]);
 
@@ -39,7 +55,7 @@ export default function LoginPage() {
           password,
         });
         if (error) throw error;
-        router.replace("/");
+        router.replace(nextDestination());
       } else {
         const trimmedName = name.trim();
         if (!trimmedName) {
@@ -67,11 +83,12 @@ export default function LoginPage() {
           return;
         }
 
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: { full_name: trimmedName, username: normalizedUsername },
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
         if (error) {
@@ -83,6 +100,13 @@ export default function LoginPage() {
           }
           throw error;
         }
+
+        // لو تأكيد الإيميل مقفول من إعدادات Supabase، بيرجع سيشن على طول
+        if (signUpData.session) {
+          router.replace(nextDestination());
+          return;
+        }
+
         setInfo("تم إنشاء الحساب بنجاح. تحقق من بريدك الإلكتروني لتأكيد الحساب ثم سجّل دخولك.");
         setMode("signin");
         setName("");
@@ -115,7 +139,9 @@ export default function LoginPage() {
             {mode === "signin" ? "تسجيل الدخول" : "إنشاء حساب"}
           </h1>
           <p className="text-inkSoft text-sm text-center mb-6">
-            {mode === "signin"
+            {hasInvite
+              ? "بعد ما تسجل هتنضم للمشروع اللي اتدعيت له تلقائي"
+              : mode === "signin"
               ? "أهلاً بيك تاني في Viora"
               : "ابدأ رحلتك مع Viora"}
           </p>
@@ -233,5 +259,13 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageInner />
+    </Suspense>
   );
 }

@@ -1,18 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import type { Session } from "@supabase/supabase-js";
 import TasksSection from "@/components/TasksSection";
 import LinksSection from "@/components/LinksSection";
+import PendingInvites from "@/components/PendingInvites";
 import { supabase } from "@/lib/supabase";
 
-type Tab = "home" | "tasks" | "links";
+type Tab = "tasks" | "links";
 
-export default function Home() {
+function HomeInner() {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("home");
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as Tab) || "tasks";
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
 
@@ -38,11 +41,6 @@ export default function Home() {
     await supabase.auth.signOut();
     router.replace("/login");
   }
-
-  const displayName =
-    (session?.user.user_metadata?.full_name as string | undefined) ||
-    session?.user.email?.split("@")[0] ||
-    "";
 
   if (checking || !session) {
     return (
@@ -74,19 +72,8 @@ export default function Home() {
             تسجيل الخروج
           </button>
         </header>
-        <p className="text-inkSoft text-sm -mt-5 mb-8">
-          مهامك وروابطك، كل حاجة في مكانها مع Viora
-        </p>
 
         <nav className="flex gap-6 border-b border-line mb-8">
-          <button
-            onClick={() => setTab("home")}
-            className={`tab-btn pb-3 text-sm font-medium transition-colors ${
-              tab === "home" ? "active text-ink" : "text-inkSoft hover:text-ink"
-            }`}
-          >
-            الرئيسية
-          </button>
           <button
             onClick={() => setTab("tasks")}
             className={`tab-btn pb-3 text-sm font-medium transition-colors ${
@@ -105,19 +92,19 @@ export default function Home() {
           </button>
         </nav>
 
-        {tab === "home" && (
-          <section className="fade-in">
-            <h1 className="font-display text-3xl md:text-4xl font-semibold mb-2">
-              أهلاً، {displayName} 👋
-            </h1>
-            <p className="text-inkSoft text-sm">
-              يومك النهارده جاهز؟ روح لتاب المهام عشان تنجز، أو الروابط عشان تلاقي اللي حفظته.
-            </p>
-          </section>
-        )}
-        {tab === "tasks" && <TasksSection />}
+        <PendingInvites userId={session.user.id} />
+
+        {tab === "tasks" && <TasksSection currentUserId={session.user.id} />}
         {tab === "links" && <LinksSection />}
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeInner />
+    </Suspense>
   );
 }
