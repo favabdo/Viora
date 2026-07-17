@@ -225,7 +225,7 @@ begin
   limit 1;
 
   if v_token is null then
-    v_token := uuid_generate_v4();
+    v_token := gen_random_uuid();
     insert into invite_links (token, project_id, created_by)
     values (v_token, p_project_id, auth.uid());
   end if;
