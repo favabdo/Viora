@@ -7,6 +7,7 @@ import IconButton from "./ui/IconButton";
 import Badge from "./ui/Badge";
 import { Input } from "./ui/Input";
 import { Link2, X } from "lucide-react";
+import ClickableName from "./ClickableName";
 
 export default function TeamPanel({
   projectId,
@@ -142,7 +143,7 @@ export default function TeamPanel({
               {accepted.map((m) => (
                 <li key={m.id} className="flex items-center justify-between py-2 text-sm">
                   <span dir="ltr" className="font-mono">
-                    @{m.profiles?.username || "?"}
+                    <ClickableName userId={m.user_id}>@{m.profiles?.username || "?"}</ClickableName>
                     {m.user_id === currentUserId && (
                       <span className="text-inkFaint text-xs font-sans"> (أنت)</span>
                     )}
@@ -161,7 +162,9 @@ export default function TeamPanel({
               <ul className="divide-y divide-line">
                 {pending.map((m) => (
                   <li key={m.id} className="flex items-center justify-between py-2 text-sm">
-                    <span dir="ltr" className="font-mono">@{m.profiles?.username || "?"}</span>
+                    <span dir="ltr" className="font-mono">
+                      <ClickableName userId={m.user_id}>@{m.profiles?.username || "?"}</ClickableName>
+                    </span>
                     <Badge tone="clay">في الانتظار</Badge>
                   </li>
                 ))}

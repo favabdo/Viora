@@ -414,6 +414,87 @@ begin
 end;
 $$;
 
+-- ============================================================
+-- 13) البروفايل الشخصي: إيميل (للعرض فقط) + صورة، وتعديل الاسم/اليوزرنيم/الباسورد من الواجهة
+-- ============================================================
+alter table profiles
+  add column if not exists email text,
+  add column if not exists avatar_url text;
+
+-- نخزّن الإيميل في profiles وقت التسجيل عشان يظهر في صفحة البروفايل والكارت الشخصي لأي عضو تاني بنفس المشروع
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, username, full_name, email)
+  values (
+    new.id,
+    lower(coalesce(new.raw_user_meta_data->>'username', '')),
+    coalesce(new.raw_user_meta_data->>'full_name', ''),
+    new.email
+  );
+  return new;
+end;
+$$;
+
+-- تعبئة الإيميل لأي حساب موجود بالفعل قبل إضافة العمود ده
+update profiles p
+set email = u.email
+from auth.users u
+where u.id = p.id and (p.email is null or p.email = '');
+
+-- لو المستخدم غيّر إيميله من auth، نحدّث النسخة المخزّنة في profiles تلقائي
+create or replace function public.handle_user_email_update()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.email is distinct from old.email then
+    update public.profiles set email = new.email where id = new.id;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_email_updated on auth.users;
+create trigger on_auth_user_email_updated
+  after update of email on auth.users
+  for each row execute function public.handle_user_email_update();
+
+-- ============================================================
+-- 14) تخزين صور البروفايل: باكت "avatars" عام للقراءة، كل مستخدم يرفع ويعدّل بس في فولدر بمعرّفه هو
+-- ============================================================
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+drop policy if exists "avatar images publicly accessible" on storage.objects;
+create policy "avatar images publicly accessible" on storage.objects
+  for select using (bucket_id = 'avatars');
+
+drop policy if exists "users upload own avatar" on storage.objects;
+create policy "users upload own avatar" on storage.objects
+  for insert with check (
+    bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+drop policy if exists "users update own avatar" on storage.objects;
+create policy "users update own avatar" on storage.objects
+  for update using (
+    bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+drop policy if exists "users delete own avatar" on storage.objects;
+create policy "users delete own avatar" on storage.objects
+  for delete using (
+    bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
 drop trigger if exists on_member_status_change on project_members;
 create trigger on_member_status_change
   after insert or update on project_members

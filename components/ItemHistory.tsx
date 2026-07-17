@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ChevronDown } from "lucide-react";
-import { toDisplayMessage } from "@/lib/displayName";
+import { splitActorMessage } from "@/lib/displayName";
+import ClickableName from "./ClickableName";
 
 function timeAgo(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -78,12 +79,22 @@ export default function ItemHistory({
           ) : entries.length === 0 ? (
             <p className="text-2xs text-inkFaint">لا يوجد سجل بعد</p>
           ) : (
-            entries.map((e) => (
-              <p key={e.id} className="text-2xs text-inkFaint">
-                {currentUserId ? toDisplayMessage(e, currentUserId) : e.message}{" "}
-                <span className="opacity-70">— {timeAgo(e.created_at)}</span>
-              </p>
-            ))
+            entries.map((e) => {
+              const { label, rest, actorId } = splitActorMessage(e, currentUserId);
+              return (
+                <p key={e.id} className="text-2xs text-inkFaint">
+                  {label && (
+                    <>
+                      <ClickableName userId={actorId} className="text-inkSoft">
+                        {label}
+                      </ClickableName>{" "}
+                    </>
+                  )}
+                  {label ? rest.trimStart() : rest}{" "}
+                  <span className="opacity-70">— {timeAgo(e.created_at)}</span>
+                </p>
+              );
+            })
           )}
         </div>
       )}

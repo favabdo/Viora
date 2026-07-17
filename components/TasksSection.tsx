@@ -11,8 +11,9 @@ import { Input } from "./ui/Input";
 import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 import ProgressBar from "./ui/ProgressBar";
-import { Plus, Users, X, ListChecks, FolderPlus } from "lucide-react";
+import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check } from "lucide-react";
 import { displayName } from "@/lib/displayName";
+import ClickableName from "./ClickableName";
 
 export default function TasksSection({ currentUserId }: { currentUserId: string }) {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -23,6 +24,11 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
+  const [editingProjectName, setEditingProjectName] = useState(false);
+  const [projectNameDraft, setProjectNameDraft] = useState("");
+  const [savingProjectName, setSavingProjectName] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [taskTitleDraft, setTaskTitleDraft] = useState("");
 
   useEffect(() => {
     loadProjects();
@@ -96,6 +102,45 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
       if (activeProjectId === id) {
         setActiveProjectId(remaining.length > 0 ? remaining[0].id : null);
       }
+    }
+  }
+
+  function startEditProjectName(project: Project) {
+    setProjectNameDraft(project.name);
+    setEditingProjectName(true);
+  }
+
+  async function saveProjectName(project: Project) {
+    const name = projectNameDraft.trim();
+    if (!name || name === project.name) {
+      setEditingProjectName(false);
+      return;
+    }
+    setSavingProjectName(true);
+    const { error } = await supabase.from("projects").update({ name }).eq("id", project.id);
+    if (!error) {
+      setProjects((prev) => prev.map((p) => (p.id === project.id ? { ...p, name } : p)));
+      setEditingProjectName(false);
+    }
+    setSavingProjectName(false);
+  }
+
+  function startEditTask(task: Task) {
+    setTaskTitleDraft(task.title);
+    setEditingTaskId(task.id);
+  }
+
+  async function saveTaskTitle(task: Task) {
+    const title = taskTitleDraft.trim();
+    if (!title || title === task.title) {
+      setEditingTaskId(null);
+      return;
+    }
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, title } : t)));
+    setEditingTaskId(null);
+    const { error } = await supabase.from("tasks").update({ title }).eq("id", task.id);
+    if (error) {
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, title: task.title } : t)));
     }
   }
 
@@ -219,7 +264,40 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
         {activeProject ? (
           <>
             <div className="flex items-center justify-between mb-4 border-b border-line pb-3 gap-3">
-              <h2 className="font-display text-xl font-medium truncate">{activeProject.name}</h2>
+              {editingProjectName ? (
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  <Input
+                    autoFocus
+                    value={projectNameDraft}
+                    onChange={(e) => setProjectNameDraft(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && saveProjectName(activeProject)}
+                    onBlur={() => saveProjectName(activeProject)}
+                    className="font-display text-lg py-1 h-auto"
+                  />
+                  <IconButton
+                    aria-label="حفظ اسم المشروع"
+                    tone="active"
+                    onClick={() => saveProjectName(activeProject)}
+                    disabled={savingProjectName}
+                  >
+                    <Check size={15} strokeWidth={2} />
+                  </IconButton>
+                </div>
+              ) : (
+                <h2 className="font-display text-xl font-medium truncate group/title flex items-center gap-2 min-w-0">
+                  <span className="truncate">{activeProject.name}</span>
+                  {activeProject.user_id === currentUserId && (
+                    <IconButton
+                      size="sm"
+                      aria-label="تعديل اسم المشروع"
+                      onClick={() => startEditProjectName(activeProject)}
+                      className="opacity-0 group-hover/title:opacity-100 shrink-0"
+                    >
+                      <Pencil size={12} strokeWidth={1.75} />
+                    </IconButton>
+                  )}
+                </h2>
+              )}
               <div className="flex items-center gap-3 shrink-0">
                 {tasks.length > 0 && <ProgressBar value={doneCount} total={tasks.length} />}
                 <Button variant="secondary" size="sm" onClick={() => setShowTeam(true)}>
@@ -261,13 +339,48 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
                         checked={task.is_done}
                         onChange={() => toggleTask(task)}
                       />
-                      <span className={`task-title flex-1 text-sm min-w-0 break-words ${task.is_done ? "done" : ""}`}>
-                        {task.title}
-                      </span>
-                      {task.profiles && (
-                        <span className="text-2xs text-inkFaint shrink-0 pt-0.5">
-                          {displayName(task.user_id, task.profiles, currentUserId)}
+                      {editingTaskId === task.id ? (
+                        <div className="flex-1 flex items-center gap-1.5 min-w-0">
+                          <Input
+                            autoFocus
+                            value={taskTitleDraft}
+                            onChange={(e) => setTaskTitleDraft(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && saveTaskTitle(task)}
+                            onBlur={() => saveTaskTitle(task)}
+                            className="text-sm py-1"
+                          />
+                          <IconButton
+                            size="sm"
+                            aria-label="حفظ عنوان المهمة"
+                            tone="active"
+                            onClick={() => saveTaskTitle(task)}
+                          >
+                            <Check size={13} strokeWidth={2} />
+                          </IconButton>
+                        </div>
+                      ) : (
+                        <span
+                          className={`task-title flex-1 text-sm min-w-0 break-words ${task.is_done ? "done" : ""}`}
+                        >
+                          {task.title}
                         </span>
+                      )}
+                      {task.profiles && editingTaskId !== task.id && (
+                        <span className="text-2xs text-inkFaint shrink-0 pt-0.5">
+                          <ClickableName userId={task.user_id}>
+                            {displayName(task.user_id, task.profiles, currentUserId)}
+                          </ClickableName>
+                        </span>
+                      )}
+                      {editingTaskId !== task.id && (
+                        <IconButton
+                          size="sm"
+                          aria-label="تعديل عنوان المهمة"
+                          onClick={() => startEditTask(task)}
+                          className="opacity-0 group-hover:opacity-100 shrink-0"
+                        >
+                          <Pencil size={12} strokeWidth={1.75} />
+                        </IconButton>
                       )}
                       <IconButton
                         size="sm"

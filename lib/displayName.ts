@@ -34,3 +34,25 @@ export function toDisplayMessage(
   }
   return entry.message;
 }
+
+/**
+ * بيقسّم جملة السجل لجزئين: اسم الفاعل (قابل للدوس عليه لفتح كارت البروفايل)
+ * وباقي الجملة كنص عادي. لو معرفناش نحدد الاسم جوه الجملة، بيرجّع label فاضي
+ * ووقتها العرض بيكون سطر واحد عادي زي ما كان.
+ */
+export function splitActorMessage(
+  entry: { actor_id?: string | null; actor_name?: string | null; message: string },
+  currentUserId?: string
+): { label: string; rest: string; actorId: string | null } {
+  const actorId = entry.actor_id ?? null;
+  const name = entry.actor_name;
+  const isSelf = !!currentUserId && !!actorId && actorId === currentUserId;
+
+  if (name && entry.message.startsWith(`@${name}`)) {
+    return { label: isSelf ? "أنت" : name, rest: entry.message.slice(name.length + 1), actorId };
+  }
+  if (name && entry.message.startsWith(name)) {
+    return { label: isSelf ? "أنت" : name, rest: entry.message.slice(name.length), actorId };
+  }
+  return { label: "", rest: entry.message, actorId };
+}

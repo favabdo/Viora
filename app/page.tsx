@@ -4,11 +4,12 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import type { Session } from "@supabase/supabase-js";
-import { CheckSquare, Link2, LogOut } from "lucide-react";
+import { CheckSquare, Link2, LogOut, UserCircle } from "lucide-react";
 import TasksSection from "@/components/TasksSection";
 import LinksSection from "@/components/LinksSection";
 import PendingInvites from "@/components/PendingInvites";
 import IconButton from "@/components/ui/IconButton";
+import ProfileCardProvider from "@/components/ProfileCardContext";
 import { supabase } from "@/lib/supabase";
 
 type Tab = "tasks" | "links";
@@ -58,48 +59,60 @@ function HomeInner() {
   }
 
   return (
-    <main className="min-h-screen px-5 py-6 md:px-10 md:py-8">
-      <div className="max-w-4xl mx-auto">
-        <header className="mb-7 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/logo-full.png"
-              alt="Viora"
-              width={40}
-              height={35}
-              priority
-              className="h-8 w-auto"
-            />
-            <span className="viora-wordmark text-lg">Viora</span>
-          </div>
-          <IconButton aria-label="تسجيل الخروج" onClick={handleSignOut} tone="default">
-            <LogOut size={16} strokeWidth={1.75} />
-          </IconButton>
-        </header>
+    <ProfileCardProvider currentUserId={session.user.id}>
+      <main className="min-h-screen px-5 py-6 md:px-10 md:py-8">
+        <div className="max-w-4xl mx-auto">
+          <header className="mb-7 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Image
+                src="/logo-full.png"
+                alt="Viora"
+                width={40}
+                height={35}
+                priority
+                className="h-8 w-auto"
+              />
+              <span className="viora-wordmark text-lg">Viora</span>
+            </div>
+            <IconButton aria-label="تسجيل الخروج" onClick={handleSignOut} tone="default">
+              <LogOut size={16} strokeWidth={1.75} />
+            </IconButton>
+          </header>
 
-        <nav className="flex gap-1 border-b border-line mb-6" role="tablist">
-          {TABS.map(({ id, label, icon: Icon }) => (
+          <nav className="flex gap-1 border-b border-line mb-6" role="tablist">
+            {TABS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                role="tab"
+                aria-selected={tab === id}
+                onClick={() => setTab(id)}
+                className={`tab-btn flex items-center gap-1.5 px-3 pb-2.5 pt-1 text-sm font-medium transition-colors ${
+                  tab === id ? "active text-ink" : "text-inkFaint hover:text-inkSoft"
+                }`}
+              >
+                <Icon size={15} strokeWidth={1.75} />
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          <PendingInvites userId={session.user.id} />
+
+          {tab === "tasks" && <TasksSection currentUserId={session.user.id} />}
+          {tab === "links" && <LinksSection />}
+
+          <footer className="mt-14 pt-5 border-t border-line flex justify-center">
             <button
-              key={id}
-              role="tab"
-              aria-selected={tab === id}
-              onClick={() => setTab(id)}
-              className={`tab-btn flex items-center gap-1.5 px-3 pb-2.5 pt-1 text-sm font-medium transition-colors ${
-                tab === id ? "active text-ink" : "text-inkFaint hover:text-inkSoft"
-              }`}
+              onClick={() => router.push("/profile")}
+              className="flex items-center gap-1.5 text-sm text-inkFaint hover:text-teal transition-colors"
             >
-              <Icon size={15} strokeWidth={1.75} />
-              {label}
+              <UserCircle size={15} strokeWidth={1.75} />
+              الملف الشخصي
             </button>
-          ))}
-        </nav>
-
-        <PendingInvites userId={session.user.id} />
-
-        {tab === "tasks" && <TasksSection currentUserId={session.user.id} />}
-        {tab === "links" && <LinksSection />}
-      </div>
-    </main>
+          </footer>
+        </div>
+      </main>
+    </ProfileCardProvider>
   );
 }
 

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { supabase, ActivityEntry } from "@/lib/supabase";
 import { ChevronDown } from "lucide-react";
-import { toDisplayMessage } from "@/lib/displayName";
+import { splitActorMessage } from "@/lib/displayName";
+import ClickableName from "./ClickableName";
 
 function timeAgo(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -77,14 +78,26 @@ export default function ActivityFeed({
       </button>
       {open && (
         <ul className="space-y-2.5 mt-3 fade-in">
-          {entries.map((e) => (
-            <li key={e.id} className="flex items-start justify-between gap-3 text-sm">
-              <span className="text-inkSoft">{toDisplayMessage(e, currentUserId)}</span>
-              <span className="text-2xs text-inkFaint whitespace-nowrap shrink-0 font-mono tabular-nums pt-0.5">
-                {timeAgo(e.created_at)}
-              </span>
-            </li>
-          ))}
+          {entries.map((e) => {
+            const { label, rest, actorId } = splitActorMessage(e, currentUserId);
+            return (
+              <li key={e.id} className="flex items-start justify-between gap-3 text-sm">
+                <span className="text-inkSoft min-w-0">
+                  {label && (
+                    <>
+                      <ClickableName userId={actorId} className="text-ink">
+                        {label}
+                      </ClickableName>{" "}
+                    </>
+                  )}
+                  {label ? rest.trimStart() : rest}
+                </span>
+                <span className="text-2xs text-inkFaint whitespace-nowrap shrink-0 font-mono tabular-nums pt-0.5">
+                  {timeAgo(e.created_at)}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
