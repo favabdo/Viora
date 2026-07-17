@@ -14,8 +14,15 @@ import ProgressBar from "./ui/ProgressBar";
 import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import ClickableName from "./ClickableName";
+import ConfirmPasswordModal from "./ConfirmPasswordModal";
 
-export default function TasksSection({ currentUserId }: { currentUserId: string }) {
+export default function TasksSection({
+  currentUserId,
+  currentUserEmail,
+}: {
+  currentUserId: string;
+  currentUserEmail: string;
+}) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -29,6 +36,9 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
   const [savingProjectName, setSavingProjectName] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [taskTitleDraft, setTaskTitleDraft] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<
+    { type: "project"; id: string; name: string } | { type: "task"; id: string; name: string } | null
+  >(null);
 
   useEffect(() => {
     loadProjects();
@@ -93,8 +103,11 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
     }
   }
 
-  async function deleteProject(id: string) {
-    if (!confirm("هل تريد حذف هذا المشروع مع جميع المهام الموجودة فيه؟")) return;
+  function requestDeleteProject(project: Project) {
+    setDeleteTarget({ type: "project", id: project.id, name: project.name });
+  }
+
+  async function performDeleteProject(id: string) {
     const { error } = await supabase.from("projects").delete().eq("id", id);
     if (!error) {
       const remaining = projects.filter((p) => p.id !== id);
@@ -173,7 +186,11 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
     }
   }
 
-  async function deleteTask(id: string) {
+  function requestDeleteTask(task: Task) {
+    setDeleteTarget({ type: "task", id: task.id, name: task.title });
+  }
+
+  async function performDeleteTask(id: string) {
     setTasks((prev) => prev.filter((t) => t.id !== id));
     await supabase.from("tasks").delete().eq("id", id);
   }
@@ -236,8 +253,8 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
                     size="sm"
                     tone="danger"
                     aria-label={`حذف مشروع ${p.name}`}
-                    onClick={() => deleteProject(p.id)}
-                    className="opacity-0 group-hover:opacity-100 shrink-0"
+                    onClick={() => requestDeleteProject(p)}
+                    className="shrink-0"
                   >
                     <X size={13} strokeWidth={2} />
                   </IconButton>
@@ -284,14 +301,14 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
                   </IconButton>
                 </div>
               ) : (
-                <h2 className="font-display text-xl font-medium truncate group/title flex items-center gap-2 min-w-0">
+                <h2 className="font-display text-xl font-medium truncate flex items-center gap-2 min-w-0">
                   <span className="truncate">{activeProject.name}</span>
                   {activeProject.user_id === currentUserId && (
                     <IconButton
                       size="sm"
                       aria-label="تعديل اسم المشروع"
                       onClick={() => startEditProjectName(activeProject)}
-                      className="opacity-0 group-hover/title:opacity-100 shrink-0"
+                      className="shrink-0"
                     >
                       <Pencil size={12} strokeWidth={1.75} />
                     </IconButton>
@@ -377,7 +394,7 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
                           size="sm"
                           aria-label="تعديل عنوان المهمة"
                           onClick={() => startEditTask(task)}
-                          className="opacity-0 group-hover:opacity-100 shrink-0"
+                          className="shrink-0"
                         >
                           <Pencil size={12} strokeWidth={1.75} />
                         </IconButton>
@@ -386,8 +403,8 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
                         size="sm"
                         tone="danger"
                         aria-label="حذف المهمة"
-                        onClick={() => deleteTask(task.id)}
-                        className="opacity-0 group-hover:opacity-100 shrink-0"
+                        onClick={() => requestDeleteTask(task)}
+                        className="shrink-0"
                       >
                         <X size={14} strokeWidth={1.75} />
                       </IconButton>
@@ -414,6 +431,25 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
           projectId={activeProject.id}
           currentUserId={currentUserId}
           onClose={() => setShowTeam(false)}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmPasswordModal
+          email={currentUserEmail}
+          title={deleteTarget.type === "project" ? "حذف المشروع؟" : "حذف المهمة؟"}
+          message={
+            deleteTarget.type === "project"
+              ? `أدخل كلمة المرور لتأكيد حذف مشروع "${deleteTarget.name}" مع جميع المهام الموجودة فيه.`
+              : `أدخل كلمة المرور لتأكيد حذف مهمة "${deleteTarget.name}".`
+          }
+          confirmLabel="حذف"
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={async () => {
+            if (deleteTarget.type === "project") await performDeleteProject(deleteTarget.id);
+            else await performDeleteTask(deleteTarget.id);
+            setDeleteTarget(null);
+          }}
         />
       )}
     </div>

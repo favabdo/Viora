@@ -74,9 +74,14 @@ function HomeInner() {
               />
               <span className="viora-wordmark text-lg">Viora</span>
             </div>
-            <IconButton aria-label="تسجيل الخروج" onClick={handleSignOut} tone="default">
-              <LogOut size={16} strokeWidth={1.75} />
-            </IconButton>
+            <div className="flex items-center gap-1">
+              <IconButton aria-label="الملف الشخصي" onClick={() => router.push("/profile")} tone="default">
+                <UserCircle size={17} strokeWidth={1.75} />
+              </IconButton>
+              <IconButton aria-label="تسجيل الخروج" onClick={handleSignOut} tone="default">
+                <LogOut size={16} strokeWidth={1.75} />
+              </IconButton>
+            </div>
           </header>
 
           <nav className="flex gap-1 border-b border-line mb-6" role="tablist">
@@ -98,18 +103,10 @@ function HomeInner() {
 
           <PendingInvites userId={session.user.id} />
 
-          {tab === "tasks" && <TasksSection currentUserId={session.user.id} />}
+          {tab === "tasks" && (
+            <TasksSection currentUserId={session.user.id} currentUserEmail={session.user.email || ""} />
+          )}
           {tab === "links" && <LinksSection />}
-
-          <footer className="mt-14 pt-5 border-t border-line flex justify-center">
-            <button
-              onClick={() => router.push("/profile")}
-              className="flex items-center gap-1.5 text-sm text-inkFaint hover:text-teal transition-colors"
-            >
-              <UserCircle size={15} strokeWidth={1.75} />
-              الملف الشخصي
-            </button>
-          </footer>
         </div>
       </main>
     </ProfileCardProvider>

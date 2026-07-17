@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import IconButton from "@/components/ui/IconButton";
 import { Input } from "@/components/ui/Input";
 import { ArrowRight, Camera, Loader2 } from "lucide-react";
+import AvatarCropModal from "@/components/AvatarCropModal";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 
@@ -28,6 +29,7 @@ export default function ProfilePage() {
 
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState("");
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -115,28 +117,39 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleAvatarFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file || !profile) return;
+    if (!file) return;
     setAvatarError("");
 
     if (!file.type.startsWith("image/")) {
       setAvatarError("يُرجى اختيار ملف صورة");
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setAvatarError("حجم الصورة كبير جدًا (الحد الأقصى 5 ميجابايت)");
+    if (file.size > 10 * 1024 * 1024) {
+      setAvatarError("حجم الصورة كبير جدًا (الحد الأقصى 10 ميجابايت)");
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
+    const reader = new FileReader();
+    reader.onload = () => setCropImageSrc(reader.result as string);
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function uploadCroppedAvatar(blob: Blob) {
+    if (!profile) return;
+    setCropImageSrc(null);
     setUploadingAvatar(true);
+    setAvatarError("");
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${profile.id}/avatar.${ext}`;
+      const path = `${profile.id}/avatar.jpg`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(path, file, { upsert: true, cacheControl: "3600" });
+        .upload(path, blob, { upsert: true, cacheControl: "3600", contentType: "image/jpeg" });
       if (uploadError) throw uploadError;
 
       const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(path);
@@ -153,7 +166,6 @@ export default function ProfilePage() {
       setAvatarError(err?.message || "تعذّر رفع الصورة، يُرجى المحاولة مرة أخرى");
     } finally {
       setUploadingAvatar(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
@@ -254,12 +266,20 @@ export default function ProfilePage() {
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={handleAvatarChange}
+              onChange={handleAvatarFileSelect}
               className="hidden"
             />
           </div>
           {avatarError && <p className="text-clay text-xs mt-2 text-center max-w-xs">{avatarError}</p>}
         </section>
+
+        {cropImageSrc && (
+          <AvatarCropModal
+            imageSrc={cropImageSrc}
+            onCancel={() => setCropImageSrc(null)}
+            onConfirm={uploadCroppedAvatar}
+          />
+        )}
 
         {/* البيانات الأساسية */}
         <section className="bg-surface border border-line rounded-lg p-5 mb-5 fade-in">
