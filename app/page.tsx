@@ -90,10 +90,7 @@ function HomeInner() {
               </div>
               <span className="text-2xs text-inkFaint tracking-wide">Save. Organize. Build Together</span>
             </div>
-            <div className="flex items-center gap-3">
-              {currentUserName && (
-                <span className="text-sm text-inkSoft font-medium hidden sm:inline">{currentUserName}</span>
-              )}
+            <div className="flex flex-col items-end gap-1">
               <div className="flex items-center gap-1">
                 <IconButton aria-label="الملف الشخصي" onClick={() => router.push("/profile")} tone="default">
                   <UserCircle size={17} strokeWidth={1.75} />
@@ -102,6 +99,9 @@ function HomeInner() {
                   <LogOut size={16} strokeWidth={1.75} />
                 </IconButton>
               </div>
+              {currentUserName && (
+                <span className="text-sm text-inkSoft font-medium">{currentUserName}</span>
+              )}
             </div>
           </header>
 
