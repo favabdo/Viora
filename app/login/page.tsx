@@ -4,6 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import Button from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 type Mode = "signin" | "signup";
 
@@ -122,20 +124,20 @@ function LoginPageInner() {
   return (
     <main className="min-h-screen flex items-center justify-center px-5 py-10">
       <div className="w-full max-w-sm">
-        <div className="flex justify-center items-center gap-2.5 mb-8">
+        <div className="flex justify-center items-center gap-2 mb-8">
           <Image
             src="/logo-full.png"
             alt="Viora"
-            width={64}
-            height={56}
+            width={52}
+            height={45}
             priority
-            className="h-[52px] w-auto"
+            className="h-10 w-auto"
           />
-          <span className="viora-wordmark text-4xl">Viora</span>
+          <span className="viora-wordmark text-2xl">Viora</span>
         </div>
 
-        <div className="bg-paper border border-line rounded-2xl shadow-card p-6 fade-in">
-          <h1 className="font-display text-2xl font-semibold mb-1 text-center">
+        <div className="bg-surface border border-line rounded-lg shadow-raised p-6 fade-in">
+          <h1 className="font-display text-xl font-medium mb-1 text-center">
             {mode === "signin" ? "تسجيل الدخول" : "إنشاء حساب"}
           </h1>
           <p className="text-inkSoft text-sm text-center mb-6">
@@ -146,19 +148,18 @@ function LoginPageInner() {
               : "ابدأ رحلتك مع Viora"}
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             {mode === "signup" && (
               <div className="fade-in">
                 <label className="block text-sm font-medium text-inkSoft mb-1.5">
                   الاسم
                 </label>
-                <input
+                <Input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="اسمك"
-                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder:text-inkSoft/60 outline-none transition-colors focus:border-teal"
                 />
               </div>
             )}
@@ -168,7 +169,7 @@ function LoginPageInner() {
                 <label className="block text-sm font-medium text-inkSoft mb-1.5">
                   اسم اليوزر
                 </label>
-                <input
+                <Input
                   type="text"
                   required
                   value={username}
@@ -179,9 +180,9 @@ function LoginPageInner() {
                   }
                   placeholder="username"
                   dir="ltr"
-                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder:text-inkSoft/60 outline-none transition-colors focus:border-teal text-left"
+                  className="font-mono text-left"
                 />
-                <p className="text-xs text-inkSoft mt-1">
+                <p className="text-xs text-inkFaint mt-1">
                   حروف إنجليزي صغيرة أو أرقام أو _ بس، من 3 لـ 20 حرف
                 </p>
               </div>
@@ -191,14 +192,14 @@ function LoginPageInner() {
               <label className="block text-sm font-medium text-inkSoft mb-1.5">
                 البريد الإلكتروني
               </label>
-              <input
+              <Input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 dir="ltr"
-                className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder:text-inkSoft/60 outline-none transition-colors focus:border-teal"
+                className="text-left"
               />
             </div>
 
@@ -206,7 +207,7 @@ function LoginPageInner() {
               <label className="block text-sm font-medium text-inkSoft mb-1.5">
                 كلمة المرور
               </label>
-              <input
+              <Input
                 type="password"
                 required
                 minLength={6}
@@ -214,32 +215,24 @@ function LoginPageInner() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 dir="ltr"
-                className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder:text-inkSoft/60 outline-none transition-colors focus:border-teal"
+                className="text-left"
               />
             </div>
 
             {error && (
-              <p className="text-sm text-clay bg-clay/10 border border-clay/30 rounded-lg px-3 py-2">
+              <p className="text-sm text-clay bg-claySoft rounded-md px-3 py-2">
                 {error}
               </p>
             )}
             {info && (
-              <p className="text-sm text-sage bg-sage/10 border border-sage/30 rounded-lg px-3 py-2">
+              <p className="text-sm text-[#4B6640] bg-sageSoft rounded-md px-3 py-2">
                 {info}
               </p>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-lg bg-teal hover:bg-tealDark transition-colors text-paper font-medium text-sm py-2.5 disabled:opacity-60"
-            >
-              {loading
-                ? "لحظة..."
-                : mode === "signin"
-                ? "تسجيل الدخول"
-                : "إنشاء الحساب"}
-            </button>
+            <Button type="submit" variant="primary" fullWidth loading={loading} className="mt-1">
+              {mode === "signin" ? "تسجيل الدخول" : "إنشاء الحساب"}
+            </Button>
           </form>
 
           <p className="text-center text-sm text-inkSoft mt-5">

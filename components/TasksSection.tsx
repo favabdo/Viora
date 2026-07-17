@@ -5,6 +5,13 @@ import { supabase, Project, Task } from "@/lib/supabase";
 import TeamPanel from "./TeamPanel";
 import ActivityFeed from "./ActivityFeed";
 import ItemHistory from "./ItemHistory";
+import Button from "./ui/Button";
+import IconButton from "./ui/IconButton";
+import { Input } from "./ui/Input";
+import EmptyState from "./ui/EmptyState";
+import { SkeletonList } from "./ui/Skeleton";
+import ProgressBar from "./ui/ProgressBar";
+import { Plus, Users, X, ListChecks, FolderPlus } from "lucide-react";
 
 export default function TasksSection({ currentUserId }: { currentUserId: string }) {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -129,114 +136,123 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
   const doneCount = tasks.filter((t) => t.is_done).length;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8">
       {/* Sidebar: قائمة المشاريع */}
       <aside className="fade-in">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-sm tracking-wide text-inkSoft">المشاريع</h2>
-          <button
-            onClick={() => setShowNewProject((s) => !s)}
-            className="text-teal hover:text-tealDark text-lg leading-none w-6 h-6 flex items-center justify-center rounded border border-line hover:border-teal transition-colors"
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase">المشاريع</h2>
+          <IconButton
+            size="sm"
             aria-label="مشروع جديد"
+            tone={showNewProject ? "active" : "default"}
+            onClick={() => setShowNewProject((s) => !s)}
           >
-            +
-          </button>
+            <Plus size={14} strokeWidth={2} />
+          </IconButton>
         </div>
 
         {showNewProject && (
-          <div className="mb-3 fade-in">
-            <input
+          <div className="mb-2.5 fade-in">
+            <Input
               autoFocus
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addProject()}
+              onBlur={() => !newProjectName && setShowNewProject(false)}
               placeholder="اسم المشروع"
-              className="w-full bg-white border border-line rounded px-3 py-2 text-sm focus:outline-none focus:border-teal"
+              className="text-sm py-1.5"
             />
           </div>
         )}
 
-        <ul className="space-y-1">
-          {projects.map((p) => (
-            <li key={p.id} className="group flex items-center">
-              <button
-                onClick={() => setActiveProjectId(p.id)}
-                className={`flex-1 text-right px-3 py-2 rounded text-sm transition-colors ${
-                  activeProjectId === p.id
-                    ? "bg-teal text-paper font-medium"
-                    : "hover:bg-paperDark text-ink"
-                }`}
-              >
-                {p.name}
-                {p.user_id !== currentUserId && (
-                  <span className="text-xs opacity-70 mr-1">🤝</span>
-                )}
-              </button>
-              {p.user_id === currentUserId && (
+        <ul className="space-y-0.5">
+          {projects.map((p) => {
+            const active = activeProjectId === p.id;
+            return (
+              <li key={p.id} className="group flex items-center">
                 <button
-                  onClick={() => deleteProject(p.id)}
-                  className="opacity-0 group-hover:opacity-100 text-inkSoft hover:text-clay px-2 transition-opacity"
-                  aria-label="حذف المشروع"
+                  onClick={() => setActiveProjectId(p.id)}
+                  className={`flex-1 flex items-center gap-1.5 min-w-0 text-right px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                    active ? "bg-teal text-paper font-medium" : "hover:bg-paperDark text-ink"
+                  }`}
                 >
-                  ×
+                  <span className="truncate">{p.name}</span>
+                  {p.user_id !== currentUserId && (
+                    <Users
+                      size={11}
+                      strokeWidth={2}
+                      className={`shrink-0 ${active ? "text-paper/70" : "text-inkFaint"}`}
+                    />
+                  )}
                 </button>
-              )}
+                {p.user_id === currentUserId && (
+                  <IconButton
+                    size="sm"
+                    tone="danger"
+                    aria-label={`حذف مشروع ${p.name}`}
+                    onClick={() => deleteProject(p.id)}
+                    className="opacity-0 group-hover:opacity-100 shrink-0"
+                  >
+                    <X size={13} strokeWidth={2} />
+                  </IconButton>
+                )}
+              </li>
+            );
+          })}
+          {projects.length === 0 && !showNewProject && (
+            <li>
+              <button
+                onClick={() => setShowNewProject(true)}
+                className="w-full flex items-center gap-2 text-inkFaint hover:text-inkSoft text-sm py-2 transition-colors"
+              >
+                <FolderPlus size={14} strokeWidth={1.75} />
+                ضيف أول مشروع
+              </button>
             </li>
-          ))}
-          {projects.length === 0 && (
-            <li className="text-inkSoft text-sm py-2">مفيش مشاريع لسه. ضيف واحد بالـ +</li>
           )}
         </ul>
       </aside>
 
       {/* Main: المهام */}
-      <section className="fade-in min-h-[300px]">
+      <section className="fade-in min-h-[300px] min-w-0">
         {activeProject ? (
           <>
-            <div className="flex items-baseline justify-between mb-4 border-b border-line pb-3">
-              <h2 className="font-display text-2xl font-medium">{activeProject.name}</h2>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowTeam(true)}
-                  className="text-xs text-teal hover:text-tealDark border border-line hover:border-teal rounded px-2.5 py-1 transition-colors"
-                >
+            <div className="flex items-center justify-between mb-4 border-b border-line pb-3 gap-3">
+              <h2 className="font-display text-xl font-medium truncate">{activeProject.name}</h2>
+              <div className="flex items-center gap-3 shrink-0">
+                {tasks.length > 0 && <ProgressBar value={doneCount} total={tasks.length} />}
+                <Button variant="secondary" size="sm" onClick={() => setShowTeam(true)}>
+                  <Users size={13} strokeWidth={1.75} />
                   الفريق
-                </button>
-                {tasks.length > 0 && (
-                  <span className="text-xs font-mono text-inkSoft">
-                    {doneCount}/{tasks.length} خلصت
-                  </span>
-                )}
+                </Button>
               </div>
             </div>
 
             <div className="flex gap-2 mb-5">
-              <input
+              <Input
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addTask()}
                 placeholder="اكتب مهمة جديدة واضغط Enter"
-                className="flex-1 bg-white border border-line rounded px-3 py-2.5 text-sm focus:outline-none focus:border-teal"
               />
-              <button
-                onClick={addTask}
-                className="bg-ink text-paper px-4 py-2.5 rounded text-sm hover:bg-tealDark transition-colors"
-              >
+              <Button variant="primary" onClick={addTask}>
+                <Plus size={15} strokeWidth={2} />
                 إضافة
-              </button>
+              </Button>
             </div>
 
             {loadingTasks ? (
-              <p className="text-inkSoft text-sm">بتحمّل...</p>
+              <SkeletonList rows={4} />
             ) : tasks.length === 0 ? (
-              <p className="text-inkSoft text-sm">مفيش مهام في المشروع ده لسه.</p>
+              <EmptyState
+                icon={ListChecks}
+                title="مفيش مهام في المشروع ده لسه"
+                hint="اكتب أول مهمة في الحقل اللي فوق وابدأ."
+              />
             ) : (
-              <ul className="space-y-2">
+              <ul className="border-t border-b border-line divide-y divide-line">
                 {tasks.map((task) => (
-                  <li
-                    key={task.id}
-                    className="group bg-white border border-line rounded px-3 py-3 shadow-card"
-                  >
+                  <li key={task.id} className="group px-1 py-2.5">
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
@@ -244,23 +260,27 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
                         checked={task.is_done}
                         onChange={() => toggleTask(task)}
                       />
-                      <span className={`task-title flex-1 text-sm ${task.is_done ? "done" : ""}`}>
+                      <span className={`task-title flex-1 text-sm min-w-0 truncate ${task.is_done ? "done" : ""}`}>
                         {task.title}
                       </span>
                       {task.profiles?.username && (
-                        <span className="text-xs text-teal font-mono shrink-0" dir="ltr">
+                        <span className="text-2xs text-inkFaint font-mono shrink-0" dir="ltr">
                           @{task.profiles.username}
                         </span>
                       )}
-                      <button
-                        onClick={() => deleteTask(task.id)}
-                        className="opacity-0 group-hover:opacity-100 text-inkSoft hover:text-clay transition-opacity"
+                      <IconButton
+                        size="sm"
+                        tone="danger"
                         aria-label="حذف المهمة"
+                        onClick={() => deleteTask(task.id)}
+                        className="opacity-0 group-hover:opacity-100 shrink-0"
                       >
-                        ×
-                      </button>
+                        <X size={14} strokeWidth={1.75} />
+                      </IconButton>
                     </div>
-                    <ItemHistory table="activity_log" column="task_id" id={task.id} />
+                    <div className="pr-[34px]">
+                      <ItemHistory table="activity_log" column="task_id" id={task.id} />
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -268,7 +288,10 @@ export default function TasksSection({ currentUserId }: { currentUserId: string 
             <ActivityFeed projectId={activeProject.id} />
           </>
         ) : (
-          <p className="text-inkSoft text-sm">ضيف مشروع الأول عشان تبدأ تضيف مهام.</p>
+          <EmptyState
+            icon={FolderPlus}
+            title="ضيف مشروع الأول عشان تبدأ تضيف مهام"
+          />
         )}
       </section>
 

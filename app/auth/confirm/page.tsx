@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import StatusScreen from "@/components/ui/StatusScreen";
+import Button from "@/components/ui/Button";
 
 type Status = "loading" | "success" | "error";
 
@@ -61,82 +63,22 @@ function ConfirmPageInner() {
   return (
     <main className="min-h-screen flex items-center justify-center px-5 py-10">
       <div className="w-full max-w-sm">
-        <div className="flex justify-center items-center gap-2.5 mb-8">
-          <Image
-            src="/logo-full.png"
-            alt="Viora"
-            width={64}
-            height={56}
-            priority
-            className="h-[52px] w-auto"
-          />
-          <span className="viora-wordmark text-4xl">Viora</span>
+        <div className="flex justify-center items-center gap-2 mb-8">
+          <Image src="/logo-full.png" alt="Viora" width={52} height={45} priority className="h-10 w-auto" />
+          <span className="viora-wordmark text-2xl">Viora</span>
         </div>
 
-        <div className="bg-paper border border-line rounded-2xl shadow-card p-6 fade-in text-center">
-          {status === "loading" && (
-            <>
-              <div className="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-line border-t-teal animate-spin" />
-              <h1 className="font-display text-xl font-semibold mb-1">
-                لحظة واحدة...
-              </h1>
-              <p className="text-inkSoft text-sm">{message}</p>
-            </>
-          )}
+        <div className="bg-surface border border-line rounded-lg shadow-raised p-6 fade-in">
+          {status === "loading" && <StatusScreen kind="loading" title="لحظة واحدة..." message={message} />}
 
-          {status === "success" && (
-            <>
-              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-sage/15 border border-sage/30 flex items-center justify-center">
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#6E8F5C"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-              </div>
-              <h1 className="font-display text-xl font-semibold mb-1">
-                تم التأكيد
-              </h1>
-              <p className="text-sm text-sage bg-sage/10 border border-sage/30 rounded-lg px-3 py-2 mt-3">
-                {message}
-              </p>
-            </>
-          )}
+          {status === "success" && <StatusScreen kind="success" title="تم التأكيد" message={message} />}
 
           {status === "error" && (
             <>
-              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-clay/15 border border-clay/30 flex items-center justify-center">
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#B5533C"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 6 6 18M6 6l12 12" />
-                </svg>
-              </div>
-              <h1 className="font-display text-xl font-semibold mb-1">
-                فشل التأكيد
-              </h1>
-              <p className="text-sm text-clay bg-clay/10 border border-clay/30 rounded-lg px-3 py-2 mt-3 mb-5">
-                {message}
-              </p>
-              <button
-                onClick={() => router.replace("/login")}
-                className="w-full rounded-lg bg-teal hover:bg-tealDark transition-colors text-paper font-medium text-sm py-2.5"
-              >
+              <StatusScreen kind="error" title="فشل التأكيد" message={message} />
+              <Button variant="primary" fullWidth onClick={() => router.replace("/login")} className="mt-5">
                 الرجوع لتسجيل الدخول
-              </button>
+              </Button>
             </>
           )}
         </div>

@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { supabase, ProjectMember } from "@/lib/supabase";
+import Button from "./ui/Button";
+import IconButton from "./ui/IconButton";
+import Badge from "./ui/Badge";
+import { Input } from "./ui/Input";
+import { Link2, X } from "lucide-react";
 
 export default function TeamPanel({
   projectId,
@@ -80,27 +85,26 @@ export default function TeamPanel({
   const pending = members.filter((m) => m.status === "pending");
 
   return (
-    <div className="fixed inset-0 bg-ink/40 flex items-center justify-center p-4 z-50 fade-in">
-      <div className="bg-paper border border-line rounded-2xl shadow-card max-w-md w-full p-5 max-h-[85vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-ink/45 flex items-center justify-center p-4 z-50 fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="bg-paper border border-line rounded-lg shadow-modal max-w-md w-full p-5 max-h-[85vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-display text-xl font-semibold">فريق المشروع</h3>
-          <button
-            onClick={onClose}
-            className="text-inkSoft hover:text-clay w-7 h-7 flex items-center justify-center rounded transition-colors"
-            aria-label="إغلاق"
-          >
-            ×
-          </button>
+          <h3 className="font-display text-lg font-medium">فريق المشروع</h3>
+          <IconButton aria-label="إغلاق" onClick={onClose}>
+            <X size={16} strokeWidth={1.75} />
+          </IconButton>
         </div>
 
         <div className="mb-5">
-          <button
-            onClick={copyInviteLink}
-            disabled={copyingLink}
-            className="w-full bg-ink text-paper px-4 py-2.5 rounded text-sm hover:bg-tealDark transition-colors disabled:opacity-60"
-          >
-            {copyingLink ? "لحظة..." : "نسخ رابط دعوة للمشروع"}
-          </button>
+          <Button variant="secondary" fullWidth loading={copyingLink} onClick={copyInviteLink}>
+            <Link2 size={14} strokeWidth={1.75} />
+            نسخ رابط دعوة للمشروع
+          </Button>
           {linkMsg && <p className="text-xs text-inkSoft mt-1.5">{linkMsg}</p>}
         </div>
 
@@ -109,44 +113,41 @@ export default function TeamPanel({
             ادعِ حد باسم اليوزر بتاعه
           </label>
           <div className="flex gap-2">
-            <input
+            <Input
               value={username}
               onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
               onKeyDown={(e) => e.key === "Enter" && inviteByUsername()}
               placeholder="username"
               dir="ltr"
-              className="flex-1 bg-white border border-line rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-teal text-left"
+              className="font-mono text-left"
             />
-            <button
-              onClick={inviteByUsername}
-              disabled={inviting}
-              className="bg-teal text-paper px-4 py-2 rounded text-sm hover:bg-tealDark transition-colors disabled:opacity-60"
-            >
+            <Button variant="primary" loading={inviting} onClick={inviteByUsername}>
               دعوة
-            </button>
+            </Button>
           </div>
           {inviteError && <p className="text-clay text-xs mt-1.5">{inviteError}</p>}
-          {inviteMsg && <p className="text-sage text-xs mt-1.5">{inviteMsg}</p>}
+          {inviteMsg && <p className="text-[#4B6640] text-xs mt-1.5">{inviteMsg}</p>}
         </div>
 
         <div className="border-t border-line pt-4">
-          <h4 className="text-sm font-medium text-inkSoft mb-2">الأعضاء</h4>
+          <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-2">الأعضاء</h4>
           {loading ? (
-            <p className="text-inkSoft text-sm">بتحمّل...</p>
+            <div className="space-y-1.5">
+              {[0, 1].map((i) => (
+                <div key={i} className="skeleton h-8 rounded-md" />
+              ))}
+            </div>
           ) : (
-            <ul className="space-y-1.5">
+            <ul className="divide-y divide-line">
               {accepted.map((m) => (
-                <li
-                  key={m.id}
-                  className="flex items-center justify-between bg-white border border-line rounded px-3 py-2 text-sm"
-                >
+                <li key={m.id} className="flex items-center justify-between py-2 text-sm">
                   <span dir="ltr" className="font-mono">
                     @{m.profiles?.username || "?"}
                     {m.user_id === currentUserId && (
-                      <span className="text-inkSoft text-xs font-sans"> (إنت)</span>
+                      <span className="text-inkFaint text-xs font-sans"> (إنت)</span>
                     )}
                   </span>
-                  <span className="text-xs text-sage">عضو</span>
+                  <Badge tone="sage">عضو</Badge>
                 </li>
               ))}
             </ul>
@@ -154,15 +155,14 @@ export default function TeamPanel({
 
           {pending.length > 0 && (
             <>
-              <h4 className="text-sm font-medium text-inkSoft mt-4 mb-2">دعوات معلّقة</h4>
-              <ul className="space-y-1.5">
+              <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mt-4 mb-2">
+                دعوات معلّقة
+              </h4>
+              <ul className="divide-y divide-line">
                 {pending.map((m) => (
-                  <li
-                    key={m.id}
-                    className="flex items-center justify-between bg-white border border-line rounded px-3 py-2 text-sm"
-                  >
+                  <li key={m.id} className="flex items-center justify-between py-2 text-sm">
                     <span dir="ltr" className="font-mono">@{m.profiles?.username || "?"}</span>
-                    <span className="text-xs text-clay">في الانتظار</span>
+                    <Badge tone="clay">في الانتظار</Badge>
                   </li>
                 ))}
               </ul>

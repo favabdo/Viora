@@ -4,12 +4,19 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import type { Session } from "@supabase/supabase-js";
+import { CheckSquare, Link2, LogOut } from "lucide-react";
 import TasksSection from "@/components/TasksSection";
 import LinksSection from "@/components/LinksSection";
 import PendingInvites from "@/components/PendingInvites";
+import IconButton from "@/components/ui/IconButton";
 import { supabase } from "@/lib/supabase";
 
 type Tab = "tasks" | "links";
+
+const TABS: { id: Tab; label: string; icon: typeof CheckSquare }[] = [
+  { id: "tasks", label: "المهام", icon: CheckSquare },
+  { id: "links", label: "الروابط", icon: Link2 },
+];
 
 function HomeInner() {
   const router = useRouter();
@@ -45,51 +52,46 @@ function HomeInner() {
   if (checking || !session) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <p className="text-inkSoft text-sm">لحظة...</p>
+        <div className="h-5 w-5 rounded-full border-2 border-line border-t-teal animate-spin" />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen px-5 py-10 md:px-10">
+    <main className="min-h-screen px-5 py-6 md:px-10 md:py-8">
       <div className="max-w-4xl mx-auto">
-        <header className="mb-8 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
+        <header className="mb-7 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
             <Image
               src="/logo-full.png"
               alt="Viora"
-              width={48}
-              height={42}
+              width={40}
+              height={35}
               priority
-              className="h-10 w-auto"
+              className="h-8 w-auto"
             />
-            <span className="viora-wordmark text-2xl">Viora</span>
+            <span className="viora-wordmark text-lg">Viora</span>
           </div>
-          <button
-            onClick={handleSignOut}
-            className="text-sm text-inkSoft hover:text-clay transition-colors border border-line rounded-lg px-3 py-1.5"
-          >
-            تسجيل الخروج
-          </button>
+          <IconButton aria-label="تسجيل الخروج" onClick={handleSignOut} tone="default">
+            <LogOut size={16} strokeWidth={1.75} />
+          </IconButton>
         </header>
 
-        <nav className="flex gap-6 border-b border-line mb-8">
-          <button
-            onClick={() => setTab("tasks")}
-            className={`tab-btn pb-3 text-sm font-medium transition-colors ${
-              tab === "tasks" ? "active text-ink" : "text-inkSoft hover:text-ink"
-            }`}
-          >
-            المهام
-          </button>
-          <button
-            onClick={() => setTab("links")}
-            className={`tab-btn pb-3 text-sm font-medium transition-colors ${
-              tab === "links" ? "active text-ink" : "text-inkSoft hover:text-ink"
-            }`}
-          >
-            الروابط
-          </button>
+        <nav className="flex gap-1 border-b border-line mb-6" role="tablist">
+          {TABS.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              role="tab"
+              aria-selected={tab === id}
+              onClick={() => setTab(id)}
+              className={`tab-btn flex items-center gap-1.5 px-3 pb-2.5 pt-1 text-sm font-medium transition-colors ${
+                tab === id ? "active text-ink" : "text-inkFaint hover:text-inkSoft"
+              }`}
+            >
+              <Icon size={15} strokeWidth={1.75} />
+              {label}
+            </button>
+          ))}
         </nav>
 
         <PendingInvites userId={session.user.id} />

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase, PendingInvite } from "@/lib/supabase";
+import Button from "./ui/Button";
+import { Mail } from "lucide-react";
 
 export default function PendingInvites({ userId }: { userId: string }) {
   const [invites, setInvites] = useState<PendingInvite[]>([]);
@@ -36,26 +38,32 @@ export default function PendingInvites({ userId }: { userId: string }) {
       {invites.map((inv) => (
         <div
           key={inv.id}
-          className="flex items-center justify-between gap-3 bg-white border border-teal/40 rounded-lg px-4 py-3 shadow-card"
+          className="flex items-center justify-between gap-3 bg-tealSoft border border-teal/25 rounded-md px-3.5 py-2.5"
         >
-          <p className="text-sm text-ink">
-            عندك دعوة تنضم لمشروع <span className="font-medium">{inv.projects?.name || "مشروع"}</span>
+          <p className="flex items-center gap-2 text-sm text-ink min-w-0">
+            <Mail size={14} strokeWidth={1.75} className="text-teal shrink-0" />
+            <span className="truncate">
+              عندك دعوة تنضم لمشروع{" "}
+              <span className="font-medium">{inv.projects?.name || "مشروع"}</span>
+            </span>
           </p>
           <div className="flex gap-2 shrink-0">
-            <button
+            <Button
+              variant="primary"
+              size="sm"
+              loading={responding === inv.project_id}
               onClick={() => respond(inv.project_id, true)}
-              disabled={responding === inv.project_id}
-              className="bg-sage text-paper px-3 py-1.5 rounded text-xs hover:opacity-90 transition-opacity disabled:opacity-60"
             >
               قبول
-            </button>
-            <button
-              onClick={() => respond(inv.project_id, false)}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               disabled={responding === inv.project_id}
-              className="border border-line text-inkSoft px-3 py-1.5 rounded text-xs hover:text-clay hover:border-clay transition-colors disabled:opacity-60"
+              onClick={() => respond(inv.project_id, false)}
             >
               رفض
-            </button>
+            </Button>
           </div>
         </div>
       ))}

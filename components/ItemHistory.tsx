@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { ChevronDown } from "lucide-react";
 
 function timeAgo(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -47,22 +48,27 @@ export default function ItemHistory({
   }
 
   return (
-    <div className="mt-1.5">
+    <div className="mt-1">
       <button
         onClick={toggle}
-        className="text-xs text-inkSoft hover:text-teal transition-colors"
+        className="flex items-center gap-1 text-2xs text-inkFaint hover:text-teal transition-colors"
       >
-        {open ? "إخفاء السجل ▲" : "السجل ▾"}
+        <ChevronDown
+          size={11}
+          strokeWidth={2}
+          className={`transition-transform ${open ? "rotate-180" : ""}`}
+        />
+        السجل
       </button>
       {open && (
         <div className="mt-1.5 border-r-2 border-line pr-3 space-y-1 fade-in">
           {loading ? (
-            <p className="text-xs text-inkSoft">بتحمّل...</p>
+            <p className="text-2xs text-inkFaint">بتحمّل...</p>
           ) : entries.length === 0 ? (
-            <p className="text-xs text-inkSoft">مفيش سجل لسه</p>
+            <p className="text-2xs text-inkFaint">مفيش سجل لسه</p>
           ) : (
             entries.map((e) => (
-              <p key={e.id} className="text-xs text-inkSoft">
+              <p key={e.id} className="text-2xs text-inkFaint">
                 {e.message} <span className="opacity-70">— {timeAgo(e.created_at)}</span>
               </p>
             ))

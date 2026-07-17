@@ -19,7 +19,10 @@ export default function AuthCallback() {
 
   return (
     <main className="min-h-screen flex items-center justify-center">
-      <p className="text-inkSoft text-sm">بنأكد حسابك...</p>
+      <div className="flex items-center gap-2.5 text-inkSoft text-sm">
+        <span className="h-4 w-4 rounded-full border-2 border-line border-t-teal animate-spin" />
+        بنأكد حسابك...
+      </div>
     </main>
   );
 }

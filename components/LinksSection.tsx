@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import { supabase, LinkItem } from "@/lib/supabase";
 import ItemHistory from "./ItemHistory";
+import Button from "./ui/Button";
+import IconButton from "./ui/IconButton";
+import { Input, Textarea } from "./ui/Input";
+import EmptyState from "./ui/EmptyState";
+import { SkeletonList } from "./ui/Skeleton";
+import { Link2, Plus, X } from "lucide-react";
 
 function getDomain(url: string) {
   try {
@@ -68,43 +74,42 @@ export default function LinksSection() {
 
   return (
     <div className="max-w-2xl fade-in">
-      <div className="bg-white border border-line rounded p-4 mb-6 shadow-card">
-        <div className="flex flex-col gap-2 mb-2">
-          <input
+      <div className="border border-line rounded-lg p-3.5 mb-6">
+        <div className="flex flex-col gap-2 mb-2.5">
+          <Input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && addLink()}
             placeholder="الصق اللينك هنا"
             dir="ltr"
-            className="bg-paper border border-line rounded px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-teal text-left"
+            className="font-mono text-left"
           />
-          <textarea
+          <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="اكتب وصف قصير — ليه سيّبت اللينك ده؟"
             rows={2}
-            className="bg-paper border border-line rounded px-3 py-2.5 text-sm focus:outline-none focus:border-teal resize-none"
           />
         </div>
         {error && <p className="text-clay text-xs mb-2">{error}</p>}
-        <button
-          onClick={addLink}
-          className="bg-ink text-paper px-4 py-2.5 rounded text-sm hover:bg-tealDark transition-colors"
-        >
+        <Button variant="primary" onClick={addLink}>
+          <Plus size={15} strokeWidth={2} />
           حفظ اللينك
-        </button>
+        </Button>
       </div>
 
       {loading ? (
-        <p className="text-inkSoft text-sm">بتحمّل...</p>
+        <SkeletonList rows={3} />
       ) : links.length === 0 ? (
-        <p className="text-inkSoft text-sm">مفيش لينكات محفوظة لسه.</p>
+        <EmptyState
+          icon={Link2}
+          title="مفيش لينكات محفوظة لسه"
+          hint="الصق أي لينك في الحقل اللي فوق واحفظه."
+        />
       ) : (
-        <ul className="space-y-3">
+        <ul className="border-t border-b border-line divide-y divide-line">
           {links.map((link) => (
-            <li
-              key={link.id}
-              className="group bg-white border border-line rounded px-4 py-3 shadow-card"
-            >
+            <li key={link.id} className="group px-1 py-3">
               <div className="flex items-start justify-between gap-2">
                 <a
                   href={link.url}
@@ -115,16 +120,18 @@ export default function LinksSection() {
                 >
                   {getDomain(link.url)}
                 </a>
-                <button
-                  onClick={() => deleteLink(link.id)}
-                  className="opacity-0 group-hover:opacity-100 text-inkSoft hover:text-clay shrink-0 transition-opacity"
+                <IconButton
+                  size="sm"
+                  tone="danger"
                   aria-label="حذف اللينك"
+                  onClick={() => deleteLink(link.id)}
+                  className="opacity-0 group-hover:opacity-100 shrink-0"
                 >
-                  ×
-                </button>
+                  <X size={14} strokeWidth={1.75} />
+                </IconButton>
               </div>
               {link.description && (
-                <p className="text-sm text-ink mt-1.5 leading-relaxed">{link.description}</p>
+                <p className="text-sm text-inkSoft mt-1 leading-relaxed">{link.description}</p>
               )}
               <ItemHistory table="link_activity_log" column="link_id" id={link.id} />
             </li>

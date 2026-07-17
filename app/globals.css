@@ -23,6 +23,17 @@ html, body {
   color: #FAF6EC;
 }
 
+/* لوحة ألوان واحدة بس (paper/ink/teal) — لغة بصرية متسقة، من غير تدرّجات زخرفية غريبة عن الهوية */
+*:focus-visible {
+  outline: 2px solid #1F6F72;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* checkbox المخصص شكل ختم */
 .task-check {
   appearance: none;
@@ -80,17 +91,31 @@ html, body {
   background: #1F6F72;
 }
 
-/* اسم Viora جمب اللوجو، بألوان مسحوبة من نفس تدرّج اللوجو */
+/* اسم Viora — لون صلب من هوية البراند (حبر داكن) بدل تدرّج ملوّن غريب عن باقي التصميم */
 .viora-wordmark {
   font-family: "Poppins", var(--font-sans, sans-serif);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  background: linear-gradient(90deg, #066EFD 0%, #7823F9 55%, #0AD5F2 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #20221F;
   line-height: 1;
+}
+
+/* skeleton بديل لعبارات "بتحمّل..." النصية */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #F1EADA;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
 }
 
 @keyframes fadeIn {

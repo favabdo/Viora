@@ -54,13 +54,15 @@ export default function ActivityFeed({ projectId }: { projectId: string }) {
   if (entries.length === 0) return null;
 
   return (
-    <div className="mt-8 border-t border-line pt-4">
-      <h3 className="text-sm font-medium text-inkSoft mb-2.5">النشاط الأخير</h3>
-      <ul className="space-y-2">
+    <div className="mt-9 border-t border-line pt-4">
+      <h3 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-3">النشاط الأخير</h3>
+      <ul className="space-y-2.5">
         {entries.map((e) => (
           <li key={e.id} className="flex items-start justify-between gap-3 text-sm">
-            <span className="text-ink">{e.message}</span>
-            <span className="text-xs text-inkSoft whitespace-nowrap shrink-0">{timeAgo(e.created_at)}</span>
+            <span className="text-inkSoft">{e.message}</span>
+            <span className="text-2xs text-inkFaint whitespace-nowrap shrink-0 font-mono tabular-nums pt-0.5">
+              {timeAgo(e.created_at)}
+            </span>
           </li>
         ))}
       </ul>
