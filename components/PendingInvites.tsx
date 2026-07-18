@@ -38,10 +38,10 @@ export default function PendingInvites({ userId }: { userId: string }) {
       {invites.map((inv) => (
         <div
           key={inv.id}
-          className="flex items-center justify-between gap-3 bg-bottleSoft border border-bottle/20 rounded-lg px-4 py-3"
+          className="flex items-center justify-between gap-3 bg-tealSoft border border-teal/20 rounded-lg px-4 py-3"
         >
           <p className="flex items-center gap-2.5 text-sm text-ink min-w-0">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-bottle shrink-0">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-teal shrink-0">
               <Mail size={13} strokeWidth={1.75} />
             </span>
             <span className="truncate">

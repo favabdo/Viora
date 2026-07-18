@@ -51,7 +51,7 @@ export default function ConfirmPasswordModal({
     <Modal onClose={onCancel} maxWidth="max-w-xs">
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-display text-lg font-medium flex items-center gap-1.5">
-          <ShieldAlert size={16} strokeWidth={1.75} className="text-oxblood" />
+          <ShieldAlert size={16} strokeWidth={1.75} className="text-clay" />
           {title}
         </h3>
         <IconButton aria-label="إغلاق" onClick={onCancel}>
@@ -72,7 +72,7 @@ export default function ConfirmPasswordModal({
         className="text-left"
         placeholder="••••••••"
       />
-      {error && <p className="text-oxblood text-xs mt-2">{error}</p>}
+      {error && <p className="text-clay text-xs mt-2">{error}</p>}
 
       <div className="flex gap-2 mt-5">
         <Button variant="secondary" fullWidth onClick={onCancel} disabled={checking}>

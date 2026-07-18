@@ -9,11 +9,11 @@ const styles: Record<Kind, { wrap: string; icon: ReactNode }> = {
     icon: <Loader2 size={20} strokeWidth={2.25} className="animate-spin" />,
   },
   success: {
-    wrap: "bg-mossSoft text-[#3E5A2C]",
+    wrap: "bg-sageSoft text-[#3F6136]",
     icon: <Check size={20} strokeWidth={2.5} />,
   },
   error: {
-    wrap: "bg-oxbloodSoft text-oxblood",
+    wrap: "bg-claySoft text-clay",
     icon: <X size={20} strokeWidth={2.5} />,
   },
 };

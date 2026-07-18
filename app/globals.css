@@ -3,21 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --font-newsreader: "Newsreader", serif;
+  --font-fraunces: "Fraunces", serif;
   --font-mono: "IBM Plex Mono", monospace;
 }
 
 html, body {
-  background-color: #F1ECDE;
+  background-color: #FAF8F4;
 }
 
 ::selection {
-  background: #234B3B;
-  color: #F1ECDE;
+  background: #0E6E62;
+  color: #FAF8F4;
 }
 
 *:focus-visible {
-  outline: 2px solid #234B3B;
+  outline: 2px solid #0E6E62;
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -42,12 +42,12 @@ button, a {
 }
 
 .task-check:hover {
-  border-color: #234B3B;
+  border-color: #0E6E62;
 }
 
 .task-check:checked {
-  background: #234B3B;
-  border-color: #234B3B;
+  background: #0E6E62;
+  border-color: #0E6E62;
 }
 
 .task-check:checked::after {
@@ -67,9 +67,9 @@ button, a {
 }
 
 .task-title.done {
-  color: #A79C87;
+  color: #ACA99D;
   text-decoration: line-through;
-  text-decoration-color: #B98A73;
+  text-decoration-color: #C9A28C;
   text-decoration-thickness: 1.5px;
 }
 
@@ -81,11 +81,10 @@ button, a {
 
 /* اسم Viora — لون صلب من هوية البراند */
 .viora-wordmark {
-  font-family: var(--font-newsreader, serif);
-  font-style: italic;
-  font-weight: 600;
-  letter-spacing: -0.005em;
-  color: #211D17;
+  font-family: "Poppins", var(--font-sans, sans-serif);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #191A1D;
   line-height: 1;
 }
 
@@ -93,7 +92,7 @@ button, a {
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: #E9E1C9;
+  background: #EEEAE0;
 }
 .skeleton::after {
   content: "";
@@ -120,7 +119,7 @@ button, a {
 /* شريط تمرير هادئ لمناطق قابلة للتمرير (الشريط الجانبي، النوافذ) */
 .thin-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
 .thin-scroll::-webkit-scrollbar-track { background: transparent; }
-.thin-scroll::-webkit-scrollbar-thumb { background: #C2B695; border-radius: 999px; }
+.thin-scroll::-webkit-scrollbar-thumb { background: #D3CCB8; border-radius: 999px; }
 
 /* منع الموبايل (خصوصًا iOS Safari) من عمل zoom تلقائي عند الضغط على أي حقل إدخال.
    المتصفح بيكبّر الصفحة لو الخط في الحقل أصغر من 16px، فبنثبّته على 16px هنا بس على الشاشات الصغيرة

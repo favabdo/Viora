@@ -321,7 +321,7 @@ export default function TasksSection({
                 <button
                   onClick={() => setActiveProjectId(p.id)}
                   className={`flex-1 flex items-center gap-1.5 min-w-0 text-right px-2.5 py-1.5 rounded-md text-sm transition-colors ${
-                    active ? "bg-bottle text-white font-medium" : "hover:bg-paperDark text-ink"
+                    active ? "bg-teal text-white font-medium" : "hover:bg-paperDark text-ink"
                   }`}
                 >
                   <span className="truncate">{p.name}</span>

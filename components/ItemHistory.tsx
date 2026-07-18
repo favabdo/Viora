@@ -53,7 +53,7 @@ export default function ItemHistory({
     <div className="mt-1">
       <button
         onClick={toggle}
-        className="flex items-center gap-1 text-2xs text-inkFaint hover:text-bottle transition-colors"
+        className="flex items-center gap-1 text-2xs text-inkFaint hover:text-teal transition-colors"
       >
         <ChevronDown
           size={11}

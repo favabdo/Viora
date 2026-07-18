@@ -166,8 +166,8 @@ export default function TeamPanel({
             دعوة
           </Button>
         </div>
-        {inviteError && <p className="text-oxblood text-xs mt-1.5">{inviteError}</p>}
-        {inviteMsg && <p className="text-[#3E5A2C] text-xs mt-1.5">{inviteMsg}</p>}
+        {inviteError && <p className="text-clay text-xs mt-1.5">{inviteError}</p>}
+        {inviteMsg && <p className="text-[#3F6136] text-xs mt-1.5">{inviteMsg}</p>}
       </div>
 
       <div className="border-t border-line pt-4">
@@ -194,7 +194,7 @@ export default function TeamPanel({
                     {m.user_id === currentUserId && <span className="font-sans"> · أنت</span>}
                   </span>
                 </span>
-                <Badge tone="moss">عضو</Badge>
+                <Badge tone="sage">عضو</Badge>
               </li>
             ))}
           </ul>
@@ -212,7 +212,7 @@ export default function TeamPanel({
                   <span dir="ltr" className="font-mono flex-1 min-w-0 truncate">
                     @{m.profiles?.username || "?"}
                   </span>
-                  <Badge tone="brass">في الانتظار</Badge>
+                  <Badge tone="amber">في الانتظار</Badge>
                 </li>
               ))}
             </ul>

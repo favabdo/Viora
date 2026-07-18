@@ -23,7 +23,7 @@ export default function ClickableName({
         e.stopPropagation();
         openProfile(userId);
       }}
-      className={`font-medium hover:text-bottle transition-colors underline decoration-dotted decoration-inkFaint/50 underline-offset-2 ${className}`}
+      className={`font-medium hover:text-teal transition-colors underline decoration-dotted decoration-inkFaint/50 underline-offset-2 ${className}`}
     >
       {children}
     </button>

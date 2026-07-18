@@ -236,7 +236,7 @@ export default function ProfilePage() {
   if (checking || !session || loadingProfile || !profile) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <div className="h-5 w-5 rounded-full border-2 border-line border-t-bottle animate-spin" />
+        <div className="h-5 w-5 rounded-full border-2 border-line border-t-teal animate-spin" />
       </main>
     );
   }
@@ -259,7 +259,7 @@ export default function ProfilePage() {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingAvatar}
               aria-label="تغيير الصورة الشخصية"
-              className="absolute -bottom-1 -left-1 h-8 w-8 rounded-full bg-bottle text-white flex items-center justify-center border-2 border-paper hover:bg-bottleDark transition-colors disabled:opacity-60"
+              className="absolute -bottom-1 -left-1 h-8 w-8 rounded-full bg-teal text-white flex items-center justify-center border-2 border-paper hover:bg-tealDark transition-colors disabled:opacity-60"
             >
               {uploadingAvatar ? (
                 <Loader2 size={13} strokeWidth={2.5} className="animate-spin" />
@@ -275,7 +275,7 @@ export default function ProfilePage() {
               className="hidden"
             />
           </div>
-          {avatarError && <p className="text-oxblood text-xs mt-2 text-center max-w-xs">{avatarError}</p>}
+          {avatarError && <p className="text-clay text-xs mt-2 text-center max-w-xs">{avatarError}</p>}
         </section>
 
         {cropImageSrc && (
@@ -321,8 +321,8 @@ export default function ProfilePage() {
               />
             </div>
 
-            {infoError && <p className="text-sm text-oxblood bg-oxbloodSoft rounded-md px-3 py-2">{infoError}</p>}
-            {infoMsg && <p className="text-sm text-[#3E5A2C] bg-mossSoft rounded-md px-3 py-2">{infoMsg}</p>}
+            {infoError && <p className="text-sm text-clay bg-claySoft rounded-md px-3 py-2">{infoError}</p>}
+            {infoMsg && <p className="text-sm text-[#3F6136] bg-sageSoft rounded-md px-3 py-2">{infoMsg}</p>}
 
             <Button variant="primary" loading={savingInfo} onClick={saveInfo}>
               حفظ التغييرات
@@ -373,8 +373,8 @@ export default function ProfilePage() {
               />
             </div>
 
-            {passwordError && <p className="text-sm text-oxblood bg-oxbloodSoft rounded-md px-3 py-2">{passwordError}</p>}
-            {passwordMsg && <p className="text-sm text-[#3E5A2C] bg-mossSoft rounded-md px-3 py-2">{passwordMsg}</p>}
+            {passwordError && <p className="text-sm text-clay bg-claySoft rounded-md px-3 py-2">{passwordError}</p>}
+            {passwordMsg && <p className="text-sm text-[#3F6136] bg-sageSoft rounded-md px-3 py-2">{passwordMsg}</p>}
 
             <Button variant="secondary" loading={changingPassword} onClick={changePassword}>
               تغيير كلمة المرور
@@ -383,14 +383,14 @@ export default function ProfilePage() {
         </section>
 
         {/* منطقة الخطر: حذف الحساب */}
-        <section className="bg-surface border border-oxblood/30 rounded-lg p-5 mt-5 fade-in">
-          <h2 className="text-2xs font-semibold tracking-wide text-oxblood uppercase mb-3">منطقة الخطر</h2>
+        <section className="bg-surface border border-clay/30 rounded-lg p-5 mt-5 fade-in">
+          <h2 className="text-2xs font-semibold tracking-wide text-clay uppercase mb-3">منطقة الخطر</h2>
           <p className="text-sm text-inkSoft mb-4 leading-relaxed">
             حذف الحساب هيخفي اسمك وصورتك عن كل الأعضاء في أي مشروع مشترك، ومش هيقدر حد يدعوك لمشروع تاني
             باستخدام اسم المستخدم بتاعك. الإجراء ده لا يمكن التراجع عنه.
           </p>
           {deleteAccountError && (
-            <p className="text-sm text-oxblood bg-oxbloodSoft rounded-md px-3 py-2 mb-3">{deleteAccountError}</p>
+            <p className="text-sm text-clay bg-claySoft rounded-md px-3 py-2 mb-3">{deleteAccountError}</p>
           )}
           <Button variant="danger" onClick={() => setShowDeleteAccount(true)}>
             حذف الحساب

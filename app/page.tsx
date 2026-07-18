@@ -65,7 +65,7 @@ function HomeInner() {
   if (checking || !session) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <div className="h-5 w-5 rounded-full border-2 border-line border-t-bottle animate-spin" />
+        <div className="h-5 w-5 rounded-full border-2 border-line border-t-teal animate-spin" />
       </main>
     );
   }

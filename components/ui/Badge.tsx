@@ -1,13 +1,13 @@
 import { ReactNode } from "react";
 
-type Tone = "neutral" | "bottle" | "moss" | "oxblood" | "brass";
+type Tone = "neutral" | "teal" | "sage" | "clay" | "amber";
 
 const tones: Record<Tone, string> = {
   neutral: "bg-paperDark text-inkSoft",
-  bottle: "bg-bottleSoft text-bottleDark",
-  moss: "bg-mossSoft text-[#3E5A2C]",
-  oxblood: "bg-oxbloodSoft text-oxblood",
-  brass: "bg-brassSoft text-brass",
+  teal: "bg-tealSoft text-tealDark",
+  sage: "bg-sageSoft text-[#3F6136]",
+  clay: "bg-claySoft text-clay",
+  amber: "bg-amberSoft text-amber",
 };
 
 export default function Badge({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
