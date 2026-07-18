@@ -26,6 +26,7 @@ function HomeInner() {
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
   const [currentUserName, setCurrentUserName] = useState("");
+  const [currentUserAvatar, setCurrentUserAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -49,11 +50,14 @@ function HomeInner() {
     if (!session) return;
     supabase
       .from("profiles")
-      .select("full_name, username")
+      .select("full_name, username, avatar_url")
       .eq("id", session.user.id)
       .single()
       .then(({ data }) => {
-        if (data) setCurrentUserName((data.full_name && data.full_name.trim()) || data.username || "");
+        if (data) {
+          setCurrentUserName((data.full_name && data.full_name.trim()) || data.username || "");
+          setCurrentUserAvatar(data.avatar_url || null);
+        }
       });
   }, [session]);
 
@@ -77,6 +81,7 @@ function HomeInner() {
         activeTab={tab}
         onTabChange={(id) => setTab(id as Tab)}
         userName={currentUserName}
+        avatarUrl={currentUserAvatar}
         onSignOut={handleSignOut}
       >
         <PendingInvites userId={session.user.id} />

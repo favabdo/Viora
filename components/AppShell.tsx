@@ -3,7 +3,7 @@
 import { ReactNode } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LucideIcon, LogOut, UserCircle } from "lucide-react";
+import { LucideIcon, LogOut } from "lucide-react";
 import IconButton from "./ui/IconButton";
 import Avatar from "./ui/Avatar";
 
@@ -22,6 +22,7 @@ export default function AppShell({
   activeTab,
   onTabChange,
   userName,
+  avatarUrl,
   onSignOut,
   children,
 }: {
@@ -29,6 +30,7 @@ export default function AppShell({
   activeTab: string;
   onTabChange: (id: string) => void;
   userName: string;
+  avatarUrl?: string | null;
   onSignOut: () => void;
   children: ReactNode;
 }) {
@@ -69,7 +71,7 @@ export default function AppShell({
             className="flex items-center gap-2.5 min-w-0 flex-1 group text-right"
             aria-label="الملف الشخصي"
           >
-            <Avatar name={userName || "؟"} size="sm" />
+            <Avatar name={userName || "؟"} src={avatarUrl} size="sm" />
             <span className="text-sm font-medium text-ink truncate group-hover:text-teal transition-colors">
               {userName || "حسابي"}
             </span>
@@ -88,9 +90,13 @@ export default function AppShell({
         </div>
         <div className="flex items-center gap-1">
           {userName && <span className="text-sm text-inkSoft font-medium ml-1">{userName}</span>}
-          <IconButton aria-label="الملف الشخصي" onClick={() => router.push("/profile")} tone="default">
-            <UserCircle size={17} strokeWidth={1.75} />
-          </IconButton>
+          <button
+            onClick={() => router.push("/profile")}
+            aria-label="الملف الشخصي"
+            className="rounded-full transition-opacity hover:opacity-80"
+          >
+            <Avatar name={userName || "؟"} src={avatarUrl} size="sm" />
+          </button>
           <IconButton aria-label="تسجيل الخروج" onClick={onSignOut} tone="default">
             <LogOut size={16} strokeWidth={1.75} />
           </IconButton>
