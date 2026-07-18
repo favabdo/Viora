@@ -72,12 +72,12 @@ export default function AvatarCropModal({
           step={0.01}
           value={zoom}
           onChange={(e) => setZoom(Number(e.target.value))}
-          className="w-full accent-teal"
+          className="w-full accent-bottle"
           aria-label="التكبير"
         />
       </div>
 
-      {error && <p className="text-clay text-xs mt-3">{error}</p>}
+      {error && <p className="text-oxblood text-xs mt-3">{error}</p>}
 
       <div className="flex gap-2 mt-5">
         <Button variant="secondary" fullWidth onClick={onCancel} disabled={saving}>

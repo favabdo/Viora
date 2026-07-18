@@ -57,7 +57,7 @@ export default function ActivityFeed({
     <div className="mt-9 border-t border-line pt-3">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 text-2xs font-semibold tracking-wide text-inkFaint hover:text-teal uppercase transition-colors"
+        className="flex items-center gap-1.5 text-2xs font-semibold tracking-wide text-inkFaint hover:text-bottle uppercase transition-colors"
       >
         <ChevronDown
           size={12}

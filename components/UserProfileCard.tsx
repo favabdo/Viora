@@ -87,7 +87,7 @@ export default function UserProfileCard({
                 onClose();
                 router.push("/profile");
               }}
-              className="mt-4 flex items-center gap-1.5 text-xs text-teal hover:text-tealDark font-medium transition-colors"
+              className="mt-4 flex items-center gap-1.5 text-xs text-bottle hover:text-bottleDark font-medium transition-colors"
             >
               <Settings size={13} strokeWidth={1.75} />
               تعديل الملف الشخصي

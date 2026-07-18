@@ -193,7 +193,7 @@ export default function LinksSection() {
               rows={2}
             />
           </div>
-          {error && <p className="text-clay text-xs mb-2">{error}</p>}
+          {error && <p className="text-oxblood text-xs mb-2">{error}</p>}
           <Button variant="primary" size="sm" onClick={addLink}>
             <Plus size={14} strokeWidth={2} />
             حفظ الرابط
@@ -269,7 +269,7 @@ export default function LinksSection() {
                           (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
                         }}
                       />
-                      <p dir="ltr" className="text-teal font-mono text-sm truncate text-left">
+                      <p dir="ltr" className="text-bottle font-mono text-sm truncate text-left">
                         {getDomain(link.url)}
                       </p>
                     </div>
@@ -320,7 +320,7 @@ export default function LinksSection() {
                       <p
                         dir="ltr"
                         className={`font-mono text-sm truncate text-left ${
-                          link.is_done ? "text-inkFaint line-through" : "text-teal group-hover:text-tealDark"
+                          link.is_done ? "text-inkFaint line-through" : "text-bottle group-hover:text-bottleDark"
                         }`}
                       >
                         {getDomain(link.url)}

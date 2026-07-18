@@ -295,3 +295,50 @@ already in good shape. What changed:
 - No Supabase query, RPC call, auth flow, or realtime subscription was
   touched — every edit is scoped to JSX structure, Tailwind classes, and the
   two new/extracted lib helpers above.
+
+---
+
+## Third pass — new accent palette & type pairing ("Fountain & Ledger")
+
+The prior two passes established the app's real identity: warm parchment,
+hairline-divided lists instead of card soup, a considered component layer.
+That identity was worth *keeping* — but its specific palette (cream paper +
+Fraunces serif + terracotta-clay accent) sits close to a look that's become
+an AI-generated-design default, and the brand mark itself (`logo-full.png`,
+`logo-icon.png`, `app/icon.png`) was still carrying a leftover indigo/purple
+tone that never matched the rest of the app. This pass keeps the warm,
+editorial point of view the person asked for, but moves the palette and type
+pairing to something more specific to the product: a shared task-and-link
+notebook, styled after fountain-pen ink on a ledger page rather than generic
+"premium SaaS cream."
+
+**Color** — every accent is now a real ink, not a brand-blue:
+- `bottle` (#234B3B) — deep bottle-green ink, the one primary action color
+- `moss` (#55693E) — a distinct secondary green for accepted/positive state
+- `oxblood` (#7A2E28) — the only red, reserved for destructive/error
+- `brass` (#9C6B2E) — warm highlight for pending/attention states
+- Parchment ground shifted from a bright cream (#FAF8F4) to a slightly
+  deeper, less-saturated stone parchment (#F1ECDE) with a warmer near-black
+  ink (#211D17) — enough to read as its own thing next to the earlier version.
+
+**Type** — swapped Fraunces (a high-contrast display serif that's become a
+common AI-design tell when paired with warm cream + clay) for Newsreader, a
+literary serif with real optical italics. Upright Newsreader now carries
+headings; the wordmark itself moved to Newsreader *italic* — a small,
+deliberate signature distinct from both the old bold-sans logotype and from
+any other screen element, evoking a signature at the bottom of a ledger page.
+Inter (body/UI) and IBM Plex Mono (usernames, URLs, timestamps) are unchanged.
+
+**Brand mark** — `logo-full.png`, `logo-icon.png`, and `app/icon.png` had the
+mark itself recolored from the old indigo/purple to the new ink tone
+(#211D17), with the mark's alpha channel/silhouette left byte-identical —
+same shape, same anti-aliasing, new ink.
+
+**Scale** — radius scale tightened (4 / 6 / 10 / 14px) and shadows re-tinted
+from neutral black to ink-brown (`rgba(33,29,23,…)`) so elevation reads as
+part of the same warm system instead of a generic gray drop-shadow.
+
+Every component, list row, badge, and status state was carried over onto the
+new tokens (`bottle`/`moss`/`oxblood`/`brass` replacing `teal`/`sage`/`clay`/
+`amber` throughout) — no structural or functional change, verified with
+`tsc --noEmit` and `next build`, both clean.

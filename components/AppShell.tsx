@@ -40,7 +40,7 @@ export default function AppShell({
       <aside className="hidden md:flex md:w-60 md:shrink-0 md:flex-col md:border-l md:border-line md:h-screen md:sticky md:top-0 md:py-5 md:px-3.5">
         <div className="flex items-center gap-2 px-2 mb-7">
           <Image src="/logo-full.png" alt="Viora" width={32} height={28} priority className="h-7 w-auto" />
-          <span className="viora-wordmark text-base">Viora</span>
+          <span className="viora-wordmark text-lg">Viora</span>
         </div>
 
         <nav className="flex flex-col gap-0.5" role="tablist">
@@ -53,7 +53,7 @@ export default function AppShell({
                 aria-selected={active}
                 onClick={() => onTabChange(id)}
                 className={`nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium transition-colors ${
-                  active ? "bg-tealSoft text-tealDark" : "text-inkSoft hover:bg-paperDark hover:text-ink"
+                  active ? "bg-bottleSoft text-bottleDark" : "text-inkSoft hover:bg-paperDark hover:text-ink"
                 }`}
               >
                 <Icon size={16} strokeWidth={1.75} />
@@ -70,7 +70,7 @@ export default function AppShell({
             aria-label="الملف الشخصي"
           >
             <Avatar name={userName || "؟"} size="sm" />
-            <span className="text-sm font-medium text-ink truncate group-hover:text-teal transition-colors">
+            <span className="text-sm font-medium text-ink truncate group-hover:text-bottle transition-colors">
               {userName || "حسابي"}
             </span>
           </button>
@@ -84,7 +84,7 @@ export default function AppShell({
       <header className="md:hidden flex items-center justify-between gap-3 px-5 py-4 border-b border-line sticky top-0 bg-paper/90 backdrop-blur z-30">
         <div className="flex items-center gap-2">
           <Image src="/logo-full.png" alt="Viora" width={30} height={26} priority className="h-7 w-auto" />
-          <span className="viora-wordmark text-base">Viora</span>
+          <span className="viora-wordmark text-lg">Viora</span>
         </div>
         <div className="flex items-center gap-1">
           {userName && <span className="text-sm text-inkSoft font-medium ml-1">{userName}</span>}
@@ -115,7 +115,7 @@ export default function AppShell({
               aria-selected={active}
               onClick={() => onTabChange(id)}
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-2xs font-medium transition-colors ${
-                active ? "text-teal" : "text-inkFaint"
+                active ? "text-bottle" : "text-inkFaint"
               }`}
             >
               <Icon size={19} strokeWidth={active ? 2 : 1.75} />

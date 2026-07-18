@@ -100,7 +100,7 @@ export default function JoinPage() {
               <StatusScreen kind="error" title="حدثت مشكلة" message={errorMsg} />
               <button
                 onClick={() => router.replace("/")}
-                className="text-teal text-sm hover:underline mt-5"
+                className="text-bottle text-sm hover:underline mt-5"
               >
                 العودة إلى الصفحة الرئيسية
               </button>

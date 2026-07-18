@@ -109,7 +109,9 @@ function LoginPageInner() {
           return;
         }
 
-        setInfo("تم إنشاء الحساب بنجاح. يُرجى التحقق من بريدك الإلكتروني لتأكيد الحساب، ثم تسجيل الدخول.");
+        setInfo(
+          "تم إنشاء الحساب بنجاح. يُرجى التحقق من بريدك الإلكتروني لتأكيد الحساب، ثم تسجيل الدخول. في حال عدم وصول الرسالة خلال دقائق، يُرجى مراجعة مجلد الرسائل غير المرغوب فيها (Spam)."
+        );
         setMode("signin");
         setName("");
         setUsername("");
@@ -223,12 +225,12 @@ function LoginPageInner() {
             </div>
 
             {error && (
-              <p className="text-sm text-clay bg-claySoft rounded-md px-3 py-2">
+              <p className="text-sm text-oxblood bg-oxbloodSoft rounded-md px-3 py-2">
                 {error}
               </p>
             )}
             {info && (
-              <p className="text-sm text-[#3F6136] bg-sageSoft rounded-md px-3 py-2">
+              <p className="text-sm text-[#3E5A2C] bg-mossSoft rounded-md px-3 py-2">
                 {info}
               </p>
             )}
@@ -247,7 +249,7 @@ function LoginPageInner() {
                 setInfo(null);
                 setUsername("");
               }}
-              className="text-teal font-medium hover:underline"
+              className="text-bottle font-medium hover:underline"
             >
               {mode === "signin" ? "إنشاء حساب" : "تسجيل الدخول"}
             </button>
