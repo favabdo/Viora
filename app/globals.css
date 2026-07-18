@@ -8,24 +8,16 @@
 }
 
 html, body {
-  background-color: #FAF6EC;
-  background-image:
-    linear-gradient(#FAF6EC 0px, #FAF6EC 27px, #E4DCC6 27px, #E4DCC6 28px);
-  background-size: 100% 28px;
-}
-
-@media (prefers-color-scheme: dark) {
-  html, body { background-image: none; }
+  background-color: #FAF8F4;
 }
 
 ::selection {
-  background: #1F6F72;
-  color: #FAF6EC;
+  background: #0E6E62;
+  color: #FAF8F4;
 }
 
-/* لوحة ألوان واحدة بس (paper/ink/teal) — لغة بصرية متسقة، من غير تدرّجات زخرفية غريبة عن الهوية */
 *:focus-visible {
-  outline: 2px solid #1F6F72;
+  outline: 2px solid #0E6E62;
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -34,24 +26,28 @@ button, a {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* checkbox المخصص شكل ختم */
+/* checkbox مخصّص شكل ختم — جزء من هوية Viora */
 .task-check {
   appearance: none;
   -webkit-appearance: none;
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  border: 2px solid #54574F;
-  border-radius: 4px;
+  width: 21px;
+  height: 21px;
+  min-width: 21px;
+  border: 2px solid #B9B6A9;
+  border-radius: 6px;
   cursor: pointer;
   position: relative;
-  background: #FAF6EC;
+  background: #fff;
   transition: all 0.15s ease;
 }
 
+.task-check:hover {
+  border-color: #0E6E62;
+}
+
 .task-check:checked {
-  background: #6E8F5C;
-  border-color: #6E8F5C;
+  background: #0E6E62;
+  border-color: #0E6E62;
 }
 
 .task-check:checked::after {
@@ -61,7 +57,7 @@ button, a {
   top: 2px;
   width: 6px;
   height: 11px;
-  border: solid #FAF6EC;
+  border: solid #fff;
   border-width: 0 2px 2px 0;
   transform: rotate(35deg);
 }
@@ -71,32 +67,24 @@ button, a {
 }
 
 .task-title.done {
-  color: #9C9A8F;
+  color: #ACA99D;
   text-decoration: line-through;
-  text-decoration-color: #B4552F;
+  text-decoration-color: #C9A28C;
   text-decoration-thickness: 1.5px;
 }
 
-.tab-btn {
+/* شريط جانبي — عنصر نشط */
+.nav-item {
   position: relative;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
 
-.tab-btn.active::after {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  right: 0;
-  left: 0;
-  height: 2px;
-  background: #1F6F72;
-}
-
-/* اسم Viora — لون صلب من هوية البراند (حبر داكن) بدل تدرّج ملوّن غريب عن باقي التصميم */
+/* اسم Viora — لون صلب من هوية البراند */
 .viora-wordmark {
   font-family: "Poppins", var(--font-sans, sans-serif);
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: #20221F;
+  color: #191A1D;
   line-height: 1;
 }
 
@@ -104,14 +92,14 @@ button, a {
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: #F1EADA;
+  background: #EEEAE0;
 }
 .skeleton::after {
   content: "";
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
   animation: shimmer 1.4s infinite;
 }
 @keyframes shimmer {
@@ -123,3 +111,12 @@ button, a {
   to { opacity: 1; transform: translateY(0); }
 }
 .fade-in { animation: fadeIn 0.2s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in, .skeleton::after, * { animation-duration: 0.001ms !important; }
+}
+
+/* شريط تمرير هادئ لمناطق قابلة للتمرير (الشريط الجانبي، النوافذ) */
+.thin-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.thin-scroll::-webkit-scrollbar-track { background: transparent; }
+.thin-scroll::-webkit-scrollbar-thumb { background: #D3CCB8; border-radius: 999px; }

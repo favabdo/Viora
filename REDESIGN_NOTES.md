@@ -263,3 +263,35 @@ Four targeted changes on top of the initial redesign:
    `المستخدم`). RTL layout and the underlying interaction model are
    unchanged — this was a tone pass, not a content or layout pass.
 
+
+---
+
+## Second pass — sidebar shell, bookmark system, component consolidation
+
+This pass builds on the redesign above rather than replacing it — the brand
+(paper/ink/teal, Fraunces display, hairline-divided lists, no card soup) was
+already in good shape. What changed:
+
+- **Persistent sidebar navigation** (`components/AppShell.tsx`) replaces the
+  top tab bar on desktop — logo, Tasks/Links nav, and account/sign-out live in
+  a fixed left rail, the pattern Linear/Notion/Attio use so the working area
+  doesn't compete with global nav. Collapses to a bottom tab bar plus a
+  slim header on mobile instead of just shrinking the same layout.
+- **Links reimagined as a bookmark system, not a list.** Card grid with
+  favicons, a client-side search box (filters the already-loaded array, no
+  new network calls), and a collapsed-by-default composer instead of an
+  always-open form eating vertical space.
+- **New shared primitives**: `Avatar` (initials-or-image, used everywhere a
+  person is shown instead of four separate ad-hoc implementations), `Modal`
+  (the fixed-overlay + panel wrapper duplicated across TeamPanel,
+  ConfirmPasswordModal, AvatarCropModal, UserProfileCard — now one component).
+- **`lib/timeAgo.ts`** extracted from three copy-pasted implementations in
+  ActivityFeed, ItemHistory, and (new) LinksSection.
+- **Token refinements**: deeper teal, a proper elevation scale (`xs` →
+  `modal`), Inter added as the body/UI face (nothing was actually loading a
+  webfont for body text before — it was falling back to the system stack)
+  paired with Fraunces for display headings and IBM Plex Mono for
+  usernames/URLs, unchanged from before.
+- No Supabase query, RPC call, auth flow, or realtime subscription was
+  touched — every edit is scoped to JSX structure, Tailwind classes, and the
+  two new/extracted lib helpers above.

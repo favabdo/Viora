@@ -38,10 +38,12 @@ export default function PendingInvites({ userId }: { userId: string }) {
       {invites.map((inv) => (
         <div
           key={inv.id}
-          className="flex items-center justify-between gap-3 bg-tealSoft border border-teal/25 rounded-md px-3.5 py-2.5"
+          className="flex items-center justify-between gap-3 bg-tealSoft border border-teal/20 rounded-lg px-4 py-3"
         >
-          <p className="flex items-center gap-2 text-sm text-ink min-w-0">
-            <Mail size={14} strokeWidth={1.75} className="text-teal shrink-0" />
+          <p className="flex items-center gap-2.5 text-sm text-ink min-w-0">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-teal shrink-0">
+              <Mail size={13} strokeWidth={1.75} />
+            </span>
             <span className="truncate">
               لديك دعوة للانضمام إلى مشروع{" "}
               <span className="font-medium">{inv.projects?.name || "مشروع"}</span>

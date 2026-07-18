@@ -122,9 +122,9 @@ function LoginPageInner() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-5 py-10">
+    <main className="min-h-screen flex items-center justify-center px-5 py-10 bg-paper">
       <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center gap-1.5 mb-8">
+        <div className="flex flex-col items-center gap-1.5 mb-9">
           <div className="flex justify-center items-center gap-2">
             <Image
               src="/logo-full.png"
@@ -228,7 +228,7 @@ function LoginPageInner() {
               </p>
             )}
             {info && (
-              <p className="text-sm text-[#4B6640] bg-sageSoft rounded-md px-3 py-2">
+              <p className="text-sm text-[#3F6136] bg-sageSoft rounded-md px-3 py-2">
                 {info}
               </p>
             )}

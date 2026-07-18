@@ -11,6 +11,7 @@ import { Input } from "./ui/Input";
 import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 import ProgressBar from "./ui/ProgressBar";
+import Modal from "./ui/Modal";
 import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import ClickableName from "./ClickableName";
@@ -220,8 +221,8 @@ export default function TasksSection({
   const doneCount = tasks.filter((t) => t.is_done).length;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8">
-      {/* Sidebar: قائمة المشاريع */}
+    <div className="grid grid-cols-1 md:grid-cols-[212px_1fr] gap-8">
+      {/* قائمة المشاريع */}
       <aside className="fade-in">
         <div className="flex items-center justify-between mb-2.5">
           <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase">المشاريع</h2>
@@ -257,7 +258,7 @@ export default function TasksSection({
                 <button
                   onClick={() => setActiveProjectId(p.id)}
                   className={`flex-1 flex items-center gap-1.5 min-w-0 text-right px-2.5 py-1.5 rounded-md text-sm transition-colors ${
-                    active ? "bg-teal text-paper font-medium" : "hover:bg-paperDark text-ink"
+                    active ? "bg-teal text-white font-medium" : "hover:bg-paperDark text-ink"
                   }`}
                 >
                   <span className="truncate">{p.name}</span>
@@ -265,7 +266,7 @@ export default function TasksSection({
                     <Users
                       size={11}
                       strokeWidth={2}
-                      className={`shrink-0 ${active ? "text-paper/70" : "text-inkFaint"}`}
+                      className={`shrink-0 ${active ? "text-white/70" : "text-inkFaint"}`}
                     />
                   )}
                 </button>
@@ -275,7 +276,7 @@ export default function TasksSection({
                     tone="danger"
                     aria-label={`حذف مشروع ${p.name}`}
                     onClick={() => requestDeleteProject(p)}
-                    className="shrink-0"
+                    className="shrink-0 opacity-0 group-hover:opacity-100"
                   >
                     <X size={13} strokeWidth={2} />
                   </IconButton>
@@ -285,7 +286,7 @@ export default function TasksSection({
                     tone="danger"
                     aria-label={`مغادرة مشروع ${p.name}`}
                     onClick={() => requestLeaveProject(p)}
-                    className="shrink-0"
+                    className="shrink-0 opacity-0 group-hover:opacity-100"
                   >
                     <LogOut size={13} strokeWidth={2} />
                   </IconButton>
@@ -307,11 +308,11 @@ export default function TasksSection({
         </ul>
       </aside>
 
-      {/* Main: المهام */}
+      {/* المهام */}
       <section className="fade-in min-h-[300px] min-w-0">
         {activeProject ? (
           <>
-            <div className="flex items-center justify-between mb-4 border-b border-line pb-3 gap-3">
+            <div className="flex items-center justify-between mb-4 border-b border-line pb-3.5 gap-3">
               {editingProjectName ? (
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
                   <Input
@@ -408,13 +409,13 @@ export default function TasksSection({
                         </div>
                       ) : (
                         <span
-                          className={`task-title flex-1 text-sm min-w-0 break-words ${task.is_done ? "done" : ""}`}
+                          className={`task-title flex-1 text-sm min-w-0 break-words pt-0.5 ${task.is_done ? "done" : ""}`}
                         >
                           {task.title}
                         </span>
                       )}
                       {task.profiles && editingTaskId !== task.id && (
-                        <span className="text-2xs text-inkFaint shrink-0 pt-0.5">
+                        <span className="text-2xs text-inkFaint shrink-0 pt-1">
                           <ClickableName userId={task.user_id}>
                             {displayName(task.user_id, task.profiles, currentUserId)}
                           </ClickableName>
@@ -425,7 +426,7 @@ export default function TasksSection({
                           size="sm"
                           aria-label="تعديل عنوان المهمة"
                           onClick={() => startEditTask(task)}
-                          className="shrink-0"
+                          className="shrink-0 opacity-0 group-hover:opacity-100"
                         >
                           <Pencil size={12} strokeWidth={1.75} />
                         </IconButton>
@@ -435,7 +436,7 @@ export default function TasksSection({
                         tone="danger"
                         aria-label="حذف المهمة"
                         onClick={() => requestDeleteTask(task)}
-                        className="shrink-0"
+                        className="shrink-0 opacity-0 group-hover:opacity-100"
                       >
                         <X size={14} strokeWidth={1.75} />
                       </IconButton>
@@ -485,29 +486,21 @@ export default function TasksSection({
       )}
 
       {leaveTarget && (
-        <div
-          className="fixed inset-0 bg-ink/45 flex items-center justify-center p-4 z-50 fade-in"
-          onClick={() => !leavingProject && setLeaveTarget(null)}
-        >
-          <div
-            className="bg-paper border border-line rounded-lg shadow-modal max-w-xs w-full p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="font-display text-lg font-medium mb-2">مغادرة المشروع؟</h3>
-            <p className="text-sm text-inkSoft mb-5 leading-relaxed">
-              هل أنت متأكد أنك تريد مغادرة مشروع "{leaveTarget.name}"؟ لن تظهر لك مهامه بعد ذلك، ويمكنك
-              الانضمام إليه مرة أخرى لو دعاك أحد الأعضاء مجددًا.
-            </p>
-            <div className="flex gap-2">
-              <Button variant="secondary" fullWidth disabled={leavingProject} onClick={() => setLeaveTarget(null)}>
-                إلغاء
-              </Button>
-              <Button variant="danger" fullWidth loading={leavingProject} onClick={performLeaveProject}>
-                مغادرة
-              </Button>
-            </div>
+        <Modal onClose={() => !leavingProject && setLeaveTarget(null)} maxWidth="max-w-xs">
+          <h3 className="font-display text-lg font-medium mb-2">مغادرة المشروع؟</h3>
+          <p className="text-sm text-inkSoft mb-5 leading-relaxed">
+            هل أنت متأكد أنك تريد مغادرة مشروع "{leaveTarget.name}"؟ لن تظهر لك مهامه بعد ذلك، ويمكنك
+            الانضمام إليه مرة أخرى لو دعاك أحد الأعضاء مجددًا.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="secondary" fullWidth disabled={leavingProject} onClick={() => setLeaveTarget(null)}>
+              إلغاء
+            </Button>
+            <Button variant="danger" fullWidth loading={leavingProject} onClick={performLeaveProject}>
+              مغادرة
+            </Button>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

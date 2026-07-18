@@ -5,9 +5,12 @@ import { supabase, ProjectMember } from "@/lib/supabase";
 import Button from "./ui/Button";
 import IconButton from "./ui/IconButton";
 import Badge from "./ui/Badge";
+import Avatar from "./ui/Avatar";
+import Modal from "./ui/Modal";
 import { Input } from "./ui/Input";
 import { Check, Link2, X } from "lucide-react";
 import ClickableName from "./ClickableName";
+import { resolveName } from "@/lib/displayName";
 
 export default function TeamPanel({
   projectId,
@@ -130,93 +133,92 @@ export default function TeamPanel({
   const pending = members.filter((m) => m.status === "pending");
 
   return (
-    <div
-      className="fixed inset-0 bg-ink/45 flex items-center justify-center p-4 z-50 fade-in"
-      onClick={onClose}
-    >
-      <div
-        className="bg-paper border border-line rounded-lg shadow-modal max-w-md w-full p-5 max-h-[85vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-display text-lg font-medium">فريق المشروع</h3>
-          <IconButton aria-label="إغلاق" onClick={onClose}>
-            <X size={16} strokeWidth={1.75} />
-          </IconButton>
-        </div>
+    <Modal onClose={onClose} maxWidth="max-w-md">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="font-display text-lg font-medium">فريق المشروع</h3>
+        <IconButton aria-label="إغلاق" onClick={onClose}>
+          <X size={16} strokeWidth={1.75} />
+        </IconButton>
+      </div>
 
-        <div className="mb-5">
-          <Button variant="secondary" fullWidth loading={copyingLink} onClick={copyInviteLink}>
-            {justCopied ? <Check size={14} strokeWidth={2} /> : <Link2 size={14} strokeWidth={1.75} />}
-            {justCopied ? "تم النسخ بنجاح" : "نسخ رابط دعوة للمشروع"}
+      <div className="mb-5">
+        <Button variant="secondary" fullWidth loading={copyingLink} onClick={copyInviteLink}>
+          {justCopied ? <Check size={14} strokeWidth={2} /> : <Link2 size={14} strokeWidth={1.75} />}
+          {justCopied ? "تم النسخ بنجاح" : "نسخ رابط دعوة للمشروع"}
+        </Button>
+        {linkMsg && !justCopied && <p className="text-xs text-inkSoft mt-1.5">{linkMsg}</p>}
+      </div>
+
+      <div className="mb-5 border-t border-line pt-4">
+        <label className="block text-sm font-medium text-inkSoft mb-1.5">
+          ادعُ عضوًا باسم المستخدم الخاص به
+        </label>
+        <div className="flex gap-2">
+          <Input
+            value={username}
+            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+            onKeyDown={(e) => e.key === "Enter" && inviteByUsername()}
+            placeholder="username"
+            dir="ltr"
+            className="font-mono text-left"
+          />
+          <Button variant="primary" loading={inviting} onClick={inviteByUsername}>
+            دعوة
           </Button>
-          {linkMsg && !justCopied && <p className="text-xs text-inkSoft mt-1.5">{linkMsg}</p>}
         </div>
+        {inviteError && <p className="text-clay text-xs mt-1.5">{inviteError}</p>}
+        {inviteMsg && <p className="text-[#3F6136] text-xs mt-1.5">{inviteMsg}</p>}
+      </div>
 
-        <div className="mb-5 border-t border-line pt-4">
-          <label className="block text-sm font-medium text-inkSoft mb-1.5">
-            ادعُ عضوًا باسم المستخدم الخاص به
-          </label>
-          <div className="flex gap-2">
-            <Input
-              value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-              onKeyDown={(e) => e.key === "Enter" && inviteByUsername()}
-              placeholder="username"
-              dir="ltr"
-              className="font-mono text-left"
-            />
-            <Button variant="primary" loading={inviting} onClick={inviteByUsername}>
-              دعوة
-            </Button>
+      <div className="border-t border-line pt-4">
+        <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-2.5">
+          الأعضاء · {accepted.length}
+        </h4>
+        {loading ? (
+          <div className="space-y-2">
+            {[0, 1].map((i) => (
+              <div key={i} className="skeleton h-10 rounded-md" />
+            ))}
           </div>
-          {inviteError && <p className="text-clay text-xs mt-1.5">{inviteError}</p>}
-          {inviteMsg && <p className="text-[#4B6640] text-xs mt-1.5">{inviteMsg}</p>}
-        </div>
-
-        <div className="border-t border-line pt-4">
-          <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-2">الأعضاء</h4>
-          {loading ? (
-            <div className="space-y-1.5">
-              {[0, 1].map((i) => (
-                <div key={i} className="skeleton h-8 rounded-md" />
-              ))}
-            </div>
-          ) : (
-            <ul className="divide-y divide-line">
-              {accepted.map((m) => (
-                <li key={m.id} className="flex items-center justify-between py-2 text-sm">
-                  <span dir="ltr" className="font-mono">
-                    <ClickableName userId={m.user_id}>@{m.profiles?.username || "?"}</ClickableName>
-                    {m.user_id === currentUserId && (
-                      <span className="text-inkFaint text-xs font-sans"> (أنت)</span>
-                    )}
+        ) : (
+          <ul className="space-y-1">
+            {accepted.map((m) => (
+              <li key={m.id} className="flex items-center gap-2.5 py-1.5 text-sm">
+                <Avatar name={resolveName(m.profiles)} size="sm" />
+                <span className="flex-1 min-w-0">
+                  <ClickableName userId={m.user_id} className="text-ink block truncate">
+                    {resolveName(m.profiles)}
+                  </ClickableName>
+                  <span dir="ltr" className="font-mono text-2xs text-inkFaint">
+                    @{m.profiles?.username || "?"}
+                    {m.user_id === currentUserId && <span className="font-sans"> · أنت</span>}
                   </span>
-                  <Badge tone="sage">عضو</Badge>
+                </span>
+                <Badge tone="sage">عضو</Badge>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {pending.length > 0 && (
+          <>
+            <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mt-4 mb-2.5">
+              دعوات معلّقة · {pending.length}
+            </h4>
+            <ul className="space-y-1">
+              {pending.map((m) => (
+                <li key={m.id} className="flex items-center gap-2.5 py-1.5 text-sm">
+                  <Avatar name={resolveName(m.profiles)} size="sm" />
+                  <span dir="ltr" className="font-mono flex-1 min-w-0 truncate">
+                    @{m.profiles?.username || "?"}
+                  </span>
+                  <Badge tone="amber">في الانتظار</Badge>
                 </li>
               ))}
             </ul>
-          )}
-
-          {pending.length > 0 && (
-            <>
-              <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mt-4 mb-2">
-                دعوات معلّقة
-              </h4>
-              <ul className="divide-y divide-line">
-                {pending.map((m) => (
-                  <li key={m.id} className="flex items-center justify-between py-2 text-sm">
-                    <span dir="ltr" className="font-mono">
-                      <ClickableName userId={m.user_id}>@{m.profiles?.username || "?"}</ClickableName>
-                    </span>
-                    <Badge tone="clay">في الانتظار</Badge>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
+          </>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }

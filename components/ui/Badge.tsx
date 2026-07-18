@@ -1,12 +1,13 @@
 import { ReactNode } from "react";
 
-type Tone = "neutral" | "teal" | "sage" | "clay";
+type Tone = "neutral" | "teal" | "sage" | "clay" | "amber";
 
 const tones: Record<Tone, string> = {
   neutral: "bg-paperDark text-inkSoft",
   teal: "bg-tealSoft text-tealDark",
-  sage: "bg-sageSoft text-[#4B6640]",
+  sage: "bg-sageSoft text-[#3F6136]",
   clay: "bg-claySoft text-clay",
+  amber: "bg-amberSoft text-amber",
 };
 
 export default function Badge({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {

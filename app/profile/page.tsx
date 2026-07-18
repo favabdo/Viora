@@ -6,6 +6,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase, Profile } from "@/lib/supabase";
 import Button from "@/components/ui/Button";
 import IconButton from "@/components/ui/IconButton";
+import Avatar from "@/components/ui/Avatar";
 import { Input } from "@/components/ui/Input";
 import { ArrowRight, Camera, Loader2 } from "lucide-react";
 import AvatarCropModal from "@/components/AvatarCropModal";
@@ -241,7 +242,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen px-5 py-6 md:px-10 md:py-8">
+    <main className="min-h-screen px-5 py-6 md:px-10 md:py-8 bg-paper">
       <div className="max-w-lg mx-auto">
         <header className="mb-7 flex items-center gap-3">
           <IconButton aria-label="رجوع" onClick={() => router.push("/")}>
@@ -253,23 +254,12 @@ export default function ProfilePage() {
         {/* الصورة الشخصية */}
         <section className="flex flex-col items-center mb-8 fade-in">
           <div className="relative">
-            {profile.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={profile.avatar_url}
-                alt={profile.full_name || profile.username}
-                className="h-24 w-24 rounded-full object-cover border border-line"
-              />
-            ) : (
-              <div className="h-24 w-24 rounded-full bg-tealSoft text-tealDark flex items-center justify-center font-display text-3xl font-medium">
-                {(profile.full_name || profile.username || "?").trim().charAt(0).toUpperCase()}
-              </div>
-            )}
+            <Avatar name={profile.full_name || profile.username} src={profile.avatar_url} size="xl" />
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingAvatar}
               aria-label="تغيير الصورة الشخصية"
-              className="absolute -bottom-1 -left-1 h-8 w-8 rounded-full bg-teal text-paper flex items-center justify-center border-2 border-paper hover:bg-tealDark transition-colors disabled:opacity-60"
+              className="absolute -bottom-1 -left-1 h-8 w-8 rounded-full bg-teal text-white flex items-center justify-center border-2 border-paper hover:bg-tealDark transition-colors disabled:opacity-60"
             >
               {uploadingAvatar ? (
                 <Loader2 size={13} strokeWidth={2.5} className="animate-spin" />
@@ -332,7 +322,7 @@ export default function ProfilePage() {
             </div>
 
             {infoError && <p className="text-sm text-clay bg-claySoft rounded-md px-3 py-2">{infoError}</p>}
-            {infoMsg && <p className="text-sm text-[#4B6640] bg-sageSoft rounded-md px-3 py-2">{infoMsg}</p>}
+            {infoMsg && <p className="text-sm text-[#3F6136] bg-sageSoft rounded-md px-3 py-2">{infoMsg}</p>}
 
             <Button variant="primary" loading={savingInfo} onClick={saveInfo}>
               حفظ التغييرات
@@ -384,7 +374,7 @@ export default function ProfilePage() {
             </div>
 
             {passwordError && <p className="text-sm text-clay bg-claySoft rounded-md px-3 py-2">{passwordError}</p>}
-            {passwordMsg && <p className="text-sm text-[#4B6640] bg-sageSoft rounded-md px-3 py-2">{passwordMsg}</p>}
+            {passwordMsg && <p className="text-sm text-[#3F6136] bg-sageSoft rounded-md px-3 py-2">{passwordMsg}</p>}
 
             <Button variant="secondary" loading={changingPassword} onClick={changePassword}>
               تغيير كلمة المرور

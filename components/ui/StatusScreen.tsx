@@ -9,7 +9,7 @@ const styles: Record<Kind, { wrap: string; icon: ReactNode }> = {
     icon: <Loader2 size={20} strokeWidth={2.25} className="animate-spin" />,
   },
   success: {
-    wrap: "bg-sageSoft text-[#4B6640]",
+    wrap: "bg-sageSoft text-[#3F6136]",
     icon: <Check size={20} strokeWidth={2.5} />,
   },
   error: {

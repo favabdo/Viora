@@ -4,18 +4,8 @@ import { useEffect, useState } from "react";
 import { supabase, ActivityEntry } from "@/lib/supabase";
 import { ChevronDown } from "lucide-react";
 import { splitActorMessage } from "@/lib/displayName";
+import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
-
-function timeAgo(iso: string) {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "الآن";
-  if (mins < 60) return `منذ ${mins} د`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `منذ ${hours} س`;
-  const days = Math.floor(hours / 24);
-  return `منذ ${days} يوم`;
-}
 
 export default function ActivityFeed({
   projectId,

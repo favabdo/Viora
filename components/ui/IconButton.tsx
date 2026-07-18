@@ -14,11 +14,11 @@ interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const tones: Record<Tone, string> = {
   default: "text-inkSoft hover:text-ink hover:bg-paperDark",
   danger: "text-inkSoft hover:text-clay hover:bg-claySoft",
-  active: "text-teal hover:text-tealDark hover:bg-tealSoft",
+  active: "text-teal bg-tealSoft hover:text-tealDark hover:bg-tealSoft",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-6 w-6",
+  sm: "h-7 w-7",
   md: "h-8 w-8",
 };
 

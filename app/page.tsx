@@ -2,19 +2,18 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import type { Session } from "@supabase/supabase-js";
-import { CheckSquare, Link2, LogOut, UserCircle } from "lucide-react";
+import { CheckSquare, Link2 } from "lucide-react";
 import TasksSection from "@/components/TasksSection";
 import LinksSection from "@/components/LinksSection";
 import PendingInvites from "@/components/PendingInvites";
-import IconButton from "@/components/ui/IconButton";
 import ProfileCardProvider from "@/components/ProfileCardContext";
+import AppShell, { ShellTab } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 
 type Tab = "tasks" | "links";
 
-const TABS: { id: Tab; label: string; icon: typeof CheckSquare }[] = [
+const TABS: ShellTab[] = [
   { id: "tasks", label: "المهام", icon: CheckSquare },
   { id: "links", label: "الروابط", icon: Link2 },
 ];
@@ -73,63 +72,20 @@ function HomeInner() {
 
   return (
     <ProfileCardProvider currentUserId={session.user.id}>
-      <main className="min-h-screen px-5 py-6 md:px-10 md:py-8">
-        <div className="max-w-4xl mx-auto">
-          <header className="mb-7 flex items-center justify-between gap-4">
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-2">
-                <Image
-                  src="/logo-full.png"
-                  alt="Viora"
-                  width={40}
-                  height={35}
-                  priority
-                  className="h-8 w-auto"
-                />
-                <span className="viora-wordmark text-lg">Viora</span>
-              </div>
-              <span className="text-2xs text-inkFaint tracking-wide">Save. Organize. Build Together</span>
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <div className="flex items-center gap-1">
-                <IconButton aria-label="الملف الشخصي" onClick={() => router.push("/profile")} tone="default">
-                  <UserCircle size={17} strokeWidth={1.75} />
-                </IconButton>
-                <IconButton aria-label="تسجيل الخروج" onClick={handleSignOut} tone="default">
-                  <LogOut size={16} strokeWidth={1.75} />
-                </IconButton>
-              </div>
-              {currentUserName && (
-                <span className="text-sm text-inkSoft font-medium">{currentUserName}</span>
-              )}
-            </div>
-          </header>
+      <AppShell
+        tabs={TABS}
+        activeTab={tab}
+        onTabChange={(id) => setTab(id as Tab)}
+        userName={currentUserName}
+        onSignOut={handleSignOut}
+      >
+        <PendingInvites userId={session.user.id} />
 
-          <nav className="flex gap-1 border-b border-line mb-6" role="tablist">
-            {TABS.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                role="tab"
-                aria-selected={tab === id}
-                onClick={() => setTab(id)}
-                className={`tab-btn flex items-center gap-1.5 px-3 pb-2.5 pt-1 text-sm font-medium transition-colors ${
-                  tab === id ? "active text-ink" : "text-inkFaint hover:text-inkSoft"
-                }`}
-              >
-                <Icon size={15} strokeWidth={1.75} />
-                {label}
-              </button>
-            ))}
-          </nav>
-
-          <PendingInvites userId={session.user.id} />
-
-          {tab === "tasks" && (
-            <TasksSection currentUserId={session.user.id} currentUserEmail={session.user.email || ""} />
-          )}
-          {tab === "links" && <LinksSection />}
-        </div>
-      </main>
+        {tab === "tasks" && (
+          <TasksSection currentUserId={session.user.id} currentUserEmail={session.user.email || ""} />
+        )}
+        {tab === "links" && <LinksSection />}
+      </AppShell>
     </ProfileCardProvider>
   );
 }
