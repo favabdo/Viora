@@ -64,8 +64,7 @@ function ConfirmPageInner() {
     <main className="min-h-screen flex items-center justify-center px-5 py-10">
       <div className="w-full max-w-sm">
         <div className="flex justify-center items-center gap-2 mb-8">
-          <Image src="/logo-full.png" alt="Viora" width={52} height={45} priority className="h-10 w-auto" />
-          <span className="viora-wordmark text-2xl">Viora</span>
+          <Image src="/logo-full.png" alt="Viora" width={137} height={40} priority className="h-10 w-auto" />
         </div>
 
         <div className="bg-surface border border-line rounded-lg shadow-raised p-6 fade-in">

@@ -131,12 +131,11 @@ function LoginPageInner() {
             <Image
               src="/logo-full.png"
               alt="Viora"
-              width={52}
-              height={45}
+              width={137}
+              height={40}
               priority
               className="h-10 w-auto"
             />
-            <span className="viora-wordmark text-2xl">Viora</span>
           </div>
           <span className="text-xs text-inkFaint tracking-wide">Save. Organize. Build Together</span>
         </div>
