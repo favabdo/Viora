@@ -133,4 +133,8 @@ button, a {
 /* مقبض السحب لإعادة ترتيب المهام */
 .task-drag-handle {
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }

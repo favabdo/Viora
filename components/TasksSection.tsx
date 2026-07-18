@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase, Project, Task } from "@/lib/supabase";
 import TeamPanel from "./TeamPanel";
 import ActivityFeed from "./ActivityFeed";
@@ -43,6 +43,8 @@ export default function TasksSection({
   const [leaveTarget, setLeaveTarget] = useState<{ id: string; name: string } | null>(null);
   const [leavingProject, setLeavingProject] = useState(false);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressStartRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     loadProjects();
@@ -197,13 +199,46 @@ export default function TasksSection({
 
   // إعادة الترتيب بالسحب: أثناء السحب بنعيد ترتيب القائمة محليًا فورًا لإحساس سلس،
   // وأول ما المستخدم يسيب المهمة بنحسب موضعها الجديد (بين جارتها اللي قبلها واللي بعدها) ونحفظه في القاعدة
+  //
+  // على الموبايل: الدوسة العادية مش بتفعّل السحب على طول، لازم "دوسة مطوّلة" (long press) الأول
+  // عشان اللمسة ماتتلخبطش مع سكرول الصفحة أو تحديد النص. على الماوس (سطح المكتب) السحب بيبدأ فورًا.
+  function clearLongPressTimer() {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    longPressStartRef.current = null;
+  }
+
   function handleDragStart(e: React.PointerEvent, taskId: string) {
+    if (e.pointerType === "touch") {
+      longPressStartRef.current = { x: e.clientX, y: e.clientY };
+      clearLongPressTimer();
+      longPressTimerRef.current = window.setTimeout(() => {
+        longPressTimerRef.current = null;
+        setDraggedTaskId(taskId);
+      }, 300);
+      return;
+    }
     e.preventDefault();
     setDraggedTaskId(taskId);
   }
 
+  function handleHandlePointerMove(e: React.PointerEvent) {
+    if (longPressTimerRef.current === null || !longPressStartRef.current) return;
+    const dx = e.clientX - longPressStartRef.current.x;
+    const dy = e.clientY - longPressStartRef.current.y;
+    // لو الإصبع اتحرك بشكل ملحوظ قبل ما الدوسة المطوّلة تكتمل، يبقى ده مش قصد سحب — نلغي المؤقت
+    if (Math.hypot(dx, dy) > 10) clearLongPressTimer();
+  }
+
+  function handleHandlePointerEnd() {
+    clearLongPressTimer();
+  }
+
   useEffect(() => {
     if (!draggedTaskId) return;
+    clearLongPressTimer();
 
     function handlePointerMove(e: PointerEvent) {
       const target = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
@@ -453,7 +488,11 @@ export default function TasksSection({
                     <div className="flex items-start gap-2">
                       <span
                         onPointerDown={(e) => handleDragStart(e, task.id)}
-                        aria-label="اسحب لإعادة ترتيب المهمة"
+                        onPointerMove={handleHandlePointerMove}
+                        onPointerUp={handleHandlePointerEnd}
+                        onPointerCancel={handleHandlePointerEnd}
+                        onContextMenu={(e) => e.preventDefault()}
+                        aria-label="اضغط مطوّلاً واسحب لإعادة ترتيب المهمة"
                         className="task-drag-handle mt-1 shrink-0 cursor-grab text-inkFaint hover:text-inkSoft active:cursor-grabbing"
                       >
                         <GripVertical size={14} strokeWidth={1.75} />
