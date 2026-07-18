@@ -12,7 +12,7 @@ import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 import ProgressBar from "./ui/ProgressBar";
 import Modal from "./ui/Modal";
-import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut } from "lucide-react";
+import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut, GripVertical } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import ClickableName from "./ClickableName";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
@@ -42,6 +42,7 @@ export default function TasksSection({
   >(null);
   const [leaveTarget, setLeaveTarget] = useState<{ id: string; name: string } | null>(null);
   const [leavingProject, setLeavingProject] = useState(false);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     loadProjects();
@@ -85,7 +86,7 @@ export default function TasksSection({
       .from("tasks")
       .select("*, profiles!tasks_user_id_fkey(username, full_name)")
       .eq("project_id", projectId)
-      .order("created_at", { ascending: true });
+      .order("position", { ascending: true });
     if (!error && data) setTasks(data as Task[]);
     setLoadingTasks(false);
   }
@@ -182,9 +183,10 @@ export default function TasksSection({
   async function addTask() {
     const title = newTaskTitle.trim();
     if (!title || !activeProjectId) return;
+    const position = tasks.length > 0 ? Math.max(...tasks.map((t) => t.position ?? 0)) + 1000 : 1000;
     const { data, error } = await supabase
       .from("tasks")
-      .insert({ title, project_id: activeProjectId, is_done: false })
+      .insert({ title, project_id: activeProjectId, is_done: false, position })
       .select("*, profiles!tasks_user_id_fkey(username, full_name)")
       .single();
     if (!error && data) {
@@ -192,6 +194,59 @@ export default function TasksSection({
       setNewTaskTitle("");
     }
   }
+
+  // إعادة الترتيب بالسحب: أثناء السحب بنعيد ترتيب القائمة محليًا فورًا لإحساس سلس،
+  // وأول ما المستخدم يسيب المهمة بنحسب موضعها الجديد (بين جارتها اللي قبلها واللي بعدها) ونحفظه في القاعدة
+  function handleDragStart(e: React.PointerEvent, taskId: string) {
+    e.preventDefault();
+    setDraggedTaskId(taskId);
+  }
+
+  useEffect(() => {
+    if (!draggedTaskId) return;
+
+    function handlePointerMove(e: PointerEvent) {
+      const target = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+      const row = target?.closest("[data-task-row]") as HTMLElement | null;
+      const overId = row?.getAttribute("data-task-row");
+      if (!overId || overId === draggedTaskId) return;
+      setTasks((prev) => {
+        const fromIndex = prev.findIndex((t) => t.id === draggedTaskId);
+        const toIndex = prev.findIndex((t) => t.id === overId);
+        if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return prev;
+        const next = [...prev];
+        const [moved] = next.splice(fromIndex, 1);
+        next.splice(toIndex, 0, moved);
+        return next;
+      });
+    }
+
+    function handlePointerUp() {
+      const finishedId = draggedTaskId;
+      setDraggedTaskId(null);
+      if (!finishedId) return;
+      setTasks((current) => {
+        const idx = current.findIndex((t) => t.id === finishedId);
+        if (idx === -1) return current;
+        const prevTask = current[idx - 1];
+        const nextTask = current[idx + 1];
+        let newPosition: number;
+        if (prevTask && nextTask) newPosition = (prevTask.position + nextTask.position) / 2;
+        else if (prevTask) newPosition = prevTask.position + 1000;
+        else if (nextTask) newPosition = nextTask.position - 1000;
+        else newPosition = 1000;
+        supabase.from("tasks").update({ position: newPosition }).eq("id", finishedId).then();
+        return current.map((t) => (t.id === finishedId ? { ...t, position: newPosition } : t));
+      });
+    }
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [draggedTaskId]);
 
   async function toggleTask(task: Task) {
     setTasks((prev) =>
@@ -237,16 +292,24 @@ export default function TasksSection({
         </div>
 
         {showNewProject && (
-          <div className="mb-2.5 fade-in">
+          <div className="mb-2.5 fade-in flex items-center gap-1.5">
             <Input
               autoFocus
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addProject()}
-              onBlur={() => !newProjectName && setShowNewProject(false)}
               placeholder="اسم المشروع"
               className="text-sm py-1.5"
             />
+            <IconButton
+              size="sm"
+              tone="active"
+              aria-label="إضافة المشروع"
+              onClick={addProject}
+              disabled={!newProjectName.trim()}
+            >
+              <Check size={14} strokeWidth={2} />
+            </IconButton>
           </div>
         )}
 
@@ -380,8 +443,21 @@ export default function TasksSection({
             ) : (
               <ul className="border-t border-b border-line divide-y divide-line">
                 {tasks.map((task) => (
-                  <li key={task.id} className="group px-1 py-2.5">
-                    <div className="flex items-start gap-3">
+                  <li
+                    key={task.id}
+                    data-task-row={task.id}
+                    className={`group px-1 py-2.5 transition-opacity ${
+                      draggedTaskId === task.id ? "opacity-40" : ""
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <span
+                        onPointerDown={(e) => handleDragStart(e, task.id)}
+                        aria-label="اسحب لإعادة ترتيب المهمة"
+                        className="task-drag-handle mt-1 shrink-0 cursor-grab text-inkFaint hover:text-inkSoft active:cursor-grabbing"
+                      >
+                        <GripVertical size={14} strokeWidth={1.75} />
+                      </span>
                       <input
                         type="checkbox"
                         className="task-check mt-0.5"
@@ -441,7 +517,7 @@ export default function TasksSection({
                         <X size={14} strokeWidth={1.75} />
                       </IconButton>
                     </div>
-                    <div className="pr-[34px]">
+                    <div className="pr-[52px]">
                       <ItemHistory table="activity_log" column="task_id" id={task.id} currentUserId={currentUserId} />
                     </div>
                   </li>

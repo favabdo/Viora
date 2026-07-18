@@ -883,3 +883,33 @@ begin
   return new;
 end;
 $$;
+
+-- ============================================================
+-- 17) ترتيب المهام يدويًا بالسحب والإفلات (Drag & Drop)
+-- ============================================================
+alter table tasks
+  add column if not exists position double precision;
+
+-- نرقم أي مهام قديمة من غير position حسب تاريخ إنشائها كترتيب افتراضي منطقي
+with ranked as (
+  select id, row_number() over (partition by project_id order by created_at asc) as rn
+  from tasks
+  where position is null
+)
+update tasks t
+set position = ranked.rn * 1000
+from ranked
+where t.id = ranked.id;
+
+alter table tasks
+  alter column position set default 0;
+alter table tasks
+  alter column position set not null;
+
+create index if not exists tasks_project_position_idx on tasks(project_id, position);
+
+-- ============================================================
+-- 18) خانة اختيار (checkbox) للروابط لتحديد اللي خلصته/شوفته
+-- ============================================================
+alter table links
+  add column if not exists is_done boolean not null default false;

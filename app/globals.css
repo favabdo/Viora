@@ -120,3 +120,17 @@ button, a {
 .thin-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
 .thin-scroll::-webkit-scrollbar-track { background: transparent; }
 .thin-scroll::-webkit-scrollbar-thumb { background: #D3CCB8; border-radius: 999px; }
+
+/* منع الموبايل (خصوصًا iOS Safari) من عمل zoom تلقائي عند الضغط على أي حقل إدخال.
+   المتصفح بيكبّر الصفحة لو الخط في الحقل أصغر من 16px، فبنثبّته على 16px هنا بس على الشاشات الصغيرة
+   عشان الشكل على الديسكتوب يفضل زي ما هو. */
+@media (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* مقبض السحب لإعادة ترتيب المهام */
+.task-drag-handle {
+  touch-action: none;
+}

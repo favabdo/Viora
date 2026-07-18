@@ -40,6 +40,7 @@ export type Task = {
   project_id: string;
   title: string;
   is_done: boolean;
+  position: number;
   created_at: string;
   profiles?: { username: string; full_name: string } | null;
 };
@@ -49,6 +50,7 @@ export type LinkItem = {
   user_id: string;
   url: string;
   description: string;
+  is_done: boolean;
   created_at: string;
 };
 
