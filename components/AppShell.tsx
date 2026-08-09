@@ -105,8 +105,8 @@ export default function AppShell({
       {/* الشريط الجانبي — سطح المكتب */}
       <aside className="hidden md:flex md:w-60 md:shrink-0 md:flex-col md:border-l md:border-line md:h-screen md:sticky md:top-0 md:py-5 md:px-3.5">
         <div className="flex items-center gap-1.5 px-2 mb-7">
-          <Image src="/logo-icon.png" alt="" width={28} height={28} priority className="h-7 w-auto" />
-          <span className="viora-wordmark text-xl">Viora</span>
+          <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto -mr-1" />
+          <span className="viora-wordmark text-xl">iora</span>
         </div>
 
         <nav className="flex flex-col gap-0.5" role="tablist">
@@ -159,8 +159,8 @@ export default function AppShell({
       {/* الهيدر — الموبايل فقط */}
       <header className="md:hidden flex items-center justify-between gap-3 px-5 py-4 border-b border-line sticky top-0 bg-paper/90 backdrop-blur z-30">
         <div className="flex items-center gap-1.5">
-          <Image src="/logo-icon.png" alt="" width={28} height={28} priority className="h-7 w-auto" />
-          <span className="viora-wordmark text-xl">Viora</span>
+          <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto -mr-1" />
+          <span className="viora-wordmark text-xl">iora</span>
         </div>
         <div className="flex items-center gap-1.5">
           {userName && <span className="text-sm text-inkSoft font-medium ml-1">{userName}</span>}
