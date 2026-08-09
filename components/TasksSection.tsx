@@ -99,7 +99,6 @@ export default function TasksSection({
       .order("created_at", { ascending: true });
     if (!error && data) {
       setProjects(data as Project[]);
-      if (data.length > 0 && !activeProjectId) setActiveProjectId(data[0].id);
     }
   }
 
@@ -538,8 +537,8 @@ export default function TasksSection({
                     data-task-row={task.id}
                     className={`group px-1 py-2.5 transition-opacity ${
                       draggedTaskId === task.id ? "opacity-40" : ""
-                    }`}
-                    style={task.color ? { borderRight: `3px solid ${task.color}` } : undefined}
+                    } ${task.color ? "pr-2.5" : ""}`}
+                    style={task.color ? { borderRight: `6px solid ${task.color}` } : undefined}
                   >
                     <div className="flex items-start gap-2">
                       <span
@@ -665,6 +664,12 @@ export default function TasksSection({
             )}
             <ActivityFeed projectId={activeProject.id} currentUserId={currentUserId} />
           </>
+        ) : projects.length > 0 ? (
+          <EmptyState
+            icon={ListChecks}
+            title="اختر مشروعًا من القائمة لتبدأ في عرض مهامه"
+            hint="حدّد أحد المشاريع الموجودة على اليمين، أو أنشئ مشروعًا جديدًا."
+          />
         ) : (
           <EmptyState
             icon={FolderPlus}

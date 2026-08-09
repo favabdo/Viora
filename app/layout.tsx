@@ -30,6 +30,12 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Poppins:wght@700;800&display=swap"
           rel="stylesheet"
         />
+        {/* بنطبّق وضع الليل قبل أول رسم للصفحة عشان نتجنب "وميض" اللون الفاتح لو المستخدم مفعّل الوضع الداكن */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('viora-theme')==='dark')document.documentElement.classList.add('dark');}catch(e){}`,
+          }}
+        />
       </head>
       <body
         className="font-sans bg-paper text-ink antialiased"

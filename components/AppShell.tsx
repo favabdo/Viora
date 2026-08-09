@@ -1,12 +1,14 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LucideIcon, LogOut, UserRound } from "lucide-react";
+import { LucideIcon, LogOut, UserRound, Moon, Sun } from "lucide-react";
 import Avatar from "./ui/Avatar";
+import IconButton from "./ui/IconButton";
 import Modal from "./ui/Modal";
 import Button from "./ui/Button";
+import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
 
 export type ShellTab = {
   id: string;
@@ -37,6 +39,18 @@ export default function AppShell({
 }) {
   const router = useRouter();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [theme, setTheme] = useState<Theme>("light");
+
+  // نقرأ الوضع المحفوظ بعد أول رسم للصفحة (الـ script في layout.tsx بيكون طبّقه على الـ html بالفعل)
+  useEffect(() => {
+    setTheme(getStoredTheme());
+  }, []);
+
+  function toggleTheme() {
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    applyTheme(next);
+  }
 
   return (
     <div className="min-h-screen md:flex">
@@ -66,10 +80,10 @@ export default function AppShell({
           })}
         </nav>
 
-        <div className="mt-auto pt-4 border-t border-line px-2">
+        <div className="mt-auto pt-4 border-t border-line px-2 flex items-center gap-1.5">
           <button
             onClick={() => setShowAccountMenu(true)}
-            className="flex items-center gap-2.5 min-w-0 w-full group text-right rounded-md px-1 py-1 hover:bg-paperDark transition-colors"
+            className="flex items-center gap-2.5 min-w-0 flex-1 group text-right rounded-md px-1 py-1 hover:bg-paperDark transition-colors"
             aria-label="الحساب"
           >
             <Avatar name={userName || "؟"} src={avatarUrl} size="sm" />
@@ -77,6 +91,13 @@ export default function AppShell({
               {userName || "حسابي"}
             </span>
           </button>
+          <IconButton
+            aria-label={theme === "dark" ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
+            onClick={toggleTheme}
+            tone="default"
+          >
+            {theme === "dark" ? <Sun size={15} strokeWidth={1.75} /> : <Moon size={15} strokeWidth={1.75} />}
+          </IconButton>
         </div>
       </aside>
 
@@ -87,6 +108,13 @@ export default function AppShell({
         </div>
         <div className="flex items-center gap-1.5">
           {userName && <span className="text-sm text-inkSoft font-medium ml-1">{userName}</span>}
+          <IconButton
+            aria-label={theme === "dark" ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
+            onClick={toggleTheme}
+            tone="default"
+          >
+            {theme === "dark" ? <Sun size={16} strokeWidth={1.75} /> : <Moon size={16} strokeWidth={1.75} />}
+          </IconButton>
           <button
             onClick={() => setShowAccountMenu(true)}
             aria-label="الحساب"
