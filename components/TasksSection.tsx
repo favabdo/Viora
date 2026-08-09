@@ -538,11 +538,17 @@ export default function TasksSection({
                   <li
                     key={task.id}
                     data-task-row={task.id}
-                    className={`group px-1 py-2.5 transition-opacity ${
+                    className={`group relative px-1 py-2.5 transition-opacity ${
                       draggedTaskId === task.id ? "opacity-40" : ""
-                    } ${task.color ? "pr-2.5" : ""}`}
-                    style={task.color ? { borderRight: `6px solid ${task.color}` } : undefined}
+                    }`}
                   >
+                    {task.color && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -top-1.5 right-1 h-5 w-5 rounded-full border-2 border-paper shadow-xs z-10"
+                        style={{ backgroundColor: task.color }}
+                      />
+                    )}
                     <div className="flex items-start gap-2">
                       <span
                         onPointerDown={(e) => handleDragStart(e, task.id)}
