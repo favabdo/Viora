@@ -913,3 +913,45 @@ create index if not exists tasks_project_position_idx on tasks(project_id, posit
 -- ============================================================
 alter table links
   add column if not exists is_done boolean not null default false;
+
+-- ============================================================
+-- 19) لون المهمة: بيدل على أهميتها (أحمر عاجل، برتقالي مهم... إلخ)
+-- ============================================================
+alter table tasks
+  add column if not exists color text;
+
+-- ============================================================
+-- 20) تعليقات على المهام: كل مهمة ليها تعليقاتها الخاصة، تظهر مين كتبها وامتا
+-- ============================================================
+create table if not exists task_comments (
+  id uuid primary key default uuid_generate_v4(),
+  task_id uuid not null references tasks(id) on delete cascade,
+  project_id uuid not null references projects(id) on delete cascade,
+  user_id uuid not null references profiles(id) on delete cascade,
+  message text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists task_comments_task_id_idx on task_comments(task_id, created_at asc);
+create index if not exists task_comments_project_id_idx on task_comments(project_id);
+
+alter table task_comments enable row level security;
+
+drop policy if exists "task_comments select members" on task_comments;
+create policy "task_comments select members" on task_comments
+  for select using (public.is_project_member(project_id));
+
+drop policy if exists "task_comments insert members" on task_comments;
+create policy "task_comments insert members" on task_comments
+  for insert with check (public.is_project_member(project_id) and user_id = auth.uid());
+
+drop policy if exists "task_comments delete own" on task_comments;
+create policy "task_comments delete own" on task_comments
+  for delete using (user_id = auth.uid());
+
+-- ============================================================
+-- 21) ترتيب تلقائي: المهام المنجزة تنزل تحت، والمهام الجديدة تتضاف فوق
+--     (بيتم التحكم في الترتيب من الفرونت عبر عمود position الموجود بالفعل،
+--      هنا بس بنتأكد إن الترتيب الافتراضي في القراءة هو: غير المنجز أولاً)
+-- ============================================================
+-- (لا حاجة لتغييرات إضافية في القاعدة، الترتيب بيتم في استعلام SELECT من الفرونت)

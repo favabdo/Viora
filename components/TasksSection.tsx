@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { supabase, Project, Task } from "@/lib/supabase";
+import { supabase, Project, Task, TASK_COLORS } from "@/lib/supabase";
 import TeamPanel from "./TeamPanel";
 import ActivityFeed from "./ActivityFeed";
 import ItemHistory from "./ItemHistory";
+import TaskComments from "./TaskComments";
 import Button from "./ui/Button";
 import IconButton from "./ui/IconButton";
 import { Input } from "./ui/Input";
@@ -12,10 +13,18 @@ import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 import ProgressBar from "./ui/ProgressBar";
 import Modal from "./ui/Modal";
-import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut, GripVertical } from "lucide-react";
+import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut, GripVertical, Palette } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import ClickableName from "./ClickableName";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
+
+/** بيرتب المهام: غير المنجزة فوق (حسب position)، والمنجزة تنزل تحت تلقائيًا */
+function sortTasks(list: Task[]): Task[] {
+  return [...list].sort((a, b) => {
+    if (a.is_done !== b.is_done) return a.is_done ? 1 : -1;
+    return a.position - b.position;
+  });
+}
 
 export default function TasksSection({
   currentUserId,
@@ -43,6 +52,8 @@ export default function TasksSection({
   const [leaveTarget, setLeaveTarget] = useState<{ id: string; name: string } | null>(null);
   const [leavingProject, setLeavingProject] = useState(false);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+  const [colorPickerTaskId, setColorPickerTaskId] = useState<string | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const longPressStartRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -54,6 +65,16 @@ export default function TasksSection({
     if (activeProjectId) loadTasks(activeProjectId);
     else setTasks([]);
   }, [activeProjectId]);
+
+  // قفل قائمة اختيار اللون لو المستخدم دس في أي مكان تاني بره القائمة
+  useEffect(() => {
+    if (!colorPickerTaskId) return;
+    function handleClickOutside() {
+      setColorPickerTaskId(null);
+    }
+    window.addEventListener("pointerdown", handleClickOutside);
+    return () => window.removeEventListener("pointerdown", handleClickOutside);
+  }, [colorPickerTaskId]);
 
   // لايف: أي تعديل على المهام من أي عضو تاني في المشروع يظهر عندك على طول
   useEffect(() => {
@@ -88,9 +109,32 @@ export default function TasksSection({
       .from("tasks")
       .select("*, profiles!tasks_user_id_fkey(username, full_name)")
       .eq("project_id", projectId)
+      .order("is_done", { ascending: true })
       .order("position", { ascending: true });
-    if (!error && data) setTasks(data as Task[]);
+    if (!error && data) {
+      setTasks(sortTasks(data as Task[]));
+      loadCommentCounts((data as Task[]).map((t) => t.id));
+    }
     setLoadingTasks(false);
+  }
+
+  async function loadCommentCounts(taskIds: string[]) {
+    if (taskIds.length === 0) {
+      setCommentCounts({});
+      return;
+    }
+    const { data, error } = await supabase.from("task_comments").select("task_id").in("task_id", taskIds);
+    if (!error && data) {
+      const counts: Record<string, number> = {};
+      for (const row of data as { task_id: string }[]) {
+        counts[row.task_id] = (counts[row.task_id] ?? 0) + 1;
+      }
+      setCommentCounts(counts);
+    }
+  }
+
+  function handleCommentCountChange(taskId: string, delta: number) {
+    setCommentCounts((prev) => ({ ...prev, [taskId]: (prev[taskId] ?? 0) + delta }));
   }
 
   async function addProject() {
@@ -185,14 +229,15 @@ export default function TasksSection({
   async function addTask() {
     const title = newTaskTitle.trim();
     if (!title || !activeProjectId) return;
-    const position = tasks.length > 0 ? Math.max(...tasks.map((t) => t.position ?? 0)) + 1000 : 1000;
+    // المهمة الجديدة تتحط فوق كل المهام غير المنجزة تلقائيًا
+    const position = tasks.length > 0 ? Math.min(...tasks.map((t) => t.position ?? 0)) - 1000 : 1000;
     const { data, error } = await supabase
       .from("tasks")
       .insert({ title, project_id: activeProjectId, is_done: false, position })
       .select("*, profiles!tasks_user_id_fkey(username, full_name)")
       .single();
     if (!error && data) {
-      setTasks((prev) => [...prev, data as Task]);
+      setTasks((prev) => sortTasks([data as Task, ...prev]));
       setNewTaskTitle("");
     }
   }
@@ -284,8 +329,9 @@ export default function TasksSection({
   }, [draggedTaskId]);
 
   async function toggleTask(task: Task) {
+    // المهمة اللي بتتعلّم منجزة تنزل تحت تلقائي، واللي بترجع معلّقة ترجع فوق مع باقي المعلّقات
     setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, is_done: !t.is_done } : t))
+      sortTasks(prev.map((t) => (t.id === task.id ? { ...t, is_done: !t.is_done } : t)))
     );
     const { error } = await supabase
       .from("tasks")
@@ -293,8 +339,17 @@ export default function TasksSection({
       .eq("id", task.id);
     if (error) {
       setTasks((prev) =>
-        prev.map((t) => (t.id === task.id ? { ...t, is_done: task.is_done } : t))
+        sortTasks(prev.map((t) => (t.id === task.id ? { ...t, is_done: task.is_done } : t)))
       );
+    }
+  }
+
+  async function setTaskColor(task: Task, color: string | null) {
+    setColorPickerTaskId(null);
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, color } : t)));
+    const { error } = await supabase.from("tasks").update({ color }).eq("id", task.id);
+    if (error) {
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, color: task.color ?? null } : t)));
     }
   }
 
@@ -484,6 +539,7 @@ export default function TasksSection({
                     className={`group px-1 py-2.5 transition-opacity ${
                       draggedTaskId === task.id ? "opacity-40" : ""
                     }`}
+                    style={task.color ? { borderRight: `3px solid ${task.color}` } : undefined}
                   >
                     <div className="flex items-start gap-2">
                       <span
@@ -546,6 +602,43 @@ export default function TasksSection({
                           <Pencil size={12} strokeWidth={1.75} />
                         </IconButton>
                       )}
+                      {editingTaskId !== task.id && (
+                        <div className="relative shrink-0" onPointerDown={(e) => e.stopPropagation()}>
+                          <IconButton
+                            size="sm"
+                            aria-label="تحديد لون المهمة حسب الأهمية"
+                            tone={task.color ? "active" : "default"}
+                            onClick={() => setColorPickerTaskId((id) => (id === task.id ? null : task.id))}
+                            className="opacity-0 group-hover:opacity-100 data-[open=true]:opacity-100"
+                            data-open={colorPickerTaskId === task.id}
+                          >
+                            <Palette size={13} strokeWidth={1.75} style={task.color ? { color: task.color } : undefined} />
+                          </IconButton>
+                          {colorPickerTaskId === task.id && (
+                            <div className="absolute left-0 top-full mt-1 z-20 flex items-center gap-1 bg-paper border border-line rounded-md shadow-modal p-1.5 fade-in">
+                              <button
+                                type="button"
+                                aria-label="بدون لون"
+                                onClick={() => setTaskColor(task, null)}
+                                className="h-4.5 w-4.5 rounded-full border border-dashed border-inkFaint hover:border-ink"
+                              />
+                              {TASK_COLORS.map((c) => (
+                                <button
+                                  key={c.name}
+                                  type="button"
+                                  title={c.label}
+                                  aria-label={`لون ${c.label}`}
+                                  onClick={() => setTaskColor(task, c.value)}
+                                  className={`h-4.5 w-4.5 rounded-full transition-transform hover:scale-110 ${
+                                    task.color === c.value ? "ring-2 ring-offset-1 ring-ink" : ""
+                                  }`}
+                                  style={{ backgroundColor: c.value }}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <IconButton
                         size="sm"
                         tone="danger"
@@ -556,8 +649,15 @@ export default function TasksSection({
                         <X size={14} strokeWidth={1.75} />
                       </IconButton>
                     </div>
-                    <div className="pr-[52px]">
+                    <div className="pr-[52px] flex flex-col gap-0.5">
                       <ItemHistory table="activity_log" column="task_id" id={task.id} currentUserId={currentUserId} />
+                      <TaskComments
+                        taskId={task.id}
+                        projectId={task.project_id}
+                        currentUserId={currentUserId}
+                        count={commentCounts[task.id] ?? 0}
+                        onCountChange={handleCommentCountChange}
+                      />
                     </div>
                   </li>
                 ))}

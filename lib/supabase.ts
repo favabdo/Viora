@@ -42,8 +42,29 @@ export type Task = {
   is_done: boolean;
   position: number;
   created_at: string;
+  color?: string | null;
   profiles?: { username: string; full_name: string } | null;
 };
+
+export type TaskComment = {
+  id: string;
+  task_id: string;
+  project_id: string;
+  user_id: string;
+  message: string;
+  created_at: string;
+  profiles?: { username: string; full_name: string } | null;
+};
+
+/** ألوان جاهزة للدلالة على أهمية المهمة */
+export const TASK_COLORS: { name: string; value: string; label: string }[] = [
+  { name: "red", value: "#ef4444", label: "عاجل" },
+  { name: "orange", value: "#f97316", label: "مهم" },
+  { name: "yellow", value: "#eab308", label: "متوسط" },
+  { name: "green", value: "#22c55e", label: "منخفض" },
+  { name: "blue", value: "#3b82f6", label: "معلومة" },
+  { name: "purple", value: "#a855f7", label: "لاحقًا" },
+];
 
 export type LinkItem = {
   id: string;
