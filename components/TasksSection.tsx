@@ -8,6 +8,7 @@ import ItemHistory from "./ItemHistory";
 import TaskComments from "./TaskComments";
 import Button from "./ui/Button";
 import IconButton from "./ui/IconButton";
+import Avatar from "./ui/Avatar";
 import { Input } from "./ui/Input";
 import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
@@ -106,7 +107,7 @@ export default function TasksSection({
     setLoadingTasks(true);
     const { data, error } = await supabase
       .from("tasks")
-      .select("*, profiles!tasks_user_id_fkey(username, full_name)")
+      .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
       .eq("project_id", projectId)
       .order("is_done", { ascending: true })
       .order("position", { ascending: true });
@@ -157,13 +158,15 @@ export default function TasksSection({
   }
 
   async function performDeleteProject(id: string) {
-    const { error } = await supabase.from("projects").delete().eq("id", id);
+    const { error } = await supabase.rpc("delete_project", { p_project_id: id });
     if (!error) {
       const remaining = projects.filter((p) => p.id !== id);
       setProjects(remaining);
       if (activeProjectId === id) {
         setActiveProjectId(remaining.length > 0 ? remaining[0].id : null);
       }
+    } else {
+      alert(error.message || "حصل خطأ أثناء حذف المشروع");
     }
   }
 
@@ -233,7 +236,7 @@ export default function TasksSection({
     const { data, error } = await supabase
       .from("tasks")
       .insert({ title, project_id: activeProjectId, is_done: false, position })
-      .select("*, profiles!tasks_user_id_fkey(username, full_name)")
+      .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
       .single();
     if (!error && data) {
       setTasks((prev) => sortTasks([data as Task, ...prev]));
@@ -585,8 +588,9 @@ export default function TasksSection({
                         </span>
                       )}
                       {task.profiles && editingTaskId !== task.id && (
-                        <span className="text-2xs text-inkFaint shrink-0 pt-1">
-                          <ClickableName userId={task.user_id}>
+                        <span className="flex items-center gap-1 text-2xs text-inkFaint shrink-0 pt-0.5">
+                          <ClickableName userId={task.user_id} className="flex items-center gap-1">
+                            <Avatar name={displayName(task.user_id, task.profiles, currentUserId)} src={task.profiles.avatar_url} size="xs" />
                             {displayName(task.user_id, task.profiles, currentUserId)}
                           </ClickableName>
                         </span>
@@ -614,12 +618,12 @@ export default function TasksSection({
                             <Palette size={13} strokeWidth={1.75} style={task.color ? { color: task.color } : undefined} />
                           </IconButton>
                           {colorPickerTaskId === task.id && (
-                            <div className="absolute left-0 top-full mt-1 z-20 flex items-center gap-1 bg-paper border border-line rounded-md shadow-modal p-1.5 fade-in">
+                            <div className="absolute left-0 bottom-full mb-1 z-30 flex items-center gap-1 bg-paper border border-line rounded-md shadow-modal p-1.5 fade-in">
                               <button
                                 type="button"
                                 aria-label="بدون لون"
                                 onClick={() => setTaskColor(task, null)}
-                                className="h-4.5 w-4.5 rounded-full border border-dashed border-inkFaint hover:border-ink"
+                                className="h-5 w-5 rounded-full border border-dashed border-inkFaint hover:border-ink"
                               />
                               {TASK_COLORS.map((c) => (
                                 <button
@@ -628,7 +632,7 @@ export default function TasksSection({
                                   title={c.label}
                                   aria-label={`لون ${c.label}`}
                                   onClick={() => setTaskColor(task, c.value)}
-                                  className={`h-4.5 w-4.5 rounded-full transition-transform hover:scale-110 ${
+                                  className={`h-5 w-5 rounded-full transition-transform hover:scale-110 ${
                                     task.color === c.value ? "ring-2 ring-offset-1 ring-ink" : ""
                                   }`}
                                   style={{ backgroundColor: c.value }}

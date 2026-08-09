@@ -8,6 +8,7 @@ import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
 import { Input } from "./ui/Input";
 import IconButton from "./ui/IconButton";
+import Avatar from "./ui/Avatar";
 
 /**
  * تعليقات المهمة: زرار بيعرض عدد التعليقات، ولو دُس عليه بيفتح كل التعليقات
@@ -40,7 +41,7 @@ export default function TaskComments({
       setLoading(true);
       const { data, error } = await supabase
         .from("task_comments")
-        .select("*, profiles!task_comments_user_id_fkey(username, full_name)")
+        .select("*, profiles!task_comments_user_id_fkey(username, full_name, avatar_url)")
         .eq("task_id", taskId)
         .order("created_at", { ascending: true });
       if (!error && data) setComments(data as unknown as TaskComment[]);
@@ -55,14 +56,16 @@ export default function TaskComments({
     setSending(true);
     const { data, error } = await supabase
       .from("task_comments")
-      .insert({ task_id: taskId, project_id: projectId, message })
-      .select("*, profiles!task_comments_user_id_fkey(username, full_name)")
+      .insert({ task_id: taskId, project_id: projectId, message, user_id: currentUserId })
+      .select("*, profiles!task_comments_user_id_fkey(username, full_name, avatar_url)")
       .single();
     if (!error && data) {
       setComments((prev) => [...prev, data as unknown as TaskComment]);
       setDraft("");
       setLoaded(true);
       onCountChange(taskId, 1);
+    } else if (error) {
+      console.error("addComment failed:", error);
     }
     setSending(false);
   }
@@ -86,12 +89,15 @@ export default function TaskComments({
             <p className="text-2xs text-inkFaint">لا توجد تعليقات بعد</p>
           ) : (
             comments.map((c) => (
-              <div key={c.id} className="text-2xs">
-                <ClickableName userId={c.user_id} className="text-inkSoft">
-                  {displayName(c.user_id, c.profiles, currentUserId)}
-                </ClickableName>{" "}
-                <span className="opacity-70">— {timeAgo(c.created_at)}</span>
-                <p className="text-inkFaint mt-0.5 break-words leading-relaxed">{c.message}</p>
+              <div key={c.id} className="flex items-start gap-1.5 text-2xs">
+                <Avatar name={displayName(c.user_id, c.profiles, currentUserId)} src={c.profiles?.avatar_url} size="xs" className="mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <ClickableName userId={c.user_id} className="text-inkSoft">
+                    {displayName(c.user_id, c.profiles, currentUserId)}
+                  </ClickableName>{" "}
+                  <span className="opacity-70">— {timeAgo(c.created_at)}</span>
+                  <p className="text-inkFaint mt-0.5 break-words leading-relaxed">{c.message}</p>
+                </div>
               </div>
             ))
           )}

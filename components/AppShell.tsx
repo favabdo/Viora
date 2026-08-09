@@ -1,13 +1,11 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { LucideIcon, LogOut, UserRound, Moon, Sun } from "lucide-react";
 import Avatar from "./ui/Avatar";
 import IconButton from "./ui/IconButton";
-import Modal from "./ui/Modal";
-import Button from "./ui/Button";
 import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
 
 export type ShellTab = {
@@ -40,11 +38,61 @@ export default function AppShell({
   const router = useRouter();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [theme, setTheme] = useState<Theme>("light");
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileAccountMenuRef = useRef<HTMLDivElement | null>(null);
 
   // نقرأ الوضع المحفوظ بعد أول رسم للصفحة (الـ script في layout.tsx بيكون طبّقه على الـ html بالفعل)
   useEffect(() => {
     setTheme(getStoredTheme());
   }, []);
+
+  // قفل قائمة الحساب المنسدلة لو المستخدم دس في أي مكان تاني بره القائمة
+  useEffect(() => {
+    if (!showAccountMenu) return;
+    function handleClickOutside(e: PointerEvent) {
+      const target = e.target as Node;
+      const insideDesktop = accountMenuRef.current?.contains(target);
+      const insideMobile = mobileAccountMenuRef.current?.contains(target);
+      if (!insideDesktop && !insideMobile) {
+        setShowAccountMenu(false);
+      }
+    }
+    window.addEventListener("pointerdown", handleClickOutside);
+    return () => window.removeEventListener("pointerdown", handleClickOutside);
+  }, [showAccountMenu]);
+
+  function goToProfile() {
+    setShowAccountMenu(false);
+    router.push("/profile");
+  }
+
+  function signOut() {
+    setShowAccountMenu(false);
+    onSignOut();
+  }
+
+  const accountMenuDropdown = (
+    <div className="flex flex-col gap-1 min-w-[180px]">
+      <div className="flex items-center gap-2.5 px-2.5 py-2 border-b border-line mb-1">
+        <Avatar name={userName || "؟"} src={avatarUrl} size="sm" />
+        <span className="font-display text-sm font-medium text-ink truncate">{userName || "حسابي"}</span>
+      </div>
+      <button
+        onClick={goToProfile}
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-inkSoft hover:bg-paperDark hover:text-ink transition-colors text-right"
+      >
+        <UserRound size={15} strokeWidth={1.75} />
+        فتح الملف الشخصي
+      </button>
+      <button
+        onClick={signOut}
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-clay hover:bg-claySoft transition-colors text-right"
+      >
+        <LogOut size={15} strokeWidth={1.75} />
+        تسجيل الخروج
+      </button>
+    </div>
+  );
 
   function toggleTheme() {
     const next: Theme = theme === "dark" ? "light" : "dark";
@@ -80,9 +128,9 @@ export default function AppShell({
           })}
         </nav>
 
-        <div className="mt-auto pt-4 border-t border-line px-2 flex items-center gap-1.5">
+        <div className="mt-auto pt-4 border-t border-line px-2 flex items-center gap-1.5 relative" ref={accountMenuRef}>
           <button
-            onClick={() => setShowAccountMenu(true)}
+            onClick={() => setShowAccountMenu((v) => !v)}
             className="flex items-center gap-2.5 min-w-0 flex-1 group text-right rounded-md px-1 py-1 hover:bg-paperDark transition-colors"
             aria-label="الحساب"
           >
@@ -98,6 +146,12 @@ export default function AppShell({
           >
             {theme === "dark" ? <Sun size={15} strokeWidth={1.75} /> : <Moon size={15} strokeWidth={1.75} />}
           </IconButton>
+
+          {showAccountMenu && (
+            <div className="absolute bottom-full right-0 left-0 mb-2 z-40 bg-paper border border-line rounded-md shadow-modal p-1.5 fade-in">
+              {accountMenuDropdown}
+            </div>
+          )}
         </div>
       </aside>
 
@@ -115,13 +169,21 @@ export default function AppShell({
           >
             {theme === "dark" ? <Sun size={16} strokeWidth={1.75} /> : <Moon size={16} strokeWidth={1.75} />}
           </IconButton>
-          <button
-            onClick={() => setShowAccountMenu(true)}
-            aria-label="الحساب"
-            className="rounded-full transition-opacity hover:opacity-80"
-          >
-            <Avatar name={userName || "؟"} src={avatarUrl} size="sm" />
-          </button>
+          <div className="relative md:hidden" ref={mobileAccountMenuRef}>
+            <button
+              onClick={() => setShowAccountMenu((v) => !v)}
+              aria-label="الحساب"
+              className="rounded-full transition-opacity hover:opacity-80"
+            >
+              <Avatar name={userName || "؟"} src={avatarUrl} size="sm" />
+            </button>
+
+            {showAccountMenu && (
+              <div className="absolute top-full left-0 mt-2 z-40 bg-paper border border-line rounded-md shadow-modal p-1.5 fade-in">
+                {accountMenuDropdown}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -153,40 +215,6 @@ export default function AppShell({
         })}
       </nav>
 
-      {showAccountMenu && (
-        <Modal onClose={() => setShowAccountMenu(false)} maxWidth="max-w-xs">
-          <div className="flex items-center gap-2.5 mb-4">
-            <Avatar name={userName || "؟"} src={avatarUrl} size="sm" />
-            <span className="font-display text-base font-medium text-ink truncate">{userName || "حسابي"}</span>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={() => {
-                setShowAccountMenu(false);
-                router.push("/profile");
-              }}
-              className="justify-start"
-            >
-              <UserRound size={15} strokeWidth={1.75} />
-              فتح الملف الشخصي
-            </Button>
-            <Button
-              variant="danger"
-              fullWidth
-              onClick={() => {
-                setShowAccountMenu(false);
-                onSignOut();
-              }}
-              className="justify-start"
-            >
-              <LogOut size={15} strokeWidth={1.75} />
-              تسجيل الخروج
-            </Button>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }

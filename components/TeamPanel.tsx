@@ -74,7 +74,9 @@ export default function TeamPanel({
     setLoading(true);
     const { data, error } = await supabase
       .from("project_members")
-      .select("id, project_id, user_id, status, invited_by, created_at, profiles!project_members_user_id_fkey(username, full_name)")
+      .select(
+        "id, project_id, user_id, status, invited_by, created_at, profiles!project_members_user_id_fkey(username, full_name, avatar_url)"
+      )
       .eq("project_id", projectId)
       .order("created_at", { ascending: true });
     if (!error && data) setMembers(data as unknown as ProjectMember[]);
@@ -184,7 +186,7 @@ export default function TeamPanel({
           <ul className="space-y-1">
             {accepted.map((m) => (
               <li key={m.id} className="flex items-center gap-2.5 py-1.5 text-sm">
-                <Avatar name={resolveName(m.profiles)} size="sm" />
+                <Avatar name={resolveName(m.profiles)} src={m.profiles?.avatar_url} size="sm" />
                 <span className="flex-1 min-w-0">
                   <ClickableName userId={m.user_id} className="text-ink block truncate">
                     {resolveName(m.profiles)}
@@ -208,7 +210,7 @@ export default function TeamPanel({
             <ul className="space-y-1">
               {pending.map((m) => (
                 <li key={m.id} className="flex items-center gap-2.5 py-1.5 text-sm">
-                  <Avatar name={resolveName(m.profiles)} size="sm" />
+                  <Avatar name={resolveName(m.profiles)} src={m.profiles?.avatar_url} size="sm" />
                   <span dir="ltr" className="font-mono flex-1 min-w-0 truncate">
                     @{m.profiles?.username || "?"}
                   </span>

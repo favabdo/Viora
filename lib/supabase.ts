@@ -43,7 +43,7 @@ export type Task = {
   position: number;
   created_at: string;
   color?: string | null;
-  profiles?: { username: string; full_name: string } | null;
+  profiles?: { username: string; full_name: string; avatar_url?: string | null } | null;
 };
 
 export type TaskComment = {
@@ -53,7 +53,7 @@ export type TaskComment = {
   user_id: string;
   message: string;
   created_at: string;
-  profiles?: { username: string; full_name: string } | null;
+  profiles?: { username: string; full_name: string; avatar_url?: string | null } | null;
 };
 
 /** ألوان جاهزة للدلالة على أهمية المهمة */
@@ -84,7 +84,7 @@ export type ProjectMember = {
   status: MemberStatus;
   invited_by: string | null;
   created_at: string;
-  profiles?: { username: string; full_name: string } | null;
+  profiles?: { username: string; full_name: string; avatar_url?: string | null } | null;
 };
 
 export type PendingInvite = {
