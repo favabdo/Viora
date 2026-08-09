@@ -545,7 +545,7 @@ export default function TasksSection({
                     {task.color && (
                       <span
                         aria-hidden="true"
-                        className="absolute inset-y-1 right-0 w-12 rounded-2xl z-0"
+                        className="absolute inset-y-0 right-0 w-5 z-0"
                         style={{ backgroundColor: task.color }}
                       />
                     )}
