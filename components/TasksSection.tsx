@@ -545,7 +545,7 @@ export default function TasksSection({
                     {task.color && (
                       <span
                         aria-hidden="true"
-                        className="absolute -top-1.5 right-1 h-5 w-5 rounded-full border-2 border-paper shadow-xs z-10"
+                        className="absolute inset-y-1 right-0 w-12 rounded-2xl z-0"
                         style={{ backgroundColor: task.color }}
                       />
                     )}
@@ -557,13 +557,13 @@ export default function TasksSection({
                         onPointerCancel={handleHandlePointerEnd}
                         onContextMenu={(e) => e.preventDefault()}
                         aria-label="اضغط مطوّلاً واسحب لإعادة ترتيب المهمة"
-                        className="task-drag-handle mt-1 shrink-0 cursor-grab text-inkFaint hover:text-inkSoft active:cursor-grabbing"
+                        className="task-drag-handle relative z-10 mt-1 shrink-0 cursor-grab text-inkFaint hover:text-inkSoft active:cursor-grabbing"
                       >
                         <GripVertical size={14} strokeWidth={1.75} />
                       </span>
                       <input
                         type="checkbox"
-                        className="task-check mt-0.5"
+                        className="task-check relative z-10 mt-0.5"
                         checked={task.is_done}
                         onChange={() => toggleTask(task)}
                       />
