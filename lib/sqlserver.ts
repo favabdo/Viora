@@ -5,59 +5,51 @@ import sql from "mssql";
  * ده ملف سيرفر فقط (بيتقرا جوا app/api/... مش جوا component بتاع المتصفح)،
  * عشان بيانات الاتصال متتسربش لأي حد بيفتح الموقع.
  *
- * لازم تحط المتغيرات دي في .env.local (محليًا) وفي إعدادات البيئة بتاعت الاستضافة (Vercel مثلًا):
+ * نفس طريقة الاتصال بالظبط المستخدمة في مشروع Stock Watcher (config/db.js):
+ * config واحد بيتبني مرة من متغيرات البيئة، وpool مشترك (singleton) بيتعمله connect مرة واحدة.
  *
- *   ROOMS_SQLSERVER_HOST=your-server.database.windows.net
+ * لازم تحط المتغيرات دي في .env.local (محليًا) وفي إعدادات البيئة بتاعت الاستضافة:
+ *
+ *   ROOMS_SQLSERVER_HOST=162.55.67.11
  *   ROOMS_SQLSERVER_PORT=1433
- *   ROOMS_SQLSERVER_DATABASE=RoomsDB
- *   ROOMS_SQLSERVER_USER=sa
+ *   ROOMS_SQLSERVER_DATABASE=ChatwootReports
+ *   ROOMS_SQLSERVER_USER=elharaman
  *   ROOMS_SQLSERVER_PASSWORD=********
- *   ROOMS_SQLSERVER_ENCRYPT=true      // true لو سيرفر سحابي (Azure)، false لو سيرفر محلي بدون شهادة SSL
+ *   ROOMS_SQLSERVER_ENCRYPT=false      // زي Stock Watcher: false لسيرفر self-hosted بدون شهادة SSL موثوقة
+ *   ROOMS_SQLSERVER_TRUST_CERT=true    // true لسيرفر self-hosted (يتخطى التحقق من الشهادة)
  */
 
+const config: sql.config = {
+  server: process.env.ROOMS_SQLSERVER_HOST as string,
+  database: process.env.ROOMS_SQLSERVER_DATABASE as string,
+  user: process.env.ROOMS_SQLSERVER_USER as string,
+  password: process.env.ROOMS_SQLSERVER_PASSWORD as string,
+  port: Number(process.env.ROOMS_SQLSERVER_PORT) || 1433,
+  options: {
+    encrypt: process.env.ROOMS_SQLSERVER_ENCRYPT === "true",
+    trustServerCertificate: process.env.ROOMS_SQLSERVER_TRUST_CERT !== "false",
+  },
+  pool: { max: 5, min: 0, idleTimeoutMillis: 30000 },
+};
+
 let poolPromise: Promise<sql.ConnectionPool> | null = null;
-
-function readConfig(): sql.config {
-  const host = process.env.ROOMS_SQLSERVER_HOST;
-  const database = process.env.ROOMS_SQLSERVER_DATABASE;
-  const user = process.env.ROOMS_SQLSERVER_USER;
-  const password = process.env.ROOMS_SQLSERVER_PASSWORD;
-
-  if (!host || !database || !user || !password) {
-    throw new Error(
-      "بيانات الاتصال بقاعدة بيانات Rooms ناقصة. تأكد إنك حاطط ROOMS_SQLSERVER_HOST / DATABASE / USER / PASSWORD في .env.local"
-    );
-  }
-
-  return {
-    server: host,
-    port: process.env.ROOMS_SQLSERVER_PORT ? Number(process.env.ROOMS_SQLSERVER_PORT) : 1433,
-    database,
-    user,
-    password,
-    options: {
-      encrypt: (process.env.ROOMS_SQLSERVER_ENCRYPT ?? "true") === "true",
-      trustServerCertificate: (process.env.ROOMS_SQLSERVER_TRUST_CERT ?? "false") === "true",
-    },
-    pool: {
-      max: 5,
-      min: 0,
-      idleTimeoutMillis: 30000,
-    },
-  };
-}
 
 /** بيرجع Connection Pool واحد مشترك (singleton) بدل ما نفتح اتصال جديد كل ريكوست */
 export function getRoomsPool(): Promise<sql.ConnectionPool> {
   if (!poolPromise) {
-    const connecting: Promise<sql.ConnectionPool> = new sql.ConnectionPool(readConfig())
+    poolPromise = new sql.ConnectionPool(config)
       .connect()
+      .then((pool) => {
+        console.log("[Rooms DB] Connected to SQL Server:", config.server, "/", config.database);
+        return pool;
+      })
       .catch((err: unknown) => {
         // لو الاتصال فشل، امسح الـ promise عشان المحاولة الجاية تتحاول تاني بدل ما تفضل واقفة على الخطأ ده
         poolPromise = null;
+        const message = err instanceof Error ? err.message : String(err);
+        console.error("[Rooms DB] Connection failed:", message);
         throw err;
       });
-    poolPromise = connecting;
   }
   return poolPromise;
 }
