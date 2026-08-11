@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Lock, ShieldCheck, DoorOpen, CheckCircle2, XCircle } from "lucide-react";
+import { Lock, ShieldCheck, DoorOpen, XCircle, ListChecks, RefreshCw } from "lucide-react";
 import Button from "./ui/Button";
 import { Input } from "./ui/Input";
 import { SkeletonList } from "./ui/Skeleton";
 
-type ConnectionStatus =
-  | { checked: false }
-  | { checked: true; connected: true; serverTime: string; database: string }
-  | { checked: true; connected: false; error: string };
+type ScheduledTask = {
+  id: string;
+  createdBy: string;
+  assignedTo: string;
+  text: string;
+  done: boolean;
+};
 
 export default function RoomsSection() {
   const [checkingSession, setCheckingSession] = useState(true);
@@ -17,7 +20,12 @@ export default function RoomsSection() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [status, setStatus] = useState<ConnectionStatus>({ checked: false });
+
+  const [loadingTasks, setLoadingTasks] = useState(false);
+  const [tasksError, setTasksError] = useState("");
+  const [tasks, setTasks] = useState<ScheduledTask[]>([]);
+  const [doneEditable, setDoneEditable] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   // أول ما الصفحة تفتح: نشوف لو معاه كوكي سيشن سليم بالفعل عشان ما نسألوش الباسورد تاني
   useEffect(() => {
@@ -29,18 +37,54 @@ export default function RoomsSection() {
   }, []);
 
   useEffect(() => {
-    if (!unlocked) return;
-    fetch("/api/rooms")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.connected) {
-          setStatus({ checked: true, connected: true, serverTime: data.serverTime, database: data.database });
-        } else {
-          setStatus({ checked: true, connected: false, error: data.error || "فشل الاتصال" });
-        }
-      })
-      .catch(() => setStatus({ checked: true, connected: false, error: "فشل الاتصال" }));
+    if (unlocked) loadTasks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unlocked]);
+
+  async function loadTasks() {
+    setLoadingTasks(true);
+    setTasksError("");
+    try {
+      const res = await fetch("/api/rooms/tasks");
+      const data = await res.json();
+      if (!res.ok) {
+        setTasksError(data.error || "فشل تحميل المهام");
+        setTasks([]);
+        return;
+      }
+      setTasks(data.tasks as ScheduledTask[]);
+      setDoneEditable(Boolean(data.doneEditable));
+    } catch {
+      setTasksError("حصل خطأ أثناء تحميل المهام");
+    } finally {
+      setLoadingTasks(false);
+    }
+  }
+
+  async function toggleDone(task: ScheduledTask) {
+    if (!doneEditable || togglingId) return;
+    const nextDone = !task.done;
+    setTogglingId(task.id);
+    // تحديث فوري في الواجهة، ولو فشل التحديث في السيرفر بنرجّعه زي ما كان
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, done: nextDone } : t)));
+    try {
+      const res = await fetch("/api/rooms/tasks", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: task.id, done: nextDone }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setTasksError(data.error || "فشل تحديث حالة المهمة");
+        setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, done: task.done } : t)));
+      }
+    } catch {
+      setTasksError("حصل خطأ أثناء التحديث");
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, done: task.done } : t)));
+    } finally {
+      setTogglingId(null);
+    }
+  }
 
   async function handleUnlock() {
     if (!password) {
@@ -110,41 +154,79 @@ export default function RoomsSection() {
     );
   }
 
+  const doneCount = tasks.filter((t) => t.done).length;
+
   return (
     <div className="py-6">
-      <div className="flex items-center gap-2 mb-5">
-        <ShieldCheck size={17} strokeWidth={1.75} className="text-teal" />
-        <h2 className="font-display text-lg font-medium text-ink">Rooms</h2>
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <ShieldCheck size={17} strokeWidth={1.75} className="text-teal" />
+          <h2 className="font-display text-lg font-medium text-ink">NIle Chat Scheduled Tasks</h2>
+        </div>
+        <button
+          onClick={loadTasks}
+          disabled={loadingTasks}
+          className="flex items-center gap-1 text-xs text-inkSoft hover:text-teal transition-colors disabled:opacity-50"
+        >
+          <RefreshCw size={13} strokeWidth={1.75} className={loadingTasks ? "animate-spin" : ""} />
+          تحديث
+        </button>
       </div>
 
-      {/* حالة الاتصال بقاعدة بيانات SQL Server - دي خطوة تأكيد الاتصال بس، لسه هنبني عليها عرض الـ Rooms الفعلي */}
-      {!status.checked && (
-        <div className="py-6">
-          <SkeletonList rows={2} />
-        </div>
-      )}
-
-      {status.checked && status.connected && (
-        <div className="flex items-start gap-2.5 rounded-md border border-line bg-sageSoft/40 p-3.5 text-sm">
-          <CheckCircle2 size={16} strokeWidth={1.75} className="text-[#3F6136] mt-0.5 shrink-0" />
-          <div>
-            <p className="text-ink font-medium">الاتصال بقاعدة بيانات Rooms شغال ✅</p>
-            <p className="text-inkSoft text-xs mt-1">
-              قاعدة البيانات: <span dir="ltr">{status.database}</span> — وقت السيرفر:{" "}
-              <span dir="ltr">{new Date(status.serverTime).toLocaleString("ar-EG")}</span>
-            </p>
-          </div>
-        </div>
-      )}
-
-      {status.checked && !status.connected && (
-        <div className="flex items-start gap-2.5 rounded-md border border-clay/30 bg-claySoft p-3.5 text-sm">
+      {tasksError && (
+        <div className="flex items-start gap-2.5 rounded-md border border-clay/30 bg-claySoft p-3 mb-4 text-sm">
           <XCircle size={16} strokeWidth={1.75} className="text-clay mt-0.5 shrink-0" />
-          <div>
-            <p className="text-ink font-medium">مش قادر يتصل بقاعدة بيانات Rooms</p>
-            <p className="text-inkSoft text-xs mt-1">{status.error}</p>
-          </div>
+          <p className="text-ink text-xs">{tasksError}</p>
         </div>
+      )}
+
+      {loadingTasks && tasks.length === 0 ? (
+        <SkeletonList rows={4} />
+      ) : tasks.length === 0 && !tasksError ? (
+        <div className="flex flex-col items-center text-center py-10 text-inkSoft text-sm">
+          <ListChecks size={20} strokeWidth={1.75} className="mb-2 opacity-60" />
+          مفيش مهام دلوقتي في الجدول
+        </div>
+      ) : (
+        <>
+          {tasks.length > 0 && (
+            <p className="text-xs text-inkSoft mb-3">
+              {doneCount} من {tasks.length} خلصوا
+            </p>
+          )}
+          <ul className="space-y-2">
+            {[...tasks]
+              .sort((a, b) => Number(a.done) - Number(b.done))
+              .map((task) => (
+                <li
+                  key={task.id}
+                  className={`rounded-md border border-line p-3 text-sm transition-opacity ${
+                    task.done ? "opacity-60" : ""
+                  }`}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <button
+                      onClick={() => toggleDone(task)}
+                      disabled={!doneEditable || togglingId === task.id}
+                      title={doneEditable ? "علّم كخلصت/معلقة" : "التعديل مش متاح - عمود الحالة نصي"}
+                      className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border flex items-center justify-center ${
+                        task.done ? "bg-teal border-teal" : "border-inkFaint"
+                      } ${doneEditable ? "cursor-pointer" : "cursor-not-allowed"}`}
+                    >
+                      {task.done && <span className="h-1.5 w-1.5 rounded-full bg-paper" />}
+                    </button>
+                    <div className="flex-1">
+                      <p className={`text-ink ${task.done ? "line-through" : ""}`}>{task.text}</p>
+                      <p className="text-2xs text-inkFaint mt-1">
+                        من: <span className="text-inkSoft">{task.createdBy}</span> ← إلى:{" "}
+                        <span className="text-inkSoft">{task.assignedTo}</span>
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </>
       )}
     </div>
   );
