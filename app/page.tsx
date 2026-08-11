@@ -3,19 +3,21 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
-import { CheckSquare, Link2 } from "lucide-react";
+import { CheckSquare, Link2, DoorClosed } from "lucide-react";
 import TasksSection from "@/components/TasksSection";
 import LinksSection from "@/components/LinksSection";
+import RoomsSection from "@/components/RoomsSection";
 import PendingInvites from "@/components/PendingInvites";
 import ProfileCardProvider from "@/components/ProfileCardContext";
 import AppShell, { ShellTab } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
 
-type Tab = "tasks" | "links";
+type Tab = "tasks" | "links" | "rooms";
 
 const TABS: ShellTab[] = [
   { id: "tasks", label: "المهام", icon: CheckSquare },
   { id: "links", label: "الروابط", icon: Link2 },
+  { id: "rooms", label: "Rooms", icon: DoorClosed },
 ];
 
 function HomeInner() {
@@ -90,6 +92,7 @@ function HomeInner() {
           <TasksSection currentUserId={session.user.id} currentUserEmail={session.user.email || ""} />
         )}
         {tab === "links" && <LinksSection />}
+        {tab === "rooms" && <RoomsSection />}
       </AppShell>
     </ProfileCardProvider>
   );
