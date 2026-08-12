@@ -1,18 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Lock, ShieldCheck, DoorOpen, XCircle, ListChecks, RefreshCw } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Lock, ShieldCheck, DoorOpen, XCircle, ListChecks, RefreshCw, Clock, User } from "lucide-react";
 import Button from "./ui/Button";
 import { Input } from "./ui/Input";
 import { SkeletonList } from "./ui/Skeleton";
 
 type ScheduledTask = {
-  id: string;
-  createdBy: string;
-  assignedTo: string;
-  text: string;
+  id: number;
+  contactId: number;
+  customerName: string;
+  taskText: string;
+  agentName: string;
+  status: string;
   done: boolean;
+  dueDate: string | null;
+  createdAt: string | null;
+  endedAt: string | null;
+  deliveryStatus: string | null;
+  assignedToName: string;
+  isOverdue: boolean;
 };
+
+const dateFormatter = new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "short" });
+
+function formatDate(iso: string | null): string {
+  if (!iso) return "—";
+  try {
+    return dateFormatter.format(new Date(iso));
+  } catch {
+    return "—";
+  }
+}
+
+function deliveryBadge(status: string | null): { label: string; className: string } | null {
+  if (!status) return null;
+  const v = status.trim().toLowerCase();
+  if (["on_time", "ontime", "on time", "in_time", "على الميعاد"].includes(v)) {
+    return { label: "سُلّمت في الميعاد", className: "bg-sageSoft/60 text-[#3F6136]" };
+  }
+  if (["late", "delayed", "متأخر", "متأخرة"].includes(v)) {
+    return { label: "اتأخرت عن الميعاد", className: "bg-claySoft text-clay" };
+  }
+  return { label: status, className: "bg-paperDark text-inkSoft" };
+}
 
 export default function RoomsSection() {
   const [checkingSession, setCheckingSession] = useState(true);
@@ -24,10 +55,8 @@ export default function RoomsSection() {
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [tasksError, setTasksError] = useState("");
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
-  const [doneEditable, setDoneEditable] = useState(false);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
-  // أول ما الصفحة تفتح: نشوف لو معاه كوكي سيشن سليم بالفعل عشان ما نسألوش الباسورد تاني
   useEffect(() => {
     fetch("/api/rooms/auth")
       .then((r) => r.json())
@@ -53,7 +82,6 @@ export default function RoomsSection() {
         return;
       }
       setTasks(data.tasks as ScheduledTask[]);
-      setDoneEditable(Boolean(data.doneEditable));
     } catch {
       setTasksError("حصل خطأ أثناء تحميل المهام");
     } finally {
@@ -62,10 +90,9 @@ export default function RoomsSection() {
   }
 
   async function toggleDone(task: ScheduledTask) {
-    if (!doneEditable || togglingId) return;
+    if (togglingId) return;
     const nextDone = !task.done;
     setTogglingId(task.id);
-    // تحديث فوري في الواجهة، ولو فشل التحديث في السيرفر بنرجّعه زي ما كان
     setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, done: nextDone } : t)));
     try {
       const res = await fetch("/api/rooms/tasks", {
@@ -77,6 +104,8 @@ export default function RoomsSection() {
         const data = await res.json().catch(() => ({}));
         setTasksError(data.error || "فشل تحديث حالة المهمة");
         setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, done: task.done } : t)));
+      } else {
+        loadTasks();
       }
     } catch {
       setTasksError("حصل خطأ أثناء التحديث");
@@ -111,6 +140,14 @@ export default function RoomsSection() {
       setSubmitting(false);
     }
   }
+
+  const sortedTasks = useMemo(() => {
+    return [...tasks].sort((a, b) => {
+      if (a.done !== b.done) return Number(a.done) - Number(b.done);
+      if (a.isOverdue !== b.isOverdue) return Number(b.isOverdue) - Number(a.isOverdue);
+      return (a.dueDate || "").localeCompare(b.dueDate || "");
+    });
+  }, [tasks]);
 
   if (checkingSession) {
     return (
@@ -155,10 +192,11 @@ export default function RoomsSection() {
   }
 
   const doneCount = tasks.filter((t) => t.done).length;
+  const overdueCount = tasks.filter((t) => t.isOverdue).length;
 
   return (
     <div className="py-6">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <ShieldCheck size={17} strokeWidth={1.75} className="text-teal" />
           <h2 className="font-display text-lg font-medium text-ink">NIle Chat Scheduled Tasks</h2>
@@ -172,6 +210,13 @@ export default function RoomsSection() {
           تحديث
         </button>
       </div>
+
+      {tasks.length > 0 && (
+        <p className="text-xs text-inkSoft mb-4">
+          {doneCount} من {tasks.length} خلصوا
+          {overdueCount > 0 && <span className="text-clay"> — {overdueCount} متأخرة</span>}
+        </p>
+      )}
 
       {tasksError && (
         <div className="flex items-start gap-2.5 rounded-md border border-clay/30 bg-claySoft p-3 mb-4 text-sm">
@@ -188,45 +233,69 @@ export default function RoomsSection() {
           مفيش مهام دلوقتي في الجدول
         </div>
       ) : (
-        <>
-          {tasks.length > 0 && (
-            <p className="text-xs text-inkSoft mb-3">
-              {doneCount} من {tasks.length} خلصوا
-            </p>
-          )}
-          <ul className="space-y-2">
-            {[...tasks]
-              .sort((a, b) => Number(a.done) - Number(b.done))
-              .map((task) => (
-                <li
-                  key={task.id}
-                  className={`rounded-md border border-line p-3 text-sm transition-opacity ${
-                    task.done ? "opacity-60" : ""
-                  }`}
-                >
-                  <div className="flex items-start gap-2.5">
-                    <button
-                      onClick={() => toggleDone(task)}
-                      disabled={!doneEditable || togglingId === task.id}
-                      title={doneEditable ? "علّم كخلصت/معلقة" : "التعديل مش متاح - عمود الحالة نصي"}
-                      className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border flex items-center justify-center ${
-                        task.done ? "bg-teal border-teal" : "border-inkFaint"
-                      } ${doneEditable ? "cursor-pointer" : "cursor-not-allowed"}`}
-                    >
-                      {task.done && <span className="h-1.5 w-1.5 rounded-full bg-paper" />}
-                    </button>
-                    <div className="flex-1">
-                      <p className={`text-ink ${task.done ? "line-through" : ""}`}>{task.text}</p>
-                      <p className="text-2xs text-inkFaint mt-1">
-                        من: <span className="text-inkSoft">{task.createdBy}</span> ← إلى:{" "}
-                        <span className="text-inkSoft">{task.assignedTo}</span>
-                      </p>
+        <ul className="space-y-2.5">
+          {sortedTasks.map((task) => {
+            const badge = deliveryBadge(task.deliveryStatus);
+            return (
+              <li
+                key={task.id}
+                className={`rounded-md border p-3.5 text-sm transition-opacity ${
+                  task.done
+                    ? "border-line opacity-55"
+                    : task.isOverdue
+                    ? "border-clay/40 bg-claySoft/20"
+                    : "border-line"
+                }`}
+              >
+                <div className="flex items-start gap-2.5">
+                  <button
+                    onClick={() => toggleDone(task)}
+                    disabled={togglingId === task.id}
+                    title={task.done ? "رجّعها لسه مفتوحة" : "علّم إنها خلصت"}
+                    className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border cursor-pointer flex items-center justify-center ${
+                      task.done ? "bg-teal border-teal" : "border-inkFaint"
+                    }`}
+                  >
+                    {task.done && <span className="h-1.5 w-1.5 rounded-full bg-paper" />}
+                  </button>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="inline-flex items-center gap-1 text-2xs font-medium text-ink bg-paperDark rounded-full px-2 py-0.5">
+                        <User size={11} strokeWidth={2} />
+                        {task.customerName}
+                      </span>
+                      {task.isOverdue && (
+                        <span className="text-2xs font-medium text-clay bg-claySoft rounded-full px-2 py-0.5">متأخرة</span>
+                      )}
+                      {badge && (
+                        <span className={`text-2xs font-medium rounded-full px-2 py-0.5 ${badge.className}`}>
+                          {badge.label}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className={`text-ink leading-relaxed ${task.done ? "line-through" : ""}`}>{task.taskText}</p>
+
+                    <div className="flex items-center gap-3 mt-2 text-2xs text-inkFaint flex-wrap">
+                      <span>
+                        من: <span className="text-inkSoft">{task.agentName}</span>
+                      </span>
+                      <span>
+                        إلى: <span className="text-inkSoft">{task.assignedToName}</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock size={11} strokeWidth={1.75} />
+                        تسليم {formatDate(task.dueDate)}
+                      </span>
+                      {task.done && task.endedAt && <span>خلصت {formatDate(task.endedAt)}</span>}
                     </div>
                   </div>
-                </li>
-              ))}
-          </ul>
-        </>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );
