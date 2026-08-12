@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ROOMS_COOKIE_NAME, verifyRoomsSessionToken } from "@/lib/roomsAuth";
 import { getRoomsPool } from "@/lib/sqlserver";
-import { mapRow, SOURCE_TABLE, sql, ScheduledTaskDTO } from "@/lib/scheduledTasks";
+import { mapRow, mapHistoryRow, SOURCE_TABLE, HISTORY_TABLE, sql, ScheduledTaskDTO, HistoryEntryDTO } from "@/lib/scheduledTasks";
 
 export const dynamic = "force-dynamic";
 
@@ -21,14 +21,32 @@ export async function GET() {
 
   try {
     const pool = await getRoomsPool();
-    const result = await pool.request().query(
-      `SELECT id, contact_id, customer_name, task_text, agent_name, status,
-              due_date, created_at, ended_at, delivery_status, assigned_to_name
-       FROM dbo.[${SOURCE_TABLE}]
-       ORDER BY due_date ASC, created_at DESC`
-    );
+    const [tasksResult, historyResult] = await Promise.all([
+      pool.request().query(
+        `SELECT id, contact_id, customer_name, task_text, agent_name, status,
+                due_date, created_at, ended_at, delivery_status, assigned_to_name
+         FROM dbo.[${SOURCE_TABLE}]
+         ORDER BY due_date ASC, created_at DESC`
+      ),
+      pool.request().query(
+        `SELECT id, task_id, field_name, old_value, new_value, changed_by_name, changed_at
+         FROM dbo.[${HISTORY_TABLE}]
+         ORDER BY changed_at DESC`
+      ),
+    ]);
 
-    const tasks: ScheduledTaskDTO[] = result.recordset.map(mapRow);
+    // بنجمّع سجل التغييرات لكل مهمة حسب task_id، عشان كل مهمة تاخد بس سجلها هي
+    const historyByTaskId = new Map<number, HistoryEntryDTO[]>();
+    for (const row of historyResult.recordset) {
+      const entry = mapHistoryRow(row);
+      const list = historyByTaskId.get(entry.taskId) || [];
+      list.push(entry);
+      historyByTaskId.set(entry.taskId, list);
+    }
+
+    const tasks: ScheduledTaskDTO[] = tasksResult.recordset.map((row: any) =>
+      mapRow(row, historyByTaskId.get(row.id) || [])
+    );
     return NextResponse.json({ tasks });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

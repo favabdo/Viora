@@ -11,6 +11,51 @@ import { sql } from "@/lib/sqlserver";
  */
 
 export const SOURCE_TABLE = "NileChat_ScheduledTasks_byA";
+export const HISTORY_TABLE = "NileChat_ScheduledTaskHistory_byA";
+
+export type HistoryEntryDTO = {
+  id: number;
+  taskId: number;
+  fieldName: string;
+  fieldLabel: string;
+  oldValue: string | null;
+  newValue: string | null;
+  changedByName: string;
+  changedAt: string | null;
+};
+
+const FIELD_LABELS: Record<string, string> = {
+  assigned_to: "تغيير الشخص المسند إليه",
+  customer: "تغيير العميل",
+  task_text: "تغيير نص المهمة",
+};
+
+export function fieldLabel(fieldName: string): string {
+  return FIELD_LABELS[fieldName] || fieldName;
+}
+
+type RawHistoryRow = {
+  id: number;
+  task_id: number;
+  field_name: string;
+  old_value: string | null;
+  new_value: string | null;
+  changed_by_name: string | null;
+  changed_at: Date | null;
+};
+
+export function mapHistoryRow(row: RawHistoryRow): HistoryEntryDTO {
+  return {
+    id: row.id,
+    taskId: row.task_id,
+    fieldName: row.field_name,
+    fieldLabel: fieldLabel(row.field_name),
+    oldValue: row.old_value,
+    newValue: row.new_value,
+    changedByName: (row.changed_by_name || "").trim() || "غير معروف",
+    changedAt: toIso(row.changed_at),
+  };
+}
 
 export type ScheduledTaskDTO = {
   id: number;
@@ -30,6 +75,7 @@ export type ScheduledTaskDTO = {
   daysRemaining: number | null;
   /** عدد الأيام اللي فاتت على تاريخ التسليم (موجب) - null لو مش متأخرة */
   daysOverdue: number | null;
+  history: HistoryEntryDTO[];
 };
 
 type RawRow = {
@@ -51,7 +97,7 @@ function toIso(value: Date | null): string | null {
   return value instanceof Date ? value.toISOString() : String(value);
 }
 
-export function mapRow(row: RawRow): ScheduledTaskDTO {
+export function mapRow(row: RawRow, history: HistoryEntryDTO[] = []): ScheduledTaskDTO {
   const done = (row.status || "").trim().toLowerCase() === "ended";
   const dueDateIso = toIso(row.due_date);
   const agentName = (row.agent_name || "").trim() || "غير معروف";
@@ -93,6 +139,7 @@ export function mapRow(row: RawRow): ScheduledTaskDTO {
     isOverdue,
     daysRemaining,
     daysOverdue,
+    history,
   };
 }
 

@@ -1,10 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Lock, ShieldCheck, DoorOpen, XCircle, ListChecks, RefreshCw, Clock, User } from "lucide-react";
+import { Lock, ShieldCheck, DoorOpen, XCircle, ListChecks, RefreshCw, Clock, User, ChevronDown, History } from "lucide-react";
 import Button from "./ui/Button";
 import { Input } from "./ui/Input";
 import { SkeletonList } from "./ui/Skeleton";
+
+type HistoryEntry = {
+  id: number;
+  taskId: number;
+  fieldName: string;
+  fieldLabel: string;
+  oldValue: string | null;
+  newValue: string | null;
+  changedByName: string;
+  changedAt: string | null;
+};
 
 type ScheduledTask = {
   id: number;
@@ -22,7 +33,24 @@ type ScheduledTask = {
   isOverdue: boolean;
   daysRemaining: number | null;
   daysOverdue: number | null;
+  history: HistoryEntry[];
 };
+
+const dateTimeFormatter = new Intl.DateTimeFormat("ar-EG", {
+  day: "numeric",
+  month: "short",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+function formatDateTime(iso: string | null): string {
+  if (!iso) return "—";
+  try {
+    return dateTimeFormatter.format(new Date(iso));
+  } catch {
+    return "—";
+  }
+}
 
 const dateFormatter = new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "short" });
 
@@ -73,6 +101,16 @@ export default function RoomsSection() {
   const [tasksError, setTasksError] = useState("");
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+
+  function toggleHistory(taskId: number) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+  }
 
   useEffect(() => {
     fetch("/api/rooms/auth")
@@ -318,6 +356,45 @@ export default function RoomsSection() {
                       </span>
                       {task.done && task.endedAt && <span>خلصت {formatDate(task.endedAt)}</span>}
                     </div>
+
+                    <button
+                      onClick={() => toggleHistory(task.id)}
+                      className="flex items-center gap-1 text-2xs text-inkFaint hover:text-teal transition-colors mt-2"
+                    >
+                      <History size={11} strokeWidth={1.75} />
+                      السجل {task.history.length > 0 && `(${task.history.length})`}
+                      <ChevronDown
+                        size={11}
+                        strokeWidth={1.75}
+                        className={`transition-transform ${expandedIds.has(task.id) ? "rotate-180" : ""}`}
+                      />
+                    </button>
+
+                    {expandedIds.has(task.id) && (
+                      <div className="mt-2 rounded-md bg-paperDark/50 p-2.5">
+                        {task.history.length === 0 ? (
+                          <p className="text-2xs text-inkFaint">مفيش تعديلات مسجلة على المهمة دي</p>
+                        ) : (
+                          <ul className="space-y-2">
+                            {task.history.map((entry) => (
+                              <li key={entry.id} className="text-2xs">
+                                <p className="text-inkSoft">
+                                  <span className="text-ink font-medium">{entry.changedByName}</span> عدّل{" "}
+                                  {entry.fieldLabel}
+                                </p>
+                                <p className="mt-0.5">
+                                  {entry.oldValue && (
+                                    <span className="text-inkFaint line-through ml-1.5">{entry.oldValue}</span>
+                                  )}
+                                  {entry.newValue && <span className="text-ink">{entry.newValue}</span>}
+                                </p>
+                                <p className="text-inkFaint mt-0.5">{formatDateTime(entry.changedAt)}</p>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </li>
