@@ -26,6 +26,10 @@ export type ScheduledTaskDTO = {
   deliveryStatus: string | null;
   assignedToName: string;
   isOverdue: boolean;
+  /** عدد الأيام المتبقية على تاريخ التسليم (موجب) - null لو مفيش due_date أو المهمة خلصت */
+  daysRemaining: number | null;
+  /** عدد الأيام اللي فاتت على تاريخ التسليم (موجب) - null لو مش متأخرة */
+  daysOverdue: number | null;
 };
 
 type RawRow = {
@@ -50,22 +54,45 @@ function toIso(value: Date | null): string | null {
 export function mapRow(row: RawRow): ScheduledTaskDTO {
   const done = (row.status || "").trim().toLowerCase() === "ended";
   const dueDateIso = toIso(row.due_date);
-  const isOverdue = !done && !!dueDateIso && new Date(dueDateIso).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0);
+  const agentName = (row.agent_name || "").trim() || "غير معروف";
+  // لو مفيش حد متسندله المهمة، تتسند تلقائيًا في العرض للي أنشأها
+  const assignedToName = (row.assigned_to_name || "").trim() || agentName;
+
+  let isOverdue = false;
+  let daysRemaining: number | null = null;
+  let daysOverdue: number | null = null;
+
+  if (dueDateIso) {
+    const todayMidnight = new Date().setHours(0, 0, 0, 0);
+    const dueMidnight = new Date(dueDateIso).setHours(0, 0, 0, 0);
+    const diffDays = Math.round((dueMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
+
+    if (!done) {
+      if (diffDays < 0) {
+        isOverdue = true;
+        daysOverdue = Math.abs(diffDays);
+      } else {
+        daysRemaining = diffDays;
+      }
+    }
+  }
 
   return {
     id: row.id,
     contactId: row.contact_id,
     customerName: (row.customer_name || "").trim() || "عميل بدون اسم",
     taskText: row.task_text,
-    agentName: (row.agent_name || "").trim() || "غير معروف",
+    agentName,
     status: row.status,
     done,
     dueDate: dueDateIso,
     createdAt: toIso(row.created_at),
     endedAt: toIso(row.ended_at),
     deliveryStatus: row.delivery_status,
-    assignedToName: (row.assigned_to_name || "").trim() || "غير مسندة",
+    assignedToName,
     isOverdue,
+    daysRemaining,
+    daysOverdue,
   };
 }
 

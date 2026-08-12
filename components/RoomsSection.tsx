@@ -20,6 +20,8 @@ type ScheduledTask = {
   deliveryStatus: string | null;
   assignedToName: string;
   isOverdue: boolean;
+  daysRemaining: number | null;
+  daysOverdue: number | null;
 };
 
 const dateFormatter = new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "short" });
@@ -43,6 +45,21 @@ function deliveryBadge(status: string | null): { label: string; className: strin
     return { label: "اتأخرت عن الميعاد", className: "bg-claySoft text-clay" };
   }
   return { label: status, className: "bg-paperDark text-inkSoft" };
+}
+
+function remainingLabel(days: number): string {
+  if (days === 0) return "مستحقة النهاردة";
+  if (days === 1) return "متبقي يوم واحد";
+  if (days === 2) return "متبقي يومين";
+  if (days >= 3 && days <= 10) return `متبقي ${days} أيام`;
+  return `متبقي ${days} يوم`;
+}
+
+function overdueLabel(days: number): string {
+  if (days === 1) return "متأخرة يوم";
+  if (days === 2) return "متأخرة يومين";
+  if (days >= 3 && days <= 10) return `متأخرة ${days} أيام`;
+  return `متأخرة ${days} يوم`;
 }
 
 export default function RoomsSection() {
@@ -265,8 +282,15 @@ export default function RoomsSection() {
                         <User size={11} strokeWidth={2} />
                         {task.customerName}
                       </span>
-                      {task.isOverdue && (
-                        <span className="text-2xs font-medium text-clay bg-claySoft rounded-full px-2 py-0.5">متأخرة</span>
+                      {!task.done && task.isOverdue && task.daysOverdue !== null && (
+                        <span className="text-2xs font-medium text-clay bg-claySoft rounded-full px-2 py-0.5">
+                          {overdueLabel(task.daysOverdue)}
+                        </span>
+                      )}
+                      {!task.done && !task.isOverdue && task.daysRemaining !== null && (
+                        <span className="text-2xs font-medium text-inkSoft bg-paperDark rounded-full px-2 py-0.5">
+                          {remainingLabel(task.daysRemaining)}
+                        </span>
                       )}
                       {badge && (
                         <span className={`text-2xs font-medium rounded-full px-2 py-0.5 ${badge.className}`}>
@@ -283,6 +307,10 @@ export default function RoomsSection() {
                       </span>
                       <span>
                         إلى: <span className="text-inkSoft">{task.assignedToName}</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock size={11} strokeWidth={1.75} />
+                        اتنشأت {formatDate(task.createdAt)}
                       </span>
                       <span className="inline-flex items-center gap-1">
                         <Clock size={11} strokeWidth={1.75} />
