@@ -7,6 +7,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import StatusScreen from "@/components/ui/StatusScreen";
 import Button from "@/components/ui/Button";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 type Status = "loading" | "success" | "error";
 
@@ -15,8 +16,10 @@ const REDIRECT_DELAY_MS = 1800;
 function ConfirmPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
   const [status, setStatus] = useState<Status>("loading");
-  const [message, setMessage] = useState<string>("جارٍ التحقق من حسابك...");
+  const [message, setMessage] = useState<string>("");
+  const displayMessage = message || t("authConfirm.checking");
 
   useEffect(() => {
     let redirectTimer: ReturnType<typeof setTimeout>;
@@ -27,7 +30,7 @@ function ConfirmPageInner() {
 
       if (!tokenHash || !type) {
         setStatus("error");
-        setMessage("رابط التأكيد غير مكتمل أو غير صالح. يُرجى فتح الرابط من البريد الإلكتروني مرة أخرى.");
+        setMessage(t("authConfirm.err.invalidLink"));
         return;
       }
 
@@ -39,15 +42,13 @@ function ConfirmPageInner() {
       if (error) {
         setStatus("error");
         setMessage(
-          /expired/i.test(error.message)
-            ? "انتهت صلاحية رابط التأكيد. يُرجى طلب رابط جديد والمحاولة مرة أخرى."
-            : "تعذّر تأكيد حسابك. قد يكون الرابط مستخدمًا من قبل أو غير صالح."
+          /expired/i.test(error.message) ? t("authConfirm.err.expiredLink") : t("authConfirm.err.confirmFailed")
         );
         return;
       }
 
       setStatus("success");
-      setMessage("تم تأكيد حسابك بنجاح، سيتم تحويلك الآن...");
+      setMessage(t("authConfirm.success"));
 
       redirectTimer = setTimeout(() => {
         router.replace(data.session ? "/" : "/login?confirmed=1");
@@ -68,15 +69,15 @@ function ConfirmPageInner() {
         </div>
 
         <div className="bg-surface border border-line rounded-lg shadow-raised p-6 fade-in">
-          {status === "loading" && <StatusScreen kind="loading" title="لحظة من فضلك..." message={message} />}
+          {status === "loading" && <StatusScreen kind="loading" title={t("authConfirm.loadingTitle")} message={displayMessage} />}
 
-          {status === "success" && <StatusScreen kind="success" title="تم التأكيد" message={message} />}
+          {status === "success" && <StatusScreen kind="success" title={t("authConfirm.successTitle")} message={displayMessage} />}
 
           {status === "error" && (
             <>
-              <StatusScreen kind="error" title="فشل التأكيد" message={message} />
+              <StatusScreen kind="error" title={t("authConfirm.errorTitle")} message={displayMessage} />
               <Button variant="primary" fullWidth onClick={() => router.replace("/login")} className="mt-5">
-                العودة إلى تسجيل الدخول
+                {t("authConfirm.backToLogin")}
               </Button>
             </>
           )}

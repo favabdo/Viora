@@ -58,12 +58,12 @@ export type TaskComment = {
 
 /** ألوان جاهزة للدلالة على أهمية المهمة */
 export const TASK_COLORS: { name: string; value: string; label: string }[] = [
-  { name: "red", value: "#ef4444", label: "عاجل" },
-  { name: "orange", value: "#f97316", label: "مهم" },
-  { name: "yellow", value: "#eab308", label: "متوسط" },
-  { name: "green", value: "#22c55e", label: "منخفض" },
-  { name: "blue", value: "#3b82f6", label: "معلومة" },
-  { name: "purple", value: "#a855f7", label: "لاحقًا" },
+  { name: "red", value: "#ef4444", label: "Urgent" },
+  { name: "orange", value: "#f97316", label: "Important" },
+  { name: "yellow", value: "#eab308", label: "Medium" },
+  { name: "green", value: "#22c55e", label: "Low" },
+  { name: "blue", value: "#3b82f6", label: "Info" },
+  { name: "purple", value: "#a855f7", label: "Later" },
 ];
 
 export type LinkItem = {

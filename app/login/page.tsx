@@ -6,6 +6,7 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 type Mode = "signin" | "signup";
 
@@ -20,6 +21,7 @@ function nextDestination() {
 function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<Mode>("signin");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -34,7 +36,7 @@ function LoginPageInner() {
 
   useEffect(() => {
     if (searchParams.get("confirmed") === "1") {
-      setInfo("تم تأكيد حسابك بنجاح، يمكنك تسجيل الدخول الآن.");
+      setInfo(t("login.confirmedInfo"));
     }
   }, [searchParams]);
 
@@ -61,14 +63,14 @@ function LoginPageInner() {
       } else {
         const trimmedName = name.trim();
         if (!trimmedName) {
-          setError("يُرجى إدخال اسمك");
+          setError(t("login.err.enterName"));
           setLoading(false);
           return;
         }
 
         const normalizedUsername = username.trim().toLowerCase();
         if (!USERNAME_RE.test(normalizedUsername)) {
-          setError("يجب أن يتكوّن اسم المستخدم من 3 إلى 20 حرفًا، ويُسمح فقط بأحرف إنجليزية صغيرة أو أرقام أو الشرطة السفلية (_)");
+          setError(t("login.err.usernameFormat"));
           setLoading(false);
           return;
         }
@@ -80,7 +82,7 @@ function LoginPageInner() {
         );
         if (checkError) throw checkError;
         if (exists) {
-          setError("اسم المستخدم هذا مسجّل بالفعل، يُرجى تجربة اسم آخر");
+          setError(t("login.err.usernameTaken"));
           setLoading(false);
           return;
         }
@@ -96,7 +98,7 @@ function LoginPageInner() {
         if (error) {
           // لو حصل تعارض لحظي على نفس اليوزرنيم (اتسجل من حد تاني في نفس اللحظة)
           if (/duplicate|unique|already exists/i.test(error.message)) {
-            setError("اسم المستخدم هذا مسجّل بالفعل، يُرجى تجربة اسم آخر");
+            setError(t("login.err.usernameTaken"));
             setLoading(false);
             return;
           }
@@ -109,15 +111,13 @@ function LoginPageInner() {
           return;
         }
 
-        setInfo(
-          "تم إنشاء الحساب بنجاح. يُرجى التحقق من بريدك الإلكتروني لتأكيد الحساب، ثم تسجيل الدخول. في حال عدم وصول الرسالة خلال دقائق، يُرجى مراجعة مجلد الرسائل غير المرغوب فيها (Spam)."
-        );
+        setInfo(t("login.signupSuccess"));
         setMode("signin");
         setName("");
         setUsername("");
       }
     } catch (err: any) {
-      setError(err?.message || "حدث خطأ، يُرجى المحاولة مرة أخرى");
+      setError(err?.message || t("login.err.generic"));
     } finally {
       setLoading(false);
     }
@@ -142,28 +142,28 @@ function LoginPageInner() {
 
         <div className="bg-surface border border-line rounded-lg shadow-raised p-6 fade-in">
           <h1 className="font-display text-xl font-medium mb-1 text-center">
-            {mode === "signin" ? "تسجيل الدخول" : "إنشاء حساب"}
+            {mode === "signin" ? t("login.signIn") : t("login.createAccount")}
           </h1>
           <p className="text-inkSoft text-sm text-center mb-6">
             {hasInvite
-              ? "بعد تسجيل الدخول ستنضم تلقائيًا إلى المشروع الذي دُعيت إليه"
+              ? t("login.inviteHint")
               : mode === "signin"
-              ? "مرحبًا بعودتك إلى Viora"
-              : "ابدأ رحلتك مع Viora"}
+              ? t("login.welcomeBack")
+              : t("login.startJourney")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {mode === "signup" && (
               <div className="fade-in">
                 <label className="block text-sm font-medium text-inkSoft mb-1.5">
-                  الاسم
+                  {t("login.name")}
                 </label>
                 <Input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="اسمك"
+                  placeholder={t("login.namePlaceholder")}
                 />
               </div>
             )}
@@ -171,7 +171,7 @@ function LoginPageInner() {
             {mode === "signup" && (
               <div className="fade-in">
                 <label className="block text-sm font-medium text-inkSoft mb-1.5">
-                  اسم المستخدم
+                  {t("login.username")}
                 </label>
                 <Input
                   type="text"
@@ -184,17 +184,17 @@ function LoginPageInner() {
                   }
                   placeholder="username"
                   dir="ltr"
-                  className="font-mono text-left"
+                  className="font-mono text-end"
                 />
                 <p className="text-xs text-inkFaint mt-1">
-                  يُسمح فقط بأحرف إنجليزية صغيرة أو أرقام أو الشرطة السفلية (_)، من 3 إلى 20 حرفًا
+                  {t("login.usernameHint")}
                 </p>
               </div>
             )}
 
             <div>
               <label className="block text-sm font-medium text-inkSoft mb-1.5">
-                البريد الإلكتروني
+                {t("login.email")}
               </label>
               <Input
                 type="email"
@@ -203,13 +203,13 @@ function LoginPageInner() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 dir="ltr"
-                className="text-left"
+                className="text-end"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-inkSoft mb-1.5">
-                كلمة المرور
+                {t("login.password")}
               </label>
               <Input
                 type="password"
@@ -219,7 +219,7 @@ function LoginPageInner() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 dir="ltr"
-                className="text-left"
+                className="text-end"
               />
             </div>
 
@@ -235,12 +235,12 @@ function LoginPageInner() {
             )}
 
             <Button type="submit" variant="primary" fullWidth loading={loading} className="mt-1">
-              {mode === "signin" ? "تسجيل الدخول" : "إنشاء الحساب"}
+              {mode === "signin" ? t("login.signIn") : t("login.createAccountBtn")}
             </Button>
           </form>
 
           <p className="text-center text-sm text-inkSoft mt-5">
-            {mode === "signin" ? "ليس لديك حساب بعد؟" : "لديك حساب بالفعل؟"}{" "}
+            {mode === "signin" ? t("login.noAccountYet") : t("login.haveAccount")}{" "}
             <button
               onClick={() => {
                 setMode(mode === "signin" ? "signup" : "signin");
@@ -250,7 +250,7 @@ function LoginPageInner() {
               }}
               className="text-teal font-medium hover:underline"
             >
-              {mode === "signin" ? "إنشاء حساب" : "تسجيل الدخول"}
+              {mode === "signin" ? t("login.createAccount") : t("login.signIn")}
             </button>
           </p>
         </div>

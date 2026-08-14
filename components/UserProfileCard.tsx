@@ -9,6 +9,7 @@ import Avatar from "./ui/Avatar";
 import Modal from "./ui/Modal";
 import { X, Mail, Settings } from "lucide-react";
 import { resolveName } from "@/lib/displayName";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export default function UserProfileCard({
   userId,
@@ -20,6 +21,7 @@ export default function UserProfileCard({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const isSelf = userId === currentUserId;
@@ -45,7 +47,7 @@ export default function UserProfileCard({
   return (
     <Modal onClose={onClose} maxWidth="max-w-xs">
       <div className="flex justify-end mb-1">
-        <IconButton aria-label="إغلاق" onClick={onClose}>
+        <IconButton aria-label={t("common.close")} onClick={onClose}>
           <X size={16} strokeWidth={1.75} />
         </IconButton>
       </div>
@@ -57,14 +59,14 @@ export default function UserProfileCard({
           <div className="skeleton h-3 w-20 rounded-sm" />
         </div>
       ) : !profile ? (
-        <p className="text-sm text-inkSoft text-center py-6">تعذّر تحميل بيانات هذا المستخدم</p>
+        <p className="text-sm text-inkSoft text-center py-6">{t("userCard.loadFailed")}</p>
       ) : (
         <div className="flex flex-col items-center text-center -mt-2">
           <Avatar name={resolveName(profile)} src={profile.avatar_url} size="lg" className="mb-3" />
 
           <h3 className="font-display text-lg font-medium">
             {resolveName(profile)}
-            {isSelf && <span className="text-inkFaint text-sm font-sans"> (أنت)</span>}
+            {isSelf && <span className="text-inkFaint text-sm font-sans"> ({t("userCard.you")})</span>}
           </h3>
           <p dir="ltr" className="font-mono text-xs text-inkFaint mt-0.5">
             @{profile.username}
@@ -90,7 +92,7 @@ export default function UserProfileCard({
               className="mt-4 flex items-center gap-1.5 text-xs text-teal hover:text-tealDark font-medium transition-colors"
             >
               <Settings size={13} strokeWidth={1.75} />
-              تعديل الملف الشخصي
+              {t("userCard.editProfile")}
             </button>
           )}
         </div>

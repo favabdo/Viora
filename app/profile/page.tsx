@@ -11,12 +11,26 @@ import { Input } from "@/components/ui/Input";
 import { ArrowRight, Camera, Loader2 } from "lucide-react";
 import AvatarCropModal from "@/components/AvatarCropModal";
 import ConfirmPasswordModal from "@/components/ConfirmPasswordModal";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
+import { Languages, Sun, Moon } from "lucide-react";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 
 export default function ProfilePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t, lang, setLang } = useTranslation();
+  const [theme, setThemeState] = useState<Theme>("light");
+
+  useEffect(() => {
+    setThemeState(getStoredTheme());
+  }, []);
+
+  function handleThemeChange(next: Theme) {
+    setThemeState(next);
+    applyTheme(next);
+  }
 
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
@@ -83,13 +97,11 @@ export default function ProfilePage() {
     const normalizedUsername = username.trim().toLowerCase();
 
     if (!trimmedName) {
-      setInfoError("يُرجى إدخال اسمك");
+      setInfoError(t("profile.err.enterName"));
       return;
     }
     if (!USERNAME_RE.test(normalizedUsername)) {
-      setInfoError(
-        "اسم المستخدم يجب أن يكون من 3 إلى 20 حرفًا، ويُسمح فقط بأحرف إنجليزية صغيرة أو أرقام أو الشرطة السفلية (_)"
-      );
+      setInfoError(t("profile.err.usernameFormat"));
       return;
     }
 
@@ -101,7 +113,7 @@ export default function ProfilePage() {
         });
         if (checkError) throw checkError;
         if (exists) {
-          setInfoError("اسم المستخدم هذا مسجّل بالفعل، يُرجى تجربة اسم آخر");
+          setInfoError(t("profile.err.usernameTaken"));
           setSavingInfo(false);
           return;
         }
@@ -114,9 +126,9 @@ export default function ProfilePage() {
       if (error) throw error;
 
       setProfile({ ...profile, full_name: trimmedName, username: normalizedUsername });
-      setInfoMsg("تم حفظ التغييرات بنجاح");
+      setInfoMsg(t("profile.msg.infoSaved"));
     } catch (err: any) {
-      setInfoError(err?.message || "حدث خطأ، يُرجى المحاولة مرة أخرى");
+      setInfoError(err?.message || t("profile.err.generic"));
     } finally {
       setSavingInfo(false);
     }
@@ -128,12 +140,12 @@ export default function ProfilePage() {
     setAvatarError("");
 
     if (!file.type.startsWith("image/")) {
-      setAvatarError("يُرجى اختيار ملف صورة");
+      setAvatarError(t("profile.err.chooseImage"));
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setAvatarError("حجم الصورة كبير جدًا (الحد الأقصى 10 ميجابايت)");
+      setAvatarError(t("profile.err.imageTooLarge"));
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -168,7 +180,7 @@ export default function ProfilePage() {
 
       setProfile({ ...profile, avatar_url: url });
     } catch (err: any) {
-      setAvatarError(err?.message || "تعذّر رفع الصورة، يُرجى المحاولة مرة أخرى");
+      setAvatarError(err?.message || t("profile.err.uploadFailed"));
     } finally {
       setUploadingAvatar(false);
     }
@@ -179,19 +191,19 @@ export default function ProfilePage() {
     setPasswordMsg("");
 
     if (!currentPassword) {
-      setPasswordError("يُرجى إدخال كلمة المرور الحالية");
+      setPasswordError(t("profile.err.enterCurrentPassword"));
       return;
     }
     if (newPassword.length < 6) {
-      setPasswordError("كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل");
+      setPasswordError(t("profile.err.passwordMinLength"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError("كلمة المرور الجديدة غير مطابقة للتأكيد");
+      setPasswordError(t("profile.err.passwordMismatch"));
       return;
     }
     if (!session?.user.email) {
-      setPasswordError("تعذّر التحقق من الحساب");
+      setPasswordError(t("profile.err.verifyAccountFailed"));
       return;
     }
 
@@ -203,7 +215,7 @@ export default function ProfilePage() {
         password: currentPassword,
       });
       if (verifyError) {
-        setPasswordError("كلمة المرور الحالية غير صحيحة");
+        setPasswordError(t("profile.err.wrongCurrentPassword"));
         setChangingPassword(false);
         return;
       }
@@ -211,12 +223,12 @@ export default function ProfilePage() {
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
       if (updateError) throw updateError;
 
-      setPasswordMsg("تم تغيير كلمة المرور بنجاح");
+      setPasswordMsg(t("profile.msg.passwordChanged"));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      setPasswordError(err?.message || "حدث خطأ، يُرجى المحاولة مرة أخرى");
+      setPasswordError(err?.message || t("profile.err.generic"));
     } finally {
       setChangingPassword(false);
     }
@@ -226,7 +238,7 @@ export default function ProfilePage() {
     setDeleteAccountError("");
     const { error } = await supabase.rpc("delete_own_account");
     if (error) {
-      setDeleteAccountError(error.message || "حدث خطأ، يُرجى المحاولة مرة أخرى");
+      setDeleteAccountError(error.message || t("profile.err.generic"));
       return;
     }
     await supabase.auth.signOut();
@@ -245,10 +257,10 @@ export default function ProfilePage() {
     <main className="min-h-screen px-5 py-6 md:px-10 md:py-8 bg-paper">
       <div className="max-w-lg mx-auto">
         <header className="mb-7 flex items-center gap-3">
-          <IconButton aria-label="رجوع" onClick={() => router.push("/")}>
+          <IconButton aria-label={t("profile.back")} onClick={() => router.push("/")}>
             <ArrowRight size={16} strokeWidth={1.75} />
           </IconButton>
-          <h1 className="font-display text-xl font-medium">الملف الشخصي</h1>
+          <h1 className="font-display text-xl font-medium">{t("profile.title")}</h1>
         </header>
 
         {/* الصورة الشخصية */}
@@ -258,7 +270,7 @@ export default function ProfilePage() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingAvatar}
-              aria-label="تغيير الصورة الشخصية"
+              aria-label={t("profile.changeAvatar")}
               className="absolute -bottom-1 -left-1 h-8 w-8 rounded-full bg-teal text-white flex items-center justify-center border-2 border-paper hover:bg-tealDark transition-colors disabled:opacity-60"
             >
               {uploadingAvatar ? (
@@ -289,35 +301,33 @@ export default function ProfilePage() {
         {/* البيانات الأساسية */}
         <section className="bg-surface border border-line rounded-lg p-5 mb-5 fade-in">
           <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-4">
-            البيانات الأساسية
+            {t("profile.basicInfo")}
           </h2>
 
           <div className="space-y-3.5">
             <div>
-              <label className="block text-sm font-medium text-inkSoft mb-1.5">الاسم</label>
-              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="اسمك" />
+              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.name")}</label>
+              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t("profile.namePlaceholder")} />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-inkSoft mb-1.5">اسم المستخدم</label>
+              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.username")}</label>
               <Input
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
                 dir="ltr"
-                className="font-mono text-left"
+                className="font-mono text-end"
               />
-              <p className="text-xs text-inkFaint mt-1">
-                يُسمح فقط بأحرف إنجليزية صغيرة أو أرقام أو الشرطة السفلية (_)، من 3 إلى 20 حرفًا
-              </p>
+              <p className="text-xs text-inkFaint mt-1">{t("profile.usernameHint")}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-inkSoft mb-1.5">البريد الإلكتروني</label>
+              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.email")}</label>
               <Input
                 value={profile.email || session.user.email || ""}
                 disabled
                 dir="ltr"
-                className="text-left opacity-70 cursor-not-allowed"
+                className="text-end opacity-70 cursor-not-allowed"
               />
             </div>
 
@@ -325,7 +335,7 @@ export default function ProfilePage() {
             {infoMsg && <p className="text-sm text-[#3F6136] bg-sageSoft rounded-md px-3 py-2">{infoMsg}</p>}
 
             <Button variant="primary" loading={savingInfo} onClick={saveInfo}>
-              حفظ التغييرات
+              {t("profile.saveChanges")}
             </Button>
           </div>
         </section>
@@ -333,41 +343,41 @@ export default function ProfilePage() {
         {/* تغيير كلمة المرور */}
         <section className="bg-surface border border-line rounded-lg p-5 fade-in">
           <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-4">
-            تغيير كلمة المرور
+            {t("profile.changePassword")}
           </h2>
 
           <div className="space-y-3.5">
             <div>
-              <label className="block text-sm font-medium text-inkSoft mb-1.5">كلمة المرور الحالية</label>
+              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.currentPassword")}</label>
               <Input
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 dir="ltr"
-                className="text-left"
+                className="text-end"
                 placeholder="••••••••"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-inkSoft mb-1.5">كلمة المرور الجديدة</label>
+              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.newPassword")}</label>
               <Input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 dir="ltr"
-                className="text-left"
+                className="text-end"
                 placeholder="••••••••"
                 minLength={6}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-inkSoft mb-1.5">تأكيد كلمة المرور الجديدة</label>
+              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.confirmNewPassword")}</label>
               <Input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 dir="ltr"
-                className="text-left"
+                className="text-end"
                 placeholder="••••••••"
                 minLength={6}
               />
@@ -377,23 +387,87 @@ export default function ProfilePage() {
             {passwordMsg && <p className="text-sm text-[#3F6136] bg-sageSoft rounded-md px-3 py-2">{passwordMsg}</p>}
 
             <Button variant="secondary" loading={changingPassword} onClick={changePassword}>
-              تغيير كلمة المرور
+              {t("profile.changePassword")}
             </Button>
+          </div>
+        </section>
+
+        {/* التفضيلات: اللغة والمظهر */}
+        <section className="bg-surface border border-line rounded-lg p-5 mt-5 fade-in">
+          <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-4">
+            {t("profile.preferences")}
+          </h2>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-ink flex items-center gap-1.5">
+                  <Languages size={14} strokeWidth={1.75} />
+                  {t("profile.language")}
+                </p>
+                <p className="text-xs text-inkFaint mt-0.5">{t("profile.languageHint")}</p>
+              </div>
+              <div className="flex items-center rounded-md border border-line p-0.5 shrink-0">
+                <button
+                  onClick={() => setLang("en")}
+                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    lang === "en" ? "bg-tealSoft text-tealDark" : "text-inkSoft hover:text-ink"
+                  }`}
+                >
+                  English
+                </button>
+                <button
+                  onClick={() => setLang("ar")}
+                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    lang === "ar" ? "bg-tealSoft text-tealDark" : "text-inkSoft hover:text-ink"
+                  }`}
+                >
+                  العربية
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 pt-4 border-t border-line">
+              <div>
+                <p className="text-sm font-medium text-ink flex items-center gap-1.5">
+                  {theme === "dark" ? <Moon size={14} strokeWidth={1.75} /> : <Sun size={14} strokeWidth={1.75} />}
+                  {t("profile.appearance")}
+                </p>
+                <p className="text-xs text-inkFaint mt-0.5">{t("profile.appearanceHint")}</p>
+              </div>
+              <div className="flex items-center rounded-md border border-line p-0.5 shrink-0">
+                <button
+                  onClick={() => handleThemeChange("light")}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    theme === "light" ? "bg-tealSoft text-tealDark" : "text-inkSoft hover:text-ink"
+                  }`}
+                >
+                  <Sun size={13} strokeWidth={1.75} />
+                  {t("profile.light")}
+                </button>
+                <button
+                  onClick={() => handleThemeChange("dark")}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    theme === "dark" ? "bg-tealSoft text-tealDark" : "text-inkSoft hover:text-ink"
+                  }`}
+                >
+                  <Moon size={13} strokeWidth={1.75} />
+                  {t("profile.dark")}
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* منطقة الخطر: حذف الحساب */}
         <section className="bg-surface border border-clay/30 rounded-lg p-5 mt-5 fade-in">
-          <h2 className="text-2xs font-semibold tracking-wide text-clay uppercase mb-3">منطقة الخطر</h2>
-          <p className="text-sm text-inkSoft mb-4 leading-relaxed">
-            حذف الحساب هيخفي اسمك وصورتك عن كل الأعضاء في أي مشروع مشترك، ومش هيقدر حد يدعوك لمشروع تاني
-            باستخدام اسم المستخدم بتاعك. الإجراء ده لا يمكن التراجع عنه.
-          </p>
+          <h2 className="text-2xs font-semibold tracking-wide text-clay uppercase mb-3">{t("profile.dangerZone")}</h2>
+          <p className="text-sm text-inkSoft mb-4 leading-relaxed">{t("profile.deleteAccountWarning")}</p>
           {deleteAccountError && (
             <p className="text-sm text-clay bg-claySoft rounded-md px-3 py-2 mb-3">{deleteAccountError}</p>
           )}
           <Button variant="danger" onClick={() => setShowDeleteAccount(true)}>
-            حذف الحساب
+            {t("profile.deleteAccount")}
           </Button>
         </section>
       </div>
@@ -401,9 +475,9 @@ export default function ProfilePage() {
       {showDeleteAccount && (
         <ConfirmPasswordModal
           email={profile.email || session.user.email || ""}
-          title="حذف الحساب؟"
-          message="أدخل كلمة المرور لتأكيد حذف حسابك. لن يظهر اسمك أو صورتك لأي حد بعد ذلك، ولن يقدر حد يدعوك مرة أخرى باستخدام اسم المستخدم. هذا الإجراء لا يمكن التراجع عنه."
-          confirmLabel="حذف الحساب"
+          title={t("profile.deleteAccountTitle")}
+          message={t("profile.deleteAccountMessage")}
+          confirmLabel={t("profile.deleteAccount")}
           onCancel={() => setShowDeleteAccount(false)}
           onConfirm={performDeleteAccount}
         />

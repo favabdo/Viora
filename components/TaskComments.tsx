@@ -9,6 +9,7 @@ import ClickableName from "./ClickableName";
 import { Input } from "./ui/Input";
 import IconButton from "./ui/IconButton";
 import Avatar from "./ui/Avatar";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 /**
  * تعليقات المهمة: زرار بيعرض عدد التعليقات، ولو دُس عليه بيفتح كل التعليقات
@@ -27,6 +28,7 @@ export default function TaskComments({
   count: number;
   onCountChange: (taskId: string, delta: number) => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -78,15 +80,15 @@ export default function TaskComments({
       >
         <ChevronDown size={11} strokeWidth={2} className={`transition-transform ${open ? "rotate-180" : ""}`} />
         <MessageCircle size={11} strokeWidth={2} />
-        {count > 0 ? `${count} ${count === 1 ? "تعليق" : "تعليقات"}` : "تعليق"}
+        {count > 0 ? `${count} ${count === 1 ? t("comments.one") : t("comments.many")}` : t("comments.one")}
       </button>
 
       {open && (
-        <div className="mt-1.5 border-r-2 border-line pr-3 space-y-2 fade-in">
+        <div className="mt-1.5 border-s-2 border-line ps-3 space-y-2 fade-in">
           {loading ? (
-            <p className="text-2xs text-inkFaint">جارٍ التحميل...</p>
+            <p className="text-2xs text-inkFaint">{t("common.loading")}</p>
           ) : comments.length === 0 ? (
-            <p className="text-2xs text-inkFaint">لا توجد تعليقات بعد</p>
+            <p className="text-2xs text-inkFaint">{t("comments.empty")}</p>
           ) : (
             comments.map((c) => (
               <div key={c.id} className="flex items-start gap-1.5 text-2xs">
@@ -106,13 +108,13 @@ export default function TaskComments({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addComment()}
-              placeholder="أضف تعليقًا..."
+              placeholder={t("comments.addPlaceholder")}
               className="text-2xs py-1"
             />
             <IconButton
               size="sm"
               tone="active"
-              aria-label="إرسال التعليق"
+              aria-label={t("comments.send")}
               onClick={addComment}
               disabled={sending || !draft.trim()}
             >

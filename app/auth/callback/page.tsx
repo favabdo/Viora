@@ -3,9 +3,11 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export default function AuthCallback() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   useEffect(() => {
     (async () => {
@@ -21,7 +23,7 @@ export default function AuthCallback() {
     <main className="min-h-screen flex items-center justify-center">
       <div className="flex items-center gap-2.5 text-inkSoft text-sm">
         <span className="h-4 w-4 rounded-full border-2 border-line border-t-teal animate-spin" />
-        جارٍ تأكيد حسابك...
+        {t("authCallback.confirming")}
       </div>
     </main>
   );

@@ -1,0 +1,307 @@
+// قاموس ترجمة التطبيق بالكامل.
+// الإنجليزية (en) هي اللغة الافتراضية للتطبيق، والعربية (ar) هنا عربية فصحى (وليست عامية).
+// المفاتيح مقسّمة بالتعليقات حسب الملف عشان تبقى سهلة اللقاء والتحديث.
+
+const dict: Record<string, { en: string; ar: string }> = {
+  // ===== app/layout.tsx =====
+  "app.title": { en: "Viora", ar: "فيورا" },
+  "app.description": { en: "Your tasks and links for every project, in one place", ar: "مهامك وروابطك لكل مشروع في مكان واحد" },
+  // ===== components/AppShell.tsx =====
+  "shell.openProfile": { en: "Open profile", ar: "فتح الملف الشخصي" },
+  "shell.signOut": { en: "Sign out", ar: "تسجيل الخروج" },
+  "shell.account": { en: "Account", ar: "الحساب" },
+  "shell.myAccount": { en: "My account", ar: "حسابي" },
+  "shell.enableLight": { en: "Switch to light mode", ar: "تفعيل الوضع الفاتح" },
+  "shell.enableDark": { en: "Switch to dark mode", ar: "تفعيل الوضع الداكن" },
+  "shell.unnamed": { en: "?", ar: "؟" },
+  // ===== app/profile/page.tsx =====
+  "profile.back": { en: "Back", ar: "رجوع" },
+  "profile.title": { en: "Profile", ar: "الملف الشخصي" },
+  "profile.changeAvatar": { en: "Change profile photo", ar: "تغيير الصورة الشخصية" },
+  "profile.basicInfo": { en: "Basic info", ar: "البيانات الأساسية" },
+  "profile.name": { en: "Name", ar: "الاسم" },
+  "profile.namePlaceholder": { en: "Your name", ar: "اسمك" },
+  "profile.username": { en: "Username", ar: "اسم المستخدم" },
+  "profile.usernameHint": {
+    en: "Lowercase English letters, numbers, or underscores (_) only, 3–20 characters",
+    ar: "يُسمح فقط بأحرف إنجليزية صغيرة أو أرقام أو الشرطة السفلية (_)، من 3 إلى 20 حرفًا",
+  },
+  "profile.email": { en: "Email", ar: "البريد الإلكتروني" },
+  "profile.saveChanges": { en: "Save changes", ar: "حفظ التغييرات" },
+  "profile.changePassword": { en: "Change password", ar: "تغيير كلمة المرور" },
+  "profile.currentPassword": { en: "Current password", ar: "كلمة المرور الحالية" },
+  "profile.newPassword": { en: "New password", ar: "كلمة المرور الجديدة" },
+  "profile.confirmNewPassword": { en: "Confirm new password", ar: "تأكيد كلمة المرور الجديدة" },
+  "profile.preferences": { en: "Preferences", ar: "التفضيلات" },
+  "profile.language": { en: "Language", ar: "اللغة" },
+  "profile.languageHint": { en: "Choose the app's display language", ar: "اختر لغة عرض التطبيق" },
+  "profile.appearance": { en: "Appearance", ar: "المظهر" },
+  "profile.appearanceHint": { en: "Choose the app's color theme", ar: "اختر مظهر ألوان التطبيق" },
+  "profile.light": { en: "Light", ar: "فاتح" },
+  "profile.dark": { en: "Dark", ar: "داكن" },
+  "profile.dangerZone": { en: "Danger zone", ar: "منطقة الخطر" },
+  "profile.deleteAccountWarning": {
+    en:
+      "Deleting your account will hide your name and photo from all members in any shared project, and no one will be able to invite you to another project using your username. This action cannot be undone.",
+    ar:
+      "حذف الحساب هيخفي اسمك وصورتك عن كل الأعضاء في أي مشروع مشترك، ومش هيقدر حد يدعوك لمشروع تاني باستخدام اسم المستخدم بتاعك. الإجراء ده لا يمكن التراجع عنه.",
+  },
+  "profile.deleteAccount": { en: "Delete account", ar: "حذف الحساب" },
+  "profile.deleteAccountTitle": { en: "Delete account?", ar: "حذف الحساب؟" },
+  "profile.deleteAccountMessage": {
+    en:
+      "Enter your password to confirm deleting your account. Your name and photo will no longer be visible to anyone, and no one will be able to invite you again using your username. This action cannot be undone.",
+    ar:
+      "أدخل كلمة المرور لتأكيد حذف حسابك. لن يظهر اسمك أو صورتك لأي حد بعد ذلك، ولن يقدر حد يدعوك مرة أخرى باستخدام اسم المستخدم. هذا الإجراء لا يمكن التراجع عنه.",
+  },
+  "profile.err.enterName": { en: "Please enter your name", ar: "يُرجى إدخال اسمك" },
+  "profile.err.usernameFormat": {
+    en: "Username must be 3–20 characters, using only lowercase English letters, numbers, or underscores (_)",
+    ar: "اسم المستخدم يجب أن يكون من 3 إلى 20 حرفًا، ويُسمح فقط بأحرف إنجليزية صغيرة أو أرقام أو الشرطة السفلية (_)",
+  },
+  "profile.err.usernameTaken": { en: "This username is already taken, please try another one", ar: "اسم المستخدم هذا مسجّل بالفعل، يُرجى تجربة اسم آخر" },
+  "profile.err.generic": { en: "Something went wrong, please try again", ar: "حدث خطأ، يُرجى المحاولة مرة أخرى" },
+  "profile.msg.infoSaved": { en: "Changes saved successfully", ar: "تم حفظ التغييرات بنجاح" },
+  "profile.err.chooseImage": { en: "Please choose an image file", ar: "يُرجى اختيار ملف صورة" },
+  "profile.err.imageTooLarge": { en: "Image is too large (max 10MB)", ar: "حجم الصورة كبير جدًا (الحد الأقصى 10 ميجابايت)" },
+  "profile.err.uploadFailed": { en: "Couldn't upload the image, please try again", ar: "تعذّر رفع الصورة، يُرجى المحاولة مرة أخرى" },
+  "profile.err.enterCurrentPassword": { en: "Please enter your current password", ar: "يُرجى إدخال كلمة المرور الحالية" },
+  "profile.err.passwordMinLength": { en: "New password must be at least 6 characters", ar: "كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل" },
+  "profile.err.passwordMismatch": { en: "New password doesn't match the confirmation", ar: "كلمة المرور الجديدة غير مطابقة للتأكيد" },
+  "profile.err.verifyAccountFailed": { en: "Couldn't verify the account", ar: "تعذّر التحقق من الحساب" },
+  "profile.err.wrongCurrentPassword": { en: "Current password is incorrect", ar: "كلمة المرور الحالية غير صحيحة" },
+  "profile.msg.passwordChanged": { en: "Password changed successfully", ar: "تم تغيير كلمة المرور بنجاح" },
+
+  // ===== app/auth/callback/page.tsx =====
+  "authCallback.confirming": { en: "Confirming your account...", ar: "جارٍ تأكيد حسابك..." },
+
+  // ===== app/auth/confirm/page.tsx =====
+  "authConfirm.checking": { en: "Checking your account...", ar: "جارٍ التحقق من حسابك..." },
+  "authConfirm.err.invalidLink": {
+    en: "The confirmation link is incomplete or invalid. Please open the link from your email again.",
+    ar: "رابط التأكيد غير مكتمل أو غير صالح. يُرجى فتح الرابط من البريد الإلكتروني مرة أخرى.",
+  },
+  "authConfirm.err.expiredLink": {
+    en: "The confirmation link has expired. Please request a new link and try again.",
+    ar: "انتهت صلاحية رابط التأكيد. يُرجى طلب رابط جديد والمحاولة مرة أخرى.",
+  },
+  "authConfirm.err.confirmFailed": {
+    en: "Couldn't confirm your account. The link may have already been used or is invalid.",
+    ar: "تعذّر تأكيد حسابك. قد يكون الرابط مستخدمًا من قبل أو غير صالح.",
+  },
+  "authConfirm.success": { en: "Your account has been confirmed successfully, redirecting you now...", ar: "تم تأكيد حسابك بنجاح، سيتم تحويلك الآن..." },
+  "authConfirm.loadingTitle": { en: "One moment please...", ar: "لحظة من فضلك..." },
+  "authConfirm.successTitle": { en: "Confirmed", ar: "تم التأكيد" },
+  "authConfirm.errorTitle": { en: "Confirmation failed", ar: "فشل التأكيد" },
+  "authConfirm.backToLogin": { en: "Back to sign in", ar: "العودة إلى تسجيل الدخول" },
+
+  // ===== app/join/[token]/page.tsx =====
+  "join.err.invalidInvite": { en: "This invite link is invalid or has expired", ar: "رابط الدعوة هذا غير صالح أو منتهي الصلاحية" },
+  "join.checkingInvite": { en: "Checking the invite link...", ar: "جارٍ التحقق من رابط الدعوة..." },
+  "join.title": { en: "Invitation to join", ar: "دعوة للانضمام" },
+  "join.invitedTo": { en: "You're invited to join the project", ar: "أنت مدعوّ للانضمام إلى مشروع" },
+  "join.pleaseSignIn": { en: "Please sign in or create an account to join.", ar: "يُرجى تسجيل الدخول أو إنشاء حساب للانضمام." },
+  "join.signInOrCreate": { en: "Sign in / Create account", ar: "تسجيل الدخول / إنشاء حساب" },
+  "join.joining": { en: "Joining the project...", ar: "جارٍ الانضمام إلى المشروع..." },
+  "join.joined": { en: "Joined", ar: "تم الانضمام" },
+  "join.joinedMessage": { en: "You're now a member of the project", ar: "أنت الآن عضو في مشروع" },
+  "join.problemTitle": { en: "Something went wrong", ar: "حدثت مشكلة" },
+  "join.backHome": { en: "Back to home", ar: "العودة إلى الصفحة الرئيسية" },
+
+  // ===== app/login/page.tsx =====
+  "login.confirmedInfo": { en: "Your account was confirmed successfully, you can sign in now.", ar: "تم تأكيد حسابك بنجاح، يمكنك تسجيل الدخول الآن." },
+  "login.err.enterName": { en: "Please enter your name", ar: "يُرجى إدخال اسمك" },
+  "login.err.usernameFormat": {
+    en: "Username must be 3–20 characters, using only lowercase English letters, numbers, or underscores (_)",
+    ar: "يجب أن يتكوّن اسم المستخدم من 3 إلى 20 حرفًا، ويُسمح فقط بأحرف إنجليزية صغيرة أو أرقام أو الشرطة السفلية (_)",
+  },
+  "login.err.usernameTaken": { en: "This username is already taken, please try another one", ar: "اسم المستخدم هذا مسجّل بالفعل، يُرجى تجربة اسم آخر" },
+  "login.signupSuccess": {
+    en: "Account created successfully. Please check your email to confirm your account, then sign in. If you don't receive the message within a few minutes, please check your spam folder.",
+    ar: "تم إنشاء الحساب بنجاح. يُرجى التحقق من بريدك الإلكتروني لتأكيد الحساب، ثم تسجيل الدخول. في حال عدم وصول الرسالة خلال دقائق، يُرجى مراجعة مجلد الرسائل غير المرغوب فيها (Spam).",
+  },
+  "login.err.generic": { en: "Something went wrong, please try again", ar: "حدث خطأ، يُرجى المحاولة مرة أخرى" },
+  "login.signIn": { en: "Sign in", ar: "تسجيل الدخول" },
+  "login.createAccount": { en: "Create account", ar: "إنشاء حساب" },
+  "login.inviteHint": { en: "After signing in, you'll automatically join the project you were invited to", ar: "بعد تسجيل الدخول ستنضم تلقائيًا إلى المشروع الذي دُعيت إليه" },
+  "login.welcomeBack": { en: "Welcome back to Viora", ar: "مرحبًا بعودتك إلى Viora" },
+  "login.startJourney": { en: "Start your journey with Viora", ar: "ابدأ رحلتك مع Viora" },
+  "login.name": { en: "Name", ar: "الاسم" },
+  "login.namePlaceholder": { en: "Your name", ar: "اسمك" },
+  "login.username": { en: "Username", ar: "اسم المستخدم" },
+  "login.usernameHint": { en: "Lowercase English letters, numbers, or underscores (_) only, 3–20 characters", ar: "يُسمح فقط بأحرف إنجليزية صغيرة أو أرقام أو الشرطة السفلية (_)، من 3 إلى 20 حرفًا" },
+  "login.email": { en: "Email", ar: "البريد الإلكتروني" },
+  "login.password": { en: "Password", ar: "كلمة المرور" },
+  "login.createAccountBtn": { en: "Create account", ar: "إنشاء الحساب" },
+  "login.noAccountYet": { en: "Don't have an account yet?", ar: "ليس لديك حساب بعد؟" },
+  "login.haveAccount": { en: "Already have an account?", ar: "لديك حساب بالفعل؟" },
+
+  // ===== app/page.tsx =====
+  "tabs.tasks": { en: "Tasks", ar: "المهام" },
+  "tabs.links": { en: "Links", ar: "الروابط" },
+
+  // ===== components/ActivityFeed.tsx =====
+  "activity.recent": { en: "Recent activity", ar: "النشاط الأخير" },
+
+  // ===== مشترك بين أكتر من مكوّن =====
+  "common.close": { en: "Close", ar: "إغلاق" },
+  "common.cancel": { en: "Cancel", ar: "إلغاء" },
+  "common.save": { en: "Save", ar: "حفظ" },
+  "common.delete": { en: "Delete", ar: "حذف" },
+  "common.loading": { en: "Loading...", ar: "جارٍ التحميل..." },
+
+  // ===== components/AvatarCropModal.tsx =====
+  "avatarCrop.err.cropFailed": { en: "Couldn't crop the image, please try again", ar: "تعذّر قصّ الصورة، يُرجى المحاولة مرة أخرى" },
+  "avatarCrop.title": { en: "Crop photo", ar: "اقتصاص الصورة" },
+  "avatarCrop.zoom": { en: "Zoom", ar: "التكبير" },
+  "avatarCrop.savePhoto": { en: "Save photo", ar: "حفظ الصورة" },
+
+  // ===== components/ConfirmPasswordModal.tsx =====
+  "confirmPassword.confirmDelete": { en: "Confirm delete", ar: "تأكيد الحذف" },
+  "confirmPassword.err.enterPassword": { en: "Please enter your password", ar: "يُرجى إدخال كلمة المرور" },
+  "confirmPassword.err.wrongPassword": { en: "Incorrect password", ar: "كلمة المرور غير صحيحة" },
+  "confirmPassword.password": { en: "Password", ar: "كلمة المرور" },
+
+  // ===== components/ItemHistory.tsx =====
+  "itemHistory.log": { en: "History", ar: "السجل" },
+  "itemHistory.noHistory": { en: "No history yet", ar: "لا يوجد سجل بعد" },
+
+  // ===== components/LinksSection.tsx =====
+  "links.err.invalidUrl": { en: "Invalid link", ar: "الرابط غير صحيح" },
+  "links.searchPlaceholder": { en: "Search saved links", ar: "ابحث في الروابط المحفوظة" },
+  "links.newLink": { en: "New link", ar: "رابط جديد" },
+  "links.pasteHere": { en: "Paste the link here", ar: "الصق الرابط هنا" },
+  "links.descriptionPlaceholder": { en: "Add a short description — why did you save this link?", ar: "أضف وصفًا موجزًا — لماذا حفظت هذا الرابط؟" },
+  "links.saveLink": { en: "Save link", ar: "حفظ الرابط" },
+  "links.emptyTitle": { en: "No saved links yet", ar: "لا توجد روابط محفوظة بعد" },
+  "links.emptyHint": { en: "Save any useful link here with a short description so it's easy to find later.", ar: "احفظ أي رابط مفيد هنا مع وصف مختصر ليسهل الرجوع إليه لاحقًا." },
+  "links.addFirst": { en: "Add first link", ar: "أضف أول رابط" },
+  "links.noResultsTitle": { en: "No matching results", ar: "لا نتائج مطابقة" },
+  "links.noResultsHint": { en: 'No link matches "{q}"', ar: 'لا يوجد رابط يطابق "{q}"' },
+  "links.editLabel": { en: "Edit link label", ar: "تعديل ليبل الرابط" },
+  "links.deleteLink": { en: "Delete link", ar: "حذف الرابط" },
+  "links.markDone": { en: "Mark link as done", ar: "تحديد الرابط كمنجز" },
+  "links.descPlaceholderShort": { en: "Add a short description", ar: "أضف وصفًا موجزًا" },
+  "links.saveDescription": { en: "Save description", ar: "حفظ الوصف" },
+  "links.noDescription": { en: "No description", ar: "بلا وصف" },
+
+  // ===== components/PendingInvites.tsx =====
+  "invites.invitedTo": { en: "You've been invited to join the project", ar: "لديك دعوة للانضمام إلى مشروع" },
+  "invites.defaultProject": { en: "project", ar: "مشروع" },
+  "invites.accept": { en: "Accept", ar: "قبول" },
+  "invites.decline": { en: "Decline", ar: "رفض" },
+
+  // ===== components/RoomsSection.tsx =====
+  "rooms.lockedTitle": { en: "Rooms is a premium section 🔒", ar: "قسم Rooms مميز 🔒" },
+  "rooms.lockedHint": {
+    en: "This section is premium and requires a special password to access. Ask the site owner for it.",
+    ar: "السيكشن ده Premium ومحتاج كلمة مرور خاصة عشان تدخله. اطلبها من صاحب الموقع.",
+  },
+  "rooms.password": { en: "Password", ar: "كلمة المرور" },
+  "rooms.enter": { en: "Enter", ar: "دخول" },
+  "rooms.err.enterPasswordFirst": { en: "Please enter the password first", ar: "اكتب كلمة المرور الأول" },
+  "rooms.err.wrongPassword": { en: "Incorrect password", ar: "كلمة المرور غير صحيحة" },
+  "rooms.err.generic": { en: "Something went wrong, please try again", ar: "حصل خطأ، حاول تاني" },
+  "rooms.refresh": { en: "Refresh", ar: "تحديث" },
+  "rooms.err.loadFailed": { en: "Failed to load tasks", ar: "فشل تحميل المهام" },
+  "rooms.err.loadFailedGeneric": { en: "Something went wrong while loading tasks", ar: "حصل خطأ أثناء تحميل المهام" },
+  "rooms.err.updateFailed": { en: "Failed to update task status", ar: "فشل تحديث حالة المهمة" },
+  "rooms.err.updateFailedGeneric": { en: "Something went wrong while updating", ar: "حصل خطأ أثناء التحديث" },
+  "rooms.doneOf": { en: "{done} of {total} done", ar: "{done} من {total} خلصوا" },
+  "rooms.overdueSuffix": { en: "{count} overdue", ar: "{count} متأخرة" },
+  "rooms.noTasks": { en: "No tasks in the table right now", ar: "مفيش مهام دلوقتي في الجدول" },
+  "rooms.markDone": { en: "Mark as done", ar: "علّم إنها خلصت" },
+  "rooms.markOpen": { en: "Mark as still open", ar: "رجّعها لسه مفتوحة" },
+  "rooms.from": { en: "From", ar: "من" },
+  "rooms.to": { en: "To", ar: "إلى" },
+  "rooms.created": { en: "Created", ar: "اتنشأت" },
+  "rooms.due": { en: "Due", ar: "تسليم" },
+  "rooms.completed": { en: "Completed", ar: "خلصت" },
+  "rooms.history": { en: "History", ar: "السجل" },
+  "rooms.noHistoryChanges": { en: "No changes recorded for this task", ar: "مفيش تعديلات مسجلة على المهمة دي" },
+  "rooms.edited": { en: "edited", ar: "عدّل" },
+  "rooms.onTime": { en: "Delivered on time", ar: "سُلّمت في الميعاد" },
+  "rooms.late": { en: "Overdue delivery", ar: "اتأخرت عن الميعاد" },
+  "rooms.dueToday": { en: "Due today", ar: "مستحقة النهاردة" },
+  "rooms.remaining1": { en: "1 day left", ar: "متبقي يوم واحد" },
+  "rooms.remaining2": { en: "2 days left", ar: "متبقي يومين" },
+  "rooms.remainingN": { en: "{n} days left", ar: "متبقي {n} أيام" },
+  "rooms.overdue1": { en: "1 day overdue", ar: "متأخرة يوم" },
+  "rooms.overdue2": { en: "2 days overdue", ar: "متأخرة يومين" },
+  "rooms.overdueN": { en: "{n} days overdue", ar: "متأخرة {n} يوم" },
+  "rooms.field.assigned_to": { en: "Assignee change", ar: "تغيير الشخص المسند إليه" },
+  "rooms.field.customer": { en: "Customer change", ar: "تغيير العميل" },
+  "rooms.field.task_text": { en: "Task text change", ar: "تغيير نص المهمة" },
+
+  // ===== components/TaskComments.tsx =====
+  "comments.one": { en: "comment", ar: "تعليق" },
+  "comments.many": { en: "comments", ar: "تعليقات" },
+  "comments.empty": { en: "No comments yet", ar: "لا توجد تعليقات بعد" },
+  "comments.addPlaceholder": { en: "Add a comment...", ar: "أضف تعليقًا..." },
+  "comments.send": { en: "Send comment", ar: "إرسال التعليق" },
+
+  // ===== components/TasksSection.tsx =====
+  "tasks.err.deleteProject": { en: "Something went wrong while deleting the project", ar: "حصل خطأ أثناء حذف المشروع" },
+  "tasks.projects": { en: "Projects", ar: "المشاريع" },
+  "tasks.newProject": { en: "New project", ar: "مشروع جديد" },
+  "tasks.projectName": { en: "Project name", ar: "اسم المشروع" },
+  "tasks.addProject": { en: "Add project", ar: "إضافة المشروع" },
+  "tasks.deleteProjectLabel": { en: "Delete project {name}", ar: "حذف مشروع {name}" },
+  "tasks.leaveProjectLabel": { en: "Leave project {name}", ar: "مغادرة مشروع {name}" },
+  "tasks.addFirstProject": { en: "Add first project", ar: "أضف أول مشروع" },
+  "tasks.saveProjectName": { en: "Save project name", ar: "حفظ اسم المشروع" },
+  "tasks.editProjectName": { en: "Edit project name", ar: "تعديل اسم المشروع" },
+  "tasks.team": { en: "Team", ar: "الفريق" },
+  "tasks.newTaskPlaceholder": { en: "Enter a new task then press Enter", ar: "أدخل مهمة جديدة ثم اضغط Enter" },
+  "tasks.add": { en: "Add", ar: "إضافة" },
+  "tasks.emptyProjectTitle": { en: "No tasks in this project yet", ar: "لا توجد مهام في هذا المشروع بعد" },
+  "tasks.emptyProjectHint": { en: "Enter your first task in the field above to get started.", ar: "أدخل أول مهمة في الحقل أعلاه لتبدأ." },
+  "tasks.dragHandle": { en: "Press and hold, then drag to reorder the task", ar: "اضغط مطوّلاً واسحب لإعادة ترتيب المهمة" },
+  "tasks.saveTaskTitle": { en: "Save task title", ar: "حفظ عنوان المهمة" },
+  "tasks.editTaskTitle": { en: "Edit task title", ar: "تعديل عنوان المهمة" },
+  "tasks.setColor": { en: "Set task priority color", ar: "تحديد لون المهمة حسب الأهمية" },
+  "tasks.noColor": { en: "No color", ar: "بدون لون" },
+  "tasks.colorLabel": { en: "Color {label}", ar: "لون {label}" },
+  "tasks.deleteTask": { en: "Delete task", ar: "حذف المهمة" },
+  "tasks.selectProjectTitle": { en: "Select a project from the list to view its tasks", ar: "اختر مشروعًا من القائمة لتبدأ في عرض مهامه" },
+  "tasks.selectProjectHint": { en: "Choose an existing project, or create a new one.", ar: "حدّد أحد المشاريع الموجودة، أو أنشئ مشروعًا جديدًا." },
+  "tasks.addProjectFirstTitle": { en: "Add a project first to start adding tasks", ar: "أضف مشروعًا أولًا لتتمكن من إضافة المهام" },
+  "tasks.deleteProjectTitle": { en: "Delete project?", ar: "حذف المشروع؟" },
+  "tasks.deleteTaskTitle": { en: "Delete task?", ar: "حذف المهمة؟" },
+  "tasks.deleteProjectMessage": { en: 'Enter your password to confirm deleting the project "{name}" along with all its tasks.', ar: 'أدخل كلمة المرور لتأكيد حذف مشروع "{name}" مع جميع المهام الموجودة فيه.' },
+  "tasks.deleteTaskMessage": { en: 'Enter your password to confirm deleting the task "{name}".', ar: 'أدخل كلمة المرور لتأكيد حذف مهمة "{name}".' },
+  "tasks.leaveProjectTitle": { en: "Leave project?", ar: "مغادرة المشروع؟" },
+  "tasks.leaveProjectMessage": {
+    en: 'Are you sure you want to leave the project "{name}"? You\'ll no longer see its tasks, and you can rejoin later if another member invites you again.',
+    ar: 'هل أنت متأكد أنك تريد مغادرة مشروع "{name}"؟ لن تظهر لك مهامه بعد ذلك، ويمكنك الانضمام إليه مرة أخرى لو دعاك أحد الأعضاء مجددًا.',
+  },
+  "tasks.leave": { en: "Leave", ar: "مغادرة" },
+  "taskColor.red": { en: "Urgent", ar: "عاجل" },
+  "taskColor.orange": { en: "Important", ar: "مهم" },
+  "taskColor.yellow": { en: "Medium", ar: "متوسط" },
+  "taskColor.green": { en: "Low", ar: "منخفض" },
+  "taskColor.blue": { en: "Info", ar: "معلومة" },
+  "taskColor.purple": { en: "Later", ar: "لاحقًا" },
+
+  // ===== components/TeamPanel.tsx =====
+  "team.err.generic": { en: "Something went wrong, please try again", ar: "حدث خطأ، يُرجى المحاولة مرة أخرى" },
+  "team.inviteSent": { en: "Invite sent to {username}", ar: "تم إرسال دعوة لـ {username}" },
+  "team.err.linkFailed": { en: "Something went wrong while creating the link", ar: "حدث خطأ أثناء إنشاء الرابط" },
+  "team.copiedSuccess": { en: "Copied successfully", ar: "تم النسخ بنجاح" },
+  "team.title": { en: "Project team", ar: "فريق المشروع" },
+  "team.copyInviteLink": { en: "Copy project invite link", ar: "نسخ رابط دعوة للمشروع" },
+  "team.inviteByUsername": { en: "Invite a member by their username", ar: "ادعُ عضوًا باسم المستخدم الخاص به" },
+  "team.invite": { en: "Invite", ar: "دعوة" },
+  "team.members": { en: "Members", ar: "الأعضاء" },
+  "team.you": { en: "you", ar: "أنت" },
+  "team.member": { en: "Member", ar: "عضو" },
+  "team.pendingInvites": { en: "Pending invites", ar: "دعوات معلّقة" },
+  "team.pending": { en: "Pending", ar: "في الانتظار" },
+
+  // ===== components/UserProfileCard.tsx =====
+  "userCard.loadFailed": { en: "Couldn't load this user's data", ar: "تعذّر تحميل بيانات هذا المستخدم" },
+  "userCard.you": { en: "you", ar: "أنت" },
+  "userCard.editProfile": { en: "Edit profile", ar: "تعديل الملف الشخصي" },
+};
+
+export default dict;

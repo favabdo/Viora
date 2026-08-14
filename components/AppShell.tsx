@@ -7,6 +7,7 @@ import { LucideIcon, LogOut, UserRound, Moon, Sun } from "lucide-react";
 import Avatar from "./ui/Avatar";
 import IconButton from "./ui/IconButton";
 import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export type ShellTab = {
   id: string;
@@ -36,6 +37,7 @@ export default function AppShell({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [theme, setTheme] = useState<Theme>("light");
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
@@ -74,22 +76,22 @@ export default function AppShell({
   const accountMenuDropdown = (
     <div className="flex flex-col gap-1 min-w-[180px]">
       <div className="flex items-center gap-2.5 px-2.5 py-2 border-b border-line mb-1">
-        <Avatar name={userName || "؟"} src={avatarUrl} size="sm" />
-        <span className="font-display text-sm font-medium text-ink truncate">{userName || "حسابي"}</span>
+        <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="sm" />
+        <span className="font-display text-sm font-medium text-ink truncate">{userName || t("shell.myAccount")}</span>
       </div>
       <button
         onClick={goToProfile}
-        className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-inkSoft hover:bg-paperDark hover:text-ink transition-colors text-right"
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-inkSoft hover:bg-paperDark hover:text-ink transition-colors text-start"
       >
         <UserRound size={15} strokeWidth={1.75} />
-        فتح الملف الشخصي
+        {t("shell.openProfile")}
       </button>
       <button
         onClick={signOut}
-        className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-clay hover:bg-claySoft transition-colors text-right"
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-clay hover:bg-claySoft transition-colors text-start"
       >
         <LogOut size={15} strokeWidth={1.75} />
-        تسجيل الخروج
+        {t("shell.signOut")}
       </button>
     </div>
   );
@@ -132,16 +134,16 @@ export default function AppShell({
         <div className="mt-auto pt-4 border-t border-line px-2 flex items-center gap-1.5 relative" ref={accountMenuRef}>
           <button
             onClick={() => setShowAccountMenu((v) => !v)}
-            className="flex items-center gap-2.5 min-w-0 flex-1 group text-right rounded-md px-1 py-1 hover:bg-paperDark transition-colors"
-            aria-label="الحساب"
+            className="flex items-center gap-2.5 min-w-0 flex-1 group text-start rounded-md px-1 py-1 hover:bg-paperDark transition-colors"
+            aria-label={t("shell.account")}
           >
-            <Avatar name={userName || "؟"} src={avatarUrl} size="sm" />
+            <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="sm" />
             <span className="text-sm font-medium text-ink truncate group-hover:text-teal transition-colors">
-              {userName || "حسابي"}
+              {userName || t("shell.myAccount")}
             </span>
           </button>
           <IconButton
-            aria-label={theme === "dark" ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
+            aria-label={theme === "dark" ? t("shell.enableLight") : t("shell.enableDark")}
             onClick={toggleTheme}
             tone="default"
           >
@@ -165,7 +167,7 @@ export default function AppShell({
         <div className="flex items-center gap-1.5">
           {userName && <span className="text-sm text-inkSoft font-medium ml-1">{userName}</span>}
           <IconButton
-            aria-label={theme === "dark" ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
+            aria-label={theme === "dark" ? t("shell.enableLight") : t("shell.enableDark")}
             onClick={toggleTheme}
             tone="default"
           >
@@ -174,10 +176,10 @@ export default function AppShell({
           <div className="relative md:hidden" ref={mobileAccountMenuRef}>
             <button
               onClick={() => setShowAccountMenu((v) => !v)}
-              aria-label="الحساب"
+              aria-label={t("shell.account")}
               className="rounded-full transition-opacity hover:opacity-80"
             >
-              <Avatar name={userName || "؟"} src={avatarUrl} size="sm" />
+              <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="sm" />
             </button>
 
             {showAccountMenu && (

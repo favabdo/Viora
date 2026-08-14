@@ -6,6 +6,7 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import StatusScreen from "@/components/ui/StatusScreen";
 import Button from "@/components/ui/Button";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 const INVITE_KEY = "viora_invite_token";
 
@@ -13,6 +14,7 @@ export default function JoinPage() {
   const router = useRouter();
   const params = useParams();
   const token = params?.token as string;
+  const { t } = useTranslation();
 
   const [status, setStatus] = useState<"checking" | "needsAuth" | "joining" | "error" | "done">(
     "checking"
@@ -27,7 +29,7 @@ export default function JoinPage() {
       const row = Array.isArray(info) ? info[0] : info;
       if (!row || !row.valid) {
         setStatus("error");
-        setErrorMsg("رابط الدعوة هذا غير صالح أو منتهي الصلاحية");
+        setErrorMsg(t("join.err.invalidInvite"));
         return;
       }
       setProjectName(row.project_name || "");
@@ -48,7 +50,7 @@ export default function JoinPage() {
     const { error } = await supabase.rpc("join_project_by_invite", { p_token: token });
     if (error) {
       setStatus("error");
-      setErrorMsg(error.message || "حدث خطأ، يُرجى المحاولة مرة أخرى");
+      setErrorMsg(error.message || t("profile.err.generic"));
       return;
     }
     localStorage.removeItem(INVITE_KEY);
@@ -70,38 +72,37 @@ export default function JoinPage() {
 
         <div className="bg-surface border border-line rounded-lg shadow-raised p-6 fade-in">
           {status === "checking" && (
-            <StatusScreen kind="loading" title="جارٍ التحقق من رابط الدعوة..." />
+            <StatusScreen kind="loading" title={t("join.checkingInvite")} />
           )}
 
           {status === "needsAuth" && (
             <div className="text-center">
-              <h1 className="font-display text-lg font-medium mb-2">دعوة للانضمام</h1>
+              <h1 className="font-display text-lg font-medium mb-2">{t("join.title")}</h1>
               <p className="text-inkSoft text-sm mb-6 leading-relaxed">
-                أنت مدعوّ للانضمام إلى مشروع <span className="font-medium text-ink">{projectName}</span>. يُرجى
-                تسجيل الدخول أو إنشاء حساب للانضمام.
+                {t("join.invitedTo")} <span className="font-medium text-ink">{projectName}</span>. {t("join.pleaseSignIn")}
               </p>
               <Button variant="primary" fullWidth onClick={goToLogin}>
-                تسجيل الدخول / إنشاء حساب
+                {t("join.signInOrCreate")}
               </Button>
             </div>
           )}
 
           {status === "joining" && (
-            <StatusScreen kind="loading" title="جارٍ الانضمام إلى المشروع..." />
+            <StatusScreen kind="loading" title={t("join.joining")} />
           )}
 
           {status === "done" && (
-            <StatusScreen kind="success" title="تم الانضمام" message={`أنت الآن عضو في مشروع ${projectName}`} />
+            <StatusScreen kind="success" title={t("join.joined")} message={`${t("join.joinedMessage")} ${projectName}`} />
           )}
 
           {status === "error" && (
             <div className="text-center">
-              <StatusScreen kind="error" title="حدثت مشكلة" message={errorMsg} />
+              <StatusScreen kind="error" title={t("join.problemTitle")} message={errorMsg} />
               <button
                 onClick={() => router.replace("/")}
                 className="text-teal text-sm hover:underline mt-5"
               >
-                العودة إلى الصفحة الرئيسية
+                {t("join.backHome")}
               </button>
             </div>
           )}

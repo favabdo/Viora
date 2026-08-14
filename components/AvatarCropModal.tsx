@@ -7,6 +7,7 @@ import IconButton from "./ui/IconButton";
 import Modal from "./ui/Modal";
 import { X, ZoomIn } from "lucide-react";
 import { getCroppedImageBlob } from "@/lib/cropImage";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export default function AvatarCropModal({
   imageSrc,
@@ -17,6 +18,7 @@ export default function AvatarCropModal({
   onCancel: () => void;
   onConfirm: (blob: Blob) => void;
 }) {
+  const { t } = useTranslation();
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
@@ -35,7 +37,7 @@ export default function AvatarCropModal({
       const blob = await getCroppedImageBlob(imageSrc, croppedAreaPixels);
       onConfirm(blob);
     } catch {
-      setError("تعذّر قصّ الصورة، يُرجى المحاولة مرة أخرى");
+      setError(t("avatarCrop.err.cropFailed"));
       setSaving(false);
     }
   }
@@ -43,8 +45,8 @@ export default function AvatarCropModal({
   return (
     <Modal maxWidth="max-w-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-display text-lg font-medium">اقتصاص الصورة</h3>
-        <IconButton aria-label="إغلاق" onClick={onCancel}>
+        <h3 className="font-display text-lg font-medium">{t("avatarCrop.title")}</h3>
+        <IconButton aria-label={t("common.close")} onClick={onCancel}>
           <X size={16} strokeWidth={1.75} />
         </IconButton>
       </div>
@@ -73,7 +75,7 @@ export default function AvatarCropModal({
           value={zoom}
           onChange={(e) => setZoom(Number(e.target.value))}
           className="w-full accent-teal"
-          aria-label="التكبير"
+          aria-label={t("avatarCrop.zoom")}
         />
       </div>
 
@@ -81,10 +83,10 @@ export default function AvatarCropModal({
 
       <div className="flex gap-2 mt-5">
         <Button variant="secondary" fullWidth onClick={onCancel} disabled={saving}>
-          إلغاء
+          {t("common.cancel")}
         </Button>
         <Button variant="primary" fullWidth loading={saving} onClick={handleConfirm}>
-          حفظ الصورة
+          {t("avatarCrop.savePhoto")}
         </Button>
       </div>
     </Modal>

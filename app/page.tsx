@@ -11,18 +11,19 @@ import PendingInvites from "@/components/PendingInvites";
 import ProfileCardProvider from "@/components/ProfileCardContext";
 import AppShell, { ShellTab } from "@/components/AppShell";
 import { supabase } from "@/lib/supabase";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 type Tab = "tasks" | "links" | "rooms";
-
-const TABS: ShellTab[] = [
-  { id: "tasks", label: "المهام", icon: CheckSquare },
-  { id: "links", label: "الروابط", icon: Link2 },
-  { id: "rooms", label: "Rooms", icon: DoorClosed },
-];
 
 function HomeInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
+  const TABS: ShellTab[] = [
+    { id: "tasks", label: t("tabs.tasks"), icon: CheckSquare },
+    { id: "links", label: t("tabs.links"), icon: Link2 },
+    { id: "rooms", label: "Rooms", icon: DoorClosed },
+  ];
   const initialTab = (searchParams.get("tab") as Tab) || "tasks";
   const [tab, setTab] = useState<Tab>(initialTab);
   const [session, setSession] = useState<Session | null>(null);

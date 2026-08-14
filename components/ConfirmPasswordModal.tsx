@@ -7,12 +7,13 @@ import IconButton from "./ui/IconButton";
 import Modal from "./ui/Modal";
 import { Input } from "./ui/Input";
 import { X, ShieldAlert } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export default function ConfirmPasswordModal({
   email,
   title,
   message,
-  confirmLabel = "تأكيد الحذف",
+  confirmLabel,
   onCancel,
   onConfirm,
 }: {
@@ -23,13 +24,15 @@ export default function ConfirmPasswordModal({
   onCancel: () => void;
   onConfirm: () => void | Promise<void>;
 }) {
+  const { t } = useTranslation();
+  const resolvedConfirmLabel = confirmLabel ?? t("confirmPassword.confirmDelete");
   const [password, setPassword] = useState("");
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState("");
 
   async function handleConfirm() {
     if (!password) {
-      setError("يُرجى إدخال كلمة المرور");
+      setError(t("confirmPassword.err.enterPassword"));
       return;
     }
     setChecking(true);
@@ -38,7 +41,7 @@ export default function ConfirmPasswordModal({
     // بنتأكد إن كلمة المرور صح قبل ما ننفّذ الحذف
     const { error: verifyError } = await supabase.auth.signInWithPassword({ email, password });
     if (verifyError) {
-      setError("كلمة المرور غير صحيحة");
+      setError(t("confirmPassword.err.wrongPassword"));
       setChecking(false);
       return;
     }
@@ -54,14 +57,14 @@ export default function ConfirmPasswordModal({
           <ShieldAlert size={16} strokeWidth={1.75} className="text-clay" />
           {title}
         </h3>
-        <IconButton aria-label="إغلاق" onClick={onCancel}>
+        <IconButton aria-label={t("common.close")} onClick={onCancel}>
           <X size={16} strokeWidth={1.75} />
         </IconButton>
       </div>
 
       {message && <p className="text-sm text-inkSoft mb-4 leading-relaxed">{message}</p>}
 
-      <label className="block text-sm font-medium text-inkSoft mb-1.5">كلمة المرور</label>
+      <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("confirmPassword.password")}</label>
       <Input
         type="password"
         autoFocus
@@ -69,17 +72,17 @@ export default function ConfirmPasswordModal({
         onChange={(e) => setPassword(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
         dir="ltr"
-        className="text-left"
+        className="text-end"
         placeholder="••••••••"
       />
       {error && <p className="text-clay text-xs mt-2">{error}</p>}
 
       <div className="flex gap-2 mt-5">
         <Button variant="secondary" fullWidth onClick={onCancel} disabled={checking}>
-          إلغاء
+          {t("common.cancel")}
         </Button>
         <Button variant="danger" fullWidth loading={checking} onClick={handleConfirm}>
-          {confirmLabel}
+          {resolvedConfirmLabel}
         </Button>
       </div>
     </Modal>

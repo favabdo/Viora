@@ -5,6 +5,7 @@ import { Lock, ShieldCheck, DoorOpen, XCircle, ListChecks, RefreshCw, Clock, Use
 import Button from "./ui/Button";
 import { Input } from "./ui/Input";
 import { SkeletonList } from "./ui/Skeleton";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 type HistoryEntry = {
   id: number;
@@ -36,61 +37,36 @@ type ScheduledTask = {
   history: HistoryEntry[];
 };
 
-const dateTimeFormatter = new Intl.DateTimeFormat("ar-EG", {
-  day: "numeric",
-  month: "short",
-  hour: "numeric",
-  minute: "2-digit",
-});
-
-function formatDateTime(iso: string | null): string {
+function formatDateTime(iso: string | null, locale: string): string {
   if (!iso) return "—";
   try {
-    return dateTimeFormatter.format(new Date(iso));
+    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(
+      new Date(iso)
+    );
   } catch {
     return "—";
   }
 }
 
-const dateFormatter = new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "short" });
-
-function formatDate(iso: string | null): string {
+function formatDate(iso: string | null, locale: string): string {
   if (!iso) return "—";
   try {
-    return dateFormatter.format(new Date(iso));
+    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(iso));
   } catch {
     return "—";
   }
 }
 
-function deliveryBadge(status: string | null): { label: string; className: string } | null {
-  if (!status) return null;
-  const v = status.trim().toLowerCase();
-  if (["on_time", "ontime", "on time", "in_time", "على الميعاد"].includes(v)) {
-    return { label: "سُلّمت في الميعاد", className: "bg-sageSoft/60 text-[#3F6136]" };
-  }
-  if (["late", "delayed", "متأخر", "متأخرة"].includes(v)) {
-    return { label: "اتأخرت عن الميعاد", className: "bg-claySoft text-clay" };
-  }
-  return { label: status, className: "bg-paperDark text-inkSoft" };
-}
-
-function remainingLabel(days: number): string {
-  if (days === 0) return "مستحقة النهاردة";
-  if (days === 1) return "متبقي يوم واحد";
-  if (days === 2) return "متبقي يومين";
-  if (days >= 3 && days <= 10) return `متبقي ${days} أيام`;
-  return `متبقي ${days} يوم`;
-}
-
-function overdueLabel(days: number): string {
-  if (days === 1) return "متأخرة يوم";
-  if (days === 2) return "متأخرة يومين";
-  if (days >= 3 && days <= 10) return `متأخرة ${days} أيام`;
-  return `متأخرة ${days} يوم`;
-}
+const FIELD_KEY_MAP: Record<string, string> = {
+  assigned_to: "rooms.field.assigned_to",
+  customer: "rooms.field.customer",
+  task_text: "rooms.field.task_text",
+};
 
 export default function RoomsSection() {
+  const { t, lang } = useTranslation();
+  const locale = lang === "ar" ? "ar-EG" : "en-US";
+
   const [checkingSession, setCheckingSession] = useState(true);
   const [unlocked, setUnlocked] = useState(false);
   const [password, setPassword] = useState("");
@@ -102,6 +78,36 @@ export default function RoomsSection() {
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+
+  function deliveryBadge(status: string | null): { label: string; className: string } | null {
+    if (!status) return null;
+    const v = status.trim().toLowerCase();
+    if (["on_time", "ontime", "on time", "in_time", "على الميعاد"].includes(v)) {
+      return { label: t("rooms.onTime"), className: "bg-sageSoft/60 text-[#3F6136]" };
+    }
+    if (["late", "delayed", "متأخر", "متأخرة"].includes(v)) {
+      return { label: t("rooms.late"), className: "bg-claySoft text-clay" };
+    }
+    return { label: status, className: "bg-paperDark text-inkSoft" };
+  }
+
+  function remainingLabel(days: number): string {
+    if (days === 0) return t("rooms.dueToday");
+    if (days === 1) return t("rooms.remaining1");
+    if (days === 2) return t("rooms.remaining2");
+    return t("rooms.remainingN").replace("{n}", String(days));
+  }
+
+  function overdueLabel(days: number): string {
+    if (days === 1) return t("rooms.overdue1");
+    if (days === 2) return t("rooms.overdue2");
+    return t("rooms.overdueN").replace("{n}", String(days));
+  }
+
+  function fieldLabelFor(entry: HistoryEntry): string {
+    const key = FIELD_KEY_MAP[entry.fieldName];
+    return key ? t(key) : entry.fieldLabel;
+  }
 
   function toggleHistory(taskId: number) {
     setExpandedIds((prev) => {
@@ -132,13 +138,13 @@ export default function RoomsSection() {
       const res = await fetch("/api/rooms/tasks");
       const data = await res.json();
       if (!res.ok) {
-        setTasksError(data.error || "فشل تحميل المهام");
+        setTasksError(data.error || t("rooms.err.loadFailed"));
         setTasks([]);
         return;
       }
       setTasks(data.tasks as ScheduledTask[]);
     } catch {
-      setTasksError("حصل خطأ أثناء تحميل المهام");
+      setTasksError(t("rooms.err.loadFailedGeneric"));
     } finally {
       setLoadingTasks(false);
     }
@@ -148,7 +154,7 @@ export default function RoomsSection() {
     if (togglingId) return;
     const nextDone = !task.done;
     setTogglingId(task.id);
-    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, done: nextDone } : t)));
+    setTasks((prev) => prev.map((t2) => (t2.id === task.id ? { ...t2, done: nextDone } : t2)));
     try {
       const res = await fetch("/api/rooms/tasks", {
         method: "PATCH",
@@ -157,14 +163,14 @@ export default function RoomsSection() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setTasksError(data.error || "فشل تحديث حالة المهمة");
-        setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, done: task.done } : t)));
+        setTasksError(data.error || t("rooms.err.updateFailed"));
+        setTasks((prev) => prev.map((t2) => (t2.id === task.id ? { ...t2, done: task.done } : t2)));
       } else {
         loadTasks();
       }
     } catch {
-      setTasksError("حصل خطأ أثناء التحديث");
-      setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, done: task.done } : t)));
+      setTasksError(t("rooms.err.updateFailedGeneric"));
+      setTasks((prev) => prev.map((t2) => (t2.id === task.id ? { ...t2, done: task.done } : t2)));
     } finally {
       setTogglingId(null);
     }
@@ -172,7 +178,7 @@ export default function RoomsSection() {
 
   async function handleUnlock() {
     if (!password) {
-      setError("اكتب كلمة المرور الأول");
+      setError(t("rooms.err.enterPasswordFirst"));
       return;
     }
     setSubmitting(true);
@@ -185,12 +191,12 @@ export default function RoomsSection() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "كلمة المرور غير صحيحة");
+        setError(data.error || t("rooms.err.wrongPassword"));
         return;
       }
       setUnlocked(true);
     } catch {
-      setError("حصل خطأ، حاول تاني");
+      setError(t("rooms.err.generic"));
     } finally {
       setSubmitting(false);
     }
@@ -218,13 +224,11 @@ export default function RoomsSection() {
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-paperDark text-inkSoft">
           <Lock size={19} strokeWidth={1.75} />
         </div>
-        <h2 className="font-display text-lg font-medium text-ink mb-1.5">قسم Rooms مميز 🔒</h2>
-        <p className="text-sm text-inkSoft leading-relaxed max-w-xs mb-5">
-          السيكشن ده Premium ومحتاج كلمة مرور خاصة عشان تدخله. اطلبها من صاحب الموقع.
-        </p>
+        <h2 className="font-display text-lg font-medium text-ink mb-1.5">{t("rooms.lockedTitle")}</h2>
+        <p className="text-sm text-inkSoft leading-relaxed max-w-xs mb-5">{t("rooms.lockedHint")}</p>
 
-        <div className="w-full max-w-xs text-right">
-          <label className="block text-sm font-medium text-inkSoft mb-1.5">كلمة المرور</label>
+        <div className="w-full max-w-xs text-start">
+          <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("rooms.password")}</label>
           <Input
             type="password"
             autoFocus
@@ -232,22 +236,22 @@ export default function RoomsSection() {
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
             dir="ltr"
-            className="text-left"
+            className="text-end"
             placeholder="••••••••"
           />
           {error && <p className="text-clay text-xs mt-2">{error}</p>}
 
           <Button variant="primary" fullWidth loading={submitting} onClick={handleUnlock} className="mt-4">
             <DoorOpen size={15} strokeWidth={1.75} />
-            دخول
+            {t("rooms.enter")}
           </Button>
         </div>
       </div>
     );
   }
 
-  const doneCount = tasks.filter((t) => t.done).length;
-  const overdueCount = tasks.filter((t) => t.isOverdue).length;
+  const doneCount = tasks.filter((t2) => t2.done).length;
+  const overdueCount = tasks.filter((t2) => t2.isOverdue).length;
 
   return (
     <div className="py-6">
@@ -262,14 +266,16 @@ export default function RoomsSection() {
           className="flex items-center gap-1 text-xs text-inkSoft hover:text-teal transition-colors disabled:opacity-50"
         >
           <RefreshCw size={13} strokeWidth={1.75} className={loadingTasks ? "animate-spin" : ""} />
-          تحديث
+          {t("rooms.refresh")}
         </button>
       </div>
 
       {tasks.length > 0 && (
         <p className="text-xs text-inkSoft mb-4">
-          {doneCount} من {tasks.length} خلصوا
-          {overdueCount > 0 && <span className="text-clay"> — {overdueCount} متأخرة</span>}
+          {t("rooms.doneOf").replace("{done}", String(doneCount)).replace("{total}", String(tasks.length))}
+          {overdueCount > 0 && (
+            <span className="text-clay"> — {t("rooms.overdueSuffix").replace("{count}", String(overdueCount))}</span>
+          )}
         </p>
       )}
 
@@ -285,7 +291,7 @@ export default function RoomsSection() {
       ) : tasks.length === 0 && !tasksError ? (
         <div className="flex flex-col items-center text-center py-10 text-inkSoft text-sm">
           <ListChecks size={20} strokeWidth={1.75} className="mb-2 opacity-60" />
-          مفيش مهام دلوقتي في الجدول
+          {t("rooms.noTasks")}
         </div>
       ) : (
         <ul className="space-y-2.5">
@@ -306,7 +312,7 @@ export default function RoomsSection() {
                   <button
                     onClick={() => toggleDone(task)}
                     disabled={togglingId === task.id}
-                    title={task.done ? "رجّعها لسه مفتوحة" : "علّم إنها خلصت"}
+                    title={task.done ? t("rooms.markOpen") : t("rooms.markDone")}
                     className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border cursor-pointer flex items-center justify-center ${
                       task.done ? "bg-teal border-teal" : "border-inkFaint"
                     }`}
@@ -341,20 +347,24 @@ export default function RoomsSection() {
 
                     <div className="flex items-center gap-3 mt-2 text-2xs text-inkFaint flex-wrap">
                       <span>
-                        من: <span className="text-inkSoft">{task.agentName}</span>
+                        {t("rooms.from")}: <span className="text-inkSoft">{task.agentName}</span>
                       </span>
                       <span>
-                        إلى: <span className="text-inkSoft">{task.assignedToName}</span>
+                        {t("rooms.to")}: <span className="text-inkSoft">{task.assignedToName}</span>
                       </span>
                       <span className="inline-flex items-center gap-1">
                         <Clock size={11} strokeWidth={1.75} />
-                        اتنشأت {formatDate(task.createdAt)}
+                        {t("rooms.created")} {formatDate(task.createdAt, locale)}
                       </span>
                       <span className="inline-flex items-center gap-1">
                         <Clock size={11} strokeWidth={1.75} />
-                        تسليم {formatDate(task.dueDate)}
+                        {t("rooms.due")} {formatDate(task.dueDate, locale)}
                       </span>
-                      {task.done && task.endedAt && <span>خلصت {formatDate(task.endedAt)}</span>}
+                      {task.done && task.endedAt && (
+                        <span>
+                          {t("rooms.completed")} {formatDate(task.endedAt, locale)}
+                        </span>
+                      )}
                     </div>
 
                     <button
@@ -362,7 +372,7 @@ export default function RoomsSection() {
                       className="flex items-center gap-1 text-2xs text-inkFaint hover:text-teal transition-colors mt-2"
                     >
                       <History size={11} strokeWidth={1.75} />
-                      السجل {task.history.length > 0 && `(${task.history.length})`}
+                      {t("rooms.history")} {task.history.length > 0 && `(${task.history.length})`}
                       <ChevronDown
                         size={11}
                         strokeWidth={1.75}
@@ -373,22 +383,22 @@ export default function RoomsSection() {
                     {expandedIds.has(task.id) && (
                       <div className="mt-2 rounded-md bg-paperDark/50 p-2.5">
                         {task.history.length === 0 ? (
-                          <p className="text-2xs text-inkFaint">مفيش تعديلات مسجلة على المهمة دي</p>
+                          <p className="text-2xs text-inkFaint">{t("rooms.noHistoryChanges")}</p>
                         ) : (
                           <ul className="space-y-2">
                             {task.history.map((entry) => (
                               <li key={entry.id} className="text-2xs">
                                 <p className="text-inkSoft">
-                                  <span className="text-ink font-medium">{entry.changedByName}</span> عدّل{" "}
-                                  {entry.fieldLabel}
+                                  <span className="text-ink font-medium">{entry.changedByName}</span> {t("rooms.edited")}{" "}
+                                  {fieldLabelFor(entry)}
                                 </p>
                                 <p className="mt-0.5">
                                   {entry.oldValue && (
-                                    <span className="text-inkFaint line-through ml-1.5">{entry.oldValue}</span>
+                                    <span className="text-inkFaint line-through me-1.5">{entry.oldValue}</span>
                                   )}
                                   {entry.newValue && <span className="text-ink">{entry.newValue}</span>}
                                 </p>
-                                <p className="text-inkFaint mt-0.5">{formatDateTime(entry.changedAt)}</p>
+                                <p className="text-inkFaint mt-0.5">{formatDateTime(entry.changedAt, locale)}</p>
                               </li>
                             ))}
                           </ul>

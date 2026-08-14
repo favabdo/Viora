@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 
 export const metadata: Metadata = {
   title: "Viora",
-  description: "مهامك وروابطك لكل مشروع في مكان واحد",
+  description: "Your tasks and links for every project, in one place",
   icons: {
     icon: "/icon.png",
     shortcut: "/icon.png",
@@ -22,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="en" dir="ltr">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -30,10 +31,15 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Poppins:wght@700;800&display=swap"
           rel="stylesheet"
         />
-        {/* بنطبّق وضع الليل قبل أول رسم للصفحة عشان نتجنب "وميض" اللون الفاتح لو المستخدم مفعّل الوضع الداكن */}
+        {/* بنطبّق وضع الليل ولغة الواجهة قبل أول رسم للصفحة عشان نتجنب "وميض" الوضع الافتراضي
+            (الإنجليزي/الفاتح) لو المستخدم كان مخزّن عربي أو وضع داكن من زيارة سابقة */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(localStorage.getItem('viora-theme')==='dark')document.documentElement.classList.add('dark');}catch(e){}`,
+            __html: `try{
+              if(localStorage.getItem('viora-theme')==='dark')document.documentElement.classList.add('dark');
+              var l=localStorage.getItem('viora-lang');
+              if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}
+            }catch(e){}`,
           }}
         />
       </head>
@@ -41,7 +47,7 @@ export default function RootLayout({
         className="font-sans bg-paper text-ink antialiased"
         style={{ ["--font-inter" as any]: "Inter" }}
       >
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   );

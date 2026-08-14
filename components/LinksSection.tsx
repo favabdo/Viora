@@ -10,6 +10,7 @@ import EmptyState from "./ui/EmptyState";
 import { SkeletonCards } from "./ui/Skeleton";
 import { timeAgo } from "@/lib/timeAgo";
 import { Link2, Plus, Search, X, Pencil, Check } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 function getDomain(url: string) {
   try {
@@ -49,6 +50,7 @@ function faviconFor(url: string) {
 }
 
 export default function LinksSection() {
+  const { t } = useTranslation();
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
@@ -83,7 +85,7 @@ export default function LinksSection() {
     try {
       new URL(normalizedUrl);
     } catch {
-      setError("الرابط غير صحيح");
+      setError(t("links.err.invalidUrl"));
       return;
     }
     setError("");
@@ -156,12 +158,12 @@ export default function LinksSection() {
     <div className="fade-in">
       <div className="flex items-center justify-between gap-3 mb-5">
         <div className="relative flex-1 max-w-xs">
-          <Search size={14} strokeWidth={2} className="absolute right-3 top-1/2 -translate-y-1/2 text-inkFaint" />
+          <Search size={14} strokeWidth={2} className="absolute end-3 top-1/2 -translate-y-1/2 text-inkFaint" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="ابحث في الروابط المحفوظة"
-            className="pr-8 text-sm"
+            placeholder={t("links.searchPlaceholder")}
+            className="pe-8 text-sm"
           />
         </div>
         <Button
@@ -170,7 +172,7 @@ export default function LinksSection() {
           onClick={() => setShowComposer((s) => !s)}
         >
           {showComposer ? <X size={14} strokeWidth={2} /> : <Plus size={14} strokeWidth={2} />}
-          {showComposer ? "إلغاء" : "رابط جديد"}
+          {showComposer ? t("common.cancel") : t("links.newLink")}
         </Button>
       </div>
 
@@ -182,21 +184,21 @@ export default function LinksSection() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && addLink()}
-              placeholder="الصق الرابط هنا"
+              placeholder={t("links.pasteHere")}
               dir="ltr"
-              className="font-mono text-left"
+              className="font-mono text-end"
             />
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="أضف وصفًا موجزًا — لماذا حفظت هذا الرابط؟"
+              placeholder={t("links.descriptionPlaceholder")}
               rows={2}
             />
           </div>
           {error && <p className="text-clay text-xs mb-2">{error}</p>}
           <Button variant="primary" size="sm" onClick={addLink}>
             <Plus size={14} strokeWidth={2} />
-            حفظ الرابط
+            {t("links.saveLink")}
           </Button>
         </div>
       )}
@@ -206,19 +208,19 @@ export default function LinksSection() {
       ) : links.length === 0 ? (
         <EmptyState
           icon={Link2}
-          title="لا توجد روابط محفوظة بعد"
-          hint="احفظ أي رابط مفيد هنا مع وصف مختصر ليسهل الرجوع إليه لاحقًا."
+          title={t("links.emptyTitle")}
+          hint={t("links.emptyHint")}
           action={
             !showComposer && (
               <Button variant="primary" size="sm" onClick={() => setShowComposer(true)}>
                 <Plus size={14} strokeWidth={2} />
-                أضف أول رابط
+                {t("links.addFirst")}
               </Button>
             )
           }
         />
       ) : filteredLinks.length === 0 ? (
-        <EmptyState icon={Search} title="لا نتائج مطابقة" hint={`لا يوجد رابط يطابق "${query}"`} />
+        <EmptyState icon={Search} title={t("links.noResultsTitle")} hint={t("links.noResultsHint").replace("{q}", query)} />
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {filteredLinks.map((link) => (
@@ -227,10 +229,10 @@ export default function LinksSection() {
               className="group relative border border-line rounded-lg p-4 bg-surface hover:border-lineStrong hover:shadow-xs transition-all"
             >
               {editingLinkId !== link.id && (
-                <div className="absolute left-2.5 top-2.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
+                <div className="absolute start-2.5 top-2.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
                   <IconButton
                     size="sm"
-                    aria-label="تعديل ليبل الرابط"
+                    aria-label={t("links.editLabel")}
                     onClick={() => startEditLink(link)}
                   >
                     <Pencil size={12} strokeWidth={1.75} />
@@ -238,7 +240,7 @@ export default function LinksSection() {
                   <IconButton
                     size="sm"
                     tone="danger"
-                    aria-label="حذف الرابط"
+                    aria-label={t("links.deleteLink")}
                     onClick={() => deleteLink(link.id)}
                   >
                     <X size={13} strokeWidth={1.75} />
@@ -246,13 +248,13 @@ export default function LinksSection() {
                 </div>
               )}
 
-              <div className="flex items-start gap-2.5 pl-14">
+              <div className="flex items-start gap-2.5 ps-14">
                 <input
                   type="checkbox"
                   className="task-check mt-0.5 shrink-0"
                   checked={link.is_done}
                   onChange={() => toggleLinkDone(link)}
-                  aria-label="تحديد الرابط كمنجز"
+                  aria-label={t("links.markDone")}
                 />
 
                 {editingLinkId === link.id ? (
@@ -269,7 +271,7 @@ export default function LinksSection() {
                           (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
                         }}
                       />
-                      <p dir="ltr" className="text-teal font-mono text-sm truncate text-left">
+                      <p dir="ltr" className="text-teal font-mono text-sm truncate text-end">
                         {getDomain(link.url)}
                       </p>
                     </div>
@@ -284,14 +286,14 @@ export default function LinksSection() {
                             saveLinkDescription(link);
                           }
                         }}
-                        placeholder="أضف وصفًا موجزًا"
+                        placeholder={t("links.descPlaceholderShort")}
                         rows={2}
                         className="text-sm"
                       />
                       <IconButton
                         size="sm"
                         tone="active"
-                        aria-label="حفظ الوصف"
+                        aria-label={t("links.saveDescription")}
                         onClick={() => saveLinkDescription(link)}
                       >
                         <Check size={13} strokeWidth={2} />
@@ -319,7 +321,7 @@ export default function LinksSection() {
                     <div className="min-w-0 flex-1">
                       <p
                         dir="ltr"
-                        className={`font-mono text-sm truncate text-left ${
+                        className={`font-mono text-sm truncate text-end ${
                           link.is_done ? "text-inkFaint line-through" : "text-teal group-hover:text-tealDark"
                         }`}
                       >
@@ -334,7 +336,7 @@ export default function LinksSection() {
                           {link.description}
                         </p>
                       ) : (
-                        <p className="text-sm text-inkFaint mt-1 italic">بلا وصف</p>
+                        <p className="text-sm text-inkFaint mt-1 italic">{t("links.noDescription")}</p>
                       )}
                     </div>
                   </a>

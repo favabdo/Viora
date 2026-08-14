@@ -11,6 +11,7 @@ import { Input } from "./ui/Input";
 import { Check, Link2, X } from "lucide-react";
 import ClickableName from "./ClickableName";
 import { resolveName } from "@/lib/displayName";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export default function TeamPanel({
   projectId,
@@ -21,6 +22,7 @@ export default function TeamPanel({
   currentUserId: string;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState("");
@@ -94,9 +96,9 @@ export default function TeamPanel({
       p_username: trimmed,
     });
     if (error) {
-      setInviteError(error.message || "حدث خطأ، يُرجى المحاولة مرة أخرى");
+      setInviteError(error.message || t("team.err.generic"));
     } else {
-      setInviteMsg(`تم إرسال دعوة لـ ${trimmed}`);
+      setInviteMsg(t("team.inviteSent").replace("{username}", trimmed));
       setUsername("");
       loadMembers();
     }
@@ -114,7 +116,7 @@ export default function TeamPanel({
       });
       setCopyingLink(false);
       if (error || !data) {
-        setLinkMsg("حدث خطأ أثناء إنشاء الرابط");
+        setLinkMsg(t("team.err.linkFailed"));
         return;
       }
       url = `${window.location.origin}/join/${data}`;
@@ -123,7 +125,7 @@ export default function TeamPanel({
 
     const ok = await copyText(url);
     if (ok) {
-      setLinkMsg("تم النسخ بنجاح");
+      setLinkMsg(t("team.copiedSuccess"));
       setJustCopied(true);
       setTimeout(() => setJustCopied(false), 2000);
     } else {
@@ -137,8 +139,8 @@ export default function TeamPanel({
   return (
     <Modal onClose={onClose} maxWidth="max-w-md">
       <div className="flex items-center justify-between mb-5">
-        <h3 className="font-display text-lg font-medium">فريق المشروع</h3>
-        <IconButton aria-label="إغلاق" onClick={onClose}>
+        <h3 className="font-display text-lg font-medium">{t("team.title")}</h3>
+        <IconButton aria-label={t("common.close")} onClick={onClose}>
           <X size={16} strokeWidth={1.75} />
         </IconButton>
       </div>
@@ -146,14 +148,14 @@ export default function TeamPanel({
       <div className="mb-5">
         <Button variant="secondary" fullWidth loading={copyingLink} onClick={copyInviteLink}>
           {justCopied ? <Check size={14} strokeWidth={2} /> : <Link2 size={14} strokeWidth={1.75} />}
-          {justCopied ? "تم النسخ بنجاح" : "نسخ رابط دعوة للمشروع"}
+          {justCopied ? t("team.copiedSuccess") : t("team.copyInviteLink")}
         </Button>
         {linkMsg && !justCopied && <p className="text-xs text-inkSoft mt-1.5">{linkMsg}</p>}
       </div>
 
       <div className="mb-5 border-t border-line pt-4">
         <label className="block text-sm font-medium text-inkSoft mb-1.5">
-          ادعُ عضوًا باسم المستخدم الخاص به
+          {t("team.inviteByUsername")}
         </label>
         <div className="flex gap-2">
           <Input
@@ -162,10 +164,10 @@ export default function TeamPanel({
             onKeyDown={(e) => e.key === "Enter" && inviteByUsername()}
             placeholder="username"
             dir="ltr"
-            className="font-mono text-left"
+            className="font-mono text-end"
           />
           <Button variant="primary" loading={inviting} onClick={inviteByUsername}>
-            دعوة
+            {t("team.invite")}
           </Button>
         </div>
         {inviteError && <p className="text-clay text-xs mt-1.5">{inviteError}</p>}
@@ -174,7 +176,7 @@ export default function TeamPanel({
 
       <div className="border-t border-line pt-4">
         <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-2.5">
-          الأعضاء · {accepted.length}
+          {t("team.members")} · {accepted.length}
         </h4>
         {loading ? (
           <div className="space-y-2">
@@ -193,10 +195,10 @@ export default function TeamPanel({
                   </ClickableName>
                   <span dir="ltr" className="font-mono text-2xs text-inkFaint">
                     @{m.profiles?.username || "?"}
-                    {m.user_id === currentUserId && <span className="font-sans"> · أنت</span>}
+                    {m.user_id === currentUserId && <span className="font-sans"> · {t("team.you")}</span>}
                   </span>
                 </span>
-                <Badge tone="sage">عضو</Badge>
+                <Badge tone="sage">{t("team.member")}</Badge>
               </li>
             ))}
           </ul>
@@ -205,7 +207,7 @@ export default function TeamPanel({
         {pending.length > 0 && (
           <>
             <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mt-4 mb-2.5">
-              دعوات معلّقة · {pending.length}
+              {t("team.pendingInvites")} · {pending.length}
             </h4>
             <ul className="space-y-1">
               {pending.map((m) => (
@@ -214,7 +216,7 @@ export default function TeamPanel({
                   <span dir="ltr" className="font-mono flex-1 min-w-0 truncate">
                     @{m.profiles?.username || "?"}
                   </span>
-                  <Badge tone="amber">في الانتظار</Badge>
+                  <Badge tone="amber">{t("team.pending")}</Badge>
                 </li>
               ))}
             </ul>

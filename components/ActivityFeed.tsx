@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { splitActorMessage } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export default function ActivityFeed({
   projectId,
@@ -14,6 +15,7 @@ export default function ActivityFeed({
   projectId: string;
   currentUserId: string;
 }) {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -64,7 +66,7 @@ export default function ActivityFeed({
           strokeWidth={2}
           className={`transition-transform ${open ? "rotate-180" : ""}`}
         />
-        النشاط الأخير
+        {t("activity.recent")}
       </button>
       {open && (
         <ul className="space-y-2.5 mt-3 fade-in">

@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { supabase, PendingInvite } from "@/lib/supabase";
 import Button from "./ui/Button";
 import { Mail } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export default function PendingInvites({ userId }: { userId: string }) {
+  const { t } = useTranslation();
   const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [responding, setResponding] = useState<string | null>(null);
 
@@ -45,8 +47,8 @@ export default function PendingInvites({ userId }: { userId: string }) {
               <Mail size={13} strokeWidth={1.75} />
             </span>
             <span className="truncate">
-              لديك دعوة للانضمام إلى مشروع{" "}
-              <span className="font-medium">{inv.projects?.name || "مشروع"}</span>
+              {t("invites.invitedTo")}{" "}
+              <span className="font-medium">{inv.projects?.name || t("invites.defaultProject")}</span>
             </span>
           </p>
           <div className="flex gap-2 shrink-0">
@@ -56,7 +58,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
               loading={responding === inv.project_id}
               onClick={() => respond(inv.project_id, true)}
             >
-              قبول
+              {t("invites.accept")}
             </Button>
             <Button
               variant="ghost"
@@ -64,7 +66,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
               disabled={responding === inv.project_id}
               onClick={() => respond(inv.project_id, false)}
             >
-              رفض
+              {t("invites.decline")}
             </Button>
           </div>
         </div>

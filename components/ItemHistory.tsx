@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { splitActorMessage } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 type Entry = {
   id: string;
@@ -26,6 +27,7 @@ export default function ItemHistory({
   id: string;
   currentUserId?: string;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -60,14 +62,14 @@ export default function ItemHistory({
           strokeWidth={2}
           className={`transition-transform ${open ? "rotate-180" : ""}`}
         />
-        السجل
+        {t("itemHistory.log")}
       </button>
       {open && (
         <div className="mt-1.5 border-r-2 border-line pr-3 space-y-1 fade-in">
           {loading ? (
-            <p className="text-2xs text-inkFaint">جارٍ التحميل...</p>
+            <p className="text-2xs text-inkFaint">{t("common.loading")}</p>
           ) : entries.length === 0 ? (
-            <p className="text-2xs text-inkFaint">لا يوجد سجل بعد</p>
+            <p className="text-2xs text-inkFaint">{t("itemHistory.noHistory")}</p>
           ) : (
             entries.map((e) => {
               const { label, rest, actorId } = splitActorMessage(e, currentUserId);

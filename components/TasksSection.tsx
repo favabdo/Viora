@@ -18,6 +18,7 @@ import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut, GripVert
 import { displayName } from "@/lib/displayName";
 import ClickableName from "./ClickableName";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 /** بيرتب المهام: غير المنجزة فوق (حسب position)، والمنجزة تنزل تحت تلقائيًا */
 function sortTasks(list: Task[]): Task[] {
@@ -34,6 +35,7 @@ export default function TasksSection({
   currentUserId: string;
   currentUserEmail: string;
 }) {
+  const { t } = useTranslation();
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -166,7 +168,7 @@ export default function TasksSection({
         setActiveProjectId(remaining.length > 0 ? remaining[0].id : null);
       }
     } else {
-      alert(error.message || "حصل خطأ أثناء حذف المشروع");
+      alert(error.message || t("tasks.err.deleteProject"));
     }
   }
 
@@ -372,10 +374,10 @@ export default function TasksSection({
       {/* قائمة المشاريع */}
       <aside className="fade-in">
         <div className="flex items-center justify-between mb-2.5">
-          <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase">المشاريع</h2>
+          <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase">{t("tasks.projects")}</h2>
           <IconButton
             size="sm"
-            aria-label="مشروع جديد"
+            aria-label={t("tasks.newProject")}
             tone={showNewProject ? "active" : "default"}
             onClick={() => setShowNewProject((s) => !s)}
           >
@@ -390,13 +392,13 @@ export default function TasksSection({
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addProject()}
-              placeholder="اسم المشروع"
+              placeholder={t("tasks.projectName")}
               className="text-sm py-1.5"
             />
             <IconButton
               size="sm"
               tone="active"
-              aria-label="إضافة المشروع"
+              aria-label={t("tasks.addProject")}
               onClick={addProject}
               disabled={!newProjectName.trim()}
             >
@@ -412,7 +414,7 @@ export default function TasksSection({
               <li key={p.id} className="group flex items-center">
                 <button
                   onClick={() => setActiveProjectId(p.id)}
-                  className={`flex-1 flex items-center gap-1.5 min-w-0 text-right px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                  className={`flex-1 flex items-center gap-1.5 min-w-0 text-start px-2.5 py-1.5 rounded-md text-sm transition-colors ${
                     active ? "bg-teal text-white font-medium" : "hover:bg-paperDark text-ink"
                   }`}
                 >
@@ -429,7 +431,7 @@ export default function TasksSection({
                   <IconButton
                     size="sm"
                     tone="danger"
-                    aria-label={`حذف مشروع ${p.name}`}
+                    aria-label={t("tasks.deleteProjectLabel").replace("{name}", p.name)}
                     onClick={() => requestDeleteProject(p)}
                     className="shrink-0 opacity-0 group-hover:opacity-100"
                   >
@@ -439,7 +441,7 @@ export default function TasksSection({
                   <IconButton
                     size="sm"
                     tone="danger"
-                    aria-label={`مغادرة مشروع ${p.name}`}
+                    aria-label={t("tasks.leaveProjectLabel").replace("{name}", p.name)}
                     onClick={() => requestLeaveProject(p)}
                     className="shrink-0 opacity-0 group-hover:opacity-100"
                   >
@@ -456,7 +458,7 @@ export default function TasksSection({
                 className="w-full flex items-center gap-2 text-inkFaint hover:text-inkSoft text-sm py-2 transition-colors"
               >
                 <FolderPlus size={14} strokeWidth={1.75} />
-                أضف أول مشروع
+                {t("tasks.addFirstProject")}
               </button>
             </li>
           )}
@@ -479,7 +481,7 @@ export default function TasksSection({
                     className="font-display text-lg py-1 h-auto"
                   />
                   <IconButton
-                    aria-label="حفظ اسم المشروع"
+                    aria-label={t("tasks.saveProjectName")}
                     tone="active"
                     onClick={() => saveProjectName(activeProject)}
                     disabled={savingProjectName}
@@ -493,7 +495,7 @@ export default function TasksSection({
                   {activeProject.user_id === currentUserId && (
                     <IconButton
                       size="sm"
-                      aria-label="تعديل اسم المشروع"
+                      aria-label={t("tasks.editProjectName")}
                       onClick={() => startEditProjectName(activeProject)}
                       className="shrink-0"
                     >
@@ -506,7 +508,7 @@ export default function TasksSection({
                 {tasks.length > 0 && <ProgressBar value={doneCount} total={tasks.length} />}
                 <Button variant="secondary" size="sm" onClick={() => setShowTeam(true)}>
                   <Users size={13} strokeWidth={1.75} />
-                  الفريق
+                  {t("tasks.team")}
                 </Button>
               </div>
             </div>
@@ -516,11 +518,11 @@ export default function TasksSection({
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addTask()}
-                placeholder="أدخل مهمة جديدة ثم اضغط Enter"
+                placeholder={t("tasks.newTaskPlaceholder")}
               />
               <Button variant="primary" onClick={addTask}>
                 <Plus size={15} strokeWidth={2} />
-                إضافة
+                {t("tasks.add")}
               </Button>
             </div>
 
@@ -529,8 +531,8 @@ export default function TasksSection({
             ) : tasks.length === 0 ? (
               <EmptyState
                 icon={ListChecks}
-                title="لا توجد مهام في هذا المشروع بعد"
-                hint="أدخل أول مهمة في الحقل أعلاه لتبدأ."
+                title={t("tasks.emptyProjectTitle")}
+                hint={t("tasks.emptyProjectHint")}
               />
             ) : (
               <ul className="border-t border-b border-line divide-y divide-line">
@@ -545,7 +547,7 @@ export default function TasksSection({
                     {task.color && (
                       <span
                         aria-hidden="true"
-                        className="absolute inset-y-0 right-0 w-5 z-0"
+                        className="absolute inset-y-0 end-0 w-5 z-0"
                         style={{ backgroundColor: task.color }}
                       />
                     )}
@@ -556,7 +558,7 @@ export default function TasksSection({
                         onPointerUp={handleHandlePointerEnd}
                         onPointerCancel={handleHandlePointerEnd}
                         onContextMenu={(e) => e.preventDefault()}
-                        aria-label="اضغط مطوّلاً واسحب لإعادة ترتيب المهمة"
+                        aria-label={t("tasks.dragHandle")}
                         className="task-drag-handle relative z-10 mt-1 shrink-0 cursor-grab text-inkFaint hover:text-inkSoft active:cursor-grabbing"
                       >
                         <GripVertical size={14} strokeWidth={1.75} />
@@ -579,7 +581,7 @@ export default function TasksSection({
                           />
                           <IconButton
                             size="sm"
-                            aria-label="حفظ عنوان المهمة"
+                            aria-label={t("tasks.saveTaskTitle")}
                             tone="active"
                             onClick={() => saveTaskTitle(task)}
                           >
@@ -604,7 +606,7 @@ export default function TasksSection({
                       {editingTaskId !== task.id && (
                         <IconButton
                           size="sm"
-                          aria-label="تعديل عنوان المهمة"
+                          aria-label={t("tasks.editTaskTitle")}
                           onClick={() => startEditTask(task)}
                           className="shrink-0 opacity-0 group-hover:opacity-100"
                         >
@@ -615,7 +617,7 @@ export default function TasksSection({
                         <div className="relative shrink-0" onPointerDown={(e) => e.stopPropagation()}>
                           <IconButton
                             size="sm"
-                            aria-label="تحديد لون المهمة حسب الأهمية"
+                            aria-label={t("tasks.setColor")}
                             tone={task.color ? "active" : "default"}
                             onClick={() => setColorPickerTaskId((id) => (id === task.id ? null : task.id))}
                             className="opacity-0 group-hover:opacity-100 data-[open=true]:opacity-100"
@@ -624,10 +626,10 @@ export default function TasksSection({
                             <Palette size={13} strokeWidth={1.75} style={task.color ? { color: task.color } : undefined} />
                           </IconButton>
                           {colorPickerTaskId === task.id && (
-                            <div className="absolute left-0 bottom-full mb-1 z-30 flex items-center gap-1 bg-paper border border-line rounded-md shadow-modal p-1.5 fade-in">
+                            <div className="absolute start-0 bottom-full mb-1 z-30 flex items-center gap-1 bg-paper border border-line rounded-md shadow-modal p-1.5 fade-in">
                               <button
                                 type="button"
-                                aria-label="بدون لون"
+                                aria-label={t("tasks.noColor")}
                                 onClick={() => setTaskColor(task, null)}
                                 className="h-5 w-5 rounded-full border border-dashed border-inkFaint hover:border-ink"
                               />
@@ -635,8 +637,8 @@ export default function TasksSection({
                                 <button
                                   key={c.name}
                                   type="button"
-                                  title={c.label}
-                                  aria-label={`لون ${c.label}`}
+                                  title={t(`taskColor.${c.name}`)}
+                                  aria-label={t("tasks.colorLabel").replace("{label}", t(`taskColor.${c.name}`))}
                                   onClick={() => setTaskColor(task, c.value)}
                                   className={`h-5 w-5 rounded-full transition-transform hover:scale-110 ${
                                     task.color === c.value ? "ring-2 ring-offset-1 ring-ink" : ""
@@ -651,14 +653,14 @@ export default function TasksSection({
                       <IconButton
                         size="sm"
                         tone="danger"
-                        aria-label="حذف المهمة"
+                        aria-label={t("tasks.deleteTask")}
                         onClick={() => requestDeleteTask(task)}
                         className="shrink-0 opacity-0 group-hover:opacity-100"
                       >
                         <X size={14} strokeWidth={1.75} />
                       </IconButton>
                     </div>
-                    <div className="pr-[52px] flex flex-col gap-0.5">
+                    <div className="ps-[52px] flex flex-col gap-0.5">
                       <ItemHistory table="activity_log" column="task_id" id={task.id} currentUserId={currentUserId} />
                       <TaskComments
                         taskId={task.id}
@@ -677,13 +679,13 @@ export default function TasksSection({
         ) : projects.length > 0 ? (
           <EmptyState
             icon={ListChecks}
-            title="اختر مشروعًا من القائمة لتبدأ في عرض مهامه"
-            hint="حدّد أحد المشاريع الموجودة على اليمين، أو أنشئ مشروعًا جديدًا."
+            title={t("tasks.selectProjectTitle")}
+            hint={t("tasks.selectProjectHint")}
           />
         ) : (
           <EmptyState
             icon={FolderPlus}
-            title="أضف مشروعًا أولًا لتتمكن من إضافة المهام"
+            title={t("tasks.addProjectFirstTitle")}
           />
         )}
       </section>
@@ -699,13 +701,13 @@ export default function TasksSection({
       {deleteTarget && (
         <ConfirmPasswordModal
           email={currentUserEmail}
-          title={deleteTarget.type === "project" ? "حذف المشروع؟" : "حذف المهمة؟"}
+          title={deleteTarget.type === "project" ? t("tasks.deleteProjectTitle") : t("tasks.deleteTaskTitle")}
           message={
             deleteTarget.type === "project"
-              ? `أدخل كلمة المرور لتأكيد حذف مشروع "${deleteTarget.name}" مع جميع المهام الموجودة فيه.`
-              : `أدخل كلمة المرور لتأكيد حذف مهمة "${deleteTarget.name}".`
+              ? t("tasks.deleteProjectMessage").replace("{name}", deleteTarget.name)
+              : t("tasks.deleteTaskMessage").replace("{name}", deleteTarget.name)
           }
-          confirmLabel="حذف"
+          confirmLabel={t("common.delete")}
           onCancel={() => setDeleteTarget(null)}
           onConfirm={async () => {
             if (deleteTarget.type === "project") await performDeleteProject(deleteTarget.id);
@@ -717,17 +719,16 @@ export default function TasksSection({
 
       {leaveTarget && (
         <Modal onClose={() => !leavingProject && setLeaveTarget(null)} maxWidth="max-w-xs">
-          <h3 className="font-display text-lg font-medium mb-2">مغادرة المشروع؟</h3>
+          <h3 className="font-display text-lg font-medium mb-2">{t("tasks.leaveProjectTitle")}</h3>
           <p className="text-sm text-inkSoft mb-5 leading-relaxed">
-            هل أنت متأكد أنك تريد مغادرة مشروع "{leaveTarget.name}"؟ لن تظهر لك مهامه بعد ذلك، ويمكنك
-            الانضمام إليه مرة أخرى لو دعاك أحد الأعضاء مجددًا.
+            {t("tasks.leaveProjectMessage").replace("{name}", leaveTarget.name)}
           </p>
           <div className="flex gap-2">
             <Button variant="secondary" fullWidth disabled={leavingProject} onClick={() => setLeaveTarget(null)}>
-              إلغاء
+              {t("common.cancel")}
             </Button>
             <Button variant="danger" fullWidth loading={leavingProject} onClick={performLeaveProject}>
-              مغادرة
+              {t("tasks.leave")}
             </Button>
           </div>
         </Modal>

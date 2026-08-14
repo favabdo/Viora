@@ -1,5 +1,5 @@
 function initialsOf(name: string) {
-  return (name || "؟").trim().charAt(0).toUpperCase();
+  return (name || "?").trim().charAt(0).toUpperCase();
 }
 
 const sizes = {
