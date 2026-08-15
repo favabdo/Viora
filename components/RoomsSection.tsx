@@ -51,6 +51,11 @@ type ScheduledTask = {
   daysRemaining: number | null;
   daysOverdue: number | null;
   history: HistoryEntry[];
+  approvalStatus: string;
+  isPending: boolean;
+  pendingChanges: { updates?: Record<string, unknown>; historyEntries?: any[] } | null;
+  pendingChangedByName: string | null;
+  pendingChangedAt: string | null;
 };
 
 type Comment = {
@@ -237,26 +242,32 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
   }
 
   async function toggleDone(task: ScheduledTask) {
-    if (togglingId) return;
+    if (togglingId || task.isPending) return;
+    if (!nilechatLink) {
+      setTasksError(t("rooms.errCode.nilechat_link_required"));
+      return;
+    }
     const nextDone = !task.done;
     setTogglingId(task.id);
-    setTasks((prev) => prev.map((t2) => (t2.id === task.id ? { ...t2, done: nextDone } : t2)));
     try {
       const res = await fetch("/api/rooms/tasks", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: task.id, done: nextDone }),
+        body: JSON.stringify({
+          id: task.id,
+          done: nextDone,
+          agentId: nilechatLink.agentId,
+          agentName: nilechatLink.agentName,
+        }),
       });
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         setTasksError(errText(data, "rooms.err.updateFailed"));
-        setTasks((prev) => prev.map((t2) => (t2.id === task.id ? { ...t2, done: task.done } : t2)));
       } else {
         loadTasks();
       }
     } catch {
       setTasksError(t("rooms.err.updateFailedGeneric"));
-      setTasks((prev) => prev.map((t2) => (t2.id === task.id ? { ...t2, done: task.done } : t2)));
     } finally {
       setTogglingId(null);
     }
@@ -616,11 +627,17 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
                 <div className="flex items-start gap-2.5">
                   <button
                     onClick={() => toggleDone(task)}
-                    disabled={togglingId === task.id}
-                    title={task.done ? t("rooms.markOpen") : t("rooms.markDone")}
-                    className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border cursor-pointer flex items-center justify-center ${
-                      task.done ? "bg-teal border-teal" : "border-inkFaint"
-                    }`}
+                    disabled={togglingId === task.id || task.isPending}
+                    title={
+                      task.isPending
+                        ? t("rooms.pendingBadge")
+                        : task.done
+                        ? t("rooms.markOpen")
+                        : t("rooms.markDone")
+                    }
+                    className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border flex items-center justify-center ${
+                      task.isPending ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                    } ${task.done ? "bg-teal border-teal" : "border-inkFaint"}`}
                   >
                     {task.done && <span className="h-1.5 w-1.5 rounded-full bg-paper" />}
                   </button>
@@ -631,6 +648,11 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
                         <User size={11} strokeWidth={2} />
                         {task.customerName || t("rooms.unnamedCustomer")}
                       </span>
+                      {task.isPending && (
+                        <span className="text-2xs font-medium text-[#8A5A00] bg-[#FCEFC7] rounded-full px-2 py-0.5">
+                          {t("rooms.pendingBadge")}
+                        </span>
+                      )}
                       {!task.done && task.isOverdue && task.daysOverdue !== null && (
                         <span className="text-2xs font-medium text-clay bg-claySoft rounded-full px-2 py-0.5">
                           {overdueLabel(task.daysOverdue)}
@@ -671,6 +693,21 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
                         </span>
                       )}
                     </div>
+
+                    {task.isPending && (
+                      <p className="text-2xs text-[#8A5A00] mt-1.5">
+                        {task.pendingChanges?.updates?.status
+                          ? t("rooms.pendingStatusChange").replace(
+                              "{status}",
+                              task.pendingChanges.updates.status === "ended"
+                                ? t("rooms.statusEnded")
+                                : t("rooms.statusOpen")
+                            )
+                          : t("rooms.pendingNewTask")}
+                        {task.pendingChangedByName &&
+                          ` — ${t("rooms.pendingRequestedBy").replace("{name}", task.pendingChangedByName)}`}
+                      </p>
+                    )}
 
                     <div className="flex items-center gap-3 mt-2">
                       <button

@@ -274,6 +274,15 @@ const dict: Record<string, { en: string; ar: string }> = {
   "rooms.addCommentPlaceholder": { en: "Add a comment...", ar: "أضف تعليقًا..." },
   "rooms.err.loadCommentsFailed": { en: "Failed to load comments", ar: "فشل تحميل التعليقات" },
   "rooms.err.addCommentFailed": { en: "Failed to add comment", ar: "فشل إضافة التعليق" },
+  "rooms.pendingBadge": { en: "Pending approval", ar: "بانتظار الموافقة" },
+  "rooms.pendingNewTask": { en: "New task — pending admin approval before it appears in NileChat", ar: "مهمة جديدة — بانتظار موافقة الأدمن قبل ما تظهر في نايل شات" },
+  "rooms.pendingStatusChange": { en: "Requested marking as {status} — pending admin approval", ar: "طلب تعليمها كـ {status} — بانتظار موافقة الأدمن" },
+  "rooms.pendingRequestedBy": { en: "Requested by {name}", ar: "طلبها {name}" },
+  "rooms.statusEnded": { en: "done", ar: "خلصت" },
+  "rooms.statusOpen": { en: "open", ar: "لسه مفتوحة" },
+  "rooms.errCode.already_pending": { en: "This task already has a pending request awaiting approval", ar: "المهمة دي فيها طلب بانتظار الموافقة بالفعل" },
+  "rooms.errCode.nilechat_link_required": { en: "Link your NileChat account first to request changes", ar: "اربط حسابك في NileChat الأول عشان تقدر تطلب تعديل" },
+  "rooms.errCode.task_not_found": { en: "Task not found", ar: "المهمة غير موجودة" },
 
   // ===== components/TaskComments.tsx =====
   "comments.one": { en: "comment", ar: "تعليق" },

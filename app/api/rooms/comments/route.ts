@@ -5,9 +5,7 @@ import { getRoomsPool, sql } from "@/lib/sqlserver";
 
 export const dynamic = "force-dynamic";
 
-// اسم الجدول ده مبني على الأعمدة اللي اتوصفت (id, task_id, comment_text, created_by_id,
-// created_by_name, created_at) - لو الاسم الحقيقي مختلف، غيّره هنا بس وكل حاجة تفضل شغالة.
-const COMMENTS_TABLE = "NileChat_ScheduledTaskComments_byA";
+const COMMENTS_TABLE = "NileChat_TaskComments_byA";
 
 function requireSession() {
   const token = cookies().get(ROOMS_COOKIE_NAME)?.value;

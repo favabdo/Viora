@@ -7,7 +7,16 @@ import { sql } from "@/lib/sqlserver";
  * الأعمدة الحقيقية للجدول (زي ما إتبعتت):
  *   id, contact_id, customer_name, task_text, agent_id, agent_name,
  *   status ('open' | 'ended'), due_date, created_at, ended_at,
- *   delivery_status, assigned_to_id, assigned_to_name
+ *   delivery_status, assigned_to_id, assigned_to_name,
+ *   approval_status ('approved' | 'pending'), pending_changes (JSON text),
+ *   pending_changed_by_id, pending_changed_by_name, pending_changed_at
+ *
+ * نظام الـ approval بتاع NileChat: أي تعديل على مهمة (مش إنشاء بس) بيتسجل كـ
+ * approval_status='pending' + pending_changes JSON بالشكل:
+ *   { "updates": { "<camelCaseField>": <newValue> },
+ *     "historyEntries": [{ "fieldName": "<snake_case_field>", "oldValue": "...", "newValue": "..." }] }
+ * وبيفضل التاسك بالقيم القديمة لحد ما الأدمن يعمل approve من نايل شات (وقتها القيم الحقيقية تتحدّث
+ * ويتحط سجل في NileChat_ScheduledTaskHistory_byA، وapproval_status يرجع 'approved').
  */
 
 export const SOURCE_TABLE = "NileChat_ScheduledTasks_byA";
@@ -28,6 +37,8 @@ const FIELD_LABELS: Record<string, string> = {
   assigned_to: "Assignee change",
   customer: "Customer change",
   task_text: "Task text change",
+  status: "Status change",
+  due_date: "Due date change",
 };
 
 export function fieldLabel(fieldName: string): string {
@@ -57,6 +68,11 @@ export function mapHistoryRow(row: RawHistoryRow): HistoryEntryDTO {
   };
 }
 
+export type PendingChanges = {
+  updates?: Record<string, unknown>;
+  historyEntries?: { fieldName: string; oldValue: string | null; newValue: string | null }[];
+} | null;
+
 export type ScheduledTaskDTO = {
   id: number;
   contactId: number;
@@ -79,6 +95,12 @@ export type ScheduledTaskDTO = {
   /** عدد الأيام اللي فاتت على تاريخ التسليم (موجب) - null لو مش متأخرة */
   daysOverdue: number | null;
   history: HistoryEntryDTO[];
+  /** 'approved' | 'pending' - لو pending يبقى فيه تعديل أو مهمة جديدة لسه مستنية موافقة الأدمن في NileChat */
+  approvalStatus: string;
+  isPending: boolean;
+  pendingChanges: PendingChanges;
+  pendingChangedByName: string | null;
+  pendingChangedAt: string | null;
 };
 
 type RawRow = {
@@ -93,6 +115,10 @@ type RawRow = {
   ended_at: Date | null;
   delivery_status: string | null;
   assigned_to_name: string | null;
+  approval_status: string | null;
+  pending_changes: string | null;
+  pending_changed_by_name: string | null;
+  pending_changed_at: Date | null;
 };
 
 function toIso(value: Date | null): string | null {
@@ -126,6 +152,16 @@ export function mapRow(row: RawRow, history: HistoryEntryDTO[] = []): ScheduledT
     }
   }
 
+  const approvalStatus = (row.approval_status || "approved").trim().toLowerCase();
+  let pendingChanges: PendingChanges = null;
+  if (row.pending_changes) {
+    try {
+      pendingChanges = JSON.parse(row.pending_changes);
+    } catch {
+      pendingChanges = null;
+    }
+  }
+
   return {
     id: row.id,
     contactId: row.contact_id,
@@ -143,6 +179,11 @@ export function mapRow(row: RawRow, history: HistoryEntryDTO[] = []): ScheduledT
     daysRemaining,
     daysOverdue,
     history,
+    approvalStatus,
+    isPending: approvalStatus === "pending",
+    pendingChanges,
+    pendingChangedByName: (row.pending_changed_by_name || "").trim() || null,
+    pendingChangedAt: toIso(row.pending_changed_at),
   };
 }
 
