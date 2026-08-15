@@ -99,9 +99,9 @@ export async function POST(request: Request) {
       .input("assignedToName", sql.NVarChar(200), assignedToName)
       .query(
         `INSERT INTO dbo.[${SOURCE_TABLE}]
-           (contact_id, customer_name, task_text, agent_id, agent_name, status, due_date, assigned_to_id, assigned_to_name)
+           (contact_id, customer_name, task_text, agent_id, agent_name, status, due_date, assigned_to_id, assigned_to_name, company_id)
          OUTPUT INSERTED.id
-         VALUES (@contactId, @customerName, @taskText, @agentId, @agentName, 'open', @dueDate, @assignedToId, @assignedToName)`
+         VALUES (@contactId, @customerName, @taskText, @agentId, @agentName, 'open', @dueDate, @assignedToId, @assignedToName, 1)`
       );
 
     const newId = result.recordset[0]?.id;
