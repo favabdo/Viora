@@ -114,6 +114,7 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
   const [loadingCommentsFor, setLoadingCommentsFor] = useState<number | null>(null);
   const [newCommentByTask, setNewCommentByTask] = useState<Record<number, string>>({});
   const [postingCommentFor, setPostingCommentFor] = useState<number | null>(null);
+  const [commentErrorByTask, setCommentErrorByTask] = useState<Record<number, string>>({});
 
   // نموذج مهمة جديدة
   const [showNewTask, setShowNewTask] = useState(false);
@@ -157,9 +158,9 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
     return key ? t(key) : entry.fieldLabel;
   }
 
-  function errText(data: { errorCode?: string; error?: string }, fallbackKey: string): string {
-    if (data?.errorCode) return t(`rooms.errCode.${data.errorCode}`);
-    return data?.error || t(fallbackKey);
+  function errText(data: { errorCode?: string; error?: string; detail?: string }, fallbackKey: string): string {
+    const base = data?.errorCode ? t(`rooms.errCode.${data.errorCode}`) : data?.error || t(fallbackKey);
+    return data?.detail ? `${base} (${data.detail})` : base;
   }
 
   function toggleHistory(taskId: number) {
@@ -316,6 +317,7 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
     const text = (newCommentByTask[taskId] || "").trim();
     if (!text || !nilechatLink) return;
     setPostingCommentFor(taskId);
+    setCommentErrorByTask((prev) => ({ ...prev, [taskId]: "" }));
     try {
       const res = await fetch("/api/rooms/comments", {
         method: "POST",
@@ -329,13 +331,13 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
       });
       const data = await res.json();
       if (!res.ok) {
-        setTasksError(errText(data, "rooms.err.addCommentFailed"));
+        setCommentErrorByTask((prev) => ({ ...prev, [taskId]: errText(data, "rooms.err.addCommentFailed") }));
         return;
       }
       setCommentsByTask((prev) => ({ ...prev, [taskId]: [...(prev[taskId] || []), data.comment] }));
       setNewCommentByTask((prev) => ({ ...prev, [taskId]: "" }));
     } catch {
-      setTasksError(t("rooms.err.addCommentFailed"));
+      setCommentErrorByTask((prev) => ({ ...prev, [taskId]: t("rooms.err.addCommentFailed") }));
     } finally {
       setPostingCommentFor(null);
     }
@@ -744,23 +746,28 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
                         )}
 
                         {nilechatLink ? (
-                          <div className="flex items-center gap-1.5">
-                            <input
-                              value={newCommentByTask[task.id] || ""}
-                              onChange={(e) =>
-                                setNewCommentByTask((prev) => ({ ...prev, [task.id]: e.target.value }))
-                              }
-                              onKeyDown={(e) => e.key === "Enter" && submitComment(task.id)}
-                              placeholder={t("rooms.addCommentPlaceholder")}
-                              className="flex-1 rounded-md border border-line bg-surface px-2.5 py-1.5 text-2xs text-ink placeholder:text-inkFaint focus:outline-none focus:ring-1 focus:ring-teal"
-                            />
-                            <button
-                              onClick={() => submitComment(task.id)}
-                              disabled={postingCommentFor === task.id || !(newCommentByTask[task.id] || "").trim()}
-                              className="text-teal hover:text-tealDark disabled:opacity-40 shrink-0"
-                            >
-                              <Send size={14} strokeWidth={1.75} />
-                            </button>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <input
+                                value={newCommentByTask[task.id] || ""}
+                                onChange={(e) =>
+                                  setNewCommentByTask((prev) => ({ ...prev, [task.id]: e.target.value }))
+                                }
+                                onKeyDown={(e) => e.key === "Enter" && submitComment(task.id)}
+                                placeholder={t("rooms.addCommentPlaceholder")}
+                                className="flex-1 rounded-md border border-line bg-surface px-2.5 py-1.5 text-2xs text-ink placeholder:text-inkFaint focus:outline-none focus:ring-1 focus:ring-teal"
+                              />
+                              <button
+                                onClick={() => submitComment(task.id)}
+                                disabled={postingCommentFor === task.id || !(newCommentByTask[task.id] || "").trim()}
+                                className="text-teal hover:text-tealDark disabled:opacity-40 shrink-0"
+                              >
+                                <Send size={14} strokeWidth={1.75} />
+                              </button>
+                            </div>
+                            {commentErrorByTask[task.id] && (
+                              <p className="text-clay text-2xs mt-1.5">{commentErrorByTask[task.id]}</p>
+                            )}
                           </div>
                         ) : (
                           <Link href="/profile" className="text-2xs text-teal hover:text-tealDark">

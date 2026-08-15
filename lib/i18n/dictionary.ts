@@ -375,6 +375,8 @@ const dict: Record<string, { en: string; ar: string }> = {
   "rooms.errCode.load_failed": { en: "Failed to load tasks from the Rooms database", ar: "فشل تحميل المهام من قاعدة بيانات Rooms" },
   "rooms.errCode.task_id_required": { en: "Task id is required", ar: "معرّف المهمة مطلوب" },
   "rooms.errCode.update_failed": { en: "Failed to update the task in the Rooms database", ar: "فشل تحديث المهمة في قاعدة بيانات Rooms" },
+  "rooms.errCode.create_failed": { en: "Failed to save this in the Rooms database", ar: "فشل الحفظ في قاعدة بيانات Rooms" },
+  "rooms.errCode.missing_fields": { en: "Please fill in all required fields", ar: "يُرجى ملء كل الحقول المطلوبة" },
 };
 
 export default dict;
