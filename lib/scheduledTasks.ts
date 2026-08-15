@@ -20,14 +20,14 @@ export type HistoryEntryDTO = {
   fieldLabel: string;
   oldValue: string | null;
   newValue: string | null;
-  changedByName: string;
+  changedByName: string | null;
   changedAt: string | null;
 };
 
 const FIELD_LABELS: Record<string, string> = {
-  assigned_to: "تغيير الشخص المسند إليه",
-  customer: "تغيير العميل",
-  task_text: "تغيير نص المهمة",
+  assigned_to: "Assignee change",
+  customer: "Customer change",
+  task_text: "Task text change",
 };
 
 export function fieldLabel(fieldName: string): string {
@@ -52,7 +52,7 @@ export function mapHistoryRow(row: RawHistoryRow): HistoryEntryDTO {
     fieldLabel: fieldLabel(row.field_name),
     oldValue: row.old_value,
     newValue: row.new_value,
-    changedByName: (row.changed_by_name || "").trim() || "غير معروف",
+    changedByName: (row.changed_by_name || "").trim() || null,
     changedAt: toIso(row.changed_at),
   };
 }
@@ -60,16 +60,19 @@ export function mapHistoryRow(row: RawHistoryRow): HistoryEntryDTO {
 export type ScheduledTaskDTO = {
   id: number;
   contactId: number;
-  customerName: string;
+  /** null لو مفيش اسم عميل مسجّل - الواجهة تعرض نص "بدون اسم" مترجَم */
+  customerName: string | null;
   taskText: string;
-  agentName: string;
+  /** null لو مفيش اسم مُنشئ - الواجهة تعرض "غير معروف" مترجَم */
+  agentName: string | null;
   status: string;
   done: boolean;
   dueDate: string | null;
   createdAt: string | null;
   endedAt: string | null;
   deliveryStatus: string | null;
-  assignedToName: string;
+  /** null لو مفيش حد متسند له ومفيش حتى مُنشئ نرجعله كبديل - الواجهة تعرض "غير معروف" مترجَم */
+  assignedToName: string | null;
   isOverdue: boolean;
   /** عدد الأيام المتبقية على تاريخ التسليم (موجب) - null لو مفيش due_date أو المهمة خلصت */
   daysRemaining: number | null;
@@ -100,7 +103,7 @@ function toIso(value: Date | null): string | null {
 export function mapRow(row: RawRow, history: HistoryEntryDTO[] = []): ScheduledTaskDTO {
   const done = (row.status || "").trim().toLowerCase() === "ended";
   const dueDateIso = toIso(row.due_date);
-  const agentName = (row.agent_name || "").trim() || "غير معروف";
+  const agentName = (row.agent_name || "").trim() || null;
   // لو مفيش حد متسندله المهمة، تتسند تلقائيًا في العرض للي أنشأها
   const assignedToName = (row.assigned_to_name || "").trim() || agentName;
 
@@ -126,7 +129,7 @@ export function mapRow(row: RawRow, history: HistoryEntryDTO[] = []): ScheduledT
   return {
     id: row.id,
     contactId: row.contact_id,
-    customerName: (row.customer_name || "").trim() || "عميل بدون اسم",
+    customerName: (row.customer_name || "").trim() || null,
     taskText: row.task_text,
     agentName,
     status: row.status,

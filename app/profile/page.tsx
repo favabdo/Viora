@@ -57,6 +57,12 @@ export default function ProfilePage() {
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [deleteAccountError, setDeleteAccountError] = useState("");
 
+  const [nilechatLink, setNilechatLink] = useState<{ agentId: number; agentName: string } | null>(null);
+  const [nilechatToken, setNilechatToken] = useState("");
+  const [linkingNilechat, setLinkingNilechat] = useState(false);
+  const [nilechatError, setNilechatError] = useState("");
+  const [nilechatMsg, setNilechatMsg] = useState("");
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
@@ -71,6 +77,81 @@ export default function ProfilePage() {
   useEffect(() => {
     if (session) loadProfile(session.user.id);
   }, [session]);
+
+  useEffect(() => {
+    if (session) loadNilechatLink(session.user.id);
+  }, [session]);
+
+  async function loadNilechatLink(userId: string) {
+    const { data } = await supabase
+      .from("nilechat_links")
+      .select("agent_id, agent_name")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (data) setNilechatLink({ agentId: data.agent_id, agentName: data.agent_name });
+  }
+
+  async function linkNilechat() {
+    const trimmed = nilechatToken.trim();
+    setNilechatError("");
+    setNilechatMsg("");
+    if (!trimmed) {
+      setNilechatError(t("profile.nilechat.err.enterToken"));
+      return;
+    }
+    setLinkingNilechat(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error(t("profile.nilechat.err.generic"));
+
+      const res = await fetch("/api/nilechat/link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ token: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const key =
+          data.errorCode === "invalid_token" ? "profile.nilechat.err.invalidToken" : "profile.nilechat.err.generic";
+        setNilechatError(t(key));
+        return;
+      }
+      setNilechatLink({ agentId: data.agentId, agentName: data.agentName });
+      setNilechatToken("");
+      setNilechatMsg(t("profile.nilechat.linkedSuccess"));
+    } catch {
+      setNilechatError(t("profile.nilechat.err.generic"));
+    } finally {
+      setLinkingNilechat(false);
+    }
+  }
+
+  async function unlinkNilechat() {
+    setNilechatError("");
+    setNilechatMsg("");
+    setLinkingNilechat(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error(t("profile.nilechat.err.generic"));
+
+      const res = await fetch("/api/nilechat/link", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!res.ok) {
+        setNilechatError(t("profile.nilechat.err.generic"));
+        return;
+      }
+      setNilechatLink(null);
+      setNilechatMsg(t("profile.nilechat.unlinkedSuccess"));
+    } catch {
+      setNilechatError(t("profile.nilechat.err.generic"));
+    } finally {
+      setLinkingNilechat(false);
+    }
+  }
 
   async function loadProfile(userId: string) {
     setLoadingProfile(true);
@@ -457,6 +538,41 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* ربط حساب NileChat */}
+        <section className="bg-surface border border-line rounded-lg p-5 mt-5 fade-in">
+          <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-2">
+            {t("profile.nilechat.title")}
+          </h2>
+          <p className="text-xs text-inkFaint mb-4 leading-relaxed">{t("profile.nilechat.hint")}</p>
+
+          {nilechatLink ? (
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm text-ink">
+                {t("profile.nilechat.linkedAs")}: <span className="font-medium">{nilechatLink.agentName}</span>
+              </p>
+              <Button variant="secondary" loading={linkingNilechat} onClick={unlinkNilechat}>
+                {t("profile.nilechat.unlink")}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Input
+                value={nilechatToken}
+                onChange={(e) => setNilechatToken(e.target.value)}
+                placeholder={t("profile.nilechat.tokenPlaceholder")}
+                dir="ltr"
+                className="text-end flex-1"
+              />
+              <Button variant="primary" loading={linkingNilechat} onClick={linkNilechat}>
+                {t("profile.nilechat.linkButton")}
+              </Button>
+            </div>
+          )}
+
+          {nilechatError && <p className="text-clay text-xs mt-2">{nilechatError}</p>}
+          {nilechatMsg && <p className="text-teal text-xs mt-2">{nilechatMsg}</p>}
         </section>
 
         {/* منطقة الخطر: حذف الحساب */}

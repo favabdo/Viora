@@ -1,11 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Lock, ShieldCheck, DoorOpen, XCircle, ListChecks, RefreshCw, Clock, User, ChevronDown, History } from "lucide-react";
+import {
+  Lock,
+  ShieldCheck,
+  DoorOpen,
+  XCircle,
+  ListChecks,
+  RefreshCw,
+  Clock,
+  User,
+  ChevronDown,
+  History,
+  Plus,
+  MessageCircle,
+  Send,
+} from "lucide-react";
+import Link from "next/link";
 import Button from "./ui/Button";
 import { Input } from "./ui/Input";
 import { SkeletonList } from "./ui/Skeleton";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { supabase } from "@/lib/supabase";
 
 type HistoryEntry = {
   id: number;
@@ -14,28 +30,39 @@ type HistoryEntry = {
   fieldLabel: string;
   oldValue: string | null;
   newValue: string | null;
-  changedByName: string;
+  changedByName: string | null;
   changedAt: string | null;
 };
 
 type ScheduledTask = {
   id: number;
   contactId: number;
-  customerName: string;
+  customerName: string | null;
   taskText: string;
-  agentName: string;
+  agentName: string | null;
   status: string;
   done: boolean;
   dueDate: string | null;
   createdAt: string | null;
   endedAt: string | null;
   deliveryStatus: string | null;
-  assignedToName: string;
+  assignedToName: string | null;
   isOverdue: boolean;
   daysRemaining: number | null;
   daysOverdue: number | null;
   history: HistoryEntry[];
 };
+
+type Comment = {
+  id: number;
+  taskId: number;
+  commentText: string;
+  createdByName: string | null;
+  createdAt: string | null;
+};
+
+type Agent = { id: number; name: string };
+type Contact = { id: number; name: string };
 
 function formatDateTime(iso: string | null, locale: string): string {
   if (!iso) return "—";
@@ -63,7 +90,7 @@ const FIELD_KEY_MAP: Record<string, string> = {
   task_text: "rooms.field.task_text",
 };
 
-export default function RoomsSection() {
+export default function RoomsSection({ currentUserId }: { currentUserId: string }) {
   const { t, lang } = useTranslation();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
 
@@ -78,6 +105,27 @@ export default function RoomsSection() {
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+
+  const [nilechatLink, setNilechatLink] = useState<{ agentId: number; agentName: string } | null>(null);
+
+  // كومنتات
+  const [commentsOpenIds, setCommentsOpenIds] = useState<Set<number>>(new Set());
+  const [commentsByTask, setCommentsByTask] = useState<Record<number, Comment[]>>({});
+  const [loadingCommentsFor, setLoadingCommentsFor] = useState<number | null>(null);
+  const [newCommentByTask, setNewCommentByTask] = useState<Record<number, string>>({});
+  const [postingCommentFor, setPostingCommentFor] = useState<number | null>(null);
+
+  // نموذج مهمة جديدة
+  const [showNewTask, setShowNewTask] = useState(false);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [contactQuery, setContactQuery] = useState("");
+  const [contactResults, setContactResults] = useState<Contact[]>([]);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [newTaskText, setNewTaskText] = useState("");
+  const [newDueDate, setNewDueDate] = useState("");
+  const [newAssigneeId, setNewAssigneeId] = useState<number | "">("");
+  const [creatingTask, setCreatingTask] = useState(false);
+  const [newTaskError, setNewTaskError] = useState("");
 
   function deliveryBadge(status: string | null): { label: string; className: string } | null {
     if (!status) return null;
@@ -109,6 +157,11 @@ export default function RoomsSection() {
     return key ? t(key) : entry.fieldLabel;
   }
 
+  function errText(data: { errorCode?: string; error?: string }, fallbackKey: string): string {
+    if (data?.errorCode) return t(`rooms.errCode.${data.errorCode}`);
+    return data?.error || t(fallbackKey);
+  }
+
   function toggleHistory(taskId: number) {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -131,6 +184,38 @@ export default function RoomsSection() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unlocked]);
 
+  useEffect(() => {
+    if (!currentUserId) return;
+    supabase
+      .from("nilechat_links")
+      .select("agent_id, agent_name")
+      .eq("user_id", currentUserId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setNilechatLink({ agentId: data.agent_id, agentName: data.agent_name });
+      });
+  }, [currentUserId]);
+
+  // بحث العملاء (debounced) وقت فتح نموذج المهمة الجديدة
+  useEffect(() => {
+    if (!showNewTask) return;
+    const handle = setTimeout(() => {
+      fetch(`/api/rooms/contacts?q=${encodeURIComponent(contactQuery)}`)
+        .then((r) => r.json())
+        .then((data) => setContactResults(data.contacts || []))
+        .catch(() => setContactResults([]));
+    }, 250);
+    return () => clearTimeout(handle);
+  }, [contactQuery, showNewTask]);
+
+  useEffect(() => {
+    if (!showNewTask || agents.length > 0) return;
+    fetch("/api/rooms/agents")
+      .then((r) => r.json())
+      .then((data) => setAgents(data.agents || []))
+      .catch(() => setAgents([]));
+  }, [showNewTask, agents.length]);
+
   async function loadTasks() {
     setLoadingTasks(true);
     setTasksError("");
@@ -138,7 +223,7 @@ export default function RoomsSection() {
       const res = await fetch("/api/rooms/tasks");
       const data = await res.json();
       if (!res.ok) {
-        setTasksError(data.error || t("rooms.err.loadFailed"));
+        setTasksError(errText(data, "rooms.err.loadFailed"));
         setTasks([]);
         return;
       }
@@ -163,7 +248,7 @@ export default function RoomsSection() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setTasksError(data.error || t("rooms.err.updateFailed"));
+        setTasksError(errText(data, "rooms.err.updateFailed"));
         setTasks((prev) => prev.map((t2) => (t2.id === task.id ? { ...t2, done: task.done } : t2)));
       } else {
         loadTasks();
@@ -191,7 +276,7 @@ export default function RoomsSection() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || t("rooms.err.wrongPassword"));
+        setError(errText(data, "rooms.err.wrongPassword"));
         return;
       }
       setUnlocked(true);
@@ -199,6 +284,102 @@ export default function RoomsSection() {
       setError(t("rooms.err.generic"));
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function toggleComments(taskId: number) {
+    setCommentsOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+    if (!commentsByTask[taskId]) {
+      setLoadingCommentsFor(taskId);
+      try {
+        const res = await fetch(`/api/rooms/comments?taskId=${taskId}`);
+        const data = await res.json();
+        if (res.ok) {
+          setCommentsByTask((prev) => ({ ...prev, [taskId]: data.comments || [] }));
+        } else {
+          setTasksError(errText(data, "rooms.err.loadCommentsFailed"));
+        }
+      } catch {
+        setTasksError(t("rooms.err.loadCommentsFailed"));
+      } finally {
+        setLoadingCommentsFor(null);
+      }
+    }
+  }
+
+  async function submitComment(taskId: number) {
+    const text = (newCommentByTask[taskId] || "").trim();
+    if (!text || !nilechatLink) return;
+    setPostingCommentFor(taskId);
+    try {
+      const res = await fetch("/api/rooms/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskId,
+          commentText: text,
+          createdById: nilechatLink.agentId,
+          createdByName: nilechatLink.agentName,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setTasksError(errText(data, "rooms.err.addCommentFailed"));
+        return;
+      }
+      setCommentsByTask((prev) => ({ ...prev, [taskId]: [...(prev[taskId] || []), data.comment] }));
+      setNewCommentByTask((prev) => ({ ...prev, [taskId]: "" }));
+    } catch {
+      setTasksError(t("rooms.err.addCommentFailed"));
+    } finally {
+      setPostingCommentFor(null);
+    }
+  }
+
+  async function submitNewTask() {
+    setNewTaskError("");
+    if (!selectedContact || !newTaskText.trim() || !newDueDate || !nilechatLink) {
+      setNewTaskError(t("rooms.err.missingFields"));
+      return;
+    }
+    setCreatingTask(true);
+    try {
+      const assignee = agents.find((a) => a.id === newAssigneeId);
+      const res = await fetch("/api/rooms/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contactId: selectedContact.id,
+          customerName: selectedContact.name,
+          taskText: newTaskText.trim(),
+          dueDate: newDueDate,
+          assignedToId: assignee?.id ?? null,
+          assignedToName: assignee?.name ?? null,
+          agentId: nilechatLink.agentId,
+          agentName: nilechatLink.agentName,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setNewTaskError(errText(data, "rooms.err.createFailed"));
+        return;
+      }
+      setShowNewTask(false);
+      setSelectedContact(null);
+      setContactQuery("");
+      setNewTaskText("");
+      setNewDueDate("");
+      setNewAssigneeId("");
+      loadTasks();
+    } catch {
+      setNewTaskError(t("rooms.err.createFailed"));
+    } finally {
+      setCreatingTask(false);
     }
   }
 
@@ -260,18 +441,139 @@ export default function RoomsSection() {
           <ShieldCheck size={17} strokeWidth={1.75} className="text-teal" />
           <h2 className="font-display text-lg font-medium text-ink">NIle Chat Scheduled Tasks</h2>
         </div>
-        <button
-          onClick={loadTasks}
-          disabled={loadingTasks}
-          className="flex items-center gap-1 text-xs text-inkSoft hover:text-teal transition-colors disabled:opacity-50"
-        >
-          <RefreshCw size={13} strokeWidth={1.75} className={loadingTasks ? "animate-spin" : ""} />
-          {t("rooms.refresh")}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowNewTask((v) => !v)}
+            className="flex items-center gap-1 text-xs text-teal hover:text-tealDark transition-colors font-medium"
+          >
+            <Plus size={13} strokeWidth={2} />
+            {t("rooms.newTask")}
+          </button>
+          <button
+            onClick={loadTasks}
+            disabled={loadingTasks}
+            className="flex items-center gap-1 text-xs text-inkSoft hover:text-teal transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={13} strokeWidth={1.75} className={loadingTasks ? "animate-spin" : ""} />
+            {t("rooms.refresh")}
+          </button>
+        </div>
       </div>
 
+      {showNewTask && (
+        <div className="rounded-md border border-line p-4 mt-4 mb-4">
+          {!nilechatLink ? (
+            <div className="text-center py-4">
+              <p className="text-sm font-medium text-ink mb-1">{t("rooms.mustLinkTitle")}</p>
+              <p className="text-xs text-inkSoft mb-3 leading-relaxed">{t("rooms.mustLinkHint")}</p>
+              <Link href="/profile" className="text-xs text-teal hover:text-tealDark font-medium">
+                {t("rooms.goToProfile")}
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-inkSoft mb-1">{t("rooms.customer")}</label>
+                {selectedContact ? (
+                  <div className="flex items-center justify-between rounded-md bg-paperDark px-3 py-2 text-sm">
+                    <span>{selectedContact.name}</span>
+                    <button
+                      onClick={() => {
+                        setSelectedContact(null);
+                        setContactQuery("");
+                      }}
+                      className="text-inkFaint hover:text-clay"
+                    >
+                      <XCircle size={14} strokeWidth={1.75} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <Input
+                      value={contactQuery}
+                      onChange={(e) => setContactQuery(e.target.value)}
+                      placeholder={t("rooms.searchCustomer")}
+                      className="text-sm"
+                    />
+                    {contactQuery && (
+                      <div className="absolute z-10 mt-1 w-full rounded-md border border-line bg-surface shadow-sm max-h-48 overflow-y-auto">
+                        {contactResults.length === 0 ? (
+                          <p className="text-xs text-inkFaint px-3 py-2">{t("rooms.noCustomersFound")}</p>
+                        ) : (
+                          contactResults.map((c) => (
+                            <button
+                              key={c.id}
+                              onClick={() => {
+                                setSelectedContact(c);
+                                setContactQuery("");
+                                setContactResults([]);
+                              }}
+                              className="w-full text-start px-3 py-2 text-sm hover:bg-paperDark transition-colors"
+                            >
+                              {c.name}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <textarea
+                value={newTaskText}
+                onChange={(e) => setNewTaskText(e.target.value)}
+                placeholder={t("rooms.taskTextPlaceholder")}
+                rows={2}
+                className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-inkFaint focus:outline-none focus:ring-1 focus:ring-teal resize-none"
+              />
+
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-inkSoft mb-1">{t("rooms.dueDate")}</label>
+                  <Input
+                    type="date"
+                    value={newDueDate}
+                    onChange={(e) => setNewDueDate(e.target.value)}
+                    className="text-sm"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-inkSoft mb-1">{t("rooms.assignTo")}</label>
+                  <select
+                    value={newAssigneeId}
+                    onChange={(e) => setNewAssigneeId(e.target.value ? Number(e.target.value) : "")}
+                    className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-teal"
+                  >
+                    <option value="">—</option>
+                    {agents.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setNewAssigneeId(nilechatLink.agentId)}
+                className="text-2xs text-teal hover:text-tealDark"
+              >
+                {t("rooms.assignToMe")}
+              </button>
+
+              {newTaskError && <p className="text-clay text-xs">{newTaskError}</p>}
+
+              <Button variant="primary" fullWidth loading={creatingTask} onClick={submitNewTask}>
+                {t("rooms.createTask")}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       {tasks.length > 0 && (
-        <p className="text-xs text-inkSoft mb-4">
+        <p className="text-xs text-inkSoft mb-4 mt-3">
           {t("rooms.doneOf").replace("{done}", String(doneCount)).replace("{total}", String(tasks.length))}
           {overdueCount > 0 && (
             <span className="text-clay"> — {t("rooms.overdueSuffix").replace("{count}", String(overdueCount))}</span>
@@ -297,6 +599,7 @@ export default function RoomsSection() {
         <ul className="space-y-2.5">
           {sortedTasks.map((task) => {
             const badge = deliveryBadge(task.deliveryStatus);
+            const taskComments = commentsByTask[task.id] || [];
             return (
               <li
                 key={task.id}
@@ -324,7 +627,7 @@ export default function RoomsSection() {
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="inline-flex items-center gap-1 text-2xs font-medium text-ink bg-paperDark rounded-full px-2 py-0.5">
                         <User size={11} strokeWidth={2} />
-                        {task.customerName}
+                        {task.customerName || t("rooms.unnamedCustomer")}
                       </span>
                       {!task.done && task.isOverdue && task.daysOverdue !== null && (
                         <span className="text-2xs font-medium text-clay bg-claySoft rounded-full px-2 py-0.5">
@@ -347,10 +650,10 @@ export default function RoomsSection() {
 
                     <div className="flex items-center gap-3 mt-2 text-2xs text-inkFaint flex-wrap">
                       <span>
-                        {t("rooms.from")}: <span className="text-inkSoft">{task.agentName}</span>
+                        {t("rooms.from")}: <span className="text-inkSoft">{task.agentName || t("rooms.unknownPerson")}</span>
                       </span>
                       <span>
-                        {t("rooms.to")}: <span className="text-inkSoft">{task.assignedToName}</span>
+                        {t("rooms.to")}: <span className="text-inkSoft">{task.assignedToName || t("rooms.unknownPerson")}</span>
                       </span>
                       <span className="inline-flex items-center gap-1">
                         <Clock size={11} strokeWidth={1.75} />
@@ -367,18 +670,32 @@ export default function RoomsSection() {
                       )}
                     </div>
 
-                    <button
-                      onClick={() => toggleHistory(task.id)}
-                      className="flex items-center gap-1 text-2xs text-inkFaint hover:text-teal transition-colors mt-2"
-                    >
-                      <History size={11} strokeWidth={1.75} />
-                      {t("rooms.history")} {task.history.length > 0 && `(${task.history.length})`}
-                      <ChevronDown
-                        size={11}
-                        strokeWidth={1.75}
-                        className={`transition-transform ${expandedIds.has(task.id) ? "rotate-180" : ""}`}
-                      />
-                    </button>
+                    <div className="flex items-center gap-3 mt-2">
+                      <button
+                        onClick={() => toggleHistory(task.id)}
+                        className="flex items-center gap-1 text-2xs text-inkFaint hover:text-teal transition-colors"
+                      >
+                        <History size={11} strokeWidth={1.75} />
+                        {t("rooms.history")} {task.history.length > 0 && `(${task.history.length})`}
+                        <ChevronDown
+                          size={11}
+                          strokeWidth={1.75}
+                          className={`transition-transform ${expandedIds.has(task.id) ? "rotate-180" : ""}`}
+                        />
+                      </button>
+                      <button
+                        onClick={() => toggleComments(task.id)}
+                        className="flex items-center gap-1 text-2xs text-inkFaint hover:text-teal transition-colors"
+                      >
+                        <MessageCircle size={11} strokeWidth={1.75} />
+                        {t("rooms.comments")} {taskComments.length > 0 && `(${taskComments.length})`}
+                        <ChevronDown
+                          size={11}
+                          strokeWidth={1.75}
+                          className={`transition-transform ${commentsOpenIds.has(task.id) ? "rotate-180" : ""}`}
+                        />
+                      </button>
+                    </div>
 
                     {expandedIds.has(task.id) && (
                       <div className="mt-2 rounded-md bg-paperDark/50 p-2.5">
@@ -389,8 +706,8 @@ export default function RoomsSection() {
                             {task.history.map((entry) => (
                               <li key={entry.id} className="text-2xs">
                                 <p className="text-inkSoft">
-                                  <span className="text-ink font-medium">{entry.changedByName}</span> {t("rooms.edited")}{" "}
-                                  {fieldLabelFor(entry)}
+                                  <span className="text-ink font-medium">{entry.changedByName || t("rooms.unknownPerson")}</span>{" "}
+                                  {t("rooms.edited")} {fieldLabelFor(entry)}
                                 </p>
                                 <p className="mt-0.5">
                                   {entry.oldValue && (
@@ -402,6 +719,53 @@ export default function RoomsSection() {
                               </li>
                             ))}
                           </ul>
+                        )}
+                      </div>
+                    )}
+
+                    {commentsOpenIds.has(task.id) && (
+                      <div className="mt-2 rounded-md bg-paperDark/50 p-2.5">
+                        {loadingCommentsFor === task.id ? (
+                          <p className="text-2xs text-inkFaint">{t("common.loading")}</p>
+                        ) : taskComments.length === 0 ? (
+                          <p className="text-2xs text-inkFaint mb-2">{t("rooms.noComments")}</p>
+                        ) : (
+                          <ul className="space-y-2 mb-2">
+                            {taskComments.map((c) => (
+                              <li key={c.id} className="text-2xs">
+                                <p className="text-inkSoft">
+                                  <span className="text-ink font-medium">{c.createdByName || t("rooms.unknownPerson")}</span>
+                                </p>
+                                <p className="text-ink mt-0.5">{c.commentText}</p>
+                                <p className="text-inkFaint mt-0.5">{formatDateTime(c.createdAt, locale)}</p>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {nilechatLink ? (
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              value={newCommentByTask[task.id] || ""}
+                              onChange={(e) =>
+                                setNewCommentByTask((prev) => ({ ...prev, [task.id]: e.target.value }))
+                              }
+                              onKeyDown={(e) => e.key === "Enter" && submitComment(task.id)}
+                              placeholder={t("rooms.addCommentPlaceholder")}
+                              className="flex-1 rounded-md border border-line bg-surface px-2.5 py-1.5 text-2xs text-ink placeholder:text-inkFaint focus:outline-none focus:ring-1 focus:ring-teal"
+                            />
+                            <button
+                              onClick={() => submitComment(task.id)}
+                              disabled={postingCommentFor === task.id || !(newCommentByTask[task.id] || "").trim()}
+                              className="text-teal hover:text-tealDark disabled:opacity-40 shrink-0"
+                            >
+                              <Send size={14} strokeWidth={1.75} />
+                            </button>
+                          </div>
+                        ) : (
+                          <Link href="/profile" className="text-2xs text-teal hover:text-tealDark">
+                            {t("rooms.goToProfile")}
+                          </Link>
                         )}
                       </div>
                     )}

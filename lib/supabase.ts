@@ -103,6 +103,8 @@ export type ActivityEntry = {
   actor_id: string | null;
   actor_name: string;
   message: string;
+  action?: string | null;
+  action_params?: Record<string, string> | null;
   created_at: string;
 };
 
@@ -111,5 +113,7 @@ export type LinkLogEntry = {
   link_id: string;
   user_id: string;
   message: string;
+  action?: string | null;
+  action_params?: Record<string, string> | null;
   created_at: string;
 };

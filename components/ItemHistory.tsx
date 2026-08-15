@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ChevronDown } from "lucide-react";
-import { splitActorMessage } from "@/lib/displayName";
+import { renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -14,6 +14,8 @@ type Entry = {
   created_at: string;
   actor_id?: string | null;
   actor_name?: string | null;
+  action?: string | null;
+  action_params?: Record<string, string> | null;
 };
 
 export default function ItemHistory({
@@ -39,7 +41,9 @@ export default function ItemHistory({
     if (next && !loaded) {
       setLoading(true);
       const columns =
-        table === "activity_log" ? "id, actor_id, actor_name, message, created_at" : "id, message, created_at";
+        table === "activity_log"
+          ? "id, actor_id, actor_name, message, action, action_params, created_at"
+          : "id, message, action, action_params, created_at";
       const { data, error } = await supabase
         .from(table)
         .select(columns)
@@ -65,14 +69,14 @@ export default function ItemHistory({
         {t("itemHistory.log")}
       </button>
       {open && (
-        <div className="mt-1.5 border-r-2 border-line pr-3 space-y-1 fade-in">
+        <div className="mt-1.5 border-s-2 border-line ps-3 space-y-1 fade-in">
           {loading ? (
             <p className="text-2xs text-inkFaint">{t("common.loading")}</p>
           ) : entries.length === 0 ? (
             <p className="text-2xs text-inkFaint">{t("itemHistory.noHistory")}</p>
           ) : (
             entries.map((e) => {
-              const { label, rest, actorId } = splitActorMessage(e, currentUserId);
+              const { label, rest, actorId } = renderActivity(e, t, currentUserId, table === "activity_log");
               return (
                 <p key={e.id} className="text-2xs text-inkFaint">
                   {label && (
@@ -83,7 +87,7 @@ export default function ItemHistory({
                     </>
                   )}
                   {label ? rest.trimStart() : rest}{" "}
-                  <span className="opacity-70">— {timeAgo(e.created_at)}</span>
+                  <span className="opacity-70">— {timeAgo(e.created_at, t)}</span>
                 </p>
               );
             })

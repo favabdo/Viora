@@ -598,8 +598,8 @@ export default function TasksSection({
                       {task.profiles && editingTaskId !== task.id && (
                         <span className="flex items-center gap-1 text-2xs text-inkFaint shrink-0 pt-0.5">
                           <ClickableName userId={task.user_id} className="flex items-center gap-1">
-                            <Avatar name={displayName(task.user_id, task.profiles, currentUserId)} src={task.profiles.avatar_url} size="xs" />
-                            {displayName(task.user_id, task.profiles, currentUserId)}
+                            <Avatar name={displayName(task.user_id, task.profiles, currentUserId, t("common.you"))} src={task.profiles.avatar_url} size="xs" />
+                            {displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
                           </ClickableName>
                         </span>
                       )}

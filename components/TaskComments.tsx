@@ -92,12 +92,12 @@ export default function TaskComments({
           ) : (
             comments.map((c) => (
               <div key={c.id} className="flex items-start gap-1.5 text-2xs">
-                <Avatar name={displayName(c.user_id, c.profiles, currentUserId)} src={c.profiles?.avatar_url} size="xs" className="mt-0.5" />
+                <Avatar name={displayName(c.user_id, c.profiles, currentUserId, t("common.you"))} src={c.profiles?.avatar_url} size="xs" className="mt-0.5" />
                 <div className="min-w-0 flex-1">
                   <ClickableName userId={c.user_id} className="text-inkSoft">
-                    {displayName(c.user_id, c.profiles, currentUserId)}
+                    {displayName(c.user_id, c.profiles, currentUserId, t("common.you"))}
                   </ClickableName>{" "}
-                  <span className="opacity-70">— {timeAgo(c.created_at)}</span>
+                  <span className="opacity-70">— {timeAgo(c.created_at, t)}</span>
                   <p className="text-inkFaint mt-0.5 break-words leading-relaxed">{c.message}</p>
                 </div>
               </div>

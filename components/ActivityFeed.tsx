@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase, ActivityEntry } from "@/lib/supabase";
 import { ChevronDown } from "lucide-react";
-import { splitActorMessage } from "@/lib/displayName";
+import { renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -71,7 +71,7 @@ export default function ActivityFeed({
       {open && (
         <ul className="space-y-2.5 mt-3 fade-in">
           {entries.map((e) => {
-            const { label, rest, actorId } = splitActorMessage(e, currentUserId);
+            const { label, rest, actorId } = renderActivity(e, t, currentUserId, true);
             return (
               <li key={e.id} className="flex items-start justify-between gap-3 text-sm">
                 <span className="text-inkSoft min-w-0">
@@ -85,7 +85,7 @@ export default function ActivityFeed({
                   {label ? rest.trimStart() : rest}
                 </span>
                 <span className="text-2xs text-inkFaint whitespace-nowrap shrink-0 font-mono tabular-nums pt-0.5">
-                  {timeAgo(e.created_at)}
+                  {timeAgo(e.created_at, t)}
                 </span>
               </li>
             );

@@ -62,10 +62,10 @@ export default function UserProfileCard({
         <p className="text-sm text-inkSoft text-center py-6">{t("userCard.loadFailed")}</p>
       ) : (
         <div className="flex flex-col items-center text-center -mt-2">
-          <Avatar name={resolveName(profile)} src={profile.avatar_url} size="lg" className="mb-3" />
+          <Avatar name={resolveName(profile, t("common.user"))} src={profile.avatar_url} size="lg" className="mb-3" />
 
           <h3 className="font-display text-lg font-medium">
-            {resolveName(profile)}
+            {resolveName(profile, t("common.user"))}
             {isSelf && <span className="text-inkFaint text-sm font-sans"> ({t("userCard.you")})</span>}
           </h3>
           <p dir="ltr" className="font-mono text-xs text-inkFaint mt-0.5">

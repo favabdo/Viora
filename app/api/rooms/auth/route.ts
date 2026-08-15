@@ -14,10 +14,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const roomsPassword = process.env.ROOMS_PASSWORD;
   if (!roomsPassword) {
-    return NextResponse.json(
-      { error: "ROOMS_PASSWORD مش متضاف في إعدادات البيئة على السيرفر." },
-      { status: 500 }
-    );
+    return NextResponse.json({ errorCode: "not_configured" }, { status: 500 });
   }
 
   let password = "";
@@ -25,11 +22,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     password = typeof body?.password === "string" ? body.password : "";
   } catch {
-    return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
+    return NextResponse.json({ errorCode: "invalid_request" }, { status: 400 });
   }
 
   if (password !== roomsPassword) {
-    return NextResponse.json({ error: "كلمة المرور غير صحيحة" }, { status: 401 });
+    return NextResponse.json({ errorCode: "wrong_password" }, { status: 401 });
   }
 
   const token = createRoomsSessionToken();

@@ -955,3 +955,18 @@ create policy "task_comments delete own" on task_comments
 --      هنا بس بنتأكد إن الترتيب الافتراضي في القراءة هو: غير المنجز أولاً)
 -- ============================================================
 -- (لا حاجة لتغييرات إضافية في القاعدة، الترتيب بيتم في استعلام SELECT من الفرونت)
+
+-- ============================================================
+-- 22) دعم تعدد اللغات في سجل الأنشطة: بدل ما الـ trigger يبني جملة عربية
+--     جاهزة، بقى يسجّل "مفتاح الحدث" (action) + بياناته (action_params)،
+--     والواجهة (React) هي اللي بتترجم المفتاح ده حسب لغة العرض الحالية.
+--     عمود message فضل موجود كـ fallback عربي للصفوف القديمة/NOT NULL.
+--     (التفاصيل الكاملة والدوال النهائية في supabase/i18n-activity-log-migration.sql)
+-- ============================================================
+alter table activity_log
+  add column if not exists action text,
+  add column if not exists action_params jsonb;
+
+alter table link_activity_log
+  add column if not exists action text,
+  add column if not exists action_params jsonb;

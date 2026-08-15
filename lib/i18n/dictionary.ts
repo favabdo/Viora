@@ -72,6 +72,22 @@ const dict: Record<string, { en: string; ar: string }> = {
   "profile.err.wrongCurrentPassword": { en: "Current password is incorrect", ar: "كلمة المرور الحالية غير صحيحة" },
   "profile.msg.passwordChanged": { en: "Password changed successfully", ar: "تم تغيير كلمة المرور بنجاح" },
 
+  // ===== NileChat account linking (profile page) =====
+  "profile.nilechat.title": { en: "NileChat account", ar: "حساب NileChat" },
+  "profile.nilechat.hint": {
+    en: "Link your Viora account to your NileChat agent account using your access token, so tasks and comments you create here show your real name in NileChat. Get your token from your NileChat profile page.",
+    ar: "اربط حسابك في فيورا بحساب الـ agent بتاعك في NileChat باستخدام الـ access token، عشان أي مهمة أو تعليق تنشئه من هنا يظهر باسمك الحقيقي في NileChat. هتلاقي التوكن في صفحة البروفايل بتاعتك على NileChat.",
+  },
+  "profile.nilechat.linkedAs": { en: "Linked as", ar: "متربط باسم" },
+  "profile.nilechat.unlink": { en: "Unlink", ar: "إلغاء الربط" },
+  "profile.nilechat.tokenPlaceholder": { en: "Paste your NileChat access token", ar: "الصق access token بتاع NileChat" },
+  "profile.nilechat.linkButton": { en: "Link account", ar: "ربط الحساب" },
+  "profile.nilechat.err.enterToken": { en: "Please enter your access token", ar: "يُرجى إدخال الـ access token" },
+  "profile.nilechat.err.invalidToken": { en: "This token isn't valid or doesn't match any active agent", ar: "التوكن ده غير صالح أو مش مرتبط بأي agent نشط" },
+  "profile.nilechat.err.generic": { en: "Something went wrong, please try again", ar: "حصل خطأ، يُرجى المحاولة مرة أخرى" },
+  "profile.nilechat.linkedSuccess": { en: "Linked successfully", ar: "تم الربط بنجاح" },
+  "profile.nilechat.unlinkedSuccess": { en: "Unlinked successfully", ar: "تم إلغاء الربط بنجاح" },
+
   // ===== app/auth/callback/page.tsx =====
   "authCallback.confirming": { en: "Confirming your account...", ar: "جارٍ تأكيد حسابك..." },
 
@@ -232,6 +248,32 @@ const dict: Record<string, { en: string; ar: string }> = {
   "rooms.field.assigned_to": { en: "Assignee change", ar: "تغيير الشخص المسند إليه" },
   "rooms.field.customer": { en: "Customer change", ar: "تغيير العميل" },
   "rooms.field.task_text": { en: "Task text change", ar: "تغيير نص المهمة" },
+  "rooms.unknownPerson": { en: "Unknown", ar: "غير معروف" },
+  "rooms.unnamedCustomer": { en: "Unnamed customer", ar: "عميل بدون اسم" },
+
+  "rooms.newTask": { en: "New task", ar: "مهمة جديدة" },
+  "rooms.mustLinkTitle": { en: "Link your NileChat account first", ar: "اربط حسابك في NileChat الأول" },
+  "rooms.mustLinkHint": {
+    en: "To create tasks or comments here, link your Viora account to your NileChat agent account from your profile page.",
+    ar: "عشان تقدر تنشئ مهام أو تعليقات من هنا، اربط حسابك في فيورا بحساب الـ agent بتاعك في NileChat من صفحة البروفايل.",
+  },
+  "rooms.goToProfile": { en: "Go to profile", ar: "روح لصفحة البروفايل" },
+  "rooms.customer": { en: "Customer", ar: "العميل" },
+  "rooms.searchCustomer": { en: "Search for a customer...", ar: "ابحث عن عميل..." },
+  "rooms.noCustomersFound": { en: "No matching customers", ar: "مفيش عملاء مطابقين" },
+  "rooms.taskTextPlaceholder": { en: "What needs to be done?", ar: "المهمة المطلوب عملها؟" },
+  "rooms.dueDate": { en: "Due date", ar: "تاريخ التسليم" },
+  "rooms.assignTo": { en: "Assign to", ar: "إسناد لـ" },
+  "rooms.assignToMe": { en: "Assign to me", ar: "أسندها لنفسي" },
+  "rooms.createTask": { en: "Create task", ar: "إنشاء المهمة" },
+  "rooms.err.missingFields": { en: "Please fill in the customer, task text, and due date", ar: "يُرجى إدخال العميل ونص المهمة وتاريخ التسليم" },
+  "rooms.err.createFailed": { en: "Failed to create the task", ar: "فشل إنشاء المهمة" },
+  "rooms.taskCreated": { en: "Task created successfully", ar: "تم إنشاء المهمة بنجاح" },
+  "rooms.comments": { en: "Comments", ar: "التعليقات" },
+  "rooms.noComments": { en: "No comments yet", ar: "لا توجد تعليقات بعد" },
+  "rooms.addCommentPlaceholder": { en: "Add a comment...", ar: "أضف تعليقًا..." },
+  "rooms.err.loadCommentsFailed": { en: "Failed to load comments", ar: "فشل تحميل التعليقات" },
+  "rooms.err.addCommentFailed": { en: "Failed to add comment", ar: "فشل إضافة التعليق" },
 
   // ===== components/TaskComments.tsx =====
   "comments.one": { en: "comment", ar: "تعليق" },
@@ -302,6 +344,37 @@ const dict: Record<string, { en: string; ar: string }> = {
   "userCard.loadFailed": { en: "Couldn't load this user's data", ar: "تعذّر تحميل بيانات هذا المستخدم" },
   "userCard.you": { en: "you", ar: "أنت" },
   "userCard.editProfile": { en: "Edit profile", ar: "تعديل الملف الشخصي" },
+
+  // ===== مشترك: أسماء وقت نسبي (timeAgo) =====
+  "common.you": { en: "You", ar: "أنت" },
+  "common.someone": { en: "Someone", ar: "حد ما" },
+  "common.user": { en: "User", ar: "مستخدم" },
+  "time.now": { en: "now", ar: "الآن" },
+  "time.minutesAgo": { en: "{n}m ago", ar: "منذ {n} د" },
+  "time.hoursAgo": { en: "{n}h ago", ar: "منذ {n} س" },
+  "time.daysAgo": { en: "{n}d ago", ar: "منذ {n} يوم" },
+  "time.monthsAgo": { en: "{n}mo ago", ar: "منذ {n} شهر" },
+
+  // ===== سجل الأنشطة القابل للترجمة (action keys) =====
+  "activity.task_created": { en: "added a new task: {title}", ar: "أضاف مهمة جديدة: {title}" },
+  "activity.task_completed": { en: "completed the task", ar: "أكمل المهمة" },
+  "activity.task_reopened": { en: "reopened the task", ar: "أعاد فتح المهمة" },
+  "activity.task_title_changed": { en: 'changed the task title to "{title}"', ar: 'عدّل عنوان المهمة إلى "{title}"' },
+  "activity.task_deleted": { en: "deleted a task: {title}", ar: "حذف مهمة: {title}" },
+  "activity.member_joined": { en: "joined the project", ar: "انضم إلى المشروع" },
+  "activity.link_added": { en: "Link added", ar: "تمت إضافة الرابط" },
+  "activity.link_url_and_description_changed": { en: "Link and description updated", ar: "تم تعديل الرابط والوصف" },
+  "activity.link_url_changed": { en: "Link updated", ar: "تم تعديل الرابط" },
+  "activity.link_description_changed": { en: "Description updated", ar: "تم تعديل الوصف" },
+
+  // ===== app/api/rooms error codes =====
+  "rooms.errCode.not_configured": { en: "Rooms password isn't configured on the server yet.", ar: "كلمة مرور Rooms مش متضافة في إعدادات السيرفر بعد." },
+  "rooms.errCode.invalid_request": { en: "Invalid request", ar: "طلب غير صالح" },
+  "rooms.errCode.wrong_password": { en: "Incorrect password", ar: "كلمة المرور غير صحيحة" },
+  "rooms.errCode.session_required": { en: "Please enter the Rooms password first", ar: "محتاج تدخل كلمة مرور Rooms الأول" },
+  "rooms.errCode.load_failed": { en: "Failed to load tasks from the Rooms database", ar: "فشل تحميل المهام من قاعدة بيانات Rooms" },
+  "rooms.errCode.task_id_required": { en: "Task id is required", ar: "معرّف المهمة مطلوب" },
+  "rooms.errCode.update_failed": { en: "Failed to update the task in the Rooms database", ar: "فشل تحديث المهمة في قاعدة بيانات Rooms" },
 };
 
 export default dict;

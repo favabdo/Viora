@@ -16,7 +16,7 @@ function requireSession() {
  */
 export async function GET() {
   if (!requireSession()) {
-    return NextResponse.json({ error: "محتاج تدخل كلمة مرور Rooms الأول" }, { status: 401 });
+    return NextResponse.json({ errorCode: "session_required" }, { status: 401 });
   }
 
   try {
@@ -51,7 +51,65 @@ export async function GET() {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[Rooms Tasks] فشل القراءة:", message);
-    return NextResponse.json({ error: "فشل قراءة المهام من قاعدة بيانات Rooms: " + message }, { status: 500 });
+    return NextResponse.json({ errorCode: "load_failed", detail: message }, { status: 500 });
+  }
+}
+
+/**
+ * POST: بينشئ مهمة جديدة مباشرة في NileChat_ScheduledTasks_byA من فيورا.
+ * المُنشئ (agent_id/agent_name) لازم يكون agent حقيقي في NileChat - بيتبعت من الفرونت
+ * بعد ما اليوزر يربط حسابه في صفحة البروفايل (nilechat_links في Supabase).
+ */
+export async function POST(request: Request) {
+  if (!requireSession()) {
+    return NextResponse.json({ errorCode: "session_required" }, { status: 401 });
+  }
+
+  let body: any;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ errorCode: "invalid_request" }, { status: 400 });
+  }
+
+  const contactId = Number(body?.contactId);
+  const customerName = typeof body?.customerName === "string" ? body.customerName.trim() : "";
+  const taskText = typeof body?.taskText === "string" ? body.taskText.trim() : "";
+  const dueDate = typeof body?.dueDate === "string" ? body.dueDate : "";
+  const assignedToId = body?.assignedToId != null ? Number(body.assignedToId) : null;
+  const assignedToName = typeof body?.assignedToName === "string" ? body.assignedToName.trim() : null;
+  const agentId = Number(body?.agentId);
+  const agentName = typeof body?.agentName === "string" ? body.agentName.trim() : "";
+
+  if (!contactId || !taskText || !dueDate || !agentId || !agentName) {
+    return NextResponse.json({ errorCode: "missing_fields" }, { status: 400 });
+  }
+
+  try {
+    const pool = await getRoomsPool();
+    const result = await pool
+      .request()
+      .input("contactId", sql.BigInt, contactId)
+      .input("customerName", sql.NVarChar(200), customerName || null)
+      .input("taskText", sql.NVarChar(sql.MAX), taskText)
+      .input("agentId", sql.BigInt, agentId)
+      .input("agentName", sql.NVarChar(200), agentName)
+      .input("dueDate", sql.Date, dueDate)
+      .input("assignedToId", sql.BigInt, assignedToId)
+      .input("assignedToName", sql.NVarChar(200), assignedToName)
+      .query(
+        `INSERT INTO dbo.[${SOURCE_TABLE}]
+           (contact_id, customer_name, task_text, agent_id, agent_name, status, due_date, assigned_to_id, assigned_to_name)
+         OUTPUT INSERTED.id
+         VALUES (@contactId, @customerName, @taskText, @agentId, @agentName, 'open', @dueDate, @assignedToId, @assignedToName)`
+      );
+
+    const newId = result.recordset[0]?.id;
+    return NextResponse.json({ ok: true, id: newId });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[Rooms Tasks] فشل الإنشاء:", message);
+    return NextResponse.json({ errorCode: "create_failed", detail: message }, { status: 500 });
   }
 }
 
@@ -63,7 +121,7 @@ export async function GET() {
  */
 export async function PATCH(request: Request) {
   if (!requireSession()) {
-    return NextResponse.json({ error: "محتاج تدخل كلمة مرور Rooms الأول" }, { status: 401 });
+    return NextResponse.json({ errorCode: "session_required" }, { status: 401 });
   }
 
   let id: number | null = null;
@@ -73,10 +131,10 @@ export async function PATCH(request: Request) {
     id = typeof body?.id === "number" ? body.id : Number(body?.id);
     done = Boolean(body?.done);
   } catch {
-    return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
+    return NextResponse.json({ errorCode: "invalid_request" }, { status: 400 });
   }
   if (!id || Number.isNaN(id)) {
-    return NextResponse.json({ error: "id المهمة مطلوب" }, { status: 400 });
+    return NextResponse.json({ errorCode: "task_id_required" }, { status: 400 });
   }
 
   try {
@@ -95,6 +153,6 @@ export async function PATCH(request: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[Rooms Tasks] فشل التحديث:", message);
-    return NextResponse.json({ error: "فشل تحديث المهمة في قاعدة بيانات Rooms: " + message }, { status: 500 });
+    return NextResponse.json({ errorCode: "update_failed", detail: message }, { status: 500 });
   }
 }

@@ -344,7 +344,7 @@ export default function LinksSection() {
               </div>
 
               <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-line/70">
-                <span className="text-2xs text-inkFaint font-mono tabular-nums">{timeAgo(link.created_at)}</span>
+                <span className="text-2xs text-inkFaint font-mono tabular-nums">{timeAgo(link.created_at, t)}</span>
                 <ItemHistory table="link_activity_log" column="link_id" id={link.id} />
               </div>
             </li>

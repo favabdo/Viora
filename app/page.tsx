@@ -93,7 +93,7 @@ function HomeInner() {
           <TasksSection currentUserId={session.user.id} currentUserEmail={session.user.email || ""} />
         )}
         {tab === "links" && <LinksSection />}
-        {tab === "rooms" && <RoomsSection />}
+        {tab === "rooms" && <RoomsSection currentUserId={session.user.id} />}
       </AppShell>
     </ProfileCardProvider>
   );
