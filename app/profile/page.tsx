@@ -13,7 +13,7 @@ import AvatarCropModal from "@/components/AvatarCropModal";
 import ConfirmPasswordModal from "@/components/ConfirmPasswordModal";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
-import { Languages, Sun, Moon } from "lucide-react";
+import { Languages, Sun, Moon, Lock, DoorOpen } from "lucide-react";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 
@@ -62,6 +62,47 @@ export default function ProfilePage() {
   const [linkingNilechat, setLinkingNilechat] = useState(false);
   const [nilechatError, setNilechatError] = useState("");
   const [nilechatMsg, setNilechatMsg] = useState("");
+
+  const [roomsUnlocked, setRoomsUnlocked] = useState(false);
+  const [checkingRoomsAuth, setCheckingRoomsAuth] = useState(true);
+  const [roomsPasswordInput, setRoomsPasswordInput] = useState("");
+  const [unlockingRooms, setUnlockingRooms] = useState(false);
+  const [roomsUnlockError, setRoomsUnlockError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/rooms/auth")
+      .then((r) => r.json())
+      .then((data) => setRoomsUnlocked(Boolean(data.unlocked)))
+      .catch(() => setRoomsUnlocked(false))
+      .finally(() => setCheckingRoomsAuth(false));
+  }, []);
+
+  async function unlockRooms() {
+    if (!roomsPasswordInput) {
+      setRoomsUnlockError(t("rooms.err.enterPasswordFirst"));
+      return;
+    }
+    setUnlockingRooms(true);
+    setRoomsUnlockError("");
+    try {
+      const res = await fetch("/api/rooms/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: roomsPasswordInput }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setRoomsUnlockError(data.errorCode ? t(`rooms.errCode.${data.errorCode}`) : t("rooms.err.wrongPassword"));
+        return;
+      }
+      setRoomsUnlocked(true);
+      setRoomsPasswordInput("");
+    } catch {
+      setRoomsUnlockError(t("rooms.err.generic"));
+    } finally {
+      setUnlockingRooms(false);
+    }
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -540,39 +581,63 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* ربط حساب NileChat */}
-        <section className="bg-surface border border-line rounded-lg p-5 mt-5 fade-in">
-          <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-2">
-            {t("profile.nilechat.title")}
-          </h2>
-          <p className="text-xs text-inkFaint mb-4 leading-relaxed">{t("profile.nilechat.hint")}</p>
+        {/* ربط حساب NileChat - محجوب ببلور لحد ما تدخل كلمة مرور الغرف */}
+        <section className="relative bg-surface border border-line rounded-lg p-5 mt-5 fade-in overflow-hidden">
+          <div className={roomsUnlocked ? "" : "blur-sm select-none pointer-events-none"}>
+            <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-2">
+              {t("profile.nilechat.title")}
+            </h2>
+            <p className="text-xs text-inkFaint mb-4 leading-relaxed">{t("profile.nilechat.hint")}</p>
 
-          {nilechatLink ? (
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm text-ink">
-                {t("profile.nilechat.linkedAs")}: <span className="font-medium">{nilechatLink.agentName}</span>
-              </p>
-              <Button variant="secondary" loading={linkingNilechat} onClick={unlinkNilechat}>
-                {t("profile.nilechat.unlink")}
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Input
-                value={nilechatToken}
-                onChange={(e) => setNilechatToken(e.target.value)}
-                placeholder={t("profile.nilechat.tokenPlaceholder")}
-                dir="ltr"
-                className="text-end flex-1"
-              />
-              <Button variant="primary" loading={linkingNilechat} onClick={linkNilechat}>
-                {t("profile.nilechat.linkButton")}
-              </Button>
+            {nilechatLink ? (
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-ink">
+                  {t("profile.nilechat.linkedAs")}: <span className="font-medium">{nilechatLink.agentName}</span>
+                </p>
+                <Button variant="secondary" loading={linkingNilechat} onClick={unlinkNilechat}>
+                  {t("profile.nilechat.unlink")}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={nilechatToken}
+                  onChange={(e) => setNilechatToken(e.target.value)}
+                  placeholder={t("profile.nilechat.tokenPlaceholder")}
+                  dir="ltr"
+                  className="text-end flex-1"
+                />
+                <Button variant="primary" loading={linkingNilechat} onClick={linkNilechat}>
+                  {t("profile.nilechat.linkButton")}
+                </Button>
+              </div>
+            )}
+
+            {nilechatError && <p className="text-clay text-xs mt-2">{nilechatError}</p>}
+            {nilechatMsg && <p className="text-teal text-xs mt-2">{nilechatMsg}</p>}
+          </div>
+
+          {!checkingRoomsAuth && !roomsUnlocked && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-surface/70 px-6 text-center">
+              <Lock size={17} strokeWidth={1.75} className="text-inkSoft" />
+              <p className="text-xs text-inkSoft max-w-[260px] leading-relaxed">{t("profile.nilechat.lockedHint")}</p>
+              <div className="flex items-center gap-2 w-full max-w-[260px]">
+                <Input
+                  type="password"
+                  value={roomsPasswordInput}
+                  onChange={(e) => setRoomsPasswordInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && unlockRooms()}
+                  dir="ltr"
+                  className="text-end flex-1"
+                  placeholder="••••••••"
+                />
+                <Button variant="primary" loading={unlockingRooms} onClick={unlockRooms}>
+                  <DoorOpen size={14} strokeWidth={1.75} />
+                </Button>
+              </div>
+              {roomsUnlockError && <p className="text-clay text-xs">{roomsUnlockError}</p>}
             </div>
           )}
-
-          {nilechatError && <p className="text-clay text-xs mt-2">{nilechatError}</p>}
-          {nilechatMsg && <p className="text-teal text-xs mt-2">{nilechatMsg}</p>}
         </section>
 
         {/* منطقة الخطر: حذف الحساب */}

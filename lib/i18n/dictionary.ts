@@ -87,6 +87,7 @@ const dict: Record<string, { en: string; ar: string }> = {
   "profile.nilechat.err.generic": { en: "Something went wrong, please try again", ar: "حصل خطأ، يُرجى المحاولة مرة أخرى" },
   "profile.nilechat.linkedSuccess": { en: "Linked successfully", ar: "تم الربط بنجاح" },
   "profile.nilechat.unlinkedSuccess": { en: "Unlinked successfully", ar: "تم إلغاء الربط بنجاح" },
+  "profile.nilechat.lockedHint": { en: "Enter the Rooms password to link your NileChat account", ar: "أدخل كلمة مرور الغرف عشان تقدر تربط حسابك في NileChat" },
 
   // ===== app/auth/callback/page.tsx =====
   "authCallback.confirming": { en: "Confirming your account...", ar: "جارٍ تأكيد حسابك..." },
