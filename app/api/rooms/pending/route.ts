@@ -10,6 +10,8 @@ export const dynamic = "force-dynamic";
  * GET: ليستة خفيفة بالمهام اللي approval_status='pending' حاليًا - بتُستخدم لنظام
  * التنبيهات داخل فيورا (مش أي حاجة في نايل شات). بيتسحب دوري (polling) من الفرونت
  * كل شوية عشان نكتشف أي طلب جديد من أي agent أول ما يحصل.
+ * بنستبعد المهام اللي status='ended' (خلصت) عشان مهمة مقفولة مينفعش تتحسب في
+ * عداد "الطلبات المعلّقة" حتى لو لسه فيها approval_status='pending' لأي سبب.
  */
 export async function GET() {
   const token = cookies().get(ROOMS_COOKIE_NAME)?.value;
@@ -22,7 +24,7 @@ export async function GET() {
     const result = await pool.request().query(
       `SELECT id, task_text, customer_name, pending_changes, pending_changed_by_name, pending_changed_at
        FROM dbo.[${SOURCE_TABLE}]
-       WHERE approval_status = 'pending'
+       WHERE approval_status = 'pending' AND status = 'open'
        ORDER BY pending_changed_at DESC`
     );
 

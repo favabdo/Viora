@@ -155,6 +155,7 @@ const dict: Record<string, { en: string; ar: string }> = {
   // ===== app/page.tsx =====
   "tabs.tasks": { en: "Tasks", ar: "المهام" },
   "tabs.links": { en: "Links", ar: "الروابط" },
+  "tabs.rooms": { en: "Rooms", ar: "الغرف" },
 
   // ===== components/ActivityFeed.tsx =====
   "activity.recent": { en: "Recent activity", ar: "النشاط الأخير" },
@@ -208,7 +209,7 @@ const dict: Record<string, { en: string; ar: string }> = {
   "invites.decline": { en: "Decline", ar: "رفض" },
 
   // ===== components/RoomsSection.tsx =====
-  "rooms.lockedTitle": { en: "Rooms is a premium section 🔒", ar: "قسم Rooms مميز 🔒" },
+  "rooms.lockedTitle": { en: "Rooms is a premium section 🔒", ar: "قسم الغرف المميز 🔒" },
   "rooms.lockedHint": {
     en: "This section is premium and requires a special password to access. Ask the site owner for it.",
     ar: "السيكشن ده Premium ومحتاج كلمة مرور خاصة عشان تدخله. اطلبها من صاحب الموقع.",
@@ -377,24 +378,32 @@ const dict: Record<string, { en: string; ar: string }> = {
   "activity.link_description_changed": { en: "Description updated", ar: "تم تعديل الوصف" },
 
   // ===== app/api/rooms error codes =====
-  "rooms.errCode.not_configured": { en: "Rooms password isn't configured on the server yet.", ar: "كلمة مرور Rooms مش متضافة في إعدادات السيرفر بعد." },
+  "rooms.errCode.not_configured": { en: "Rooms password isn't configured on the server yet.", ar: "كلمة مرور الغرف مش متضافة في إعدادات السيرفر بعد." },
   "rooms.errCode.invalid_request": { en: "Invalid request", ar: "طلب غير صالح" },
   "rooms.errCode.wrong_password": { en: "Incorrect password", ar: "كلمة المرور غير صحيحة" },
-  "rooms.errCode.session_required": { en: "Please enter the Rooms password first", ar: "محتاج تدخل كلمة مرور Rooms الأول" },
-  "rooms.errCode.load_failed": { en: "Failed to load tasks from the Rooms database", ar: "فشل تحميل المهام من قاعدة بيانات Rooms" },
+  "rooms.errCode.session_required": { en: "Please enter the Rooms password first", ar: "محتاج تدخل كلمة مرور الغرف الأول" },
+  "rooms.errCode.load_failed": { en: "Failed to load tasks from the Rooms database", ar: "فشل تحميل المهام من قاعدة بيانات الغرف" },
   "rooms.errCode.task_id_required": { en: "Task id is required", ar: "معرّف المهمة مطلوب" },
-  "rooms.errCode.update_failed": { en: "Failed to update the task in the Rooms database", ar: "فشل تحديث المهمة في قاعدة بيانات Rooms" },
-  "rooms.errCode.create_failed": { en: "Failed to save this in the Rooms database", ar: "فشل الحفظ في قاعدة بيانات Rooms" },
+  "rooms.errCode.update_failed": { en: "Failed to update the task in the Rooms database", ar: "فشل تحديث المهمة في قاعدة بيانات الغرف" },
+  "rooms.errCode.create_failed": { en: "Failed to save this in the Rooms database", ar: "فشل الحفظ في قاعدة بيانات الغرف" },
   "rooms.errCode.missing_fields": { en: "Please fill in all required fields", ar: "يُرجى ملء كل الحقول المطلوبة" },
 
   // ===== نظام التنبيهات داخل فيورا (AppShell) =====
   "notif.title": { en: "Viora", ar: "فيورا" },
   "notif.newTaskBody": { en: 'New task pending approval: "{text}"', ar: 'مهمة جديدة بانتظار الموافقة: "{text}"' },
   "notif.changeRequestBody": { en: '{name} requested a change on: "{text}"', ar: '{name} طلب تعديل على: "{text}"' },
-  "notif.enablePrompt": { en: "Enable browser notifications for new Rooms requests?", ar: "تفعّل تنبيهات المتصفح للطلبات الجديدة في Rooms؟" },
+  "notif.enablePrompt": { en: "Enable browser notifications for new Rooms requests?", ar: "تفعّل تنبيهات المتصفح للطلبات الجديدة في الغرف؟" },
   "notif.enable": { en: "Enable", ar: "تفعيل" },
   "notif.dismiss": { en: "Not now", ar: "مش دلوقتي" },
   "notif.pendingRequests": { en: "Pending requests", ar: "طلبات معلّقة" },
+
+  // ===== فلترة المعلّق + زرار الاعتماد (RoomsSection) =====
+  "rooms.pendingOnly": { en: "Pending only", ar: "المعلّقة بس" },
+  "rooms.showAll": { en: "Show all", ar: "عرض الكل" },
+  "rooms.approve": { en: "Approve", ar: "اعتماد" },
+  "rooms.approveSuccess": { en: "Approved successfully", ar: "تم الاعتماد بنجاح" },
+  "rooms.err.approveFailed": { en: "Failed to approve", ar: "فشل الاعتماد" },
+  "rooms.noPendingTasks": { en: "No pending requests right now", ar: "مفيش طلبات معلّقة دلوقتي" },
 };
 
 export default dict;

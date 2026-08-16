@@ -95,7 +95,13 @@ const FIELD_KEY_MAP: Record<string, string> = {
   task_text: "rooms.field.task_text",
 };
 
-export default function RoomsSection({ currentUserId }: { currentUserId: string }) {
+export default function RoomsSection({
+  currentUserId,
+  initialFilterPending,
+}: {
+  currentUserId: string;
+  initialFilterPending?: boolean;
+}) {
   const { t, lang } = useTranslation();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
 
@@ -112,6 +118,8 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   const [nilechatLink, setNilechatLink] = useState<{ agentId: number; agentName: string } | null>(null);
+  const [showPendingOnly, setShowPendingOnly] = useState(Boolean(initialFilterPending));
+  const [approvingId, setApprovingId] = useState<number | null>(null);
 
   // كومنتات
   const [commentsOpenIds, setCommentsOpenIds] = useState<Set<number>>(new Set());
@@ -396,13 +404,38 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
     }
   }
 
+  async function approveTask(taskId: number) {
+    if (approvingId) return;
+    setApprovingId(taskId);
+    try {
+      const res = await fetch("/api/rooms/tasks/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: taskId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setTasksError(errText(data, "rooms.err.approveFailed"));
+        return;
+      }
+      loadTasks();
+    } catch {
+      setTasksError(t("rooms.err.approveFailed"));
+    } finally {
+      setApprovingId(null);
+    }
+  }
+
   const sortedTasks = useMemo(() => {
-    return [...tasks].sort((a, b) => {
+    // "المعلّقة بس" بيعرض بس المهام المفتوحة اللي عليها طلب - مهمة مقفولة (خلصت)
+    // منطقيًا مش المفروض تتحسب هنا حتى لو فيها approval_status='pending' لأي سبب
+    const base = showPendingOnly ? tasks.filter((t2) => t2.isPending && !t2.done) : tasks;
+    return [...base].sort((a, b) => {
       if (a.done !== b.done) return Number(a.done) - Number(b.done);
       if (a.isOverdue !== b.isOverdue) return Number(b.isOverdue) - Number(a.isOverdue);
       return (a.dueDate || "").localeCompare(b.dueDate || "");
     });
-  }, [tasks]);
+  }, [tasks, showPendingOnly]);
 
   if (checkingSession) {
     return (
@@ -446,10 +479,11 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
 
   const doneCount = tasks.filter((t2) => t2.done).length;
   const overdueCount = tasks.filter((t2) => t2.isOverdue).length;
+  const pendingTasksCount = tasks.filter((t2) => t2.isPending && !t2.done).length;
 
   return (
     <div className="py-6">
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <ShieldCheck size={17} strokeWidth={1.75} className="text-teal" />
           <h2 className="font-display text-lg font-medium text-ink">NIle Chat Scheduled Tasks</h2>
@@ -461,6 +495,19 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
           >
             <Plus size={13} strokeWidth={2} />
             {t("rooms.newTask")}
+          </button>
+          <button
+            onClick={() => setShowPendingOnly((v) => !v)}
+            className={`flex items-center gap-1 text-xs font-medium transition-colors ${
+              showPendingOnly ? "text-[#8A5A00]" : "text-inkSoft hover:text-teal"
+            }`}
+          >
+            {showPendingOnly ? t("rooms.showAll") : t("rooms.pendingOnly")}
+            {pendingTasksCount > 0 && !showPendingOnly && (
+              <span className="ms-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-clay px-1 text-[10px] font-semibold text-white">
+                {pendingTasksCount}
+              </span>
+            )}
           </button>
           <button
             onClick={loadTasks}
@@ -608,6 +655,11 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
           <ListChecks size={20} strokeWidth={1.75} className="mb-2 opacity-60" />
           {t("rooms.noTasks")}
         </div>
+      ) : sortedTasks.length === 0 && showPendingOnly ? (
+        <div className="flex flex-col items-center text-center py-10 text-inkSoft text-sm">
+          <ListChecks size={20} strokeWidth={1.75} className="mb-2 opacity-60" />
+          {t("rooms.noPendingTasks")}
+        </div>
       ) : (
         <ul className="space-y-2.5">
           {sortedTasks.map((task) => {
@@ -652,6 +704,15 @@ export default function RoomsSection({ currentUserId }: { currentUserId: string 
                         <span className="text-2xs font-medium text-[#8A5A00] bg-[#FCEFC7] rounded-full px-2 py-0.5">
                           {t("rooms.pendingBadge")}
                         </span>
+                      )}
+                      {task.isPending && nilechatLink && (
+                        <button
+                          onClick={() => approveTask(task.id)}
+                          disabled={approvingId === task.id}
+                          className="text-2xs font-medium text-white bg-teal hover:bg-tealDark rounded-full px-2 py-0.5 transition-colors disabled:opacity-50"
+                        >
+                          {t("rooms.approve")}
+                        </button>
                       )}
                       {!task.done && task.isOverdue && task.daysOverdue !== null && (
                         <span className="text-2xs font-medium text-clay bg-claySoft rounded-full px-2 py-0.5">

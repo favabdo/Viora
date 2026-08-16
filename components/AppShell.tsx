@@ -11,6 +11,8 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useRoomsPendingPoll } from "@/lib/useRoomsPendingPoll";
 import { usePushSubscription } from "@/lib/usePushSubscription";
 
+import { supabase } from "@/lib/supabase";
+
 export type ShellTab = {
   id: string;
   label: string;
@@ -25,34 +27,51 @@ export default function AppShell({
   tabs,
   activeTab,
   onTabChange,
+  onRoomsTabActivated,
   userName,
   avatarUrl,
   onSignOut,
+  currentUserId,
   children,
 }: {
   tabs: ShellTab[];
   activeTab: string;
   onTabChange: (id: string) => void;
+  /** بينادى كل ما حد يدوس على تاب Rooms، بيقول لصاحب الصفحة هل فيه طلبات معلّقة وقت الدوسة عشان يفلتر تلقائي */
+  onRoomsTabActivated?: (hasPending: boolean) => void;
   userName: string;
   avatarUrl?: string | null;
   onSignOut: () => void;
+  currentUserId: string;
   children: ReactNode;
 }) {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [theme, setTheme] = useState<Theme>("light");
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileAccountMenuRef = useRef<HTMLDivElement | null>(null);
-  const { pendingCount } = useRoomsPendingPoll();
+  const [isNilechatLinked, setIsNilechatLinked] = useState(false);
+  const { pendingCount } = useRoomsPendingPoll(isNilechatLinked);
   const { supported: pushSupported, subscribed: pushSubscribed, subscribing, subscribe } = usePushSubscription();
   const [showEnablePrompt, setShowEnablePrompt] = useState(false);
 
+  // عداد الطلبات المعلّقة بجانب "Rooms"/"الغرف" بيظهر بس لللي رابط حسابه في NileChat من البروفايل
   useEffect(() => {
-    if (!pushSupported || pushSubscribed) return;
+    if (!currentUserId) return;
+    supabase
+      .from("nilechat_links")
+      .select("user_id")
+      .eq("user_id", currentUserId)
+      .maybeSingle()
+      .then(({ data }) => setIsNilechatLinked(Boolean(data)));
+  }, [currentUserId]);
+
+  useEffect(() => {
+    if (!isNilechatLinked || !pushSupported || pushSubscribed) return;
     const dismissed = typeof window !== "undefined" && localStorage.getItem("viora-push-prompt-dismissed") === "1";
     if (!dismissed) setShowEnablePrompt(true);
-  }, [pushSupported, pushSubscribed]);
+  }, [isNilechatLinked, pushSupported, pushSubscribed]);
 
   function dismissEnablePrompt() {
     setShowEnablePrompt(false);
@@ -63,8 +82,9 @@ export default function AppShell({
     }
   }
 
-  function goToRooms() {
-    onTabChange("rooms");
+  function handleTabClick(id: string) {
+    if (id === "rooms") onRoomsTabActivated?.(pendingCount > 0);
+    onTabChange(id);
   }
 
   // نقرأ الوضع المحفوظ بعد أول رسم للصفحة (الـ script في layout.tsx بيكون طبّقه على الـ html بالفعل)
@@ -131,42 +151,44 @@ export default function AppShell({
       {/* الشريط الجانبي — سطح المكتب */}
       <aside className="hidden md:flex md:w-60 md:shrink-0 md:flex-col md:border-l md:border-line md:h-screen md:sticky md:top-0 md:py-5 md:px-3.5">
         <div className="flex items-center gap-1 px-2 mb-7">
-          <span className="viora-wordmark text-xl">iora</span>
-          <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
+          {lang === "ar" ? (
+            <>
+              <span className="viora-wordmark text-xl">iora</span>
+              <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
+            </>
+          ) : (
+            <>
+              <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
+              <span className="viora-wordmark text-xl">iora</span>
+            </>
+          )}
         </div>
 
         <nav className="flex flex-col gap-0.5" role="tablist">
           {tabs.map(({ id, label, icon: Icon }) => {
             const active = activeTab === id;
+            const showBadge = id === "rooms" && isNilechatLinked && pendingCount > 0;
             return (
               <button
                 key={id}
                 role="tab"
                 aria-selected={active}
-                onClick={() => onTabChange(id)}
+                onClick={() => handleTabClick(id)}
                 className={`nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium transition-colors ${
                   active ? "bg-tealSoft text-tealDark" : "text-inkSoft hover:bg-paperDark hover:text-ink"
                 }`}
               >
                 <Icon size={16} strokeWidth={1.75} />
                 {label}
+                {showBadge && (
+                  <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-clay px-1 text-2xs font-semibold text-white">
+                    {pendingCount}
+                  </span>
+                )}
               </button>
             );
           })}
         </nav>
-
-        <button
-          onClick={goToRooms}
-          className="flex items-center gap-2.5 px-2.5 py-2 mt-1 rounded-md text-sm font-medium text-inkSoft hover:bg-paperDark hover:text-ink transition-colors relative"
-        >
-          <Bell size={16} strokeWidth={1.75} />
-          {t("notif.pendingRequests")}
-          {pendingCount > 0 && (
-            <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-clay px-1 text-2xs font-semibold text-white">
-              {pendingCount}
-            </span>
-          )}
-        </button>
 
         <div className="mt-auto pt-4 border-t border-line px-2 flex items-center gap-1.5 relative" ref={accountMenuRef}>
           <button
@@ -198,19 +220,20 @@ export default function AppShell({
       {/* الهيدر — الموبايل فقط */}
       <header className="md:hidden flex items-center justify-between gap-3 px-5 py-4 border-b border-line sticky top-0 bg-paper/90 backdrop-blur z-30">
         <div className="flex items-center gap-1">
-          <span className="viora-wordmark text-xl">iora</span>
-          <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
+          {lang === "ar" ? (
+            <>
+              <span className="viora-wordmark text-xl">iora</span>
+              <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
+            </>
+          ) : (
+            <>
+              <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
+              <span className="viora-wordmark text-xl">iora</span>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-1.5">
           {userName && <span className="text-sm text-inkSoft font-medium ml-1">{userName}</span>}
-          <IconButton aria-label={t("notif.pendingRequests")} onClick={goToRooms} tone="default" className="relative">
-            <Bell size={16} strokeWidth={1.75} />
-            {pendingCount > 0 && (
-              <span className="absolute -top-0.5 -end-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-clay px-0.5 text-[9px] font-semibold text-white">
-                {pendingCount}
-              </span>
-            )}
-          </IconButton>
           <IconButton
             aria-label={theme === "dark" ? t("shell.enableLight") : t("shell.enableDark")}
             onClick={toggleTheme}
@@ -272,17 +295,25 @@ export default function AppShell({
       >
         {tabs.map(({ id, label, icon: Icon }) => {
           const active = activeTab === id;
+          const showBadge = id === "rooms" && isNilechatLinked && pendingCount > 0;
           return (
             <button
               key={id}
               role="tab"
               aria-selected={active}
-              onClick={() => onTabChange(id)}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-2xs font-medium transition-colors ${
+              onClick={() => handleTabClick(id)}
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-2xs font-medium transition-colors relative ${
                 active ? "text-teal" : "text-inkFaint"
               }`}
             >
-              <Icon size={19} strokeWidth={active ? 2 : 1.75} />
+              <span className="relative">
+                <Icon size={19} strokeWidth={active ? 2 : 1.75} />
+                {showBadge && (
+                  <span className="absolute -top-1 -end-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-clay px-0.5 text-[9px] font-semibold text-white">
+                    {pendingCount}
+                  </span>
+                )}
+              </span>
               {label}
             </button>
           );

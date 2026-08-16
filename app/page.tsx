@@ -22,7 +22,7 @@ function HomeInner() {
   const TABS: ShellTab[] = [
     { id: "tasks", label: t("tabs.tasks"), icon: CheckSquare },
     { id: "links", label: t("tabs.links"), icon: Link2 },
-    { id: "rooms", label: "Rooms", icon: DoorClosed },
+    { id: "rooms", label: t("tabs.rooms"), icon: DoorClosed },
   ];
   const initialTab = (searchParams.get("tab") as Tab) || "tasks";
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -30,6 +30,7 @@ function HomeInner() {
   const [checking, setChecking] = useState(true);
   const [currentUserName, setCurrentUserName] = useState("");
   const [currentUserAvatar, setCurrentUserAvatar] = useState<string | null>(null);
+  const [roomsFilterPending, setRoomsFilterPending] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -83,9 +84,11 @@ function HomeInner() {
         tabs={TABS}
         activeTab={tab}
         onTabChange={(id) => setTab(id as Tab)}
+        onRoomsTabActivated={(hasPending) => setRoomsFilterPending(hasPending)}
         userName={currentUserName}
         avatarUrl={currentUserAvatar}
         onSignOut={handleSignOut}
+        currentUserId={session.user.id}
       >
         <PendingInvites userId={session.user.id} />
 
@@ -93,7 +96,9 @@ function HomeInner() {
           <TasksSection currentUserId={session.user.id} currentUserEmail={session.user.email || ""} />
         )}
         {tab === "links" && <LinksSection />}
-        {tab === "rooms" && <RoomsSection currentUserId={session.user.id} />}
+        {tab === "rooms" && (
+          <RoomsSection currentUserId={session.user.id} initialFilterPending={roomsFilterPending} />
+        )}
       </AppShell>
     </ProfileCardProvider>
   );

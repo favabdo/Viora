@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     const result = await pool.request().query(
       `SELECT id, task_text, customer_name, pending_changes, pending_changed_by_name, pending_changed_at
        FROM dbo.[${SOURCE_TABLE}]
-       WHERE approval_status = 'pending'`
+       WHERE approval_status = 'pending' AND status = 'open'`
     );
 
     const pendingItems = result.recordset.map((r: any) => ({
