@@ -3,11 +3,13 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LucideIcon, LogOut, UserRound, Moon, Sun } from "lucide-react";
+import { LucideIcon, LogOut, UserRound, Moon, Sun, Bell, X } from "lucide-react";
 import Avatar from "./ui/Avatar";
 import IconButton from "./ui/IconButton";
 import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useRoomsPendingPoll } from "@/lib/useRoomsPendingPoll";
+import { usePushSubscription } from "@/lib/usePushSubscription";
 
 export type ShellTab = {
   id: string;
@@ -42,6 +44,28 @@ export default function AppShell({
   const [theme, setTheme] = useState<Theme>("light");
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileAccountMenuRef = useRef<HTMLDivElement | null>(null);
+  const { pendingCount } = useRoomsPendingPoll();
+  const { supported: pushSupported, subscribed: pushSubscribed, subscribing, subscribe } = usePushSubscription();
+  const [showEnablePrompt, setShowEnablePrompt] = useState(false);
+
+  useEffect(() => {
+    if (!pushSupported || pushSubscribed) return;
+    const dismissed = typeof window !== "undefined" && localStorage.getItem("viora-push-prompt-dismissed") === "1";
+    if (!dismissed) setShowEnablePrompt(true);
+  }, [pushSupported, pushSubscribed]);
+
+  function dismissEnablePrompt() {
+    setShowEnablePrompt(false);
+    try {
+      localStorage.setItem("viora-push-prompt-dismissed", "1");
+    } catch {
+      // تجاهل
+    }
+  }
+
+  function goToRooms() {
+    onTabChange("rooms");
+  }
 
   // نقرأ الوضع المحفوظ بعد أول رسم للصفحة (الـ script في layout.tsx بيكون طبّقه على الـ html بالفعل)
   useEffect(() => {
@@ -131,6 +155,19 @@ export default function AppShell({
           })}
         </nav>
 
+        <button
+          onClick={goToRooms}
+          className="flex items-center gap-2.5 px-2.5 py-2 mt-1 rounded-md text-sm font-medium text-inkSoft hover:bg-paperDark hover:text-ink transition-colors relative"
+        >
+          <Bell size={16} strokeWidth={1.75} />
+          {t("notif.pendingRequests")}
+          {pendingCount > 0 && (
+            <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-clay px-1 text-2xs font-semibold text-white">
+              {pendingCount}
+            </span>
+          )}
+        </button>
+
         <div className="mt-auto pt-4 border-t border-line px-2 flex items-center gap-1.5 relative" ref={accountMenuRef}>
           <button
             onClick={() => setShowAccountMenu((v) => !v)}
@@ -166,6 +203,14 @@ export default function AppShell({
         </div>
         <div className="flex items-center gap-1.5">
           {userName && <span className="text-sm text-inkSoft font-medium ml-1">{userName}</span>}
+          <IconButton aria-label={t("notif.pendingRequests")} onClick={goToRooms} tone="default" className="relative">
+            <Bell size={16} strokeWidth={1.75} />
+            {pendingCount > 0 && (
+              <span className="absolute -top-0.5 -end-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-clay px-0.5 text-[9px] font-semibold text-white">
+                {pendingCount}
+              </span>
+            )}
+          </IconButton>
           <IconButton
             aria-label={theme === "dark" ? t("shell.enableLight") : t("shell.enableDark")}
             onClick={toggleTheme}
@@ -192,7 +237,32 @@ export default function AppShell({
       </header>
 
       <main className="flex-1 min-w-0 px-5 py-6 md:px-9 md:py-8 pb-24 md:pb-8">
-        <div className="max-w-5xl mx-auto">{children}</div>
+        <div className="max-w-5xl mx-auto">
+          {showEnablePrompt && (
+            <div className="flex items-center justify-between gap-3 rounded-md border border-line bg-paperDark px-3.5 py-2.5 mb-4 text-sm fade-in">
+              <div className="flex items-center gap-2">
+                <Bell size={14} strokeWidth={1.75} className="text-teal shrink-0" />
+                <span className="text-ink">{t("notif.enablePrompt")}</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={async () => {
+                    await subscribe();
+                    setShowEnablePrompt(false);
+                  }}
+                  disabled={subscribing}
+                  className="text-teal hover:text-tealDark font-medium text-xs disabled:opacity-50"
+                >
+                  {t("notif.enable")}
+                </button>
+                <button onClick={dismissEnablePrompt} className="text-inkFaint hover:text-ink">
+                  <X size={14} strokeWidth={1.75} />
+                </button>
+              </div>
+            </div>
+          )}
+          {children}
+        </div>
       </main>
 
       {/* شريط تنقّل سفلي — الموبايل فقط */}

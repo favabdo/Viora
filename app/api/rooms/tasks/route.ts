@@ -3,12 +3,34 @@ import { cookies } from "next/headers";
 import { ROOMS_COOKIE_NAME, verifyRoomsSessionToken } from "@/lib/roomsAuth";
 import { getRoomsPool } from "@/lib/sqlserver";
 import { mapRow, mapHistoryRow, SOURCE_TABLE, HISTORY_TABLE, sql, ScheduledTaskDTO, HistoryEntryDTO } from "@/lib/scheduledTasks";
+import { supabase } from "@/lib/supabase";
+import { sendPushToAllSubscribers } from "@/lib/webPush";
 
 export const dynamic = "force-dynamic";
 
 function requireSession() {
   const token = cookies().get(ROOMS_COOKIE_NAME)?.value;
   return verifyRoomsSessionToken(token);
+}
+
+/**
+ * بيبعت إيميل فوري لحظة إنشاء تاسك أو طلب تعديل من فيورا نفسها، وبيسجله كـ"متبعت" في
+ * rooms_notified_pending عشان الـ cron الدوري (/api/rooms/notify-pending) ميبعتش
+ * عنه تاني إيميل مكرر.
+ */
+async function notifyAndMarkSent(
+  taskId: number,
+  item: { isNewTask: boolean; taskText: string; customerName: string | null; requestedByName: string | null }
+) {
+  try {
+    const title = item.isNewTask ? "مهمة جديدة بانتظار الموافقة" : "طلب تعديل بانتظار الموافقة";
+    const body = `${item.requestedByName ? `${item.requestedByName} — ` : ""}${item.taskText}`;
+    await sendPushToAllSubscribers(title, body, "/?tab=rooms");
+    await supabase.from("rooms_notified_pending").upsert({ task_id: taskId });
+  } catch (err) {
+    // فشل إرسال الإشعار ميفشلش الطلب الأساسي (إنشاء التاسك/طلب التعديل)
+    console.error("[Rooms Notify] فشل الإرسال الفوري:", err);
+  }
 }
 
 /**
@@ -113,6 +135,15 @@ export async function POST(request: Request) {
       );
 
     const newId = result.recordset[0]?.id;
+
+    // إيميل فوري لحظة الإنشاء (الطلب ده جاي من فيورا نفسها فمش محتاجين ننتظر الـ cron)
+    await notifyAndMarkSent(newId, {
+      isNewTask: true,
+      taskText,
+      customerName: customerName || null,
+      requestedByName: agentName,
+    });
+
     return NextResponse.json({ ok: true, id: newId });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -160,7 +191,7 @@ export async function PATCH(request: Request) {
     const currentResult = await pool
       .request()
       .input("id", sql.BigInt, id)
-      .query(`SELECT status, approval_status FROM dbo.[${SOURCE_TABLE}] WHERE id = @id`);
+      .query(`SELECT status, approval_status, task_text, customer_name FROM dbo.[${SOURCE_TABLE}] WHERE id = @id`);
     const current = currentResult.recordset[0];
     if (!current) {
       return NextResponse.json({ errorCode: "task_not_found" }, { status: 404 });
@@ -190,6 +221,14 @@ export async function PATCH(request: Request) {
              pending_changed_at = SYSUTCDATETIME()
          WHERE id = @id`
       );
+
+    // إيميل فوري لحظة الطلب (جاي من فيورا نفسها فمش محتاجين ننتظر الـ cron)
+    await notifyAndMarkSent(id, {
+      isNewTask: false,
+      taskText: current.task_text,
+      customerName: (current.customer_name || "").trim() || null,
+      requestedByName: agentName,
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err) {

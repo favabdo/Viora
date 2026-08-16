@@ -386,6 +386,15 @@ const dict: Record<string, { en: string; ar: string }> = {
   "rooms.errCode.update_failed": { en: "Failed to update the task in the Rooms database", ar: "فشل تحديث المهمة في قاعدة بيانات Rooms" },
   "rooms.errCode.create_failed": { en: "Failed to save this in the Rooms database", ar: "فشل الحفظ في قاعدة بيانات Rooms" },
   "rooms.errCode.missing_fields": { en: "Please fill in all required fields", ar: "يُرجى ملء كل الحقول المطلوبة" },
+
+  // ===== نظام التنبيهات داخل فيورا (AppShell) =====
+  "notif.title": { en: "Viora", ar: "فيورا" },
+  "notif.newTaskBody": { en: 'New task pending approval: "{text}"', ar: 'مهمة جديدة بانتظار الموافقة: "{text}"' },
+  "notif.changeRequestBody": { en: '{name} requested a change on: "{text}"', ar: '{name} طلب تعديل على: "{text}"' },
+  "notif.enablePrompt": { en: "Enable browser notifications for new Rooms requests?", ar: "تفعّل تنبيهات المتصفح للطلبات الجديدة في Rooms؟" },
+  "notif.enable": { en: "Enable", ar: "تفعيل" },
+  "notif.dismiss": { en: "Not now", ar: "مش دلوقتي" },
+  "notif.pendingRequests": { en: "Pending requests", ar: "طلبات معلّقة" },
 };
 
 export default dict;
