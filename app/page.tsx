@@ -30,7 +30,7 @@ function HomeInner() {
   const [checking, setChecking] = useState(true);
   const [currentUserName, setCurrentUserName] = useState("");
   const [currentUserAvatar, setCurrentUserAvatar] = useState<string | null>(null);
-  const [roomsFilterPending, setRoomsFilterPending] = useState(false);
+  const [roomsInitialFilter, setRoomsInitialFilter] = useState<"open" | "pending">("open");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -84,7 +84,7 @@ function HomeInner() {
         tabs={TABS}
         activeTab={tab}
         onTabChange={(id) => setTab(id as Tab)}
-        onRoomsTabActivated={(hasPending) => setRoomsFilterPending(hasPending)}
+        onRoomsTabActivated={(hasPending) => setRoomsInitialFilter(hasPending ? "pending" : "open")}
         userName={currentUserName}
         avatarUrl={currentUserAvatar}
         onSignOut={handleSignOut}
@@ -97,7 +97,7 @@ function HomeInner() {
         )}
         {tab === "links" && <LinksSection />}
         {tab === "rooms" && (
-          <RoomsSection currentUserId={session.user.id} initialFilterPending={roomsFilterPending} />
+          <RoomsSection currentUserId={session.user.id} initialFilter={roomsInitialFilter} />
         )}
       </AppShell>
     </ProfileCardProvider>

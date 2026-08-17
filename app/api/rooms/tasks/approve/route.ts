@@ -85,6 +85,19 @@ export async function POST(request: Request) {
         else req.input(paramName, sql.NVarChar(sql.MAX), value as string);
         setClauses.push(`[${column}] = @${paramName}`);
       });
+
+      // لو من ضمن اللي اتوافق عليه إن status بقى 'ended'، لازم نسجل ended_at ونحسب
+      // delivery_status بالظبط زي ما نايل شات بيعمل (بنقارن وقت الإنهاء بتاريخ التسليم).
+      // ولو رجّعناها 'open' (فتح المهمة تاني)، بنمسح ended_at وdelivery_status.
+      if (updates.status === "ended") {
+        setClauses.push(
+          `[ended_at] = SYSUTCDATETIME()`,
+          `[delivery_status] = CASE WHEN CAST(SYSUTCDATETIME() AS DATE) <= [due_date] THEN 'on_time' ELSE 'late' END`
+        );
+      } else if (updates.status === "open") {
+        setClauses.push(`[ended_at] = NULL`, `[delivery_status] = NULL`);
+      }
+
       await req.query(`UPDATE dbo.[${SOURCE_TABLE}] SET ${setClauses.join(", ")} WHERE id = @id`);
     }
 

@@ -93,14 +93,18 @@ const FIELD_KEY_MAP: Record<string, string> = {
   assigned_to: "rooms.field.assigned_to",
   customer: "rooms.field.customer",
   task_text: "rooms.field.task_text",
+  status: "rooms.field.status",
+  due_date: "rooms.field.due_date",
 };
+
+type RoomsFilter = "open" | "all" | "pending";
 
 export default function RoomsSection({
   currentUserId,
-  initialFilterPending,
+  initialFilter,
 }: {
   currentUserId: string;
-  initialFilterPending?: boolean;
+  initialFilter?: RoomsFilter;
 }) {
   const { t, lang } = useTranslation();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
@@ -118,8 +122,9 @@ export default function RoomsSection({
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   const [nilechatLink, setNilechatLink] = useState<{ agentId: number; agentName: string } | null>(null);
-  const [showPendingOnly, setShowPendingOnly] = useState(Boolean(initialFilterPending));
+  const [filter, setFilter] = useState<RoomsFilter>(initialFilter || "open");
   const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [dismissingId, setDismissingId] = useState<number | null>(null);
 
   // كومنتات
   const [commentsOpenIds, setCommentsOpenIds] = useState<Set<number>>(new Set());
@@ -426,16 +431,44 @@ export default function RoomsSection({
     }
   }
 
+  async function dismissTask(taskId: number) {
+    if (dismissingId) return;
+    setDismissingId(taskId);
+    try {
+      const res = await fetch("/api/rooms/tasks/dismiss", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: taskId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setTasksError(errText(data, "rooms.err.dismissFailed"));
+        return;
+      }
+      loadTasks();
+    } catch {
+      setTasksError(t("rooms.err.dismissFailed"));
+    } finally {
+      setDismissingId(null);
+    }
+  }
+
   const sortedTasks = useMemo(() => {
-    // "المعلّقة بس" بيعرض بس المهام المفتوحة اللي عليها طلب - مهمة مقفولة (خلصت)
-    // منطقيًا مش المفروض تتحسب هنا حتى لو فيها approval_status='pending' لأي سبب
-    const base = showPendingOnly ? tasks.filter((t2) => t2.isPending && !t2.done) : tasks;
+    // "المفتوحة" (افتراضي): كل المهام اللي لسه مخلصتش، بما فيها اللي عليها طلب معلّق
+    // "الكل": كل المهام من غير استثناء
+    // "المعلّقة": المهام المفتوحة اللي عليها طلب بانتظار الاعتماد بس
+    const base =
+      filter === "pending"
+        ? tasks.filter((t2) => t2.isPending && !t2.done)
+        : filter === "open"
+        ? tasks.filter((t2) => !t2.done)
+        : tasks;
     return [...base].sort((a, b) => {
       if (a.done !== b.done) return Number(a.done) - Number(b.done);
       if (a.isOverdue !== b.isOverdue) return Number(b.isOverdue) - Number(a.isOverdue);
       return (a.dueDate || "").localeCompare(b.dueDate || "");
     });
-  }, [tasks, showPendingOnly]);
+  }, [tasks, filter]);
 
   if (checkingSession) {
     return (
@@ -480,10 +513,11 @@ export default function RoomsSection({
   const doneCount = tasks.filter((t2) => t2.done).length;
   const overdueCount = tasks.filter((t2) => t2.isOverdue).length;
   const pendingTasksCount = tasks.filter((t2) => t2.isPending && !t2.done).length;
+  const openTasksCount = tasks.filter((t2) => !t2.done).length;
 
   return (
     <div className="py-6">
-      <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <ShieldCheck size={17} strokeWidth={1.75} className="text-teal" />
           <h2 className="font-display text-lg font-medium text-ink">NIle Chat Scheduled Tasks</h2>
@@ -497,19 +531,6 @@ export default function RoomsSection({
             {t("rooms.newTask")}
           </button>
           <button
-            onClick={() => setShowPendingOnly((v) => !v)}
-            className={`flex items-center gap-1 text-xs font-medium transition-colors ${
-              showPendingOnly ? "text-[#8A5A00]" : "text-inkSoft hover:text-teal"
-            }`}
-          >
-            {showPendingOnly ? t("rooms.showAll") : t("rooms.pendingOnly")}
-            {pendingTasksCount > 0 && !showPendingOnly && (
-              <span className="ms-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-clay px-1 text-[10px] font-semibold text-white">
-                {pendingTasksCount}
-              </span>
-            )}
-          </button>
-          <button
             onClick={loadTasks}
             disabled={loadingTasks}
             className="flex items-center gap-1 text-xs text-inkSoft hover:text-teal transition-colors disabled:opacity-50"
@@ -518,6 +539,35 @@ export default function RoomsSection({
             {t("rooms.refresh")}
           </button>
         </div>
+      </div>
+
+      <div className="flex items-center gap-1 rounded-md border border-line p-0.5 mb-4 w-fit">
+        {(
+          [
+            ["open", t("rooms.filter.open"), openTasksCount],
+            ["all", t("rooms.filter.all"), tasks.length],
+            ["pending", t("rooms.filter.pending"), pendingTasksCount],
+          ] as [RoomsFilter, string, number][]
+        ).map(([key, label, count]) => (
+          <button
+            key={key}
+            onClick={() => setFilter(key)}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+              filter === key ? "bg-tealSoft text-tealDark" : "text-inkSoft hover:text-ink"
+            }`}
+          >
+            {label}
+            {count > 0 && (
+              <span
+                className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold ${
+                  key === "pending" ? "bg-clay text-white" : "bg-paperDark text-inkSoft"
+                }`}
+              >
+                {count}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
       {showNewTask && (
@@ -655,10 +705,15 @@ export default function RoomsSection({
           <ListChecks size={20} strokeWidth={1.75} className="mb-2 opacity-60" />
           {t("rooms.noTasks")}
         </div>
-      ) : sortedTasks.length === 0 && showPendingOnly ? (
+      ) : sortedTasks.length === 0 && filter === "pending" ? (
         <div className="flex flex-col items-center text-center py-10 text-inkSoft text-sm">
           <ListChecks size={20} strokeWidth={1.75} className="mb-2 opacity-60" />
           {t("rooms.noPendingTasks")}
+        </div>
+      ) : sortedTasks.length === 0 && filter === "open" ? (
+        <div className="flex flex-col items-center text-center py-10 text-inkSoft text-sm">
+          <ListChecks size={20} strokeWidth={1.75} className="mb-2 opacity-60" />
+          {t("rooms.noOpenTasks")}
         </div>
       ) : (
         <ul className="space-y-2.5">
@@ -706,13 +761,22 @@ export default function RoomsSection({
                         </span>
                       )}
                       {task.isPending && nilechatLink && (
-                        <button
-                          onClick={() => approveTask(task.id)}
-                          disabled={approvingId === task.id}
-                          className="text-2xs font-medium text-white bg-teal hover:bg-tealDark rounded-full px-2 py-0.5 transition-colors disabled:opacity-50"
-                        >
-                          {t("rooms.approve")}
-                        </button>
+                        <>
+                          <button
+                            onClick={() => approveTask(task.id)}
+                            disabled={approvingId === task.id || dismissingId === task.id}
+                            className="text-2xs font-medium text-white bg-teal hover:bg-tealDark rounded-full px-2 py-0.5 transition-colors disabled:opacity-50"
+                          >
+                            {t("rooms.approve")}
+                          </button>
+                          <button
+                            onClick={() => dismissTask(task.id)}
+                            disabled={approvingId === task.id || dismissingId === task.id}
+                            className="text-2xs font-medium text-inkSoft border border-line hover:bg-paperDark rounded-full px-2 py-0.5 transition-colors disabled:opacity-50"
+                          >
+                            {t("rooms.dismiss")}
+                          </button>
+                        </>
                       )}
                       {!task.done && task.isOverdue && task.daysOverdue !== null && (
                         <span className="text-2xs font-medium text-clay bg-claySoft rounded-full px-2 py-0.5">

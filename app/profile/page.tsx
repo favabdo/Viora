@@ -581,9 +581,9 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* ربط حساب NileChat - محجوب ببلور لحد ما تدخل كلمة مرور الغرف */}
-        <section className="relative bg-surface border border-line rounded-lg p-5 mt-5 fade-in overflow-hidden">
-          <div className={roomsUnlocked ? "" : "blur-sm select-none pointer-events-none"}>
+        {/* قسم مقفول بكلمة مرور Rooms - مفيش أي إشارة لـ NileChat خالص لحد ما يتفتح */}
+        {checkingRoomsAuth ? null : roomsUnlocked ? (
+          <section className="bg-surface border border-line rounded-lg p-5 mt-5 fade-in">
             <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-2">
               {t("profile.nilechat.title")}
             </h2>
@@ -615,13 +615,14 @@ export default function ProfilePage() {
 
             {nilechatError && <p className="text-clay text-xs mt-2">{nilechatError}</p>}
             {nilechatMsg && <p className="text-teal text-xs mt-2">{nilechatMsg}</p>}
-          </div>
-
-          {!checkingRoomsAuth && !roomsUnlocked && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-surface/70 px-6 text-center">
+          </section>
+        ) : (
+          <section className="bg-surface border border-line rounded-lg p-5 mt-5 fade-in">
+            <div className="flex flex-col items-center text-center gap-2.5 py-2">
               <Lock size={17} strokeWidth={1.75} className="text-inkSoft" />
-              <p className="text-xs text-inkSoft max-w-[260px] leading-relaxed">{t("profile.nilechat.lockedHint")}</p>
-              <div className="flex items-center gap-2 w-full max-w-[260px]">
+              <p className="text-sm font-medium text-ink">{t("profile.lockedSection.title")}</p>
+              <p className="text-xs text-inkSoft max-w-[260px] leading-relaxed">{t("profile.lockedSection.hint")}</p>
+              <div className="flex items-center gap-2 w-full max-w-[260px] mt-1.5">
                 <Input
                   type="password"
                   value={roomsPasswordInput}
@@ -637,8 +638,8 @@ export default function ProfilePage() {
               </div>
               {roomsUnlockError && <p className="text-clay text-xs">{roomsUnlockError}</p>}
             </div>
-          )}
-        </section>
+          </section>
+        )}
 
         {/* منطقة الخطر: حذف الحساب */}
         <section className="bg-surface border border-clay/30 rounded-lg p-5 mt-5 fade-in">
