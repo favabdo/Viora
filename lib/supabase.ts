@@ -43,7 +43,19 @@ export type Task = {
   position: number;
   created_at: string;
   color?: string | null;
+  column_id?: string | null;
+  due_date?: string | null;
   profiles?: { username: string; full_name: string; avatar_url?: string | null } | null;
+};
+
+export type BoardColumn = {
+  id: string;
+  project_id: string;
+  name: string;
+  color: string;
+  position: number;
+  is_done_column: boolean;
+  created_at: string;
 };
 
 export type TaskComment = {

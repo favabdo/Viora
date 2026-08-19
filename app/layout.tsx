@@ -36,7 +36,7 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `try{
-              if(localStorage.getItem('viora-theme')==='dark')document.documentElement.classList.add('dark');
+              if(localStorage.getItem('viora-theme')!=='light')document.documentElement.classList.add('dark');
               var l=localStorage.getItem('viora-lang');
               if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}
             }catch(e){}`,

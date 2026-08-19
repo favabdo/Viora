@@ -27,24 +27,25 @@
 }
 
 .dark {
-  --color-paper: 23 24 26;
-  --color-paperDark: 30 32 35;
-  --color-surface: 32 34 37;
-  --color-surfaceSunken: 27 28 31;
-  --color-ink: 242 241 237;
-  --color-inkSoft: 181 183 176;
-  --color-inkFaint: 124 126 119;
-  --color-line: 44 46 49;
-  --color-lineStrong: 58 60 64;
-  --color-teal: 46 156 140;
-  --color-tealDark: 92 196 178;
-  --color-tealSoft: 21 60 55;
-  --color-sage: 127 176 110;
-  --color-sageSoft: 30 43 26;
-  --color-clay: 217 127 92;
-  --color-claySoft: 51 35 28;
-  --color-amber: 221 170 76;
-  --color-amberSoft: 51 42 22;
+  /* هوية Viora الجديدة: كحلي غامق + بنفسجي، مطابقة للتصميم المرجعي */
+  --color-paper: 10 11 20;
+  --color-paperDark: 16 18 30;
+  --color-surface: 19 20 34;
+  --color-surfaceSunken: 14 15 26;
+  --color-ink: 237 238 245;
+  --color-inkSoft: 168 171 190;
+  --color-inkFaint: 108 111 133;
+  --color-line: 32 34 51;
+  --color-lineStrong: 45 48 71;
+  --color-teal: 124 92 246;
+  --color-tealDark: 99 71 219;
+  --color-tealSoft: 33 27 61;
+  --color-sage: 34 197 94;
+  --color-sageSoft: 16 36 26;
+  --color-clay: 239 68 68;
+  --color-claySoft: 45 20 22;
+  --color-amber: 234 179 8;
+  --color-amberSoft: 42 34 10;
 }
 
 html, body {

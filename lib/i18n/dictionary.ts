@@ -14,6 +14,7 @@ const dict: Record<string, { en: string; ar: string }> = {
   "shell.enableLight": { en: "Switch to light mode", ar: "تفعيل الوضع الفاتح" },
   "shell.enableDark": { en: "Switch to dark mode", ar: "تفعيل الوضع الداكن" },
   "shell.unnamed": { en: "?", ar: "؟" },
+  "shell.search": { en: "Search tasks, projects, ideas...", ar: "ابحث في المهام والمشاريع والأفكار..." },
   // ===== app/profile/page.tsx =====
   "profile.back": { en: "Back", ar: "رجوع" },
   "profile.title": { en: "Profile", ar: "الملف الشخصي" },
@@ -417,6 +418,27 @@ const dict: Record<string, { en: string; ar: string }> = {
   "rooms.noPendingTasks": { en: "No pending requests right now", ar: "لا توجد طلبات معلّقة حاليًا" },
   "rooms.noOpenTasks": { en: "No open tasks right now", ar: "لا توجد مهام مفتوحة حاليًا" },
   "rooms.awaitingApproval": { en: "Awaiting your approval", ar: "بانتظار موافقتك" },
+
+  // ===== أنواع عرض المهام (List / Board / Calendar / Timeline) =====
+  "views.list": { en: "List", ar: "قائمة" },
+  "views.board": { en: "Board", ar: "لوحة" },
+  "views.calendar": { en: "Calendar", ar: "تقويم" },
+  "views.timeline": { en: "Timeline", ar: "الخط الزمني" },
+
+  // ===== لوحة Board (components/BoardView.tsx) =====
+  "board.addColumn": { en: "Add column", ar: "إضافة عمود" },
+  "board.newColumnPlaceholder": { en: "Column name", ar: "اسم العمود" },
+  "board.confirmDeleteColumn": { en: 'Delete column "{name}"? Its tasks will move to "no column" instead of being deleted.', ar: 'حذف عمود "{name}"؟ مهامه هتترجع "بلا عمود" بدل ما تتحذف.' },
+  "board.prevMonth": { en: "Previous month", ar: "الشهر السابق" },
+  "board.nextMonth": { en: "Next month", ar: "الشهر التالي" },
+  "board.today": { en: "Today", ar: "اليوم" },
+  "board.noDueDate": { en: "No due date", ar: "بلا تاريخ تسليم" },
+  "board.tasksOverview": { en: "Tasks overview", ar: "نظرة عامة على المهام" },
+  "board.noTasksYet": { en: "No tasks yet", ar: "لا توجد مهام بعد" },
+  "board.tasksCount": { en: "Tasks", ar: "مهمة" },
+  "board.projectProgress": { en: "Project progress", ar: "تقدّم المشاريع" },
+  "board.upcomingDeadlines": { en: "Upcoming deadlines", ar: "أقرب المواعيد" },
+  "board.noDeadlines": { en: "No upcoming deadlines", ar: "لا توجد مواعيد قريبة" },
 };
 
 export default dict;

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { supabase, Project, Task, TASK_COLORS } from "@/lib/supabase";
+import { supabase, Project, Task, BoardColumn, TASK_COLORS } from "@/lib/supabase";
+import BoardView from "./BoardView";
+import CalendarView from "./CalendarView";
+import TimelineView from "./TimelineView";
+import BoardAnalytics from "./BoardAnalytics";
 import TeamPanel from "./TeamPanel";
 import ActivityFeed from "./ActivityFeed";
 import ItemHistory from "./ItemHistory";
@@ -14,7 +18,7 @@ import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 import ProgressBar from "./ui/ProgressBar";
 import Modal from "./ui/Modal";
-import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut, GripVertical, Palette } from "lucide-react";
+import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut, GripVertical, Palette, LayoutGrid, CalendarDays, GanttChartSquare } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import ClickableName from "./ClickableName";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
@@ -39,6 +43,8 @@ export default function TasksSection({
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [columns, setColumns] = useState<BoardColumn[]>([]);
+  const [viewMode, setViewMode] = useState<"list" | "board" | "calendar" | "timeline">("list");
   const [newProjectName, setNewProjectName] = useState("");
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [loadingTasks, setLoadingTasks] = useState(false);
@@ -65,8 +71,13 @@ export default function TasksSection({
   }, []);
 
   useEffect(() => {
-    if (activeProjectId) loadTasks(activeProjectId);
-    else setTasks([]);
+    if (activeProjectId) {
+      loadTasks(activeProjectId);
+      loadColumns(activeProjectId);
+    } else {
+      setTasks([]);
+      setColumns([]);
+    }
   }, [activeProjectId]);
 
   // قفل قائمة اختيار اللون لو المستخدم دس في أي مكان تاني بره القائمة
@@ -88,6 +99,22 @@ export default function TasksSection({
         "postgres_changes",
         { event: "*", schema: "public", table: "tasks", filter: `project_id=eq.${activeProjectId}` },
         () => loadTasks(activeProjectId)
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeProjectId]);
+
+  // لايف: نفس الفكرة لأعمدة البورد (لو حد تاني ضاف/عدّل/حذف عمود)
+  useEffect(() => {
+    if (!activeProjectId) return;
+    const channel = supabase
+      .channel(`board-columns-${activeProjectId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "board_columns", filter: `project_id=eq.${activeProjectId}` },
+        () => loadColumns(activeProjectId)
       )
       .subscribe();
     return () => {
@@ -118,6 +145,15 @@ export default function TasksSection({
       loadCommentCounts((data as Task[]).map((t) => t.id));
     }
     setLoadingTasks(false);
+  }
+
+  async function loadColumns(projectId: string) {
+    const { data, error } = await supabase
+      .from("board_columns")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("position", { ascending: true });
+    if (!error && data) setColumns(data as BoardColumn[]);
   }
 
   async function loadCommentCounts(taskIds: string[]) {
@@ -235,9 +271,11 @@ export default function TasksSection({
     if (!title || !activeProjectId) return;
     // المهمة الجديدة تتحط فوق كل المهام غير المنجزة تلقائيًا
     const position = tasks.length > 0 ? Math.min(...tasks.map((t) => t.position ?? 0)) - 1000 : 1000;
+    // نحطها في أول عمود مش "منجز" افتراضيًا (لو فيه أعمدة أصلاً) عشان تظهر صح في البورد كمان
+    const defaultColumn = columns.find((c) => !c.is_done_column);
     const { data, error } = await supabase
       .from("tasks")
-      .insert({ title, project_id: activeProjectId, is_done: false, position })
+      .insert({ title, project_id: activeProjectId, is_done: false, position, column_id: defaultColumn?.id ?? null })
       .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
       .single();
     if (!error && data) {
@@ -513,20 +551,58 @@ export default function TasksSection({
               </div>
             </div>
 
-            <div className="flex gap-2 mb-5">
-              <Input
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addTask()}
-                placeholder={t("tasks.newTaskPlaceholder")}
-              />
-              <Button variant="primary" onClick={addTask}>
-                <Plus size={15} strokeWidth={2} />
-                {t("tasks.add")}
-              </Button>
+            <div className="flex items-center gap-1 rounded-md border border-line p-0.5 mb-5 w-fit">
+              {(
+                [
+                  ["list", t("views.list"), ListChecks],
+                  ["board", t("views.board"), LayoutGrid],
+                  ["calendar", t("views.calendar"), CalendarDays],
+                  ["timeline", t("views.timeline"), GanttChartSquare],
+                ] as [typeof viewMode, string, typeof ListChecks][]
+              ).map(([key, label, Icon]) => (
+                <button
+                  key={key}
+                  onClick={() => setViewMode(key)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${
+                    viewMode === key ? "bg-tealSoft text-tealDark" : "text-inkSoft hover:text-ink"
+                  }`}
+                >
+                  <Icon size={13} strokeWidth={1.75} />
+                  {label}
+                </button>
+              ))}
             </div>
 
-            {loadingTasks ? (
+            {viewMode !== "board" && (
+              <div className="flex gap-2 mb-5">
+                <Input
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addTask()}
+                  placeholder={t("tasks.newTaskPlaceholder")}
+                />
+                <Button variant="primary" onClick={addTask}>
+                  <Plus size={15} strokeWidth={2} />
+                  {t("tasks.add")}
+                </Button>
+              </div>
+            )}
+
+            {viewMode === "board" ? (
+              <BoardView
+                projectId={activeProject.id}
+                tasks={tasks}
+                columns={columns}
+                currentUserId={currentUserId}
+                onRequestDeleteTask={requestDeleteTask}
+                onTasksMutated={setTasks}
+                onColumnsMutated={setColumns}
+              />
+            ) : viewMode === "calendar" ? (
+              <CalendarView tasks={tasks} onTasksMutated={setTasks} />
+            ) : viewMode === "timeline" ? (
+              <TimelineView tasks={tasks} onTasksMutated={setTasks} />
+            ) : loadingTasks ? (
               <SkeletonList rows={4} />
             ) : tasks.length === 0 ? (
               <EmptyState
@@ -674,6 +750,12 @@ export default function TasksSection({
                 ))}
               </ul>
             )}
+            <BoardAnalytics
+              projects={projects}
+              activeProjectId={activeProject.id}
+              tasks={tasks}
+              columns={columns}
+            />
             <ActivityFeed projectId={activeProject.id} currentUserId={currentUserId} />
           </>
         ) : projects.length > 0 ? (
