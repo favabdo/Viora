@@ -20,11 +20,13 @@ export default function BoardAnalytics({
   activeProjectId,
   tasks,
   columns,
+  compact,
 }: {
   projects: Project[];
   activeProjectId: string;
   tasks: Task[];
   columns: BoardColumn[];
+  compact?: boolean;
 }) {
   const { t, lang } = useTranslation();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
@@ -62,7 +64,7 @@ export default function BoardAnalytics({
     .slice(0, 5);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+    <div className={compact ? "flex flex-col gap-4" : "grid grid-cols-1 md:grid-cols-2 gap-4 mt-6"}>
       {/* توزيع المهام حسب الحالة */}
       <div className="bg-surface border border-line rounded-lg p-4">
         <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-3">
@@ -70,6 +72,25 @@ export default function BoardAnalytics({
         </h4>
         {tasks.length === 0 ? (
           <p className="text-sm text-inkFaint">{t("board.noTasksYet")}</p>
+        ) : compact ? (
+          <div className="flex flex-col items-center gap-3">
+            <DonutChart
+              segments={tasksByColumnCount.map((c) => ({ value: c.count, color: c.column.color }))}
+              size={100}
+              strokeWidth={13}
+              centerLabel={String(tasks.length)}
+              centerSubLabel={t("board.tasksCount")}
+            />
+            <ul className="w-full space-y-1.5">
+              {tasksByColumnCount.map(({ column, count }) => (
+                <li key={column.id} className="flex items-center gap-2 text-xs">
+                  <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: column.color }} />
+                  <span className="text-inkSoft flex-1 truncate">{column.name}</span>
+                  <span className="text-ink font-medium">{count}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : (
           <div className="flex items-center gap-4">
             <DonutChart
@@ -117,7 +138,7 @@ export default function BoardAnalytics({
       </div>
 
       {/* أقرب المواعيد */}
-      <div className="bg-surface border border-line rounded-lg p-4 md:col-span-2">
+      <div className={`bg-surface border border-line rounded-lg p-4 ${compact ? "" : "md:col-span-2"}`}>
         <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-3">
           {t("board.upcomingDeadlines")}
         </h4>

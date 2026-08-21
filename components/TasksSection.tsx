@@ -39,7 +39,7 @@ export default function TasksSection({
   currentUserId: string;
   currentUserEmail: string;
 }) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -551,9 +551,11 @@ export default function TasksSection({
               </div>
             </div>
 
-            <div className="flex items-center gap-1 rounded-md border border-line p-0.5 mb-5 w-fit">
-              {(
-                [
+            <div className="flex items-start gap-6">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1 rounded-md border border-line p-0.5 mb-5 w-fit">
+                  {(
+                    [
                   ["list", t("views.list"), ListChecks],
                   ["board", t("views.board"), LayoutGrid],
                   ["calendar", t("views.calendar"), CalendarDays],
@@ -594,6 +596,7 @@ export default function TasksSection({
                 tasks={tasks}
                 columns={columns}
                 currentUserId={currentUserId}
+                commentCounts={commentCounts}
                 onRequestDeleteTask={requestDeleteTask}
                 onTasksMutated={setTasks}
                 onColumnsMutated={setColumns}
@@ -611,152 +614,212 @@ export default function TasksSection({
                 hint={t("tasks.emptyProjectHint")}
               />
             ) : (
-              <ul className="border-t border-b border-line divide-y divide-line">
-                {tasks.map((task) => (
-                  <li
-                    key={task.id}
-                    data-task-row={task.id}
-                    className={`group relative px-1 py-2.5 transition-opacity ${
-                      draggedTaskId === task.id ? "opacity-40" : ""
-                    }`}
-                  >
-                    {task.color && (
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-y-0 end-0 w-5 z-0"
-                        style={{ backgroundColor: task.color }}
-                      />
-                    )}
-                    <div className="flex items-start gap-2">
-                      <span
-                        onPointerDown={(e) => handleDragStart(e, task.id)}
-                        onPointerMove={handleHandlePointerMove}
-                        onPointerUp={handleHandlePointerEnd}
-                        onPointerCancel={handleHandlePointerEnd}
-                        onContextMenu={(e) => e.preventDefault()}
-                        aria-label={t("tasks.dragHandle")}
-                        className="task-drag-handle relative z-10 mt-1 shrink-0 cursor-grab text-inkFaint hover:text-inkSoft active:cursor-grabbing"
-                      >
-                        <GripVertical size={14} strokeWidth={1.75} />
-                      </span>
-                      <input
-                        type="checkbox"
-                        className="task-check relative z-10 mt-0.5"
-                        checked={task.is_done}
-                        onChange={() => toggleTask(task)}
-                      />
-                      {editingTaskId === task.id ? (
-                        <div className="flex-1 flex items-center gap-1.5 min-w-0">
-                          <Input
-                            autoFocus
-                            value={taskTitleDraft}
-                            onChange={(e) => setTaskTitleDraft(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && saveTaskTitle(task)}
-                            onBlur={() => saveTaskTitle(task)}
-                            className="text-sm py-1"
-                          />
-                          <IconButton
-                            size="sm"
-                            aria-label={t("tasks.saveTaskTitle")}
-                            tone="active"
-                            onClick={() => saveTaskTitle(task)}
-                          >
-                            <Check size={13} strokeWidth={2} />
-                          </IconButton>
+              <div className="border-t border-line">
+                {(() => {
+                  const grouped = columns.map((col) => ({
+                    column: col,
+                    items: tasks.filter((t2) => t2.column_id === col.id),
+                  }));
+                  const uncategorized = tasks.filter((t2) => !t2.column_id || !columns.some((c) => c.id === t2.column_id));
+                  if (uncategorized.length > 0) {
+                    grouped.push({
+                      column: { id: "uncategorized", name: t("tasks.noColumn"), color: "#6b7280" } as BoardColumn,
+                      items: uncategorized,
+                    });
+                  }
+                  return grouped
+                    .filter((g) => g.items.length > 0)
+                    .map(({ column, items }) => (
+                      <div key={column.id}>
+                        <div className="flex items-center gap-2 px-1 py-2 bg-paperDark/40">
+                          <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: column.color }} />
+                          <span className="text-xs font-semibold text-ink">{column.name}</span>
+                          <span className="text-2xs text-inkFaint">{items.length}</span>
                         </div>
-                      ) : (
-                        <span
-                          className={`task-title flex-1 text-sm min-w-0 break-words pt-0.5 ${task.is_done ? "done" : ""}`}
-                        >
-                          {task.title}
-                        </span>
-                      )}
-                      {task.profiles && editingTaskId !== task.id && (
-                        <span className="flex items-center gap-1 text-2xs text-inkFaint shrink-0 pt-0.5">
-                          <ClickableName userId={task.user_id} className="flex items-center gap-1">
-                            <Avatar name={displayName(task.user_id, task.profiles, currentUserId, t("common.you"))} src={task.profiles.avatar_url} size="xs" />
-                            {displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
-                          </ClickableName>
-                        </span>
-                      )}
-                      {editingTaskId !== task.id && (
-                        <IconButton
-                          size="sm"
-                          aria-label={t("tasks.editTaskTitle")}
-                          onClick={() => startEditTask(task)}
-                          className="shrink-0 opacity-0 group-hover:opacity-100"
-                        >
-                          <Pencil size={12} strokeWidth={1.75} />
-                        </IconButton>
-                      )}
-                      {editingTaskId !== task.id && (
-                        <div className="relative shrink-0" onPointerDown={(e) => e.stopPropagation()}>
-                          <IconButton
-                            size="sm"
-                            aria-label={t("tasks.setColor")}
-                            tone={task.color ? "active" : "default"}
-                            onClick={() => setColorPickerTaskId((id) => (id === task.id ? null : task.id))}
-                            className="opacity-0 group-hover:opacity-100 data-[open=true]:opacity-100"
-                            data-open={colorPickerTaskId === task.id}
-                          >
-                            <Palette size={13} strokeWidth={1.75} style={task.color ? { color: task.color } : undefined} />
-                          </IconButton>
-                          {colorPickerTaskId === task.id && (
-                            <div className="absolute start-0 bottom-full mb-1 z-30 flex items-center gap-1 bg-paper border border-line rounded-md shadow-modal p-1.5 fade-in">
-                              <button
-                                type="button"
-                                aria-label={t("tasks.noColor")}
-                                onClick={() => setTaskColor(task, null)}
-                                className="h-5 w-5 rounded-full border border-dashed border-inkFaint hover:border-ink"
-                              />
-                              {TASK_COLORS.map((c) => (
-                                <button
-                                  key={c.name}
-                                  type="button"
-                                  title={t(`taskColor.${c.name}`)}
-                                  aria-label={t("tasks.colorLabel").replace("{label}", t(`taskColor.${c.name}`))}
-                                  onClick={() => setTaskColor(task, c.value)}
-                                  className={`h-5 w-5 rounded-full transition-transform hover:scale-110 ${
-                                    task.color === c.value ? "ring-2 ring-offset-1 ring-ink" : ""
-                                  }`}
-                                  style={{ backgroundColor: c.value }}
+                        <ul className="border-b border-line divide-y divide-line">
+                          {items.map((task) => (
+                            <li
+                              key={task.id}
+                              data-task-row={task.id}
+                              className={`group relative px-1 py-2.5 transition-opacity ${
+                                draggedTaskId === task.id ? "opacity-40" : ""
+                              }`}
+                            >
+                              <div className="flex items-start gap-2">
+                                <span
+                                  onPointerDown={(e) => handleDragStart(e, task.id)}
+                                  onPointerMove={handleHandlePointerMove}
+                                  onPointerUp={handleHandlePointerEnd}
+                                  onPointerCancel={handleHandlePointerEnd}
+                                  onContextMenu={(e) => e.preventDefault()}
+                                  aria-label={t("tasks.dragHandle")}
+                                  className="task-drag-handle relative z-10 mt-1 shrink-0 cursor-grab text-inkFaint hover:text-inkSoft active:cursor-grabbing"
+                                >
+                                  <GripVertical size={14} strokeWidth={1.75} />
+                                </span>
+                                <input
+                                  type="checkbox"
+                                  className="task-check relative z-10 mt-0.5"
+                                  checked={task.is_done}
+                                  onChange={() => toggleTask(task)}
                                 />
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <IconButton
-                        size="sm"
-                        tone="danger"
-                        aria-label={t("tasks.deleteTask")}
-                        onClick={() => requestDeleteTask(task)}
-                        className="shrink-0 opacity-0 group-hover:opacity-100"
-                      >
-                        <X size={14} strokeWidth={1.75} />
-                      </IconButton>
-                    </div>
-                    <div className="ps-[52px] flex flex-col gap-0.5">
-                      <ItemHistory table="activity_log" column="task_id" id={task.id} currentUserId={currentUserId} />
-                      <TaskComments
-                        taskId={task.id}
-                        projectId={task.project_id}
-                        currentUserId={currentUserId}
-                        count={commentCounts[task.id] ?? 0}
-                        onCountChange={handleCommentCountChange}
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                                {editingTaskId === task.id ? (
+                                  <div className="flex-1 flex items-center gap-1.5 min-w-0">
+                                    <Input
+                                      autoFocus
+                                      value={taskTitleDraft}
+                                      onChange={(e) => setTaskTitleDraft(e.target.value)}
+                                      onKeyDown={(e) => e.key === "Enter" && saveTaskTitle(task)}
+                                      onBlur={() => saveTaskTitle(task)}
+                                      className="text-sm py-1"
+                                    />
+                                    <IconButton
+                                      size="sm"
+                                      aria-label={t("tasks.saveTaskTitle")}
+                                      tone="active"
+                                      onClick={() => saveTaskTitle(task)}
+                                    >
+                                      <Check size={13} strokeWidth={2} />
+                                    </IconButton>
+                                  </div>
+                                ) : (
+                                  <div className="flex-1 min-w-0">
+                                    <span
+                                      className={`task-title block text-sm break-words pt-0.5 ${task.is_done ? "done" : ""}`}
+                                    >
+                                      {task.title}
+                                    </span>
+                                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                      {task.color &&
+                                        (() => {
+                                          const colorMeta = TASK_COLORS.find((c) => c.value === task.color);
+                                          return colorMeta ? (
+                                            <span
+                                              className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                                              style={{ backgroundColor: colorMeta.value + "22", color: colorMeta.value }}
+                                            >
+                                              {t(`taskColor.${colorMeta.name}`)}
+                                            </span>
+                                          ) : null;
+                                        })()}
+                                      {task.due_date && (
+                                        <span className="text-[10px] text-inkFaint">
+                                          {new Intl.DateTimeFormat(lang === "ar" ? "ar-EG" : "en-US", {
+                                            day: "numeric",
+                                            month: "short",
+                                          }).format(new Date(task.due_date))}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                                {task.profiles && editingTaskId !== task.id && (
+                                  <span className="flex items-center gap-1 text-2xs text-inkFaint shrink-0 pt-0.5">
+                                    <ClickableName userId={task.user_id} className="flex items-center gap-1">
+                                      <Avatar
+                                        name={displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
+                                        src={task.profiles.avatar_url}
+                                        size="xs"
+                                      />
+                                      {displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
+                                    </ClickableName>
+                                  </span>
+                                )}
+                                {editingTaskId !== task.id && (
+                                  <IconButton
+                                    size="sm"
+                                    aria-label={t("tasks.editTaskTitle")}
+                                    onClick={() => startEditTask(task)}
+                                    className="shrink-0 opacity-0 group-hover:opacity-100"
+                                  >
+                                    <Pencil size={12} strokeWidth={1.75} />
+                                  </IconButton>
+                                )}
+                                {editingTaskId !== task.id && (
+                                  <div className="relative shrink-0" onPointerDown={(e) => e.stopPropagation()}>
+                                    <IconButton
+                                      size="sm"
+                                      aria-label={t("tasks.setColor")}
+                                      tone={task.color ? "active" : "default"}
+                                      onClick={() => setColorPickerTaskId((id) => (id === task.id ? null : task.id))}
+                                      className="opacity-0 group-hover:opacity-100 data-[open=true]:opacity-100"
+                                      data-open={colorPickerTaskId === task.id}
+                                    >
+                                      <Palette size={13} strokeWidth={1.75} style={task.color ? { color: task.color } : undefined} />
+                                    </IconButton>
+                                    {colorPickerTaskId === task.id && (
+                                      <div className="absolute start-0 bottom-full mb-1 z-30 flex items-center gap-1 bg-paper border border-line rounded-md shadow-modal p-1.5 fade-in">
+                                        <button
+                                          type="button"
+                                          aria-label={t("tasks.noColor")}
+                                          onClick={() => setTaskColor(task, null)}
+                                          className="h-5 w-5 rounded-full border border-dashed border-inkFaint hover:border-ink"
+                                        />
+                                        {TASK_COLORS.map((c) => (
+                                          <button
+                                            key={c.name}
+                                            type="button"
+                                            title={t(`taskColor.${c.name}`)}
+                                            aria-label={t("tasks.colorLabel").replace("{label}", t(`taskColor.${c.name}`))}
+                                            onClick={() => setTaskColor(task, c.value)}
+                                            className={`h-5 w-5 rounded-full transition-transform hover:scale-110 ${
+                                              task.color === c.value ? "ring-2 ring-offset-1 ring-ink" : ""
+                                            }`}
+                                            style={{ backgroundColor: c.value }}
+                                          />
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                <IconButton
+                                  size="sm"
+                                  tone="danger"
+                                  aria-label={t("tasks.deleteTask")}
+                                  onClick={() => requestDeleteTask(task)}
+                                  className="shrink-0 opacity-0 group-hover:opacity-100"
+                                >
+                                  <X size={14} strokeWidth={1.75} />
+                                </IconButton>
+                              </div>
+                              <div className="ps-[52px] flex flex-col gap-0.5">
+                                <ItemHistory table="activity_log" column="task_id" id={task.id} currentUserId={currentUserId} />
+                                <TaskComments
+                                  taskId={task.id}
+                                  projectId={task.project_id}
+                                  currentUserId={currentUserId}
+                                  count={commentCounts[task.id] ?? 0}
+                                  onCountChange={handleCommentCountChange}
+                                />
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ));
+                })()}
+              </div>
             )}
-            <BoardAnalytics
-              projects={projects}
-              activeProjectId={activeProject.id}
-              tasks={tasks}
-              columns={columns}
-            />
-            <ActivityFeed projectId={activeProject.id} currentUserId={currentUserId} />
+              </div>
+
+              <aside className="hidden lg:block w-72 shrink-0 sticky top-20">
+                <BoardAnalytics
+                  projects={projects}
+                  activeProjectId={activeProject.id}
+                  tasks={tasks}
+                  columns={columns}
+                  compact
+                />
+                <div className="mt-4">
+                  <ActivityFeed projectId={activeProject.id} currentUserId={currentUserId} />
+                </div>
+              </aside>
+            </div>
+
+            <div className="lg:hidden mt-6">
+              <BoardAnalytics projects={projects} activeProjectId={activeProject.id} tasks={tasks} columns={columns} />
+              <ActivityFeed projectId={activeProject.id} currentUserId={currentUserId} />
+            </div>
           </>
         ) : projects.length > 0 ? (
           <EmptyState

@@ -19,7 +19,7 @@ import { supabase, Task, BoardColumn, TASK_COLORS } from "@/lib/supabase";
 import Avatar from "./ui/Avatar";
 import IconButton from "./ui/IconButton";
 import { Input } from "./ui/Input";
-import { Plus, X, Pencil, Check, Calendar, Palette, GripVertical } from "lucide-react";
+import { Plus, X, Pencil, Check, Calendar, Palette, GripVertical, MessageCircle } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import ClickableName from "./ClickableName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -39,6 +39,7 @@ function TaskCard({
   task,
   currentUserId,
   locale,
+  commentCount,
   onRequestDelete,
   onRenameTask,
   onSetColor,
@@ -47,6 +48,7 @@ function TaskCard({
   task: Task;
   currentUserId: string;
   locale: string;
+  commentCount: number;
   onRequestDelete: (task: Task) => void;
   onRenameTask: (task: Task, title: string) => void;
   onSetColor: (task: Task, color: string | null) => void;
@@ -124,9 +126,18 @@ function TaskCard({
       </div>
 
       <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-        {task.color && (
-          <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: task.color }} />
-        )}
+        {task.color &&
+          (() => {
+            const colorMeta = TASK_COLORS.find((c) => c.value === task.color);
+            return colorMeta ? (
+              <span
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                style={{ backgroundColor: colorMeta.value + "22", color: colorMeta.value }}
+              >
+                {t(`taskColor.${colorMeta.name}`)}
+              </span>
+            ) : null;
+          })()}
 
         <div className="relative">
           <button
@@ -192,6 +203,13 @@ function TaskCard({
           )}
         </div>
 
+        {commentCount > 0 && (
+          <span className="flex items-center gap-0.5 text-[10px] text-inkFaint">
+            <MessageCircle size={11} strokeWidth={1.75} />
+            {commentCount}
+          </span>
+        )}
+
         {task.profiles && (
           <ClickableName userId={task.user_id}>
             <Avatar
@@ -211,6 +229,7 @@ function ColumnContainer({
   tasks,
   currentUserId,
   locale,
+  commentCounts,
   onRequestDelete,
   onRenameTask,
   onSetColor,
@@ -223,6 +242,7 @@ function ColumnContainer({
   tasks: Task[];
   currentUserId: string;
   locale: string;
+  commentCounts: Record<string, number>;
   onRequestDelete: (task: Task) => void;
   onRenameTask: (task: Task, title: string) => void;
   onSetColor: (task: Task, color: string | null) => void;
@@ -289,6 +309,7 @@ function ColumnContainer({
               task={task}
               currentUserId={currentUserId}
               locale={locale}
+              commentCount={commentCounts[task.id] ?? 0}
               onRequestDelete={onRequestDelete}
               onRenameTask={onRenameTask}
               onSetColor={onSetColor}
@@ -346,6 +367,7 @@ export default function BoardView({
   tasks,
   columns,
   currentUserId,
+  commentCounts,
   onRequestDeleteTask,
   onTasksMutated,
   onColumnsMutated,
@@ -354,6 +376,7 @@ export default function BoardView({
   tasks: Task[];
   columns: BoardColumn[];
   currentUserId: string;
+  commentCounts: Record<string, number>;
   onRequestDeleteTask: (task: Task) => void;
   /** بننادي عليها بعد أي تعديل محلي عشان صاحب الصفحة يحدّث نسخته من tasks (باقي التزامن اللايف بيحصل تلقائي عن طريق realtime) */
   onTasksMutated: (updater: (prev: Task[]) => Task[]) => void;
@@ -496,6 +519,7 @@ export default function BoardView({
             tasks={tasksByColumn.get(column.id) || []}
             currentUserId={currentUserId}
             locale={locale}
+            commentCounts={commentCounts}
             onRequestDelete={onRequestDeleteTask}
             onRenameTask={renameTask}
             onSetColor={setColor}

@@ -335,6 +335,7 @@ const dict: Record<string, { en: string; ar: string }> = {
     ar: 'هل أنت متأكد أنك تريد مغادرة مشروع "{name}"؟ لن تظهر لك مهامه بعد ذلك، ويمكنك الانضمام إليه مرة أخرى لو دعاك أحد الأعضاء مجددًا.',
   },
   "tasks.leave": { en: "Leave", ar: "مغادرة" },
+  "tasks.noColumn": { en: "No status", ar: "بلا حالة" },
   "taskColor.red": { en: "Urgent", ar: "عاجل" },
   "taskColor.orange": { en: "Important", ar: "مهم" },
   "taskColor.yellow": { en: "Medium", ar: "متوسط" },
