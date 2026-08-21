@@ -1,95 +1,215 @@
 "use client";
 
-import { useMemo } from "react";
-import { supabase, Task } from "@/lib/supabase";
+import { useMemo, useRef, useState } from "react";
+import { supabase, Task, BoardColumn } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import Modal from "./ui/Modal";
+import Button from "./ui/Button";
+
+const DAY_WIDTH = 34;
+const ROW_HEIGHT = 44;
+
+function toDate(iso: string): Date {
+  return new Date(iso + "T00:00:00");
+}
+function diffDays(a: Date, b: Date): number {
+  return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+}
+function addDays(d: Date, n: number): Date {
+  const copy = new Date(d);
+  copy.setDate(copy.getDate() + n);
+  return copy;
+}
 
 export default function TimelineView({
   tasks,
+  columns,
   onTasksMutated,
 }: {
   tasks: Task[];
+  columns: BoardColumn[];
   onTasksMutated: (updater: (prev: Task[]) => Task[]) => void;
 }) {
   const { t, lang } = useTranslation();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  const groups = useMemo(() => {
-    const map = new Map<string, Task[]>();
-    for (const task of tasks) {
-      if (!task.due_date) continue;
-      const key = task.due_date.slice(0, 10);
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(task);
+  const datedTasks = tasks.filter((t2) => t2.start_date || t2.due_date);
+
+  const { rangeStart, totalDays, months } = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let min = today;
+    let max = addDays(today, 30);
+    for (const task of datedTasks) {
+      const s = task.start_date ? toDate(task.start_date) : task.due_date ? toDate(task.due_date) : null;
+      const e = task.due_date ? toDate(task.due_date) : task.start_date ? toDate(task.start_date) : null;
+      if (s && s < min) min = s;
+      if (e && e > max) max = e;
     }
-    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
-  }, [tasks]);
+    min = addDays(min, -4);
+    max = addDays(max, 10);
+    const total = Math.max(diffDays(min, max), 30);
 
-  const undated = tasks.filter((t2) => !t2.due_date);
-  const todayKey = new Date().toISOString().slice(0, 10);
+    const monthGroups: { label: string; days: number }[] = [];
+    let cursor = new Date(min);
+    for (let i = 0; i < total; ) {
+      const label = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(cursor);
+      const daysInThisMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate() - cursor.getDate() + 1;
+      const span = Math.min(daysInThisMonth, total - i);
+      monthGroups.push({ label, days: span });
+      cursor = addDays(cursor, span);
+      i += span;
+    }
 
-  async function toggleDone(task: Task) {
-    onTasksMutated((prev) => prev.map((t2) => (t2.id === task.id ? { ...t2, is_done: !t2.is_done } : t2)));
-    await supabase.from("tasks").update({ is_done: !task.is_done }).eq("id", task.id);
+    return { rangeStart: min, totalDays: total, months: monthGroups };
+  }, [datedTasks, locale]);
+
+  const todayOffset = diffDays(rangeStart, new Date(new Date().toDateString()));
+
+  const rows = columns.map((col) => ({
+    column: col,
+    items: datedTasks.filter((t2) => t2.column_id === col.id),
+  }));
+  const uncategorized = datedTasks.filter((t2) => !t2.column_id || !columns.some((c) => c.id === t2.column_id));
+
+  async function saveDates(task: Task, startDate: string | null, dueDate: string | null) {
+    onTasksMutated((prev) =>
+      prev.map((t2) => (t2.id === task.id ? { ...t2, start_date: startDate, due_date: dueDate } : t2))
+    );
+    await supabase.from("tasks").update({ start_date: startDate, due_date: dueDate }).eq("id", task.id);
+    setEditingTask(null);
   }
 
-  if (groups.length === 0 && undated.length === 0) {
-    return <p className="text-sm text-inkFaint text-center py-10">{t("board.noDueDate")}</p>;
+  if (datedTasks.length === 0) {
+    return <p className="text-sm text-inkFaint text-center py-10">{t("board.noTasksWithDates")}</p>;
+  }
+
+  const gridWidth = totalDays * DAY_WIDTH;
+
+  function renderRow(column: BoardColumn, items: Task[]) {
+    return (
+      <div key={column.id} className="flex border-b border-line">
+        <div className="w-40 shrink-0 sticky start-0 bg-surface z-10 flex items-center gap-1.5 px-2.5 py-2 border-e border-line">
+          <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: column.color }} />
+          <span className="text-xs font-medium text-ink truncate">{column.name}</span>
+          <span className="text-[10px] text-inkFaint">{items.length}</span>
+        </div>
+        <div className="relative" style={{ width: gridWidth, minHeight: ROW_HEIGHT * Math.max(items.length, 1) }}>
+          {items.map((task, i) => {
+            const start = task.start_date ? toDate(task.start_date) : task.due_date ? toDate(task.due_date) : rangeStart;
+            const end = task.due_date ? toDate(task.due_date) : start;
+            const offset = Math.max(diffDays(rangeStart, start), 0);
+            const span = Math.max(diffDays(start, end) + 1, 1);
+            return (
+              <button
+                key={task.id}
+                onClick={() => setEditingTask(task)}
+                className="absolute rounded-md px-2 py-1.5 text-start text-[11px] font-medium text-white truncate hover:opacity-90 transition-opacity shadow-sm"
+                style={{
+                  insetInlineStart: offset * DAY_WIDTH + 2,
+                  width: span * DAY_WIDTH - 4,
+                  top: i * ROW_HEIGHT + 6,
+                  backgroundColor: task.color || column.color,
+                  opacity: task.is_done ? 0.55 : 1,
+                }}
+                title={task.title}
+              >
+                {task.title}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
   }
 
   return (
     <div>
-      <div className="relative ps-6">
-        <div className="absolute inset-y-0 start-[9px] w-px bg-line" />
-        {groups.map(([dateKey, dayTasks]) => {
-          const date = new Date(dateKey);
-          const isPast = dateKey < todayKey;
-          const isToday = dateKey === todayKey;
-          return (
-            <div key={dateKey} className="relative mb-5">
-              <span
-                className={`absolute -start-6 top-0.5 h-4 w-4 rounded-full border-2 ${
-                  isToday ? "bg-teal border-teal" : isPast ? "bg-paperDark border-line" : "bg-surface border-teal"
-                }`}
-              />
-              <p className={`text-sm font-medium mb-2 ${isToday ? "text-teal" : "text-ink"}`}>
-                {new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long" }).format(date)}
-              </p>
-              <div className="flex flex-col gap-1.5">
-                {dayTasks.map((task) => (
-                  <button
-                    key={task.id}
-                    onClick={() => toggleDone(task)}
-                    className={`flex items-center gap-2 text-start rounded-md border border-line bg-surface px-3 py-2 text-sm transition-opacity hover:border-teal/40 ${
-                      task.is_done ? "opacity-50 line-through" : ""
-                    }`}
-                  >
-                    {task.color && (
-                      <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: task.color }} />
-                    )}
-                    <span className="truncate">{task.title}</span>
-                  </button>
-                ))}
+      <div ref={scrollRef} className="overflow-x-auto border border-line rounded-lg thin-scroll">
+        <div style={{ width: 160 + gridWidth }}>
+          {/* رأس الشهور */}
+          <div className="flex border-b border-line bg-paperDark">
+            <div className="w-40 shrink-0 sticky start-0 bg-paperDark z-10 border-e border-line" />
+            {months.map((m, i) => (
+              <div
+                key={i}
+                className="shrink-0 px-2 py-1.5 text-2xs font-medium text-inkSoft border-e border-line"
+                style={{ width: m.days * DAY_WIDTH }}
+              >
+                {m.label}
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {undated.length > 0 && (
-        <div className="mt-6 pt-5 border-t border-line">
-          <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-2">
-            {t("board.noDueDate")}
-          </h4>
-          <div className="flex flex-wrap gap-1.5">
-            {undated.map((task) => (
-              <span key={task.id} className="text-xs px-2 py-1 rounded-full bg-paperDark text-inkSoft">
-                {task.title}
-              </span>
             ))}
           </div>
+
+          {/* الصفوف بحالتها + مؤشر اليوم */}
+          <div className="relative">
+            {todayOffset >= 0 && todayOffset < totalDays && (
+              <div
+                className="absolute top-0 bottom-0 w-px bg-teal z-20 pointer-events-none"
+                style={{ insetInlineStart: 160 + todayOffset * DAY_WIDTH }}
+              />
+            )}
+            {rows.filter((r) => r.items.length > 0).map((r) => renderRow(r.column, r.items))}
+            {uncategorized.length > 0 &&
+              renderRow({ id: "uncategorized", name: t("tasks.noColumn"), color: "#6b7280" } as BoardColumn, uncategorized)}
+          </div>
         </div>
+      </div>
+
+      {editingTask && (
+        <Modal onClose={() => setEditingTask(null)} maxWidth="max-w-xs">
+          <h3 className="font-display text-base font-medium mb-4 truncate">{editingTask.title}</h3>
+          <TimelineDateEditor task={editingTask} onSave={saveDates} onCancel={() => setEditingTask(null)} t={t} />
+        </Modal>
       )}
+    </div>
+  );
+}
+
+function TimelineDateEditor({
+  task,
+  onSave,
+  onCancel,
+  t,
+}: {
+  task: Task;
+  onSave: (task: Task, start: string | null, due: string | null) => void;
+  onCancel: () => void;
+  t: (key: string) => string;
+}) {
+  const [start, setStart] = useState(task.start_date || "");
+  const [due, setDue] = useState(task.due_date || "");
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="block text-xs font-medium text-inkSoft mb-1">{t("board.startDate")}</label>
+        <input
+          type="date"
+          value={start}
+          onChange={(e) => setStart(e.target.value)}
+          className="w-full bg-paperDark border border-line rounded-md px-3 py-2 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-teal"
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-inkSoft mb-1">{t("board.dueDate")}</label>
+        <input
+          type="date"
+          value={due}
+          onChange={(e) => setDue(e.target.value)}
+          className="w-full bg-paperDark border border-line rounded-md px-3 py-2 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-teal"
+        />
+      </div>
+      <div className="flex gap-2 pt-1">
+        <Button variant="secondary" fullWidth onClick={onCancel}>
+          {t("common.cancel")}
+        </Button>
+        <Button variant="primary" fullWidth onClick={() => onSave(task, start || null, due || null)}>
+          {t("common.save")}
+        </Button>
+      </div>
     </div>
   );
 }

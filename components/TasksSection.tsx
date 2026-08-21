@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { supabase, Project, Task, BoardColumn, TASK_COLORS } from "@/lib/supabase";
+import { useSettings } from "@/lib/useSettings";
 import BoardView from "./BoardView";
 import CalendarView from "./CalendarView";
 import TimelineView from "./TimelineView";
@@ -44,7 +45,13 @@ export default function TasksSection({
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [columns, setColumns] = useState<BoardColumn[]>([]);
-  const [viewMode, setViewMode] = useState<"list" | "board" | "calendar" | "timeline">("list");
+  const { settings } = useSettings();
+  const [viewMode, setViewMode] = useState<"list" | "board" | "calendar" | "timeline">(settings.defaultView);
+
+  useEffect(() => {
+    setViewMode(settings.defaultView);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.defaultView]);
   const [newProjectName, setNewProjectName] = useState("");
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [loadingTasks, setLoadingTasks] = useState(false);
@@ -604,7 +611,7 @@ export default function TasksSection({
             ) : viewMode === "calendar" ? (
               <CalendarView tasks={tasks} onTasksMutated={setTasks} />
             ) : viewMode === "timeline" ? (
-              <TimelineView tasks={tasks} onTasksMutated={setTasks} />
+              <TimelineView tasks={tasks} columns={columns} onTasksMutated={setTasks} />
             ) : loadingTasks ? (
               <SkeletonList rows={4} />
             ) : tasks.length === 0 ? (

@@ -5,6 +5,7 @@ import { supabase, Task } from "@/lib/supabase";
 import IconButton from "./ui/IconButton";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useSettings } from "@/lib/useSettings";
 
 function ymd(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -18,6 +19,8 @@ export default function CalendarView({
   onTasksMutated: (updater: (prev: Task[]) => Task[]) => void;
 }) {
   const { t, lang, dir } = useTranslation();
+  const { settings } = useSettings();
+  const weekStartsOnMonday = settings.weekStart === "monday";
   const locale = lang === "ar" ? "ar-EG" : "en-US";
   const [cursor, setCursor] = useState(() => {
     const now = new Date();
@@ -41,24 +44,25 @@ export default function CalendarView({
     const year = cursor.getFullYear();
     const month = cursor.getMonth();
     const firstOfMonth = new Date(year, month, 1);
-    const startOffset = firstOfMonth.getDay(); // 0 = الأحد
+    const rawOffset = firstOfMonth.getDay(); // 0 = الأحد
+    const startOffset = weekStartsOnMonday ? (rawOffset + 6) % 7 : rawOffset;
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const cells: (Date | null)[] = [];
     for (let i = 0; i < startOffset; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
     while (cells.length % 7 !== 0) cells.push(null);
     return cells;
-  }, [cursor]);
+  }, [cursor, weekStartsOnMonday]);
 
   const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(cursor);
   const weekdayLabels = useMemo(() => {
-    const base = new Date(2024, 0, 7); // أحد
+    const base = new Date(2024, 0, weekStartsOnMonday ? 8 : 7); // إثنين أو أحد
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(base);
       d.setDate(base.getDate() + i);
       return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(d);
     });
-  }, [locale]);
+  }, [locale, weekStartsOnMonday]);
 
   const todayKey = ymd(new Date());
 

@@ -3,7 +3,7 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LucideIcon, LogOut, UserRound, Moon, Sun, Bell, X, Search } from "lucide-react";
+import { LucideIcon, LogOut, UserRound, Moon, Sun, Bell, X, Search, Settings } from "lucide-react";
 import Avatar from "./ui/Avatar";
 import IconButton from "./ui/IconButton";
 import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
@@ -106,6 +106,11 @@ export default function AppShell({
   function goToProfile() {
     setShowAccountMenu(false);
     router.push("/profile");
+  }
+
+  function goToSettings() {
+    setShowAccountMenu(false);
+    router.push("/settings");
   }
 
   function signOut() {
@@ -228,6 +233,13 @@ export default function AppShell({
                   >
                     <UserRound size={15} strokeWidth={1.75} />
                     {t("shell.openProfile")}
+                  </button>
+                  <button
+                    onClick={goToSettings}
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-inkSoft hover:bg-paperDark hover:text-ink transition-colors text-start w-full"
+                  >
+                    <Settings size={15} strokeWidth={1.75} />
+                    {t("settings.title")}
                   </button>
                   <button
                     onClick={signOut}
