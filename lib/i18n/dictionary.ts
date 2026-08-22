@@ -270,6 +270,10 @@ const dict: Record<string, { en: string; ar: string }> = {
   "timeline.inProgress": { en: "In Progress", ar: "قيد التنفيذ" },
   "timeline.criticalPath": { en: "Critical path", ar: "المسار الحرج" },
   "timeline.overdueHint": { en: "Still open after the deadline", ar: "ما زالت مفتوحة بعد موعد التسليم" },
+  "timeline.months": { en: "Months", ar: "أشهر" },
+  "timeline.todo": { en: "To Do", ar: "للتنفيذ" },
+  "timeline.allLabels": { en: "All Labels", ar: "كل الوسوم" },
+  "timeline.overview": { en: "Timeline overview", ar: "نظرة عامة على الجدول" },
 
   // ===== components/ActivityFeed.tsx =====
   "activity.recent": { en: "Recent activity", ar: "النشاط الأخير" },
