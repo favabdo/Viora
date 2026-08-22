@@ -1,4 +1,4 @@
-import type { Task } from "@/lib/supabase";
+import type { ProjectMember, Task } from "@/lib/supabase";
 
 type ProfileBits = { username: string; full_name: string; avatar_url?: string | null };
 
@@ -34,6 +34,19 @@ export function formatTaskDate(value: unknown, locale: string): string {
   } catch {
     return key;
   }
+}
+
+export function normalizeProjectMember(row: ProjectMember | Record<string, unknown>): ProjectMember {
+  const data = row as Record<string, unknown>;
+  return {
+    id: String(data.id ?? ""),
+    project_id: String(data.project_id ?? ""),
+    user_id: String(data.user_id ?? ""),
+    status: data.status === "pending" ? "pending" : "accepted",
+    invited_by: typeof data.invited_by === "string" ? data.invited_by : null,
+    created_at: String(data.created_at ?? ""),
+    profiles: normalizeProfile(data.profiles),
+  };
 }
 
 export function normalizeTask(row: Task): Task {

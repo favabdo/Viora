@@ -16,7 +16,7 @@ import {
   CheckSquare,
 } from "lucide-react";
 import { supabase, Project, Task, BoardColumn, ProjectMember } from "@/lib/supabase";
-import { normalizeTask } from "@/lib/taskShape";
+import { normalizeProjectMember, normalizeTask } from "@/lib/taskShape";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { displayName } from "@/lib/displayName";
 import BoardView from "./BoardView";
@@ -132,7 +132,9 @@ export default function ProjectWorkspace({
       setTasks(rows.map(normalizeTask));
       loadCommentCounts(rows.map((row) => row.id));
 
-      if (!membersRes.error && membersRes.data) setMembers(membersRes.data as ProjectMember[]);
+      if (!membersRes.error && membersRes.data) {
+        setMembers(membersRes.data.map(normalizeProjectMember));
+      }
       setLoading(false);
     }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase, ProjectMember } from "@/lib/supabase";
+import { normalizeProjectMember } from "@/lib/taskShape";
 import Button from "./ui/Button";
 import IconButton from "./ui/IconButton";
 import Badge from "./ui/Badge";
@@ -81,7 +82,7 @@ export default function TeamPanel({
       )
       .eq("project_id", projectId)
       .order("created_at", { ascending: true });
-    if (!error && data) setMembers(data as unknown as ProjectMember[]);
+    if (!error && data) setMembers(data.map(normalizeProjectMember));
     setLoading(false);
   }
 
