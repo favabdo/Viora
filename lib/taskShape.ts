@@ -49,13 +49,13 @@ export function normalizeProjectMember(row: ProjectMember | Record<string, unkno
   };
 }
 
-export function normalizeTask(row: Task): Task {
-  const profiles = normalizeProfile(row.profiles);
+export function normalizeTask(row: Task | Record<string, unknown>): Task {
+  const data = row as Task;
   return {
-    ...row,
-    due_date: dateKey(row.due_date),
-    start_date: dateKey(row.start_date),
-    position: typeof row.position === "number" && Number.isFinite(row.position) ? row.position : 0,
-    profiles,
+    ...data,
+    due_date: dateKey(data.due_date),
+    start_date: dateKey(data.start_date),
+    position: typeof data.position === "number" && Number.isFinite(data.position) ? data.position : 0,
+    profiles: normalizeProfile(data.profiles),
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Star,
   Share2,
@@ -20,7 +20,8 @@ import { normalizeProjectMember, normalizeTask } from "@/lib/taskShape";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { displayName } from "@/lib/displayName";
 import BoardView from "./BoardView";
-import CalendarView from "./CalendarView";
+import ProjectListView from "./ProjectListView";
+import ProjectCalendarView from "./ProjectCalendarView";
 import TimelineView from "./TimelineView";
 import LinksSection from "./LinksSection";
 import BoardAnalytics from "./BoardAnalytics";
@@ -124,10 +125,10 @@ export default function ProjectWorkspace({
       }
       setColumns(cols);
 
-      let rows = (!tasksRes.error && tasksRes.data ? tasksRes.data : []) as Task[];
+      let rows: Record<string, unknown>[] = !tasksRes.error && tasksRes.data ? (tasksRes.data as Record<string, unknown>[]) : [];
       if (tasksRes.error) {
         const fallback = await supabase.from("tasks").select("*").eq("project_id", projectId);
-        if (!fallback.error && fallback.data) rows = fallback.data as Task[];
+        if (!fallback.error && fallback.data) rows = fallback.data as Record<string, unknown>[];
       }
       setTasks(rows.map(normalizeTask));
       loadCommentCounts(rows.map((row) => row.id));
@@ -155,7 +156,7 @@ export default function ProjectWorkspace({
             .from("tasks")
             .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
             .eq("project_id", projectId);
-          if (data) setTasks((data as Task[]).map(normalizeTask));
+          if (data) setTasks(data.map(normalizeTask));
         }
       )
       .subscribe();
@@ -230,11 +231,6 @@ export default function ProjectWorkspace({
   const acceptedMembers = members.filter((m) => m.status === "accepted");
   const shownMembers = acceptedMembers.slice(0, 4);
   const extraMembers = Math.max(0, acceptedMembers.length - shownMembers.length);
-
-  const listTasks = useMemo(
-    () => [...tasks].sort((a, b) => Number(a.is_done) - Number(b.is_done) || a.position - b.position),
-    [tasks]
-  );
 
   if (loading) {
     return (
@@ -368,38 +364,26 @@ export default function ProjectWorkspace({
       )}
 
       {view === "list" && (
-        <div className="rounded-xl border border-line bg-surface divide-y divide-line overflow-hidden">
-          {listTasks.length === 0 ? (
-            <EmptyState icon={CheckSquare} title={t("board.noTasksYet")} />
-          ) : (
-            listTasks.map((task) => {
-              const column = columns.find((col) => col.id === task.column_id);
-              return (
-                <div key={task.id} className="flex items-center gap-3 px-4 py-3">
-                  <span
-                    className={`h-2 w-2 rounded-full shrink-0 ${task.is_done ? "bg-sage" : "bg-inkFaint"}`}
-                  />
-                  <p className={`flex-1 min-w-0 text-sm ${task.is_done ? "text-inkFaint line-through" : "text-ink"}`}>
-                    {task.title}
-                  </p>
-                  {column && (
-                    <span className="text-[11px] px-2 py-0.5 rounded-md bg-paperDark text-inkSoft">{column.name}</span>
-                  )}
-                  {task.profiles && (
-                    <Avatar
-                      name={displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
-                      src={task.profiles.avatar_url}
-                      size="xs"
-                    />
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
+        <ProjectListView
+          project={project}
+          projects={projects}
+          tasks={tasks}
+          columns={columns}
+          currentUserId={currentUserId}
+          commentCounts={commentCounts}
+          onTasksMutated={setTasks}
+        />
       )}
 
-      {view === "calendar" && <CalendarView tasks={tasks} onTasksMutated={setTasks} />}
+      {view === "calendar" && (
+        <ProjectCalendarView
+          project={project}
+          projects={projects}
+          tasks={tasks}
+          columns={columns}
+          onTasksMutated={setTasks}
+        />
+      )}
       {view === "timeline" && (
         <TimelineView tasks={tasks} columns={columns} onTasksMutated={setTasks} />
       )}
