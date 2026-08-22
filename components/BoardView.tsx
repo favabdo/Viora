@@ -16,6 +16,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { supabase, Task, BoardColumn, TASK_COLORS } from "@/lib/supabase";
+import { normalizeTask } from "@/lib/taskShape";
 import Avatar from "./ui/Avatar";
 import IconButton from "./ui/IconButton";
 import { Input } from "./ui/Input";
@@ -71,7 +72,7 @@ function TaskCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="group bg-surface border border-line rounded-lg p-3 shadow-sm hover:shadow-modal transition-shadow"
+      className="group bg-[#0F111A] border border-[#2D2F39] rounded-lg p-3 hover:border-[#3a3d4a] transition-colors"
     >
       <div className="flex items-start gap-1.5">
         <button
@@ -259,8 +260,8 @@ function ColumnContainer({
   const [newTaskTitle, setNewTaskTitle] = useState("");
 
   return (
-    <div className="flex flex-col w-72 shrink-0">
-      <div className="flex items-center gap-2 px-1 mb-2.5">
+    <div className="flex flex-col w-[280px] shrink-0 rounded-xl border border-[#2D2F39] bg-[#151621] p-3 min-h-[28rem]">
+      <div className="flex items-center gap-2 mb-3 px-0.5">
         <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: column.color }} />
         {editingName ? (
           <input
@@ -277,7 +278,7 @@ function ColumnContainer({
               onRenameColumn(column, nameDraft);
               setEditingName(false);
             }}
-            className="flex-1 min-w-0 bg-transparent text-sm font-semibold text-ink focus:outline-none border-b border-teal"
+            className="flex-1 min-w-0 bg-transparent text-sm font-semibold text-ink focus:outline-none border-b border-[#8C3AED]"
           />
         ) : (
           <button
@@ -285,12 +286,12 @@ function ColumnContainer({
               setNameDraft(column.name);
               setEditingName(true);
             }}
-            className="flex-1 min-w-0 text-start text-sm font-semibold text-ink truncate hover:text-teal transition-colors"
+            className="flex-1 min-w-0 text-start text-sm font-semibold text-ink truncate hover:text-[#8C3AED] transition-colors"
           >
             {column.name}
           </button>
         )}
-        <span className="text-2xs text-inkFaint shrink-0">{tasks.length}</span>
+        <span className="text-2xs text-inkFaint shrink-0">({tasks.length})</span>
         <IconButton size="sm" aria-label={t("common.delete")} tone="danger" onClick={() => onDeleteColumn(column)}>
           <X size={12} strokeWidth={1.75} />
         </IconButton>
@@ -298,8 +299,8 @@ function ColumnContainer({
 
       <div
         ref={setNodeRef}
-        className={`flex-1 flex flex-col gap-2 min-h-[80px] rounded-lg p-1.5 transition-colors ${
-          isOver ? "bg-tealSoft/40" : ""
+        className={`flex-1 flex flex-col gap-2 min-h-[80px] rounded-lg p-0.5 transition-colors ${
+          isOver ? "bg-[#8C3AED]/10" : ""
         }`}
       >
         <SortableContext items={tasks.map((t2) => t2.id)} strategy={verticalListSortingStrategy}>
@@ -472,7 +473,7 @@ export default function BoardView({
       .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
       .single();
     if (!error && data) {
-      onTasksMutated((prev) => [...prev, data as Task]);
+      onTasksMutated((prev) => [...prev, normalizeTask(data)]);
     }
   }
 
@@ -530,7 +531,7 @@ export default function BoardView({
           />
         ))}
 
-        <div className="w-72 shrink-0">
+        <div className="w-[280px] shrink-0 rounded-xl border border-dashed border-[#2D2F39] bg-[#151621]/50 p-3 min-h-[28rem]">
           {showAddColumn ? (
             <div className="flex items-center gap-1">
               <Input
@@ -548,7 +549,7 @@ export default function BoardView({
           ) : (
             <button
               onClick={() => setShowAddColumn(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-inkFaint hover:text-teal hover:bg-paperDark rounded-md transition-colors w-full"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-inkFaint hover:text-[#8C3AED] hover:bg-white/5 rounded-lg transition-colors w-full"
             >
               <Plus size={14} strokeWidth={2} />
               {t("board.addColumn")}

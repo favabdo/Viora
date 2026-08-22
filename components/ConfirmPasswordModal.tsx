@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Button from "./ui/Button";
-import IconButton from "./ui/IconButton";
 import Modal from "./ui/Modal";
 import { Input } from "./ui/Input";
-import { X, ShieldAlert } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export default function ConfirmPasswordModal({
@@ -51,20 +49,10 @@ export default function ConfirmPasswordModal({
   }
 
   return (
-    <Modal onClose={onCancel} maxWidth="max-w-xs">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-display text-lg font-medium flex items-center gap-1.5">
-          <ShieldAlert size={16} strokeWidth={1.75} className="text-clay" />
-          {title}
-        </h3>
-        <IconButton aria-label={t("common.close")} onClick={onCancel}>
-          <X size={16} strokeWidth={1.75} />
-        </IconButton>
-      </div>
-
+    <Modal onClose={onCancel} title={title} maxWidth="max-w-sm">
       {message && <p className="text-sm text-inkSoft mb-4 leading-relaxed">{message}</p>}
 
-      <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("confirmPassword.password")}</label>
+      <label className="block text-xs font-medium text-inkFaint mb-1.5">{t("confirmPassword.password")}</label>
       <Input
         type="password"
         autoFocus
@@ -72,10 +60,9 @@ export default function ConfirmPasswordModal({
         onChange={(e) => setPassword(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
         dir="ltr"
-        className="text-end"
         placeholder="••••••••"
       />
-      {error && <p className="text-clay text-xs mt-2">{error}</p>}
+      {error && <p className="text-[#E85D4C] text-xs mt-2">{error}</p>}
 
       <div className="flex gap-2 mt-5">
         <Button variant="secondary" fullWidth onClick={onCancel} disabled={checking}>

@@ -4,12 +4,11 @@ import { useEffect, useState } from "react";
 import { supabase, ProjectMember } from "@/lib/supabase";
 import { normalizeProjectMember } from "@/lib/taskShape";
 import Button from "./ui/Button";
-import IconButton from "./ui/IconButton";
 import Badge from "./ui/Badge";
 import Avatar from "./ui/Avatar";
 import Modal from "./ui/Modal";
 import { Input } from "./ui/Input";
-import { Check, Link2, X } from "lucide-react";
+import { Check, Link2 } from "lucide-react";
 import ClickableName from "./ClickableName";
 import { resolveName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -138,14 +137,7 @@ export default function TeamPanel({
   const pending = members.filter((m) => m.status === "pending");
 
   return (
-    <Modal onClose={onClose} maxWidth="max-w-md">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="font-display text-lg font-medium">{t("team.title")}</h3>
-        <IconButton aria-label={t("common.close")} onClick={onClose}>
-          <X size={16} strokeWidth={1.75} />
-        </IconButton>
-      </div>
-
+    <Modal onClose={onClose} title={t("team.title")} maxWidth="max-w-md">
       <div className="mb-5">
         <Button variant="secondary" fullWidth loading={copyingLink} onClick={copyInviteLink}>
           {justCopied ? <Check size={14} strokeWidth={2} /> : <Link2 size={14} strokeWidth={1.75} />}

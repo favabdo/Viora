@@ -342,9 +342,9 @@ export default function ProjectsSection({
       )}
 
       {showCreate && (
-        <Modal onClose={() => setShowCreate(false)}>
-          <h2 className="text-lg font-semibold text-ink mb-1">{t("projects.newTitle")}</h2>
+        <Modal onClose={() => setShowCreate(false)} title={t("projects.newTitle")}>
           <p className="text-sm text-inkSoft mb-4">{t("projects.newHint")}</p>
+          <label className="block text-xs font-medium text-inkFaint mb-1.5">{t("projects.namePlaceholder")}</label>
           <Input
             autoFocus
             value={newName}
@@ -354,7 +354,7 @@ export default function ProjectsSection({
               if (e.key === "Enter") createProject();
             }}
           />
-          <div className="flex justify-end gap-2 mt-4">
+          <div className="flex justify-end gap-2 mt-5">
             <Button onClick={() => setShowCreate(false)}>{t("common.cancel")}</Button>
             <Button variant="primary" loading={creating} onClick={createProject}>
               {t("projects.create")}

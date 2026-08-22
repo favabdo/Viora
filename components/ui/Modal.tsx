@@ -2,21 +2,17 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 
-/**
- * بنعمل render للمودال جوه document.body مباشرة (مش في مكانه في الشجرة) باستخدام
- * React Portal. ده مهم عشان أي عنصر أب عليه transform/filter (زي أي حاجة معمولها
- * blur أو fade-in animation) بيعمل "containing block" جديد لأي عنصر جواه بـ
- * position: fixed - وده بيخلي المودال يظهر في مكان غلط أو يخرج بره حدود الشاشة
- * على الموبايل بدل ما يتوسط الشاشة كلها زي المفروض.
- */
 export default function Modal({
   onClose,
   children,
+  title,
   maxWidth = "max-w-sm",
 }: {
   onClose?: () => void;
   children: ReactNode;
+  title?: string;
   maxWidth?: string;
 }) {
   const [mounted, setMounted] = useState(false);
@@ -25,13 +21,28 @@ export default function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 bg-ink/50 backdrop-blur-[2px] flex items-center justify-center p-4 z-50 fade-in"
+      className="fixed inset-0 bg-black/70 backdrop-blur-[2px] flex items-center justify-center p-4 z-50 fade-in"
       onClick={onClose}
     >
       <div
-        className={`bg-paper border border-line rounded-lg shadow-modal w-full p-5 max-h-[85vh] overflow-y-auto thin-scroll ${maxWidth}`}
+        className={`w-full ${maxWidth} rounded-xl border border-[#2D2F39] bg-[#1A1C23] shadow-[0_24px_64px_rgba(0,0,0,0.55)] p-6 max-h-[85vh] overflow-y-auto thin-scroll`}
         onClick={(e) => e.stopPropagation()}
       >
+        {title && (
+          <div className="flex items-start justify-between gap-3 mb-5">
+            <h3 className="text-lg font-semibold text-ink leading-tight">{title}</h3>
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-inkFaint hover:text-ink hover:bg-white/5"
+                aria-label="Close"
+              >
+                <X size={16} strokeWidth={1.75} />
+              </button>
+            )}
+          </div>
+        )}
         {children}
       </div>
     </div>,

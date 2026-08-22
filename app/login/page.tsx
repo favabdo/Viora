@@ -124,9 +124,9 @@ function LoginPageInner() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-5 py-10 bg-paper">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center gap-1.5 mb-9">
+    <main className="min-h-screen flex items-center justify-center px-5 py-10 bg-[#0F111A]">
+      <div className="w-full max-w-md">
+        <div className="flex flex-col items-center gap-1.5 mb-8">
           <div className="flex justify-center items-center gap-2">
             <Image
               src="/logo-full.png"
@@ -140,11 +140,11 @@ function LoginPageInner() {
           <span className="text-xs text-inkFaint tracking-wide">Save. Organize. Build Together</span>
         </div>
 
-        <div className="bg-surface border border-line rounded-lg shadow-raised p-6 fade-in">
-          <h1 className="font-display text-xl font-medium mb-1 text-center">
+        <div className="rounded-xl border border-[#2D2F39] bg-[#1A1C23] shadow-[0_24px_64px_rgba(0,0,0,0.55)] p-6 fade-in">
+          <h1 className="text-xl font-semibold mb-1 text-ink">
             {mode === "signin" ? t("login.signIn") : t("login.createAccount")}
           </h1>
-          <p className="text-inkSoft text-sm text-center mb-6">
+          <p className="text-inkSoft text-sm mb-6">
             {hasInvite
               ? t("login.inviteHint")
               : mode === "signin"
@@ -155,7 +155,7 @@ function LoginPageInner() {
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {mode === "signup" && (
               <div className="fade-in">
-                <label className="block text-sm font-medium text-inkSoft mb-1.5">
+                <label className="block text-xs font-medium text-inkFaint mb-1.5">
                   {t("login.name")}
                 </label>
                 <Input
@@ -170,7 +170,7 @@ function LoginPageInner() {
 
             {mode === "signup" && (
               <div className="fade-in">
-                <label className="block text-sm font-medium text-inkSoft mb-1.5">
+                <label className="block text-xs font-medium text-inkFaint mb-1.5">
                   {t("login.username")}
                 </label>
                 <Input
@@ -184,7 +184,6 @@ function LoginPageInner() {
                   }
                   placeholder="username"
                   dir="ltr"
-                  className="font-mono text-end"
                 />
                 <p className="text-xs text-inkFaint mt-1">
                   {t("login.usernameHint")}
@@ -193,7 +192,7 @@ function LoginPageInner() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-inkSoft mb-1.5">
+              <label className="block text-xs font-medium text-inkFaint mb-1.5">
                 {t("login.email")}
               </label>
               <Input
@@ -203,12 +202,11 @@ function LoginPageInner() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 dir="ltr"
-                className="text-end"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-inkSoft mb-1.5">
+              <label className="block text-xs font-medium text-inkFaint mb-1.5">
                 {t("login.password")}
               </label>
               <Input
@@ -219,22 +217,21 @@ function LoginPageInner() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 dir="ltr"
-                className="text-end"
               />
             </div>
 
             {error && (
-              <p className="text-sm text-clay bg-claySoft rounded-md px-3 py-2">
+              <p className="text-sm text-[#E85D4C] bg-[#E85D4C]/10 rounded-lg px-3 py-2">
                 {error}
               </p>
             )}
             {info && (
-              <p className="text-sm text-[#3F6136] bg-sageSoft rounded-md px-3 py-2">
+              <p className="text-sm text-[#4ADE80] bg-[#22C55E]/10 rounded-lg px-3 py-2">
                 {info}
               </p>
             )}
 
-            <Button type="submit" variant="primary" fullWidth loading={loading} className="mt-1">
+            <Button type="submit" variant="primary" fullWidth loading={loading} className="mt-2">
               {mode === "signin" ? t("login.signIn") : t("login.createAccountBtn")}
             </Button>
           </form>
@@ -248,7 +245,7 @@ function LoginPageInner() {
                 setInfo(null);
                 setUsername("");
               }}
-              className="text-teal font-medium hover:underline"
+              className="text-[#8C3AED] font-medium hover:underline"
             >
               {mode === "signin" ? t("login.createAccount") : t("login.signIn")}
             </button>
