@@ -37,9 +37,11 @@ function sortTasks(list: Task[]): Task[] {
 export default function TasksSection({
   currentUserId,
   currentUserEmail,
+  initialProjectId,
 }: {
   currentUserId: string;
   currentUserEmail: string;
+  initialProjectId?: string | null;
 }) {
   const { t, lang } = useTranslation();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -77,6 +79,10 @@ export default function TasksSection({
   useEffect(() => {
     loadProjects();
   }, []);
+
+  useEffect(() => {
+    if (initialProjectId) setActiveProjectId(initialProjectId);
+  }, [initialProjectId]);
 
   useEffect(() => {
     if (activeProjectId) {
@@ -136,7 +142,9 @@ export default function TasksSection({
       .select("*")
       .order("created_at", { ascending: true });
     if (!error && data) {
-      setProjects(data as Project[]);
+      const list = data as Project[];
+      setProjects(list);
+      setActiveProjectId((current) => current ?? initialProjectId ?? list[0]?.id ?? null);
     }
   }
 

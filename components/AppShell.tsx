@@ -1,16 +1,26 @@
 "use client";
 
 import { ReactNode, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LucideIcon, LogOut, UserRound, Moon, Sun, Bell, X, Search, Settings } from "lucide-react";
+import {
+  LucideIcon,
+  LogOut,
+  UserRound,
+  Moon,
+  Sun,
+  Bell,
+  X,
+  Search,
+  Settings,
+  Plus,
+  Crown,
+  ChevronDown,
+} from "lucide-react";
 import Avatar from "./ui/Avatar";
-import IconButton from "./ui/IconButton";
 import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useRoomsPendingPoll } from "@/lib/useRoomsPendingPoll";
 import { usePushSubscription } from "@/lib/usePushSubscription";
-
 import { supabase } from "@/lib/supabase";
 
 export type ShellTab = {
@@ -19,16 +29,22 @@ export type ShellTab = {
   icon: LucideIcon;
 };
 
-/**
- * الهيكل العام للتطبيق: شريط جانبي ثابت على الشاشات الكبيرة (زي Linear/Notion)،
- * شريط علوي ثابت (بحث + إشعارات + وضع الليل + الحساب) في كل الأحجام، وشريط تنقّل
- * سفلي على الموبايل بس. المحتوى نفسه بييجي من children.
- */
+function VioraMark() {
+  return (
+    <div className="h-8 w-8 rounded-[10px] bg-[#6C5CE7] text-white flex items-center justify-center shrink-0 shadow-[0_0_0_4px_rgba(108,92,231,0.12)]">
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden>
+        <path d="M4 5h5.2l2.8 9.4L14.8 5H20l-6.4 14h-3.2L4 5z" fill="currentColor" />
+      </svg>
+    </div>
+  );
+}
+
 export default function AppShell({
   tabs,
   activeTab,
   onTabChange,
   onRoomsTabActivated,
+  onNew,
   userName,
   avatarUrl,
   onSignOut,
@@ -38,8 +54,8 @@ export default function AppShell({
   tabs: ShellTab[];
   activeTab: string;
   onTabChange: (id: string) => void;
-  /** بينادى كل ما حد يدوس على تاب Rooms، بيقول لصاحب الصفحة هل فيه طلبات معلّقة وقت الدوسة عشان يفلتر تلقائي */
   onRoomsTabActivated?: (hasPending: boolean) => void;
+  onNew?: () => void;
   userName: string;
   avatarUrl?: string | null;
   onSignOut: () => void;
@@ -47,7 +63,7 @@ export default function AppShell({
   children: ReactNode;
 }) {
   const router = useRouter();
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [theme, setTheme] = useState<Theme>("dark");
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
@@ -55,8 +71,8 @@ export default function AppShell({
   const { pendingCount } = useRoomsPendingPoll(isNilechatLinked);
   const { supported: pushSupported, subscribed: pushSubscribed, subscribing, subscribe } = usePushSubscription();
   const [showEnablePrompt, setShowEnablePrompt] = useState(false);
+  const notifCount = isNilechatLinked ? pendingCount : 0;
 
-  // عداد الطلبات المعلّقة بجانب "Rooms"/"الغرف" بيظهر بس لللي رابط حسابه في NileChat من البروفايل
   useEffect(() => {
     if (!currentUserId) return;
     supabase
@@ -83,16 +99,18 @@ export default function AppShell({
   }
 
   function handleTabClick(id: string) {
+    if (id === "settings") {
+      router.push("/settings");
+      return;
+    }
     if (id === "rooms") onRoomsTabActivated?.(pendingCount > 0);
     onTabChange(id);
   }
 
-  // نقرأ الوضع المحفوظ بعد أول رسم للصفحة (الـ script في layout.tsx بيكون طبّقه على الـ html بالفعل)
   useEffect(() => {
     setTheme(getStoredTheme());
   }, []);
 
-  // قفل قائمة الحساب المنسدلة لو المستخدم دس في أي مكان تاني بره القائمة
   useEffect(() => {
     if (!showAccountMenu) return;
     function handleClickOutside(e: PointerEvent) {
@@ -125,196 +143,241 @@ export default function AppShell({
   }
 
   const Logo = (
-    <div className="flex items-center gap-1">
-      {lang === "ar" ? (
-        <>
-          <span className="viora-wordmark text-xl">iora</span>
-          <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
-        </>
-      ) : (
-        <>
-          <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
-          <span className="viora-wordmark text-xl">iora</span>
-        </>
-      )}
+    <div className="flex items-center gap-2.5">
+      <VioraMark />
+      <span className="text-[17px] font-semibold tracking-[0.14em] text-ink">VIORA</span>
     </div>
   );
 
-  return (
-    <div className="min-h-screen md:flex">
-      {/* الشريط الجانبي — سطح المكتب فقط */}
-      <aside className="hidden md:flex md:w-60 md:shrink-0 md:flex-col md:border-e md:border-line md:h-screen md:sticky md:top-0 md:py-5 md:px-3.5">
-        <div className="px-2 mb-7">{Logo}</div>
+  const mobileTabs = tabs.filter((tab) => ["projects", "tasks", "board", "files"].includes(tab.id));
 
-        <nav className="flex flex-col gap-0.5" role="tablist">
+  return (
+    <div className="min-h-screen md:flex bg-paper">
+      <aside className="hidden md:flex md:w-[248px] md:shrink-0 md:flex-col md:h-screen md:sticky md:top-0 md:bg-surface md:border-e md:border-line">
+        <div className="px-5 pt-5 pb-6">{Logo}</div>
+
+        <nav className="flex-1 flex flex-col gap-0.5 px-3 overflow-y-auto thin-scroll" role="tablist">
           {tabs.map(({ id, label, icon: Icon }) => {
             const active = activeTab === id;
-            const showBadge = id === "rooms" && isNilechatLinked && pendingCount > 0;
+            const showBadge = id === "rooms" && notifCount > 0;
             return (
               <button
                 key={id}
                 role="tab"
                 aria-selected={active}
                 onClick={() => handleTabClick(id)}
-                className={`nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium transition-colors ${
-                  active ? "bg-tealSoft text-tealDark" : "text-inkSoft hover:bg-paperDark hover:text-ink"
+                className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
+                  active ? "bg-[#6C5CE7]/16 text-ink" : "text-inkSoft hover:bg-paperDark hover:text-ink"
                 }`}
               >
-                <Icon size={16} strokeWidth={1.75} />
+                {active && <span className="absolute start-0 inset-y-1.5 w-[3px] rounded-full bg-[#6C5CE7]" />}
+                <Icon size={16} strokeWidth={1.75} className={active ? "text-[#6C5CE7]" : ""} />
                 {label}
                 {showBadge && (
-                  <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-clay px-1 text-2xs font-semibold text-white">
-                    {pendingCount}
+                  <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#6C5CE7] px-1 text-2xs font-semibold text-white">
+                    {notifCount}
                   </span>
                 )}
               </button>
             );
           })}
         </nav>
+
+        <div className="px-3 pb-3 mt-4">
+          <div className="rounded-xl border border-line bg-paperDark/70 px-3.5 py-3.5">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="h-7 w-7 rounded-lg bg-[#6C5CE7]/18 text-[#6C5CE7] flex items-center justify-center">
+                <Crown size={14} strokeWidth={1.75} />
+              </div>
+              <p className="text-sm font-semibold text-ink">{t("shell.upgradeTitle")}</p>
+            </div>
+            <p className="text-[11px] leading-relaxed text-inkSoft mb-3">{t("shell.upgradeHint")}</p>
+            <button className="w-full rounded-lg bg-[#6C5CE7] hover:bg-[#5b4bd6] text-white text-xs font-semibold py-2 transition-colors">
+              {t("shell.upgradeNow")}
+            </button>
+          </div>
+        </div>
+
+        <div className="relative px-3 pb-4" ref={accountMenuRef}>
+          <button
+            onClick={() => setShowAccountMenu((v) => !v)}
+            className="w-full flex items-center gap-2.5 rounded-xl px-2 py-2 hover:bg-paperDark transition-colors"
+          >
+            <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="md" />
+            <div className="min-w-0 text-start flex-1">
+              <p className="text-sm font-medium text-ink truncate">{userName || t("shell.myAccount")}</p>
+              <p className="text-[11px] text-inkFaint">{t("shell.admin")}</p>
+            </div>
+            <ChevronDown size={14} className="text-inkFaint shrink-0" />
+          </button>
+          {showAccountMenu && (
+            <AccountMenu
+              userName={userName}
+              avatarUrl={avatarUrl}
+              t={t}
+              onProfile={goToProfile}
+              onSettings={goToSettings}
+              onSignOut={signOut}
+            />
+          )}
+        </div>
       </aside>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        {/* الشريط العلوي — بحث + إشعارات + وضع الليل + الحساب، ظاهر في كل الأحجام */}
-        <header className="flex items-center gap-3 px-5 py-3.5 md:px-7 border-b border-line sticky top-0 bg-paper/90 backdrop-blur z-30">
+        <header className="flex items-center gap-3 px-4 py-3 md:px-6 border-b border-line sticky top-0 bg-paper/90 backdrop-blur z-30">
           <div className="md:hidden">{Logo}</div>
 
-          <div className="relative flex-1 max-w-md hidden sm:block">
-            <Search size={15} strokeWidth={1.75} className="absolute top-1/2 -translate-y-1/2 start-3 text-inkFaint" />
+          <div className="relative flex-1 max-w-xl mx-auto hidden sm:block">
+            <Search size={15} strokeWidth={1.75} className="absolute top-1/2 -translate-y-1/2 start-3.5 text-inkFaint" />
             <input
               type="text"
               placeholder={t("shell.search")}
-              className="w-full bg-paperDark border border-line rounded-md ps-9 pe-3 py-2 text-sm text-ink placeholder:text-inkFaint focus:outline-none focus:ring-1 focus:ring-teal transition-shadow"
+              className="w-full bg-surface border border-line rounded-xl ps-10 pe-14 py-2.5 text-sm text-ink placeholder:text-inkFaint focus:outline-none focus:ring-1 focus:ring-[#6C5CE7] transition-shadow"
             />
+            <span className="absolute top-1/2 -translate-y-1/2 end-3 text-[11px] text-inkFaint border border-line rounded-md px-1.5 py-0.5">
+              ⌘ K
+            </span>
           </div>
 
-          <div className="flex items-center gap-1.5 ms-auto">
-            <IconButton
-              aria-label={t("notif.pendingRequests")}
-              onClick={() => handleTabClick("rooms")}
-              tone="default"
-              className="relative"
+          <div className="flex items-center gap-2 ms-auto">
+            <button
+              onClick={onNew}
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-[#6C5CE7] hover:bg-[#5b4bd6] text-white text-sm font-semibold px-3.5 py-2 transition-colors"
             >
-              <Bell size={16} strokeWidth={1.75} />
-              {isNilechatLinked && pendingCount > 0 && (
-                <span className="absolute -top-0.5 -end-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-clay px-0.5 text-[9px] font-semibold text-white">
-                  {pendingCount}
+              <Plus size={15} strokeWidth={2.25} />
+              {t("shell.new")}
+            </button>
+            <button
+              aria-label={t("notif.pendingRequests")}
+              onClick={() => handleTabClick("projects")}
+              className="relative h-9 w-9 inline-flex items-center justify-center rounded-xl text-inkSoft hover:text-ink hover:bg-surface"
+            >
+              <Bell size={17} strokeWidth={1.75} />
+              {notifCount > 0 && (
+                <span className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#6C5CE7] px-1 text-[9px] font-semibold text-white">
+                  {notifCount}
                 </span>
               )}
-            </IconButton>
-            <IconButton
+            </button>
+            <button
               aria-label={theme === "dark" ? t("shell.enableLight") : t("shell.enableDark")}
               onClick={toggleTheme}
-              tone="default"
+              className="h-9 w-9 inline-flex items-center justify-center rounded-xl text-inkSoft hover:text-ink hover:bg-surface"
             >
-              {theme === "dark" ? <Sun size={16} strokeWidth={1.75} /> : <Moon size={16} strokeWidth={1.75} />}
-            </IconButton>
+              {theme === "dark" ? <Sun size={17} strokeWidth={1.75} /> : <Moon size={17} strokeWidth={1.75} />}
+            </button>
 
-            <div className="relative" ref={accountMenuRef}>
+            <div className="hidden md:block">
               <button
-                onClick={() => setShowAccountMenu((v) => !v)}
-                aria-label={t("shell.account")}
-                className="flex items-center gap-2 rounded-full transition-opacity hover:opacity-80"
+                onClick={goToProfile}
+                className="flex items-center gap-2 rounded-xl ps-1 pe-2 py-1 hover:bg-surface transition-colors"
               >
                 <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="sm" />
-                <span className="hidden md:inline text-sm font-medium text-ink">{userName || t("shell.myAccount")}</span>
-              </button>
-
-              {showAccountMenu && (
-                <div className="absolute top-full end-0 mt-2 z-40 bg-paper border border-line rounded-md shadow-modal p-1.5 min-w-[180px] fade-in">
-                  <div className="flex items-center gap-2.5 px-2.5 py-2 border-b border-line mb-1">
-                    <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="sm" />
-                    <span className="font-display text-sm font-medium text-ink truncate">
-                      {userName || t("shell.myAccount")}
-                    </span>
-                  </div>
-                  <button
-                    onClick={goToProfile}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-inkSoft hover:bg-paperDark hover:text-ink transition-colors text-start w-full"
-                  >
-                    <UserRound size={15} strokeWidth={1.75} />
-                    {t("shell.openProfile")}
-                  </button>
-                  <button
-                    onClick={goToSettings}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-inkSoft hover:bg-paperDark hover:text-ink transition-colors text-start w-full"
-                  >
-                    <Settings size={15} strokeWidth={1.75} />
-                    {t("settings.title")}
-                  </button>
-                  <button
-                    onClick={signOut}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-clay hover:bg-claySoft transition-colors text-start w-full"
-                  >
-                    <LogOut size={15} strokeWidth={1.75} />
-                    {t("shell.signOut")}
-                  </button>
+                <div className="text-start leading-tight">
+                  <p className="text-sm font-medium text-ink">{userName || t("shell.myAccount")}</p>
+                  <p className="text-[11px] text-inkFaint">{t("shell.admin")}</p>
                 </div>
-              )}
+              </button>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 min-w-0 px-5 py-6 md:px-9 md:py-8 pb-24 md:pb-8">
-          <div className="max-w-5xl mx-auto">
-            {showEnablePrompt && (
-              <div className="flex items-center justify-between gap-3 rounded-md border border-line bg-paperDark px-3.5 py-2.5 mb-4 text-sm fade-in">
-                <div className="flex items-center gap-2">
-                  <Bell size={14} strokeWidth={1.75} className="text-teal shrink-0" />
-                  <span className="text-ink">{t("notif.enablePrompt")}</span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={async () => {
-                      await subscribe();
-                      setShowEnablePrompt(false);
-                    }}
-                    disabled={subscribing}
-                    className="text-teal hover:text-tealDark font-medium text-xs disabled:opacity-50"
-                  >
-                    {t("notif.enable")}
-                  </button>
-                  <button onClick={dismissEnablePrompt} className="text-inkFaint hover:text-ink">
-                    <X size={14} strokeWidth={1.75} />
-                  </button>
-                </div>
+        <main className="flex-1 min-w-0 px-4 py-6 md:px-8 md:py-7 pb-24 md:pb-8">
+          {showEnablePrompt && (
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5 mb-4 text-sm fade-in">
+              <div className="flex items-center gap-2">
+                <Bell size={14} strokeWidth={1.75} className="text-[#6C5CE7] shrink-0" />
+                <span className="text-ink">{t("notif.enablePrompt")}</span>
               </div>
-            )}
-            {children}
-          </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={async () => {
+                    await subscribe();
+                    setShowEnablePrompt(false);
+                  }}
+                  disabled={subscribing}
+                  className="text-[#6C5CE7] hover:text-[#5b4bd6] font-medium text-xs disabled:opacity-50"
+                >
+                  {t("notif.enable")}
+                </button>
+                <button onClick={dismissEnablePrompt} className="text-inkFaint hover:text-ink">
+                  <X size={14} strokeWidth={1.75} />
+                </button>
+              </div>
+            </div>
+          )}
+          {children}
         </main>
       </div>
 
-      {/* شريط تنقّل سفلي — الموبايل فقط */}
       <nav
         className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-surface/95 backdrop-blur border-t border-line flex items-stretch pb-[env(safe-area-inset-bottom)]"
         role="tablist"
       >
-        {tabs.map(({ id, label, icon: Icon }) => {
+        {mobileTabs.map(({ id, label, icon: Icon }) => {
           const active = activeTab === id;
-          const showBadge = id === "rooms" && isNilechatLinked && pendingCount > 0;
           return (
             <button
               key={id}
               role="tab"
               aria-selected={active}
               onClick={() => handleTabClick(id)}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-2xs font-medium transition-colors relative ${
-                active ? "text-teal" : "text-inkFaint"
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-2xs font-medium transition-colors ${
+                active ? "text-[#6C5CE7]" : "text-inkFaint"
               }`}
             >
-              <span className="relative">
-                <Icon size={19} strokeWidth={active ? 2 : 1.75} />
-                {showBadge && (
-                  <span className="absolute -top-1 -end-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-clay px-0.5 text-[9px] font-semibold text-white">
-                    {pendingCount}
-                  </span>
-                )}
-              </span>
+              <Icon size={19} strokeWidth={active ? 2 : 1.75} />
               {label}
             </button>
           );
         })}
       </nav>
+    </div>
+  );
+}
+
+function AccountMenu({
+  userName,
+  avatarUrl,
+  t,
+  onProfile,
+  onSettings,
+  onSignOut,
+}: {
+  userName: string;
+  avatarUrl?: string | null;
+  t: (key: string) => string;
+  onProfile: () => void;
+  onSettings: () => void;
+  onSignOut: () => void;
+}) {
+  return (
+    <div className="absolute z-40 bg-surface border border-line rounded-xl shadow-modal p-1.5 min-w-[180px] fade-in bottom-16 start-3 end-3 md:start-auto">
+      <div className="flex items-center gap-2.5 px-2.5 py-2 border-b border-line mb-1">
+        <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="sm" />
+        <span className="text-sm font-medium text-ink truncate">{userName || t("shell.myAccount")}</span>
+      </div>
+      <button
+        onClick={onProfile}
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm text-inkSoft hover:bg-paperDark hover:text-ink transition-colors text-start w-full"
+      >
+        <UserRound size={15} strokeWidth={1.75} />
+        {t("shell.openProfile")}
+      </button>
+      <button
+        onClick={onSettings}
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm text-inkSoft hover:bg-paperDark hover:text-ink transition-colors text-start w-full"
+      >
+        <Settings size={15} strokeWidth={1.75} />
+        {t("settings.title")}
+      </button>
+      <button
+        onClick={onSignOut}
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm text-clay hover:bg-claySoft transition-colors text-start w-full"
+      >
+        <LogOut size={15} strokeWidth={1.75} />
+        {t("shell.signOut")}
+      </button>
     </div>
   );
 }
