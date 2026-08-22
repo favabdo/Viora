@@ -5,6 +5,7 @@ import { supabase, Task, BoardColumn } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Modal from "./ui/Modal";
 import Button from "./ui/Button";
+import { dateKey } from "@/lib/taskShape";
 
 const DAY_WIDTH = 34;
 const ROW_HEIGHT = 44;
@@ -35,7 +36,7 @@ export default function TimelineView({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  const datedTasks = tasks.filter((t2) => t2.start_date || t2.due_date);
+  const datedTasks = tasks.filter((t2) => dateKey(t2.start_date) || dateKey(t2.due_date));
 
   const { rangeStart, totalDays, months } = useMemo(() => {
     const today = new Date();
@@ -43,8 +44,10 @@ export default function TimelineView({
     let min = today;
     let max = addDays(today, 30);
     for (const task of datedTasks) {
-      const s = task.start_date ? toDate(task.start_date) : task.due_date ? toDate(task.due_date) : null;
-      const e = task.due_date ? toDate(task.due_date) : task.start_date ? toDate(task.start_date) : null;
+      const start = dateKey(task.start_date);
+      const due = dateKey(task.due_date);
+      const s = start ? toDate(start) : due ? toDate(due) : null;
+      const e = due ? toDate(due) : start ? toDate(start) : null;
       if (s && s < min) min = s;
       if (e && e > max) max = e;
     }
@@ -98,8 +101,10 @@ export default function TimelineView({
         </div>
         <div className="relative" style={{ width: gridWidth, minHeight: ROW_HEIGHT * Math.max(items.length, 1) }}>
           {items.map((task, i) => {
-            const start = task.start_date ? toDate(task.start_date) : task.due_date ? toDate(task.due_date) : rangeStart;
-            const end = task.due_date ? toDate(task.due_date) : start;
+            const startIso = dateKey(task.start_date) || dateKey(task.due_date);
+            const start = startIso ? toDate(startIso) : rangeStart;
+            const dueIso = dateKey(task.due_date);
+            const end = dueIso ? toDate(dueIso) : start;
             const offset = Math.max(diffDays(rangeStart, start), 0);
             const span = Math.max(diffDays(start, end) + 1, 1);
             return (
@@ -129,7 +134,6 @@ export default function TimelineView({
     <div>
       <div ref={scrollRef} className="overflow-x-auto border border-line rounded-lg thin-scroll">
         <div style={{ width: 160 + gridWidth }}>
-          {/* رأس الشهور */}
           <div className="flex border-b border-line bg-paperDark">
             <div className="w-40 shrink-0 sticky start-0 bg-paperDark z-10 border-e border-line" />
             {months.map((m, i) => (
@@ -143,7 +147,6 @@ export default function TimelineView({
             ))}
           </div>
 
-          {/* الصفوف بحالتها + مؤشر اليوم */}
           <div className="relative">
             {todayOffset >= 0 && todayOffset < totalDays && (
               <div
@@ -179,8 +182,8 @@ function TimelineDateEditor({
   onCancel: () => void;
   t: (key: string) => string;
 }) {
-  const [start, setStart] = useState(task.start_date || "");
-  const [due, setDue] = useState(task.due_date || "");
+  const [start, setStart] = useState(dateKey(task.start_date) || "");
+  const [due, setDue] = useState(dateKey(task.due_date) || "");
 
   return (
     <div className="space-y-3">

@@ -19,11 +19,12 @@ import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 import ProgressBar from "./ui/ProgressBar";
 import Modal from "./ui/Modal";
-import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut, GripVertical, Palette, LayoutGrid, CalendarDays, GanttChartSquare } from "lucide-react";
+import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut, GripVertical, Palette, LayoutGrid, CalendarDays, GanttChart } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import ClickableName from "./ClickableName";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { formatTaskDate, normalizeTask } from "@/lib/taskShape";
 
 /** بيرتب المهام: غير المنجزة فوق (حسب position)، والمنجزة تنزل تحت تلقائيًا */
 function sortTasks(list: Task[]): Task[] {
@@ -141,15 +142,29 @@ export default function TasksSection({
 
   async function loadTasks(projectId: string) {
     setLoadingTasks(true);
-    const { data, error } = await supabase
-      .from("tasks")
-      .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
-      .eq("project_id", projectId)
-      .order("is_done", { ascending: true })
-      .order("position", { ascending: true });
+    const query = () =>
+      supabase
+        .from("tasks")
+        .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
+        .eq("project_id", projectId)
+        .order("is_done", { ascending: true })
+        .order("position", { ascending: true });
+
+    let { data, error } = await query();
+    if (error) {
+      const fallback = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("is_done", { ascending: true })
+        .order("position", { ascending: true });
+      data = fallback.data;
+      error = fallback.error;
+    }
     if (!error && data) {
-      setTasks(sortTasks(data as Task[]));
-      loadCommentCounts((data as Task[]).map((t) => t.id));
+      const next = sortTasks((data as Task[]).map(normalizeTask));
+      setTasks(next);
+      loadCommentCounts(next.map((t) => t.id));
     }
     setLoadingTasks(false);
   }
@@ -286,7 +301,7 @@ export default function TasksSection({
       .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
       .single();
     if (!error && data) {
-      setTasks((prev) => sortTasks([data as Task, ...prev]));
+      setTasks((prev) => sortTasks([normalizeTask(data as Task), ...prev]));
       setNewTaskTitle("");
     }
   }
@@ -566,7 +581,7 @@ export default function TasksSection({
                   ["list", t("views.list"), ListChecks],
                   ["board", t("views.board"), LayoutGrid],
                   ["calendar", t("views.calendar"), CalendarDays],
-                  ["timeline", t("views.timeline"), GanttChartSquare],
+                  ["timeline", t("views.timeline"), GanttChart],
                 ] as [typeof viewMode, string, typeof ListChecks][]
               ).map(([key, label, Icon]) => (
                 <button
@@ -711,10 +726,7 @@ export default function TasksSection({
                                         })()}
                                       {task.due_date && (
                                         <span className="text-[10px] text-inkFaint">
-                                          {new Intl.DateTimeFormat(lang === "ar" ? "ar-EG" : "en-US", {
-                                            day: "numeric",
-                                            month: "short",
-                                          }).format(new Date(task.due_date))}
+                                          {formatTaskDate(task.due_date, lang === "ar" ? "ar-EG" : "en-US")}
                                         </span>
                                       )}
                                     </div>

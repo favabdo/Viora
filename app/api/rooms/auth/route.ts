@@ -29,7 +29,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ errorCode: "wrong_password" }, { status: 401 });
   }
 
-  const token = createRoomsSessionToken();
+  let token = "";
+  try {
+    token = createRoomsSessionToken();
+  } catch {
+    return NextResponse.json({ errorCode: "not_configured" }, { status: 500 });
+  }
   cookies().set(ROOMS_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

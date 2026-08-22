@@ -9,33 +9,40 @@ import { createHmac, timingSafeEqual } from "crypto";
 export const ROOMS_COOKIE_NAME = "viora_rooms_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 12; // 12 ساعة
 
-function getSecret(): string {
-  const secret = process.env.ROOMS_SESSION_SECRET;
-  if (!secret) {
-    throw new Error("ROOMS_SESSION_SECRET مش متضاف في .env.local");
-  }
-  return secret;
+function getSecret(): string | null {
+  return process.env.ROOMS_SESSION_SECRET || null;
 }
 
 export function createRoomsSessionToken(): string {
+  const secret = getSecret();
+  if (!secret) {
+    throw new Error("ROOMS_SESSION_SECRET مش متضاف في متغيرات البيئة");
+  }
   const issuedAt = Date.now().toString();
-  const signature = createHmac("sha256", getSecret()).update(issuedAt).digest("hex");
+  const signature = createHmac("sha256", secret).update(issuedAt).digest("hex");
   return `${issuedAt}.${signature}`;
 }
 
 export function verifyRoomsSessionToken(token: string | undefined | null): boolean {
   if (!token) return false;
-  const [issuedAt, signature] = token.split(".");
-  if (!issuedAt || !signature) return false;
+  const secret = getSecret();
+  if (!secret) return false;
 
-  const age = Date.now() - Number(issuedAt);
-  if (!Number.isFinite(age) || age < 0 || age > SESSION_MAX_AGE_SECONDS * 1000) return false;
+  try {
+    const [issuedAt, signature] = token.split(".");
+    if (!issuedAt || !signature) return false;
 
-  const expected = createHmac("sha256", getSecret()).update(issuedAt).digest("hex");
-  const a = Buffer.from(signature);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+    const age = Date.now() - Number(issuedAt);
+    if (!Number.isFinite(age) || age < 0 || age > SESSION_MAX_AGE_SECONDS * 1000) return false;
+
+    const expected = createHmac("sha256", secret).update(issuedAt).digest("hex");
+    const a = Buffer.from(signature);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length) return false;
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
 }
 
 export const ROOMS_COOKIE_MAX_AGE = SESSION_MAX_AGE_SECONDS;

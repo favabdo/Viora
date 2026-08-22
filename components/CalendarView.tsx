@@ -6,6 +6,7 @@ import IconButton from "./ui/IconButton";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings } from "@/lib/useSettings";
+import { dateKey } from "@/lib/taskShape";
 
 function ymd(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -30,15 +31,15 @@ export default function CalendarView({
   const tasksByDate = useMemo(() => {
     const map = new Map<string, Task[]>();
     for (const task of tasks) {
-      if (!task.due_date) continue;
-      const key = task.due_date.slice(0, 10);
+      const key = dateKey(task.due_date);
+      if (!key) continue;
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(task);
     }
     return map;
   }, [tasks]);
 
-  const undatedTasks = tasks.filter((t2) => !t2.due_date);
+  const undatedTasks = tasks.filter((t2) => !dateKey(t2.due_date));
 
   const days = useMemo(() => {
     const year = cursor.getFullYear();

@@ -86,9 +86,11 @@ export function renderActivity(
 
   if (entry.action) {
     let text = t(`activity.${entry.action}`);
-    const params = entry.action_params || {};
+    const raw = entry.action_params;
+    const params =
+      raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
     for (const [key, value] of Object.entries(params)) {
-      text = text.replace(`{${key}}`, value);
+      text = text.replace(`{${key}}`, String(value ?? ""));
     }
 
     if (!hasActor) {
