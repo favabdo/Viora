@@ -55,6 +55,7 @@ export function normalizeTask(row: Task | Record<string, unknown>): Task {
     ...data,
     due_date: dateKey(data.due_date),
     start_date: dateKey(data.start_date),
+    completed_at: dateKey(data.completed_at),
     position: typeof data.position === "number" && Number.isFinite(data.position) ? data.position : 0,
     profiles: normalizeProfile(data.profiles),
   };

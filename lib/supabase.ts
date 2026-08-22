@@ -46,6 +46,7 @@ export type Task = {
   column_id?: string | null;
   due_date?: string | null;
   start_date?: string | null;
+  completed_at?: string | null;
   profiles?: { username: string; full_name: string; avatar_url?: string | null } | null;
 };
 

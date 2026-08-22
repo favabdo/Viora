@@ -22,7 +22,7 @@ import { displayName } from "@/lib/displayName";
 import BoardView from "./BoardView";
 import ProjectListView from "./ProjectListView";
 import ProjectCalendarView from "./ProjectCalendarView";
-import TimelineView from "./TimelineView";
+import ProjectTimelineView from "./ProjectTimelineView";
 import LinksSection from "./LinksSection";
 import BoardAnalytics from "./BoardAnalytics";
 import ActivityFeed from "./ActivityFeed";
@@ -386,7 +386,13 @@ export default function ProjectWorkspace({
         />
       )}
       {view === "timeline" && (
-        <TimelineView tasks={tasks} columns={columns} onTasksMutated={setTasks} />
+        <ProjectTimelineView
+          project={project}
+          projects={projects}
+          tasks={tasks}
+          currentUserId={currentUserId}
+          onTasksMutated={setTasks}
+        />
       )}
       {view === "files" && <LinksSection />}
       {view === "settings" && (

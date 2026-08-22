@@ -266,6 +266,10 @@ const dict: Record<string, { en: string; ar: string }> = {
   "calendar.showCompleted": { en: "Show completed tasks", ar: "إظهار المهام المكتملة" },
   "calendar.upcoming": { en: "Upcoming", ar: "القادم" },
   "calendar.tomorrow": { en: "Tomorrow", ar: "غدًا" },
+  "timeline.completed": { en: "Completed", ar: "مكتملة" },
+  "timeline.inProgress": { en: "In Progress", ar: "قيد التنفيذ" },
+  "timeline.criticalPath": { en: "Critical path", ar: "المسار الحرج" },
+  "timeline.overdueHint": { en: "Still open after the deadline", ar: "ما زالت مفتوحة بعد موعد التسليم" },
 
   // ===== components/ActivityFeed.tsx =====
   "activity.recent": { en: "Recent activity", ar: "النشاط الأخير" },
