@@ -130,8 +130,9 @@ export default function ProjectWorkspace({
         const fallback = await supabase.from("tasks").select("*").eq("project_id", projectId);
         if (!fallback.error && fallback.data) rows = fallback.data as Record<string, unknown>[];
       }
-      setTasks(rows.map(normalizeTask));
-      loadCommentCounts(rows.map((row) => row.id));
+      const normalized = rows.map(normalizeTask);
+      setTasks(normalized);
+      loadCommentCounts(normalized.map((row) => row.id));
 
       if (!membersRes.error && membersRes.data) {
         setMembers(membersRes.data.map(normalizeProjectMember));
