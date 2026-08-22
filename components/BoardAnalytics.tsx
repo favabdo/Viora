@@ -21,12 +21,14 @@ export default function BoardAnalytics({
   tasks,
   columns,
   compact,
+  layout,
 }: {
   projects: Project[];
   activeProjectId: string;
   tasks: Task[];
   columns: BoardColumn[];
   compact?: boolean;
+  layout?: "default" | "workspace";
 }) {
   const { t, lang } = useTranslation();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
@@ -63,8 +65,15 @@ export default function BoardAnalytics({
     .sort((a, b) => (a.due_date || "").localeCompare(b.due_date || ""))
     .slice(0, 5);
 
+  const gridClass =
+    layout === "workspace"
+      ? "grid grid-cols-1 md:grid-cols-3 gap-4"
+      : compact
+        ? "flex flex-col gap-4"
+        : "grid grid-cols-1 md:grid-cols-2 gap-4 mt-6";
+
   return (
-    <div className={compact ? "flex flex-col gap-4" : "grid grid-cols-1 md:grid-cols-2 gap-4 mt-6"}>
+    <div className={gridClass}>
       {/* توزيع المهام حسب الحالة */}
       <div className="bg-surface border border-line rounded-lg p-4">
         <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-3">
@@ -138,7 +147,7 @@ export default function BoardAnalytics({
       </div>
 
       {/* أقرب المواعيد */}
-      <div className={`bg-surface border border-line rounded-lg p-4 ${compact ? "" : "md:col-span-2"}`}>
+      <div className={`bg-surface border border-line rounded-lg p-4 ${compact || layout === "workspace" ? "" : "md:col-span-2"}`}>
         <h4 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-3">
           {t("board.upcomingDeadlines")}
         </h4>

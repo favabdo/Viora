@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   LucideIcon,
@@ -29,16 +30,6 @@ export type ShellTab = {
   icon: LucideIcon;
 };
 
-function VioraMark() {
-  return (
-    <div className="h-8 w-8 rounded-[10px] bg-[#6C5CE7] text-white flex items-center justify-center shrink-0 shadow-[0_0_0_4px_rgba(108,92,231,0.12)]">
-      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden>
-        <path d="M4 5h5.2l2.8 9.4L14.8 5H20l-6.4 14h-3.2L4 5z" fill="currentColor" />
-      </svg>
-    </div>
-  );
-}
-
 export default function AppShell({
   tabs,
   activeTab,
@@ -63,7 +54,7 @@ export default function AppShell({
   children: ReactNode;
 }) {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [theme, setTheme] = useState<Theme>("dark");
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
@@ -143,9 +134,18 @@ export default function AppShell({
   }
 
   const Logo = (
-    <div className="flex items-center gap-2.5">
-      <VioraMark />
-      <span className="text-[17px] font-semibold tracking-[0.14em] text-ink">VIORA</span>
+    <div className="flex items-center gap-1">
+      {lang === "ar" ? (
+        <>
+          <span className="viora-wordmark text-xl">iora</span>
+          <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
+        </>
+      ) : (
+        <>
+          <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
+          <span className="viora-wordmark text-xl">iora</span>
+        </>
+      )}
     </div>
   );
 

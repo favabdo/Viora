@@ -20,6 +20,7 @@ import TasksSection from "@/components/TasksSection";
 import LinksSection from "@/components/LinksSection";
 import RoomsSection from "@/components/RoomsSection";
 import ProjectsSection from "@/components/ProjectsSection";
+import ProjectWorkspace from "@/components/ProjectWorkspace";
 import ComingSoon from "@/components/ComingSoon";
 import PendingInvites from "@/components/PendingInvites";
 import ProfileCardProvider from "@/components/ProfileCardContext";
@@ -65,7 +66,7 @@ function HomeInner() {
   const [currentUserAvatar, setCurrentUserAvatar] = useState<string | null>(null);
   const [roomsInitialFilter, setRoomsInitialFilter] = useState<"open" | "pending">("open");
   const [openCreateSignal, setOpenCreateSignal] = useState(0);
-  const [focusProjectId, setFocusProjectId] = useState<string | null>(null);
+  const [openProjectId, setOpenProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -114,8 +115,8 @@ function HomeInner() {
   }
 
   function openProject(projectId: string) {
-    setFocusProjectId(projectId);
-    setTab("tasks");
+    setOpenProjectId(projectId);
+    setTab("projects");
   }
 
   return (
@@ -123,9 +124,14 @@ function HomeInner() {
       <AppShell
         tabs={TABS}
         activeTab={tab}
-        onTabChange={(id) => setTab(id as Tab)}
+        onTabChange={(id) => {
+          const next = id as Tab;
+          setTab(next);
+          if (next === "projects") setOpenProjectId(null);
+        }}
         onRoomsTabActivated={(hasPending) => setRoomsInitialFilter(hasPending ? "pending" : "open")}
         onNew={() => {
+          if (openProjectId) setOpenProjectId(null);
           if (tab === "projects" || tab === "dashboard") setOpenCreateSignal((n) => n + 1);
           else setTab("projects");
         }}
@@ -137,18 +143,26 @@ function HomeInner() {
         <PendingInvites userId={session.user.id} />
 
         {tab === "dashboard" && <ComingSoon title={t("nav.dashboard")} icon={LayoutDashboard} />}
-        {tab === "projects" && (
+        {tab === "projects" && !openProjectId && (
           <ProjectsSection
             currentUserId={session.user.id}
             openCreateSignal={openCreateSignal}
             onOpenProject={openProject}
           />
         )}
+        {tab === "projects" && openProjectId && (
+          <ProjectWorkspace
+            projectId={openProjectId}
+            currentUserId={session.user.id}
+            currentUserEmail={session.user.email || ""}
+            onBack={() => setOpenProjectId(null)}
+          />
+        )}
         {tab === "tasks" && (
           <TasksSection
             currentUserId={session.user.id}
             currentUserEmail={session.user.email || ""}
-            initialProjectId={focusProjectId}
+            initialProjectId={openProjectId}
           />
         )}
         {tab === "board" && <ComingSoon title={t("nav.board")} icon={LayoutGrid} />}
