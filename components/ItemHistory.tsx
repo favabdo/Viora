@@ -46,21 +46,21 @@ export default function ItemHistory({
           : "id, message, action, action_params, created_at";
       const fallbackColumns =
         table === "activity_log" ? "id, actor_id, actor_name, message, created_at" : "id, message, created_at";
-      let { data, error } = await supabase
+      const primary = await supabase
         .from(table)
         .select(columns)
         .eq(column, id)
         .order("created_at", { ascending: true });
-      if (error) {
+      let rows: Entry[] | null = !primary.error && primary.data ? (primary.data as unknown as Entry[]) : null;
+      if (!rows) {
         const fallback = await supabase
           .from(table)
           .select(fallbackColumns)
           .eq(column, id)
           .order("created_at", { ascending: true });
-        data = fallback.data;
-        error = fallback.error;
+        if (!fallback.error && fallback.data) rows = fallback.data as unknown as Entry[];
       }
-      if (!error && data) setEntries(data as unknown as Entry[]);
+      if (rows) setEntries(rows);
       setLoaded(true);
       setLoading(false);
     }

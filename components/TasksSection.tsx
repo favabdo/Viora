@@ -142,27 +142,25 @@ export default function TasksSection({
 
   async function loadTasks(projectId: string) {
     setLoadingTasks(true);
-    const query = () =>
-      supabase
-        .from("tasks")
-        .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
-        .eq("project_id", projectId)
-        .order("is_done", { ascending: true })
-        .order("position", { ascending: true });
-
-    let { data, error } = await query();
-    if (error) {
+    const primary = await supabase
+      .from("tasks")
+      .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
+      .eq("project_id", projectId)
+      .order("is_done", { ascending: true })
+      .order("position", { ascending: true });
+    let rows: Task[] | null =
+      !primary.error && primary.data ? (primary.data as Task[]) : null;
+    if (!rows) {
       const fallback = await supabase
         .from("tasks")
         .select("*")
         .eq("project_id", projectId)
         .order("is_done", { ascending: true })
         .order("position", { ascending: true });
-      data = fallback.data;
-      error = fallback.error;
+      if (!fallback.error && fallback.data) rows = fallback.data as Task[];
     }
-    if (!error && data) {
-      const next = sortTasks((data as Task[]).map(normalizeTask));
+    if (rows) {
+      const next = sortTasks(rows.map(normalizeTask));
       setTasks(next);
       loadCommentCounts(next.map((t) => t.id));
     }
