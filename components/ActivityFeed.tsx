@@ -37,7 +37,7 @@ export default function ActivityFeed({
       });
 
     const channel = supabase
-      .channel(`activity-${projectId}`)
+      .channel(`activity-${projectId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "activity_log", filter: `project_id=eq.${projectId}` },

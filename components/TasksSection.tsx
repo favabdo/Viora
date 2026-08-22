@@ -102,7 +102,7 @@ export default function TasksSection({
   useEffect(() => {
     if (!activeProjectId) return;
     const channel = supabase
-      .channel(`tasks-${activeProjectId}`)
+      .channel(`tasks-${activeProjectId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "tasks", filter: `project_id=eq.${activeProjectId}` },
@@ -118,7 +118,7 @@ export default function TasksSection({
   useEffect(() => {
     if (!activeProjectId) return;
     const channel = supabase
-      .channel(`board-columns-${activeProjectId}`)
+      .channel(`board-columns-${activeProjectId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "board_columns", filter: `project_id=eq.${activeProjectId}` },
@@ -827,16 +827,14 @@ export default function TasksSection({
                   columns={columns}
                   compact
                 />
-                <div className="mt-4">
-                  <ActivityFeed projectId={activeProject.id} currentUserId={currentUserId} />
-                </div>
               </aside>
             </div>
 
             <div className="lg:hidden mt-6">
               <BoardAnalytics projects={projects} activeProjectId={activeProject.id} tasks={tasks} columns={columns} />
-              <ActivityFeed projectId={activeProject.id} currentUserId={currentUserId} />
             </div>
+
+            <ActivityFeed projectId={activeProject.id} currentUserId={currentUserId} />
           </>
         ) : projects.length > 0 ? (
           <EmptyState
