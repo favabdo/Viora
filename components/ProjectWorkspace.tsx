@@ -23,7 +23,7 @@ import BoardView from "./BoardView";
 import ProjectListView from "./ProjectListView";
 import ProjectCalendarView from "./ProjectCalendarView";
 import ProjectTimelineView from "./ProjectTimelineView";
-import LinksSection from "./LinksSection";
+import ComingSoon from "./ComingSoon";
 import BoardAnalytics from "./BoardAnalytics";
 import ActivityFeed from "./ActivityFeed";
 import TeamPanel from "./TeamPanel";
@@ -396,7 +396,7 @@ export default function ProjectWorkspace({
           onTasksMutated={setTasks}
         />
       )}
-      {view === "files" && <LinksSection />}
+      {view === "files" && <ComingSoon title={t("workspace.files")} icon={FileText} />}
       {view === "settings" && (
         <div className="max-w-lg rounded-xl border border-line bg-surface p-5">
           <h2 className="text-sm font-semibold text-ink mb-3">{t("workspace.projectSettings")}</h2>

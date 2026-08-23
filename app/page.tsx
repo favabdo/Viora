@@ -21,7 +21,6 @@ import RoomsSection from "@/components/RoomsSection";
 import ProjectsSection from "@/components/ProjectsSection";
 import ProjectWorkspace from "@/components/ProjectWorkspace";
 import ComingSoon from "@/components/ComingSoon";
-import EmptyState from "@/components/ui/EmptyState";
 import PendingInvites from "@/components/PendingInvites";
 import ProfileCardProvider from "@/components/ProfileCardContext";
 import AppShell, { ShellTab } from "@/components/AppShell";
@@ -163,11 +162,7 @@ function HomeInner() {
         {tab === "calendar" && <ComingSoon title={t("nav.calendar")} icon={CalendarDays} />}
         {tab === "ideas" && <ComingSoon title={t("nav.ideas")} icon={Lightbulb} />}
         {tab === "timeline" && <ComingSoon title={t("nav.timeline")} icon={GanttChart} />}
-        {tab === "files" && (
-          <div className="rounded-xl border border-line bg-surface">
-            <EmptyState icon={FileText} title={t("files.empty")} hint={t("files.emptyHint")} />
-          </div>
-        )}
+        {tab === "files" && <ComingSoon title={t("nav.files")} icon={FileText} />}
         {tab === "links" && <LinksSection />}
         {tab === "reports" && <ComingSoon title={t("nav.reports")} icon={BarChart3} />}
         {tab === "rooms" && (

@@ -373,7 +373,7 @@ export default function ProjectCalendarView({
           <select
             value={projectFilter}
             onChange={(e) => setProjectFilter(e.target.value)}
-            className="w-full rounded-[1.75rem] border border-line bg-surfaceSunken px-4 py-2 text-xs text-ink outline-none focus:border-[#8C3AED] focus:ring-2 focus:ring-[#8C3AED]/20"
+            className="w-full rounded-[1.75rem] border-0 bg-surfaceSunken px-4 py-2 text-xs text-ink outline-none focus:outline-none focus:ring-0"
           >
             <option value="all">{t("calendar.allProjects")}</option>
             {projects.map((item) => (
@@ -385,7 +385,7 @@ export default function ProjectCalendarView({
           <select
             value={assigneeFilter}
             onChange={(e) => setAssigneeFilter(e.target.value)}
-            className="w-full rounded-[1.75rem] border border-line bg-surfaceSunken px-4 py-2 text-xs text-ink outline-none focus:border-[#8C3AED] focus:ring-2 focus:ring-[#8C3AED]/20"
+            className="w-full rounded-[1.75rem] border-0 bg-surfaceSunken px-4 py-2 text-xs text-ink outline-none focus:outline-none focus:ring-0"
           >
             <option value="all">{t("calendar.allAssignees")}</option>
             {assignees.map(([id, name]) => (
@@ -397,7 +397,7 @@ export default function ProjectCalendarView({
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="w-full rounded-[1.75rem] border border-line bg-surfaceSunken px-4 py-2 text-xs text-ink outline-none focus:border-[#8C3AED] focus:ring-2 focus:ring-[#8C3AED]/20"
+            className="w-full rounded-[1.75rem] border-0 bg-surfaceSunken px-4 py-2 text-xs text-ink outline-none focus:outline-none focus:ring-0"
           >
             <option value="all">{t("calendar.allPriorities")}</option>
             <option value="high">{t("list.priority.high")}</option>

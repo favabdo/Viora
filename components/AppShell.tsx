@@ -232,7 +232,7 @@ export default function AppShell({
             <input
               type="text"
               placeholder={t("shell.search")}
-              className="w-full bg-surfaceSunken border border-line rounded-[1.75rem] ps-10 pe-14 py-2.5 text-sm text-ink placeholder:text-inkFaint focus:outline-none focus:border-[#8C3AED] focus:ring-2 focus:ring-[#8C3AED]/20 transition-shadow"
+              className="w-full bg-surfaceSunken border-0 rounded-[1.75rem] ps-10 pe-14 py-2.5 text-sm text-ink placeholder:text-inkFaint outline-none focus:outline-none focus:ring-0"
             />
             <span className="absolute top-1/2 -translate-y-1/2 end-3 text-[11px] text-inkFaint border border-line rounded-md px-1.5 py-0.5">
               ⌘ K

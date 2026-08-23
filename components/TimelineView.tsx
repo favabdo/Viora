@@ -193,7 +193,7 @@ function TimelineDateEditor({
           type="date"
           value={start}
           onChange={(e) => setStart(e.target.value)}
-          className="w-full bg-paperDark border border-line rounded-md px-3 py-2 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-teal"
+          className="w-full bg-paperDark border-0 rounded-[1.75rem] px-3 py-2 text-sm text-ink outline-none focus:outline-none focus:ring-0"
         />
       </div>
       <div>
@@ -202,7 +202,7 @@ function TimelineDateEditor({
           type="date"
           value={due}
           onChange={(e) => setDue(e.target.value)}
-          className="w-full bg-paperDark border border-line rounded-md px-3 py-2 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-teal"
+          className="w-full bg-paperDark border-0 rounded-[1.75rem] px-3 py-2 text-sm text-ink outline-none focus:outline-none focus:ring-0"
         />
       </div>
       <div className="flex gap-2 pt-1">

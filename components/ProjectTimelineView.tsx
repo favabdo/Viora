@@ -214,7 +214,7 @@ export default function ProjectTimelineView({
     node.scrollTo({ left: Math.max(todayOffset * dayWidth - 240, 0), behavior: "smooth" });
   }
 
-  const selectClass = "w-full rounded-[1.75rem] border border-line bg-surfaceSunken px-4 py-2 text-xs text-ink outline-none focus:border-[#8C3AED] focus:ring-2 focus:ring-[#8C3AED]/20";
+  const selectClass = "w-full rounded-[1.75rem] border-0 bg-surfaceSunken px-4 py-2 text-xs text-ink outline-none focus:outline-none focus:ring-0";
 
   return (
     <div className="flex flex-col xl:flex-row gap-5 items-start">

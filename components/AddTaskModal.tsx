@@ -50,10 +50,10 @@ export function writeTaskMeta(taskId: string, extras: NewTaskDraft["extras"]) {
 }
 
 const selectClass =
-  "w-full rounded-[1.75rem] border border-line bg-surfaceSunken px-4 py-2.5 text-sm text-ink outline-none transition-colors focus:border-[#8C3AED] focus:ring-2 focus:ring-[#8C3AED]/20";
+  "w-full rounded-[1.75rem] border-0 bg-surfaceSunken px-4 py-2.5 text-sm text-ink outline-none shadow-none focus:outline-none focus:ring-0";
 
 const chipSelectClass =
-  "h-8 rounded-full border border-line bg-surfaceSunken px-3 text-xs text-ink outline-none focus:border-[#8C3AED]";
+  "h-8 rounded-full border-0 bg-surfaceSunken px-3 text-xs text-ink outline-none focus:outline-none focus:ring-0";
 
 export default function AddTaskModal({
   mode,
@@ -184,7 +184,7 @@ export default function AddTaskModal({
                   </option>
                 ))}
               </select>
-              <label className="h-8 inline-flex items-center gap-1.5 rounded-full border border-line bg-surfaceSunken px-3 text-inkFaint">
+              <label className="h-8 inline-flex items-center gap-1.5 rounded-full border-0 bg-surfaceSunken px-3 text-inkFaint">
                 <Calendar size={13} />
                 <input
                   type="date"

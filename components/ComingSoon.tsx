@@ -16,8 +16,8 @@ export default function ComingSoon({
       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#6C5CE7]/15 text-[#6C5CE7]">
         <Icon size={26} strokeWidth={1.75} />
       </div>
-      <h1 className="text-2xl font-semibold text-ink tracking-tight">{title}</h1>
-      <p className="mt-2 text-sm text-inkSoft max-w-sm">{t("comingSoon.hint")}</p>
+      <p className="text-sm text-inkFaint">{title}</p>
+      <h1 className="mt-1 text-2xl font-semibold text-ink tracking-tight">{t("comingSoon.hint")}</h1>
     </div>
   );
 }

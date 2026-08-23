@@ -72,7 +72,7 @@ function Select({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="bg-paperDark border border-line rounded-md px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-teal min-w-[160px]"
+      className="bg-paperDark border-0 rounded-[1.75rem] px-3 py-1.5 text-sm text-ink outline-none focus:outline-none focus:ring-0 min-w-[160px]"
     >
       {children}
     </select>
