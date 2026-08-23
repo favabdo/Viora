@@ -341,6 +341,8 @@ export default function ProjectWorkspace({
         <>
           <BoardView
             projectId={project.id}
+            projects={projects}
+            members={acceptedMembers}
             tasks={tasks}
             columns={columns}
             currentUserId={currentUserId}

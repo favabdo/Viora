@@ -6,22 +6,22 @@ import type { Session } from "@supabase/supabase-js";
 import {
   LayoutDashboard,
   FolderKanban,
-  CheckSquare,
   LayoutGrid,
   CalendarDays,
   Lightbulb,
   GanttChart,
   FileText,
+  Link2,
   BarChart3,
   Settings,
   DoorClosed,
 } from "lucide-react";
-import TasksSection from "@/components/TasksSection";
 import LinksSection from "@/components/LinksSection";
 import RoomsSection from "@/components/RoomsSection";
 import ProjectsSection from "@/components/ProjectsSection";
 import ProjectWorkspace from "@/components/ProjectWorkspace";
 import ComingSoon from "@/components/ComingSoon";
+import EmptyState from "@/components/ui/EmptyState";
 import PendingInvites from "@/components/PendingInvites";
 import ProfileCardProvider from "@/components/ProfileCardContext";
 import AppShell, { ShellTab } from "@/components/AppShell";
@@ -31,12 +31,12 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 type Tab =
   | "dashboard"
   | "projects"
-  | "tasks"
   | "board"
   | "calendar"
   | "ideas"
   | "timeline"
   | "files"
+  | "links"
   | "reports"
   | "rooms"
   | "settings";
@@ -48,17 +48,18 @@ function HomeInner() {
   const TABS: ShellTab[] = [
     { id: "dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
     { id: "projects", label: t("nav.projects"), icon: FolderKanban },
-    { id: "tasks", label: t("nav.tasks"), icon: CheckSquare },
     { id: "board", label: t("nav.board"), icon: LayoutGrid },
     { id: "calendar", label: t("nav.calendar"), icon: CalendarDays },
     { id: "ideas", label: t("nav.ideas"), icon: Lightbulb },
     { id: "timeline", label: t("nav.timeline"), icon: GanttChart },
     { id: "files", label: t("nav.files"), icon: FileText },
+    { id: "links", label: t("nav.links"), icon: Link2 },
     { id: "reports", label: t("nav.reports"), icon: BarChart3 },
     { id: "rooms", label: t("nav.rooms"), icon: DoorClosed },
     { id: "settings", label: t("nav.settings"), icon: Settings },
   ];
-  const initialTab = (searchParams.get("tab") as Tab) || "projects";
+  const requestedTab = searchParams.get("tab");
+  const initialTab = (requestedTab === "tasks" ? "projects" : requestedTab) as Tab || "projects";
   const [tab, setTab] = useState<Tab>(initialTab);
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
@@ -158,18 +159,16 @@ function HomeInner() {
             onBack={() => setOpenProjectId(null)}
           />
         )}
-        {tab === "tasks" && (
-          <TasksSection
-            currentUserId={session.user.id}
-            currentUserEmail={session.user.email || ""}
-            initialProjectId={openProjectId}
-          />
-        )}
         {tab === "board" && <ComingSoon title={t("nav.board")} icon={LayoutGrid} />}
         {tab === "calendar" && <ComingSoon title={t("nav.calendar")} icon={CalendarDays} />}
         {tab === "ideas" && <ComingSoon title={t("nav.ideas")} icon={Lightbulb} />}
         {tab === "timeline" && <ComingSoon title={t("nav.timeline")} icon={GanttChart} />}
-        {tab === "files" && <LinksSection />}
+        {tab === "files" && (
+          <div className="rounded-xl border border-line bg-surface">
+            <EmptyState icon={FileText} title={t("files.empty")} hint={t("files.emptyHint")} />
+          </div>
+        )}
+        {tab === "links" && <LinksSection />}
         {tab === "reports" && <ComingSoon title={t("nav.reports")} icon={BarChart3} />}
         {tab === "rooms" && (
           <RoomsSection currentUserId={session.user.id} initialFilter={roomsInitialFilter} />

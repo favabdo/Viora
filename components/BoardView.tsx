@@ -15,15 +15,16 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { supabase, Task, BoardColumn, TASK_COLORS } from "@/lib/supabase";
+import { supabase, Task, BoardColumn, Project, ProjectMember, TASK_COLORS } from "@/lib/supabase";
 import { normalizeTask } from "@/lib/taskShape";
 import Avatar from "./ui/Avatar";
 import IconButton from "./ui/IconButton";
 import { Input } from "./ui/Input";
-import { Plus, X, Pencil, Check, Calendar, Palette, GripVertical, MessageCircle } from "lucide-react";
+import { Plus, X, Check, Calendar, Palette, MessageCircle } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import ClickableName from "./ClickableName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import AddTaskModal, { writeTaskMeta, type NewTaskDraft } from "./AddTaskModal";
 
 const COLUMN_PALETTE = ["#3b82f6", "#a855f7", "#22c55e", "#f97316", "#ef4444", "#06b6d4", "#eab308", "#6b7280"];
 
@@ -56,11 +57,14 @@ function TaskCard({
   onSetDueDate: (task: Task, date: string | null) => void;
 }) {
   const { t } = useTranslation();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
   const [editing, setEditing] = useState(false);
   const [titleDraft, setTitleDraft] = useState(task.title);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: task.id,
+    disabled: editing,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -72,20 +76,13 @@ function TaskCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="group bg-[#0F111A] border border-[#2D2F39] rounded-lg p-3 hover:border-[#3a3d4a] transition-colors"
+      {...attributes}
+      {...listeners}
+      className="group bg-[#0F111A] border border-[#2D2F39] rounded-lg p-3 hover:border-[#3a3d4a] transition-colors cursor-grab active:cursor-grabbing touch-none"
     >
       <div className="flex items-start gap-1.5">
-        <button
-          {...attributes}
-          {...listeners}
-          className="mt-0.5 shrink-0 cursor-grab active:cursor-grabbing text-inkFaint hover:text-inkSoft touch-none"
-          aria-label={t("tasks.dragHandle")}
-        >
-          <GripVertical size={13} strokeWidth={1.75} />
-        </button>
-
         {editing ? (
-          <div className="flex-1 flex items-center gap-1 min-w-0">
+          <div className="flex-1 flex items-center gap-1 min-w-0" onPointerDown={(e) => e.stopPropagation()}>
             <Input
               autoFocus
               value={titleDraft}
@@ -120,6 +117,7 @@ function TaskCard({
           tone="danger"
           aria-label={t("tasks.deleteTask")}
           onClick={() => onRequestDelete(task)}
+          onPointerDown={(e) => e.stopPropagation()}
           className="shrink-0 opacity-0 group-hover:opacity-100"
         >
           <X size={13} strokeWidth={1.75} />
@@ -140,7 +138,7 @@ function TaskCard({
             ) : null;
           })()}
 
-        <div className="relative">
+        <div className="relative" onPointerDown={(e) => e.stopPropagation()}>
           <button
             onClick={() => setShowColorPicker((v) => !v)}
             className="opacity-0 group-hover:opacity-100 text-inkFaint hover:text-inkSoft transition-opacity"
@@ -178,7 +176,7 @@ function TaskCard({
           )}
         </div>
 
-        <div className="relative ms-auto">
+        <div className="relative ms-auto" onPointerDown={(e) => e.stopPropagation()}>
           <button
             onClick={() => setShowDatePicker((v) => !v)}
             className={`flex items-center gap-1 text-2xs transition-colors ${
@@ -250,14 +248,12 @@ function ColumnContainer({
   onSetDueDate: (task: Task, date: string | null) => void;
   onRenameColumn: (column: BoardColumn, name: string) => void;
   onDeleteColumn: (column: BoardColumn) => void;
-  onAddTask: (columnId: string, title: string) => void;
+  onAddTask: (columnId: string) => void;
 }) {
   const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(column.name);
-  const [showAddTask, setShowAddTask] = useState(false);
-  const [newTaskTitle, setNewTaskTitle] = useState("");
 
   return (
     <div className="flex flex-col w-[280px] shrink-0 rounded-xl border border-[#2D2F39] bg-[#151621] p-3 min-h-[28rem]">
@@ -320,51 +316,21 @@ function ColumnContainer({
         </SortableContext>
       </div>
 
-      {showAddTask ? (
-        <div className="flex items-center gap-1 mt-2 px-1">
-          <Input
-            autoFocus
-            value={newTaskTitle}
-            onChange={(e) => setNewTaskTitle(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && newTaskTitle.trim()) {
-                onAddTask(column.id, newTaskTitle.trim());
-                setNewTaskTitle("");
-              }
-              if (e.key === "Escape") setShowAddTask(false);
-            }}
-            placeholder={t("tasks.newTaskPlaceholder")}
-            className="text-sm py-1.5"
-          />
-          <IconButton
-            size="sm"
-            tone="active"
-            aria-label={t("tasks.add")}
-            onClick={() => {
-              if (newTaskTitle.trim()) {
-                onAddTask(column.id, newTaskTitle.trim());
-                setNewTaskTitle("");
-              }
-            }}
-          >
-            <Check size={13} strokeWidth={2} />
-          </IconButton>
-        </div>
-      ) : (
-        <button
-          onClick={() => setShowAddTask(true)}
-          className="flex items-center gap-1.5 mt-2 px-2 py-1.5 text-xs text-inkFaint hover:text-teal hover:bg-paperDark rounded-md transition-colors"
-        >
-          <Plus size={13} strokeWidth={2} />
-          {t("tasks.add")}
-        </button>
-      )}
+      <button
+        onClick={() => onAddTask(column.id)}
+        className="flex items-center gap-1.5 mt-2 px-2 py-2 text-xs text-inkFaint hover:text-[#8C3AED] rounded-md border border-transparent hover:border-dashed hover:border-[#8C3AED] transition-colors"
+      >
+        <Plus size={13} strokeWidth={2} />
+        {t("board.addTask")}
+      </button>
     </div>
   );
 }
 
 export default function BoardView({
   projectId,
+  projects,
+  members,
   tasks,
   columns,
   currentUserId,
@@ -374,6 +340,8 @@ export default function BoardView({
   onColumnsMutated,
 }: {
   projectId: string;
+  projects: Project[];
+  members: ProjectMember[];
   tasks: Task[];
   columns: BoardColumn[];
   currentUserId: string;
@@ -388,6 +356,10 @@ export default function BoardView({
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
+  const [addTaskOpen, setAddTaskOpen] = useState(false);
+  const [addTaskMode, setAddTaskMode] = useState<"quick" | "full">("quick");
+  const [addTaskColumnId, setAddTaskColumnId] = useState<string | null>(null);
+  const [creatingTask, setCreatingTask] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -464,17 +436,38 @@ export default function BoardView({
     await supabase.from("tasks").update({ due_date: date }).eq("id", task.id);
   }
 
-  async function addTaskToColumn(columnId: string, title: string) {
-    const list = tasksByColumn.get(columnId) || [];
+  function openAddTask(columnId?: string, mode: "quick" | "full" = "quick") {
+    setAddTaskColumnId(columnId ?? columns[0]?.id ?? null);
+    setAddTaskMode(mode);
+    setAddTaskOpen(true);
+  }
+
+  async function createTask(draft: NewTaskDraft) {
+    const targetProjectId = draft.projectId || projectId;
+    const targetColumnId = targetProjectId === projectId ? draft.columnId : null;
+    const list = targetColumnId ? tasksByColumn.get(targetColumnId) || [] : [];
     const position = list.length > 0 ? list[list.length - 1].position + 1000 : 1000;
+    setCreatingTask(true);
     const { data, error } = await supabase
       .from("tasks")
-      .insert({ title, project_id: projectId, column_id: columnId, position })
+      .insert({
+        title: draft.title,
+        project_id: targetProjectId,
+        column_id: targetColumnId,
+        position,
+        color: draft.color,
+        due_date: draft.dueDate,
+      })
       .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
       .single();
-    if (!error && data) {
-      onTasksMutated((prev) => [...prev, normalizeTask(data)]);
+    setCreatingTask(false);
+    if (error || !data) return;
+    const created = normalizeTask(data);
+    writeTaskMeta(created.id, draft.extras);
+    if (created.project_id === projectId) {
+      onTasksMutated((prev) => [...prev, created]);
     }
+    if (!draft.createAnother) setAddTaskOpen(false);
   }
 
   async function addColumn() {
@@ -512,6 +505,16 @@ export default function BoardView({
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div className="flex items-center justify-end mb-3">
+        <button
+          type="button"
+          onClick={() => openAddTask(columns[0]?.id, "quick")}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[#6C5CE7] px-3.5 py-2 text-sm font-medium text-white hover:bg-[#7c6ef0] active:bg-[#5a4bd1] transition-colors"
+        >
+          <Plus size={15} strokeWidth={2.25} />
+          {t("board.addTask")}
+        </button>
+      </div>
       <div className="flex items-start gap-4 overflow-x-auto pb-4 thin-scroll">
         {columns.map((column) => (
           <ColumnContainer
@@ -527,7 +530,7 @@ export default function BoardView({
             onSetDueDate={setDueDate}
             onRenameColumn={renameColumn}
             onDeleteColumn={deleteColumn}
-            onAddTask={addTaskToColumn}
+            onAddTask={(columnId) => openAddTask(columnId, "quick")}
           />
         ))}
 
@@ -560,11 +563,28 @@ export default function BoardView({
 
       <DragOverlay>
         {activeTask ? (
-          <div className="bg-surface border border-teal rounded-lg p-3 shadow-modal w-72 opacity-90">
+          <div className="bg-surface border border-[#8C3AED] rounded-lg p-3 shadow-modal w-72 opacity-90">
             <p className="text-sm text-ink">{activeTask.title}</p>
           </div>
         ) : null}
       </DragOverlay>
+
+      {addTaskOpen && (
+        <AddTaskModal
+          mode={addTaskMode}
+          columns={columns}
+          projects={projects.length ? projects : [{ id: projectId, user_id: currentUserId, name: "", created_at: "" }]}
+          members={members}
+          currentUserId={currentUserId}
+          defaultProjectId={projectId}
+          defaultColumnId={addTaskColumnId}
+          creating={creatingTask}
+          onClose={() => setAddTaskOpen(false)}
+          onExpand={() => setAddTaskMode("full")}
+          onCollapse={() => setAddTaskMode("quick")}
+          onCreate={createTask}
+        />
+      )}
     </DndContext>
   );
 }

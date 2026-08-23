@@ -8,11 +8,13 @@ export default function Modal({
   onClose,
   children,
   title,
+  titleAlign = "start",
   maxWidth = "max-w-sm",
 }: {
   onClose?: () => void;
   children: ReactNode;
   title?: string;
+  titleAlign?: "start" | "center";
   maxWidth?: string;
 }) {
   const [mounted, setMounted] = useState(false);
@@ -29,13 +31,17 @@ export default function Modal({
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-start justify-between gap-3 mb-5">
-            <h3 className="text-lg font-semibold text-ink leading-tight">{title}</h3>
+          <div className={`relative mb-5 ${titleAlign === "center" ? "" : "flex items-start justify-between gap-3"}`}>
+            <h3 className={`text-lg font-semibold text-ink leading-tight ${titleAlign === "center" ? "text-center px-8" : ""}`}>
+              {title}
+            </h3>
             {onClose && (
               <button
                 type="button"
                 onClick={onClose}
-                className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-inkFaint hover:text-ink hover:bg-white/5"
+                className={`h-8 w-8 inline-flex items-center justify-center rounded-lg text-inkFaint hover:text-ink hover:bg-white/5 ${
+                  titleAlign === "center" ? "absolute end-0 top-0" : ""
+                }`}
                 aria-label="Close"
               >
                 <X size={16} strokeWidth={1.75} />

@@ -621,6 +621,8 @@ export default function TasksSection({
             {viewMode === "board" ? (
               <BoardView
                 projectId={activeProject.id}
+                projects={projects}
+                members={[]}
                 tasks={tasks}
                 columns={columns}
                 currentUserId={currentUserId}

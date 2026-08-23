@@ -11,7 +11,16 @@ import {
   Search,
   FolderKanban,
   Plus,
+  MessageCircle,
+  Globe,
+  Code2,
+  Palette,
+  BarChart3,
+  Smartphone,
+  Briefcase,
+  MoreHorizontal,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Button from "./ui/Button";
@@ -33,6 +42,8 @@ type ProjectCard = {
   memberCount: number;
   dueLabel: string | null;
   accent: Accent;
+  color: string;
+  icon: string;
 };
 
 type Accent = {
@@ -52,10 +63,50 @@ const ACCENTS: Accent[] = [
   { bar: "bg-[#EAB308]", iconBg: "bg-[#EAB308]/18", iconText: "text-[#EAB308]" },
 ];
 
-function accentFor(id: string): Accent {
+const PROJECT_ICONS: { id: string; icon: LucideIcon }[] = [
+  { id: "folder", icon: FolderKanban },
+  { id: "chat", icon: MessageCircle },
+  { id: "globe", icon: Globe },
+  { id: "code", icon: Code2 },
+  { id: "palette", icon: Palette },
+  { id: "chart", icon: BarChart3 },
+  { id: "phone", icon: Smartphone },
+  { id: "briefcase", icon: Briefcase },
+];
+
+const PROJECT_COLORS = ["#6C5CE7", "#3B82F6", "#14B8A6", "#F59E0B", "#EC4899", "#A855F7", "#EAB308", "#6B7280"];
+
+const META_KEY = "viora-project-meta";
+
+type ProjectMeta = { description: string; icon: string; color: string };
+
+function readProjectMeta(): Record<string, ProjectMeta> {
+  try {
+    const raw = localStorage.getItem(META_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, ProjectMeta>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeProjectMeta(id: string, meta: ProjectMeta) {
+  const all = readProjectMeta();
+  all[id] = meta;
+  localStorage.setItem(META_KEY, JSON.stringify(all));
+}
+
+function hashIndex(id: string, size: number): number {
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  return ACCENTS[Math.abs(hash) % ACCENTS.length];
+  return Math.abs(hash) % size;
+}
+
+function accentFor(id: string): Accent {
+  return ACCENTS[hashIndex(id, ACCENTS.length)];
+}
+
+function defaultColor(id: string): string {
+  return PROJECT_COLORS[hashIndex(id, PROJECT_COLORS.length)];
 }
 
 function daysFromNow(iso: string): number {
@@ -84,6 +135,9 @@ export default function ProjectsSection({
   const [view, setView] = useState<ViewMode>("grid");
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newIcon, setNewIcon] = useState("folder");
+  const [newColor, setNewColor] = useState(PROJECT_COLORS[0]);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -110,6 +164,7 @@ export default function ProjectsSection({
 
     const list = projectRows as Project[];
     setProjects(list);
+    const meta = readProjectMeta();
     const ids = list.map((p) => p.id);
 
     if (ids.length === 0) {
@@ -159,21 +214,32 @@ export default function ProjectsSection({
         else dueLabel = t("projects.overdueN").replace("{n}", String(Math.abs(days)));
       }
 
+      const extra = meta[project.id];
+        const color = extra?.color || defaultColor(project.id);
       return {
         id: project.id,
         name: project.name,
-        description: t("projects.defaultDescription"),
+        description: extra?.description || t("projects.defaultDescription"),
         status,
         progress,
         taskCount: projectTasks.length,
         memberCount,
         dueLabel,
         accent: accentFor(project.id),
+        color,
+        icon: extra?.icon || "folder",
       };
     });
 
     setCards(next);
     setLoading(false);
+  }
+
+  function resetCreateForm() {
+    setNewName("");
+    setNewDescription("");
+    setNewIcon("folder");
+    setNewColor(PROJECT_COLORS[0]);
   }
 
   async function createProject() {
@@ -183,10 +249,14 @@ export default function ProjectsSection({
     const { data, error } = await supabase.from("projects").insert({ name }).select().single();
     setCreating(false);
     if (!error && data) {
-      setNewName("");
+      writeProjectMeta(String((data as Project).id), {
+        description: newDescription.trim(),
+        icon: newIcon,
+        color: newColor,
+      });
+      resetCreateForm();
       setShowCreate(false);
       await load();
-      onOpenProject?.(data.id);
     }
   }
 
@@ -222,10 +292,6 @@ export default function ProjectsSection({
           <h1 className="text-[28px] font-semibold tracking-tight text-ink">{t("projects.title")}</h1>
           <p className="mt-1 text-sm text-inkSoft">{t("projects.subtitle")}</p>
         </div>
-        <Button variant="primary" className="sm:hidden" onClick={() => setShowCreate(true)}>
-          <Plus size={15} strokeWidth={2} />
-          {t("projects.new")}
-        </Button>
       </div>
 
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between mb-6">
@@ -278,6 +344,20 @@ export default function ProjectsSection({
               <List size={15} strokeWidth={1.75} />
             </button>
           </div>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-[#6C5CE7] hover:bg-[#7B6CF0] active:bg-[#5D3FD3] text-white text-sm font-semibold px-3.5 py-2 transition-colors"
+          >
+            <Plus size={15} strokeWidth={2.25} />
+            {t("projects.new")}
+          </button>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="sm:hidden h-10 w-10 inline-flex items-center justify-center rounded-lg bg-[#6C5CE7] hover:bg-[#7B6CF0] active:bg-[#5D3FD3] text-white"
+            aria-label={t("projects.new")}
+          >
+            <Plus size={18} strokeWidth={2.25} />
+          </button>
         </div>
       </div>
 
@@ -317,8 +397,11 @@ export default function ProjectsSection({
               onClick={() => onOpenProject?.(card.id)}
               className="w-full flex items-center gap-4 px-4 py-3.5 text-start hover:bg-paperDark/60 transition-colors"
             >
-              <div className={`h-10 w-10 rounded-lg ${card.accent.iconBg} ${card.accent.iconText} flex items-center justify-center font-semibold shrink-0`}>
-                {card.name.charAt(0).toUpperCase()}
+              <div
+                className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0"
+                style={{ backgroundColor: `${card.color}22`, color: card.color }}
+              >
+                <ProjectIcon name={card.icon} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -329,7 +412,7 @@ export default function ProjectsSection({
               </div>
               <div className="hidden sm:flex items-center gap-3 w-36 shrink-0">
                 <div className="h-1.5 flex-1 rounded-full bg-paperDark overflow-hidden">
-                  <div className={`h-full rounded-full ${card.accent.bar}`} style={{ width: `${card.progress}%` }} />
+                  <div className="h-full rounded-full" style={{ width: `${card.progress}%`, backgroundColor: card.color }} />
                 </div>
                 <span className="text-xs text-inkSoft tabular-nums w-8">{card.progress}%</span>
               </div>
@@ -342,20 +425,92 @@ export default function ProjectsSection({
       )}
 
       {showCreate && (
-        <Modal onClose={() => setShowCreate(false)} title={t("projects.newTitle")}>
-          <p className="text-sm text-inkSoft mb-4">{t("projects.newHint")}</p>
-          <label className="block text-xs font-medium text-inkFaint mb-1.5">{t("projects.namePlaceholder")}</label>
-          <Input
-            autoFocus
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder={t("projects.namePlaceholder")}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") createProject();
-            }}
-          />
-          <div className="flex justify-end gap-2 mt-5">
-            <Button onClick={() => setShowCreate(false)}>{t("common.cancel")}</Button>
+        <Modal
+          onClose={() => {
+            setShowCreate(false);
+            resetCreateForm();
+          }}
+          title={t("projects.newTitle")}
+          titleAlign="center"
+          maxWidth="max-w-md"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-inkFaint mb-1.5">{t("projects.nameLabel")}</label>
+              <Input
+                autoFocus
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder={t("projects.namePlaceholder")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") createProject();
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-inkFaint mb-1.5">{t("projects.descLabel")}</label>
+              <Input
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                placeholder={t("projects.descPlaceholder")}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-inkFaint mb-2">{t("projects.iconLabel")}</label>
+              <div className="flex flex-wrap items-center gap-2">
+                {PROJECT_ICONS.map(({ id, icon: Icon }) => {
+                  const active = newIcon === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setNewIcon(id)}
+                      className={`h-10 w-10 rounded-full inline-flex items-center justify-center transition-colors ${
+                        active ? "ring-2 ring-[#6C5CE7] ring-offset-2 ring-offset-[#1A1C23]" : ""
+                      }`}
+                      style={{ backgroundColor: `${newColor}22`, color: newColor }}
+                    >
+                      <Icon size={16} strokeWidth={1.75} />
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  className="h-10 w-10 rounded-full inline-flex items-center justify-center bg-paperDark text-inkFaint"
+                  aria-label={t("workspace.more")}
+                >
+                  <MoreHorizontal size={16} />
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-inkFaint mb-2">{t("projects.colorLabel")}</label>
+              <div className="flex flex-wrap items-center gap-2">
+                {PROJECT_COLORS.map((color) => {
+                  const active = newColor === color;
+                  return (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setNewColor(color)}
+                      className={`h-7 w-7 rounded-full ${active ? "ring-2 ring-[#60A5FA] ring-offset-2 ring-offset-[#1A1C23]" : ""}`}
+                      style={{ backgroundColor: color }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-3 mt-6">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowCreate(false);
+                resetCreateForm();
+              }}
+            >
+              {t("common.cancel")}
+            </Button>
             <Button variant="primary" loading={creating} onClick={createProject}>
               {t("projects.create")}
             </Button>
@@ -364,6 +519,11 @@ export default function ProjectsSection({
       )}
     </div>
   );
+}
+
+function ProjectIcon({ name }: { name: string }) {
+  const Icon = PROJECT_ICONS.find((item) => item.id === name)?.icon || FolderKanban;
+  return <Icon size={18} strokeWidth={1.75} />;
 }
 
 function StatusBadge({ status, t }: { status: ProjectStatus; t: (key: string) => string }) {
@@ -396,9 +556,10 @@ function ProjectCardView({
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div
-          className={`h-10 w-10 rounded-lg ${card.accent.iconBg} ${card.accent.iconText} flex items-center justify-center font-semibold`}
+          className="h-10 w-10 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: `${card.color}22`, color: card.color }}
         >
-          {card.name.charAt(0).toUpperCase()}
+          <ProjectIcon name={card.icon} />
         </div>
         <StatusBadge status={card.status} t={t} />
       </div>
@@ -410,7 +571,7 @@ function ProjectCardView({
           <span className="text-xs font-medium text-inkSoft tabular-nums">{card.progress}%</span>
         </div>
         <div className="h-1.5 rounded-full bg-paperDark overflow-hidden">
-          <div className={`h-full rounded-full ${card.accent.bar}`} style={{ width: `${card.progress}%` }} />
+          <div className="h-full rounded-full" style={{ width: `${card.progress}%`, backgroundColor: card.color }} />
         </div>
       </div>
       <div className="mt-4 flex items-center justify-between gap-2 text-[11px] text-inkFaint">

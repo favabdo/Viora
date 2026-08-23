@@ -149,7 +149,7 @@ export default function AppShell({
     </div>
   );
 
-  const mobileTabs = tabs.filter((tab) => ["projects", "tasks", "board", "files"].includes(tab.id));
+  const mobileTabs = tabs.filter((tab) => ["projects", "links", "files", "board"].includes(tab.id));
 
   return (
     <div className="min-h-screen md:flex bg-paper">
