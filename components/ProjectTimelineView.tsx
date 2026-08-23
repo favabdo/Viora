@@ -17,7 +17,7 @@ import { displayName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Avatar from "./ui/Avatar";
 import DonutChart from "./ui/DonutChart";
-import { Input } from "./ui/Input";
+import { Input, Textarea } from "./ui/Input";
 
 const LABEL_WIDTH = 260;
 const ROW_HEIGHT = 48;
@@ -214,7 +214,7 @@ export default function ProjectTimelineView({
     node.scrollTo({ left: Math.max(todayOffset * dayWidth - 240, 0), behavior: "smooth" });
   }
 
-  const selectClass = "w-full rounded-lg border border-line bg-paperDark px-2.5 py-2 text-xs text-ink";
+  const selectClass = "w-full rounded-[1.75rem] border border-line bg-surfaceSunken px-4 py-2 text-xs text-ink outline-none focus:border-[#8C3AED] focus:ring-2 focus:ring-[#8C3AED]/20";
 
   return (
     <div className="flex flex-col xl:flex-row gap-5 items-start">
@@ -379,13 +379,16 @@ export default function ProjectTimelineView({
                     {!closed &&
                       (addingFor === group.project.id ? (
                         <div className="flex items-center gap-2 px-3 py-2 bg-surface border-b border-line">
-                          <Input
+                          <Textarea
                             autoFocus
                             value={newTitle}
                             onChange={(e) => setNewTitle(e.target.value)}
                             placeholder={t("tasks.newTaskPlaceholder")}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") addTask(group.project.id);
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                addTask(group.project.id);
+                              }
                               if (e.key === "Escape") setAddingFor(null);
                             }}
                             className="text-sm py-1.5 max-w-sm"

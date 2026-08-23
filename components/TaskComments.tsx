@@ -6,7 +6,7 @@ import { ChevronDown, MessageCircle, Send } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
-import { Input } from "./ui/Input";
+import { Textarea } from "./ui/Input";
 import IconButton from "./ui/IconButton";
 import Avatar from "./ui/Avatar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -104,12 +104,17 @@ export default function TaskComments({
             ))
           )}
           <div className="flex items-center gap-1.5 pt-0.5">
-            <Input
+            <Textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addComment()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  addComment();
+                }
+              }}
               placeholder={t("comments.addPlaceholder")}
-              className="text-2xs py-1"
+              className="text-2xs py-1.5"
             />
             <IconButton
               size="sm"

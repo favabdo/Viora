@@ -26,7 +26,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
 import Modal from "./ui/Modal";
-import { Input } from "./ui/Input";
+import { Input, Textarea } from "./ui/Input";
 
 type ProjectStatus = "active" | "completed" | "archived" | "on_hold";
 type StatusFilter = "all" | "active" | "completed" | "archived";
@@ -321,7 +321,7 @@ export default function ProjectsSection({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("projects.search")}
-              className="w-full rounded-lg border border-line bg-surface ps-9 pe-3 py-2 text-sm text-ink placeholder:text-inkFaint focus:outline-none focus:ring-1 focus:ring-[#6C5CE7]"
+              className="w-full rounded-[1.75rem] border border-line bg-surfaceSunken ps-9 pe-3 py-2.5 text-sm text-ink placeholder:text-inkFaint focus:outline-none focus:border-[#8C3AED] focus:ring-2 focus:ring-[#8C3AED]/20"
             />
           </div>
           <button className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-inkSoft hover:text-ink">
@@ -437,19 +437,22 @@ export default function ProjectsSection({
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-inkFaint mb-1.5">{t("projects.nameLabel")}</label>
-              <Input
+              <Textarea
                 autoFocus
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder={t("projects.namePlaceholder")}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") createProject();
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    createProject();
+                  }
                 }}
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-inkFaint mb-1.5">{t("projects.descLabel")}</label>
-              <Input
+              <Textarea
                 value={newDescription}
                 onChange={(e) => setNewDescription(e.target.value)}
                 placeholder={t("projects.descPlaceholder")}

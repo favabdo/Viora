@@ -14,7 +14,7 @@ import TaskComments from "./TaskComments";
 import Button from "./ui/Button";
 import IconButton from "./ui/IconButton";
 import Avatar from "./ui/Avatar";
-import { Input } from "./ui/Input";
+import { Input, Textarea } from "./ui/Input";
 import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 import ProgressBar from "./ui/ProgressBar";
@@ -605,10 +605,15 @@ export default function TasksSection({
 
             {viewMode !== "board" && (
               <div className="flex gap-2 mb-5">
-                <Input
+                <Textarea
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addTask()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      addTask();
+                    }
+                  }}
                   placeholder={t("tasks.newTaskPlaceholder")}
                 />
                 <Button variant="primary" onClick={addTask}>
@@ -695,13 +700,18 @@ export default function TasksSection({
                                 />
                                 {editingTaskId === task.id ? (
                                   <div className="flex-1 flex items-center gap-1.5 min-w-0">
-                                    <Input
+                                    <Textarea
                                       autoFocus
                                       value={taskTitleDraft}
                                       onChange={(e) => setTaskTitleDraft(e.target.value)}
-                                      onKeyDown={(e) => e.key === "Enter" && saveTaskTitle(task)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter" && !e.shiftKey) {
+                                          e.preventDefault();
+                                          saveTaskTitle(task);
+                                        }
+                                      }}
                                       onBlur={() => saveTaskTitle(task)}
-                                      className="text-sm py-1"
+                                      className="text-sm py-1.5"
                                     />
                                     <IconButton
                                       size="sm"

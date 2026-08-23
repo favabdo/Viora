@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Button from "./ui/Button";
-import { Input } from "./ui/Input";
+import { Input, Textarea, fieldClass } from "./ui/Input";
 import { SkeletonList } from "./ui/Skeleton";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { supabase } from "@/lib/supabase";
@@ -630,12 +630,11 @@ export default function RoomsSection({
                 )}
               </div>
 
-              <textarea
+              <Textarea
                 value={newTaskText}
                 onChange={(e) => setNewTaskText(e.target.value)}
                 placeholder={t("rooms.taskTextPlaceholder")}
                 rows={2}
-                className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-inkFaint focus:outline-none focus:ring-1 focus:ring-teal resize-none"
               />
 
               <div className="flex items-center gap-2">
@@ -653,7 +652,7 @@ export default function RoomsSection({
                   <select
                     value={newAssigneeId}
                     onChange={(e) => setNewAssigneeId(e.target.value ? Number(e.target.value) : "")}
-                    className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-teal"
+                    className={fieldClass}
                   >
                     <option value="">—</option>
                     {agents.map((a) => (
@@ -910,14 +909,19 @@ export default function RoomsSection({
                         {nilechatLink ? (
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <input
+                              <Textarea
                                 value={newCommentByTask[task.id] || ""}
                                 onChange={(e) =>
                                   setNewCommentByTask((prev) => ({ ...prev, [task.id]: e.target.value }))
                                 }
-                                onKeyDown={(e) => e.key === "Enter" && submitComment(task.id)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    submitComment(task.id);
+                                  }
+                                }}
                                 placeholder={t("rooms.addCommentPlaceholder")}
-                                className="flex-1 rounded-md border border-line bg-surface px-2.5 py-1.5 text-2xs text-ink placeholder:text-inkFaint focus:outline-none focus:ring-1 focus:ring-teal"
+                                className="flex-1 text-2xs py-1.5"
                               />
                               <button
                                 onClick={() => submitComment(task.id)}

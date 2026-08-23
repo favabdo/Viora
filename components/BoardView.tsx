@@ -19,7 +19,7 @@ import { supabase, Task, BoardColumn, Project, ProjectMember, TASK_COLORS } from
 import { normalizeTask } from "@/lib/taskShape";
 import Avatar from "./ui/Avatar";
 import IconButton from "./ui/IconButton";
-import { Input } from "./ui/Input";
+import { Input, Textarea } from "./ui/Input";
 import { Plus, X, Check, Calendar, Palette, MessageCircle } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import ClickableName from "./ClickableName";
@@ -83,12 +83,13 @@ function TaskCard({
       <div className="flex items-start gap-1.5">
         {editing ? (
           <div className="flex-1 flex items-center gap-1 min-w-0" onPointerDown={(e) => e.stopPropagation()}>
-            <Input
+            <Textarea
               autoFocus
               value={titleDraft}
               onChange={(e) => setTitleDraft(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
                   onRenameTask(task, titleDraft);
                   setEditing(false);
                 }
@@ -97,7 +98,7 @@ function TaskCard({
                 onRenameTask(task, titleDraft);
                 setEditing(false);
               }}
-              className="text-sm py-1"
+              className="text-sm py-1.5"
             />
           </div>
         ) : (

@@ -18,7 +18,7 @@ import { formatTaskDate, normalizeTask } from "@/lib/taskShape";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Avatar from "./ui/Avatar";
 import DonutChart from "./ui/DonutChart";
-import { Input } from "./ui/Input";
+import { Input, Textarea } from "./ui/Input";
 
 type GroupBy = "status" | "none";
 type SortBy = "position" | "due" | "priority" | "title";
@@ -308,13 +308,16 @@ export default function ProjectListView({
                     ))}
                     {addingFor === group.id ? (
                       <div className="flex items-center gap-2 px-4 py-2">
-                        <Input
+                        <Textarea
                           autoFocus
                           value={newTitle}
                           onChange={(e) => setNewTitle(e.target.value)}
                           placeholder={t("tasks.newTaskPlaceholder")}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") addTask(group.id === "all" || group.id === "none" ? null : group.id);
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              addTask(group.id === "all" || group.id === "none" ? null : group.id);
+                            }
                             if (e.key === "Escape") {
                               setAddingFor(null);
                               setNewTitle("");
