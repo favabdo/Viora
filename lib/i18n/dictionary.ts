@@ -17,6 +17,7 @@ const dict: Record<string, { en: string; ar: string }> = {
   "shell.search": { en: "Search tasks, projects, ideas...", ar: "ابحث في المهام والمشاريع والأفكار..." },
   "shell.new": { en: "New", ar: "جديد" },
   "shell.openMenu": { en: "Open menu", ar: "فتح القائمة" },
+  "shell.closeMenu": { en: "Close menu", ar: "إغلاق القائمة" },
   "shell.sections": { en: "Sections", ar: "الأقسام" },
   "shell.admin": { en: "Admin", ar: "مدير" },
   "shell.upgradeTitle": { en: "Upgrade to Pro", ar: "الترقية إلى Pro" },
@@ -155,6 +156,10 @@ const dict: Record<string, { en: string; ar: string }> = {
 
   // ===== app/login/page.tsx =====
   "login.confirmedInfo": { en: "Your account was confirmed successfully, you can sign in now.", ar: "تم تأكيد حسابك بنجاح، يمكنك تسجيل الدخول الآن." },
+  "login.resetSuccessInfo": {
+    en: "Your password has been updated. Sign in with your email and the new password.",
+    ar: "تم تعيين كلمة المرور الجديدة. يُرجى تسجيل الدخول ببريدك الإلكتروني وكلمة المرور الجديدة.",
+  },
   "login.err.enterName": { en: "Please enter your name", ar: "يُرجى إدخال اسمك" },
   "login.err.usernameFormat": {
     en: "Username must be 3–20 characters, using only lowercase English letters, numbers, or underscores (_)",

@@ -38,13 +38,25 @@ function LoginPageInner() {
     if (searchParams.get("confirmed") === "1") {
       setInfo(t("login.confirmedInfo"));
     }
-  }, [searchParams]);
+    if (searchParams.get("reset") === "1") {
+      setInfo(t("login.resetSuccessInfo"));
+    }
+  }, [searchParams, t]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    const fromReset = searchParams.get("reset") === "1";
+    (async () => {
+      if (fromReset) {
+        await supabase.auth.signOut();
+        if (typeof window !== "undefined" && window.location.hash) {
+          window.history.replaceState(null, "", "/login?reset=1");
+        }
+        return;
+      }
+      const { data } = await supabase.auth.getSession();
       if (data.session) router.replace(nextDestination());
-    });
-  }, [router]);
+    })();
+  }, [router, searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

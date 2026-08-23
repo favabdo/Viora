@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
@@ -13,7 +13,6 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 type Status = "checking" | "form" | "success" | "error";
 
 function ResetPasswordInner() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
 
@@ -103,6 +102,15 @@ function ResetPasswordInner() {
     }
   }
 
+  async function goToLogin() {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // ننتقل إلى صفحة الدخول حتى لو تعذّر إنهاء الجلسة هنا
+    }
+    window.location.assign("/login?reset=1");
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center px-5 py-10 bg-paper">
       <div className="w-full max-w-md">
@@ -119,7 +127,7 @@ function ResetPasswordInner() {
           {status === "error" && (
             <>
               <StatusScreen kind="error" title={t("resetPassword.errorTitle")} message={errorMessage} />
-              <Button variant="primary" fullWidth onClick={() => router.replace("/login")} className="mt-5">
+              <Button type="button" variant="primary" fullWidth onClick={goToLogin} className="mt-5">
                 {t("resetPassword.goToLogin")}
               </Button>
             </>
@@ -128,7 +136,7 @@ function ResetPasswordInner() {
           {status === "success" && (
             <>
               <StatusScreen kind="success" title={t("resetPassword.successTitle")} message={t("resetPassword.success")} />
-              <Button variant="primary" fullWidth onClick={() => router.replace("/login")} className="mt-5">
+              <Button type="button" variant="primary" fullWidth onClick={goToLogin} className="mt-5">
                 {t("resetPassword.goToLogin")}
               </Button>
             </>
