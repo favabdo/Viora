@@ -59,7 +59,7 @@ export default function AppShell({
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [theme, setTheme] = useState<Theme>("dark");
-  const accountMenuRef = useRef<HTMLDivElement | null>(null);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
   const [isNilechatLinked, setIsNilechatLinked] = useState(false);
   const { pendingCount } = useRoomsPendingPoll(isNilechatLinked);
   const { supported: pushSupported, subscribed: pushSubscribed, subscribing, subscribe } = usePushSubscription();
@@ -321,7 +321,7 @@ function SidebarPanel({
   userName: string;
   avatarUrl?: string | null;
   showAccountMenu: boolean;
-  accountMenuRef: RefObject<HTMLDivElement | null>;
+  accountMenuRef: RefObject<HTMLDivElement>;
   t: (key: string) => string;
   onTabClick: (id: string) => void;
   onToggleAccount: () => void;
