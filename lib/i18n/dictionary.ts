@@ -16,6 +16,8 @@ const dict: Record<string, { en: string; ar: string }> = {
   "shell.unnamed": { en: "?", ar: "؟" },
   "shell.search": { en: "Search tasks, projects, ideas...", ar: "ابحث في المهام والمشاريع والأفكار..." },
   "shell.new": { en: "New", ar: "جديد" },
+  "shell.openMenu": { en: "Open menu", ar: "فتح القائمة" },
+  "shell.sections": { en: "Sections", ar: "الأقسام" },
   "shell.admin": { en: "Admin", ar: "مدير" },
   "shell.upgradeTitle": { en: "Upgrade to Pro", ar: "الترقية إلى Pro" },
   "shell.upgradeHint": {

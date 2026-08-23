@@ -16,6 +16,7 @@ import {
   Plus,
   Crown,
   ChevronDown,
+  MoreHorizontal,
 } from "lucide-react";
 import Avatar from "./ui/Avatar";
 import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
@@ -56,8 +57,10 @@ export default function AppShell({
   const router = useRouter();
   const { t, lang } = useTranslation();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [showMobileNav, setShowMobileNav] = useState(false);
   const [theme, setTheme] = useState<Theme>("dark");
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileNavRef = useRef<HTMLDivElement | null>(null);
   const [isNilechatLinked, setIsNilechatLinked] = useState(false);
   const { pendingCount } = useRoomsPendingPoll(isNilechatLinked);
   const { supported: pushSupported, subscribed: pushSubscribed, subscribing, subscribe } = usePushSubscription();
@@ -90,6 +93,7 @@ export default function AppShell({
   }
 
   function handleTabClick(id: string) {
+    setShowMobileNav(false);
     if (id === "settings") {
       router.push("/settings");
       return;
@@ -103,27 +107,31 @@ export default function AppShell({
   }, []);
 
   useEffect(() => {
-    if (!showAccountMenu) return;
+    if (!showAccountMenu && !showMobileNav) return;
     function handleClickOutside(e: PointerEvent) {
       const target = e.target as Node;
-      if (!accountMenuRef.current?.contains(target)) setShowAccountMenu(false);
+      if (showAccountMenu && !accountMenuRef.current?.contains(target)) setShowAccountMenu(false);
+      if (showMobileNav && !mobileNavRef.current?.contains(target)) setShowMobileNav(false);
     }
     window.addEventListener("pointerdown", handleClickOutside);
     return () => window.removeEventListener("pointerdown", handleClickOutside);
-  }, [showAccountMenu]);
+  }, [showAccountMenu, showMobileNav]);
 
   function goToProfile() {
     setShowAccountMenu(false);
+    setShowMobileNav(false);
     router.push("/profile");
   }
 
   function goToSettings() {
     setShowAccountMenu(false);
+    setShowMobileNav(false);
     router.push("/settings");
   }
 
   function signOut() {
     setShowAccountMenu(false);
+    setShowMobileNav(false);
     onSignOut();
   }
 
@@ -148,8 +156,6 @@ export default function AppShell({
       )}
     </div>
   );
-
-  const mobileTabs = tabs.filter((tab) => ["projects", "links", "files", "board"].includes(tab.id));
 
   return (
     <div className="min-h-screen md:flex bg-paper">
@@ -225,9 +231,80 @@ export default function AppShell({
 
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="flex items-center gap-3 px-4 py-3 md:px-6 border-b border-line sticky top-0 bg-paper/90 backdrop-blur z-30">
-          <div className="md:hidden">{Logo}</div>
+          <div className="relative md:hidden" ref={mobileNavRef}>
+            <button
+              type="button"
+              onClick={() => setShowMobileNav((v) => !v)}
+              className="flex items-center gap-2 rounded-xl pe-2 py-1 hover:bg-surface"
+              aria-label={t("shell.openMenu")}
+              aria-expanded={showMobileNav}
+            >
+              <MoreHorizontal size={20} strokeWidth={2} className="text-ink shrink-0" />
+              {Logo}
+              <span className="text-sm font-medium text-ink truncate max-w-[7.5rem]">
+                {userName || t("shell.myAccount")}
+              </span>
+            </button>
+            {showMobileNav && (
+              <div className="absolute start-0 top-full mt-2 z-50 w-[min(calc(100vw-2rem),20rem)] rounded-xl border border-line bg-surface shadow-modal p-2 fade-in">
+                <p className="px-2.5 pt-1.5 pb-2 text-[11px] font-medium uppercase tracking-wide text-inkFaint">
+                  {t("shell.sections")}
+                </p>
+                <div className="max-h-[55vh] overflow-y-auto thin-scroll">
+                  {tabs.map(({ id, label, icon: Icon }) => {
+                    const active = activeTab === id;
+                    const showBadge = id === "rooms" && notifCount > 0;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => handleTabClick(id)}
+                        className={`w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${
+                          active ? "bg-[#6C5CE7]/16 text-ink" : "text-inkSoft hover:bg-paperDark hover:text-ink"
+                        }`}
+                      >
+                        <Icon size={16} strokeWidth={1.75} className={active ? "text-[#6C5CE7]" : ""} />
+                        <span className="flex-1 text-start">{label}</span>
+                        {showBadge && (
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#6C5CE7] px-1 text-2xs font-semibold text-white">
+                            {notifCount}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-1 border-t border-line pt-1">
+                  <button
+                    type="button"
+                    onClick={goToProfile}
+                    className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-inkSoft hover:bg-paperDark hover:text-ink"
+                  >
+                    <UserRound size={16} strokeWidth={1.75} />
+                    {t("shell.openProfile")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goToSettings}
+                    className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-inkSoft hover:bg-paperDark hover:text-ink"
+                  >
+                    <Settings size={16} strokeWidth={1.75} />
+                    {t("settings.title")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-clay hover:bg-claySoft"
+                  >
+                    <LogOut size={16} strokeWidth={1.75} />
+                    {t("shell.signOut")}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
-          <div className="relative flex-1 max-w-xl mx-auto hidden sm:block">
+          <div className="relative flex-1 max-w-xl mx-auto hidden md:block">
             <Search size={15} strokeWidth={1.75} className="absolute top-1/2 -translate-y-1/2 start-3.5 text-inkFaint" />
             <input
               type="text"
@@ -266,23 +343,10 @@ export default function AppShell({
             >
               {theme === "dark" ? <Sun size={17} strokeWidth={1.75} /> : <Moon size={17} strokeWidth={1.75} />}
             </button>
-
-            <div className="hidden md:block">
-              <button
-                onClick={goToProfile}
-                className="flex items-center gap-2 rounded-xl ps-1 pe-2 py-1 hover:bg-surface transition-colors"
-              >
-                <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="sm" />
-                <div className="text-start leading-tight">
-                  <p className="text-sm font-medium text-ink">{userName || t("shell.myAccount")}</p>
-                  <p className="text-[11px] text-inkFaint">{t("shell.admin")}</p>
-                </div>
-              </button>
-            </div>
           </div>
         </header>
 
-        <main className="flex-1 min-w-0 px-4 py-6 md:px-8 md:py-7 pb-24 md:pb-8">
+        <main className="flex-1 min-w-0 px-4 py-6 md:px-8 md:py-7 pb-8">
           {showEnablePrompt && (
             <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5 mb-4 text-sm fade-in">
               <div className="flex items-center gap-2">
@@ -310,28 +374,6 @@ export default function AppShell({
         </main>
       </div>
 
-      <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-surface/95 backdrop-blur border-t border-line flex items-stretch pb-[env(safe-area-inset-bottom)]"
-        role="tablist"
-      >
-        {mobileTabs.map(({ id, label, icon: Icon }) => {
-          const active = activeTab === id;
-          return (
-            <button
-              key={id}
-              role="tab"
-              aria-selected={active}
-              onClick={() => handleTabClick(id)}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-2xs font-medium transition-colors ${
-                active ? "text-[#6C5CE7]" : "text-inkFaint"
-              }`}
-            >
-              <Icon size={19} strokeWidth={active ? 2 : 1.75} />
-              {label}
-            </button>
-          );
-        })}
-      </nav>
     </div>
   );
 }
