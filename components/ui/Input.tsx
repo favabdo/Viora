@@ -11,7 +11,7 @@ import {
 } from "react";
 
 export const fieldClass =
-  "w-full rounded-[1.75rem] border-0 bg-surfaceSunken px-4 py-2.5 text-sm text-ink placeholder:text-inkFaint outline-none shadow-none focus:outline-none focus:ring-0 focus:border-0";
+  "w-full rounded-[1.75rem] border-0 bg-surfaceSunken px-4 py-2.5 text-sm text-ink placeholder:text-inkFaint outline-none shadow-none focus:outline-none focus:ring-0 focus:border-0 focus:rounded-[1.75rem] focus-visible:rounded-[1.75rem]";
 
 function mergeRefs<T>(...refs: Array<Ref<T> | undefined>) {
   return (node: T) => {

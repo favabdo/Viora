@@ -62,16 +62,26 @@ html, body {
   color: rgb(var(--color-paper));
 }
 
-*:focus-visible {
+*:focus-visible:not(input):not(textarea):not(select) {
   outline: 2px solid rgb(var(--color-teal));
   outline-offset: 2px;
   border-radius: 4px;
 }
 
+input,
+textarea,
+select {
+  border-radius: 1.75rem;
+}
+
+input:focus,
 input:focus-visible,
+textarea:focus,
 textarea:focus-visible,
+select:focus,
 select:focus-visible {
   outline: none;
+  border-radius: 1.75rem;
 }
 
 button, a {
