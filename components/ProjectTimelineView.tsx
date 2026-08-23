@@ -257,7 +257,7 @@ export default function ProjectTimelineView({
 
         <div ref={scrollRef} className="overflow-auto rounded-xl border border-line bg-surface thin-scroll max-h-[70vh]">
           <div style={{ minWidth: LABEL_WIDTH + gridWidth }}>
-            <div className="flex border-b border-line bg-[#151621] sticky top-0 z-20">
+            <div className="flex border-b border-line bg-surface sticky top-0 z-20">
               <div className="shrink-0 border-e border-line px-3 py-3 text-xs text-inkFaint" style={{ width: LABEL_WIDTH }}>
                 {t("list.col.task")}
               </div>
@@ -321,7 +321,7 @@ export default function ProjectTimelineView({
                   <div key={group.project.id}>
                     <button
                       onClick={() => setCollapsed((prev) => ({ ...prev, [group.project.id]: !prev[group.project.id] }))}
-                      className="flex items-center gap-2 px-3 py-2.5 w-full text-start bg-[#12131c] border-b border-line"
+                      className="flex items-center gap-2 px-3 py-2.5 w-full text-start bg-surfaceSunken border-b border-line"
                     >
                       <ChevronDown size={14} className={`text-inkFaint ${closed ? "-rotate-90" : ""}`} />
                       <Folder size={14} style={{ color }} />

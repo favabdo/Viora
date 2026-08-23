@@ -78,7 +78,7 @@ function TaskCard({
       style={style}
       {...attributes}
       {...listeners}
-      className="group bg-[#0F111A] border border-[#2D2F39] rounded-lg p-3 hover:border-[#3a3d4a] transition-colors cursor-grab active:cursor-grabbing touch-none"
+      className="group bg-surfaceSunken border border-line rounded-lg p-3 hover:border-lineStrong transition-colors cursor-grab active:cursor-grabbing touch-none"
     >
       <div className="flex items-start gap-1.5">
         {editing ? (
@@ -256,7 +256,7 @@ function ColumnContainer({
   const [nameDraft, setNameDraft] = useState(column.name);
 
   return (
-    <div className="flex flex-col w-[280px] shrink-0 rounded-xl border border-[#2D2F39] bg-[#151621] p-3 min-h-[28rem]">
+    <div className="flex flex-col w-[280px] shrink-0 rounded-xl border border-line bg-surface p-3 min-h-[28rem]">
       <div className="flex items-center gap-2 mb-3 px-0.5">
         <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: column.color }} />
         {editingName ? (
@@ -534,7 +534,7 @@ export default function BoardView({
           />
         ))}
 
-        <div className="w-[280px] shrink-0 rounded-xl border border-dashed border-[#2D2F39] bg-[#151621]/50 p-3 min-h-[28rem]">
+        <div className="w-[280px] shrink-0 rounded-xl border border-dashed border-line bg-paperDark/60 p-3 min-h-[28rem]">
           {showAddColumn ? (
             <div className="flex items-center gap-1">
               <Input
@@ -552,7 +552,7 @@ export default function BoardView({
           ) : (
             <button
               onClick={() => setShowAddColumn(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-inkFaint hover:text-[#8C3AED] hover:bg-white/5 rounded-lg transition-colors w-full"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-inkFaint hover:text-[#8C3AED] hover:bg-paperDark rounded-lg transition-colors w-full"
             >
               <Plus size={14} strokeWidth={2} />
               {t("board.addColumn")}

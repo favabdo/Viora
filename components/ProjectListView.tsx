@@ -431,11 +431,11 @@ function TaskRow({
   const priority = priorityOf(task);
   const priorityClass =
     priority === "high"
-      ? "bg-[#EF4444]/15 text-[#F87171]"
+      ? "bg-[#EF4444]/15 text-[#DC2626] dark:text-[#F87171]"
       : priority === "medium"
-        ? "bg-[#F59E0B]/15 text-[#FBBF24]"
+        ? "bg-[#F59E0B]/15 text-[#B45309] dark:text-[#FBBF24]"
         : priority === "low"
-          ? "bg-[#3B82F6]/15 text-[#60A5FA]"
+          ? "bg-[#3B82F6]/15 text-[#2563EB] dark:text-[#60A5FA]"
           : "text-inkFaint";
   const tag = tagLabel(task, t);
   const due = formatTaskDate(task.due_date, locale);

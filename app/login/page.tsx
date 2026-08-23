@@ -124,7 +124,7 @@ function LoginPageInner() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-5 py-10 bg-[#0F111A]">
+    <main className="min-h-screen flex items-center justify-center px-5 py-10 bg-paper">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center gap-1.5 mb-8">
           <div className="flex justify-center items-center gap-2">
@@ -140,7 +140,7 @@ function LoginPageInner() {
           <span className="text-xs text-inkFaint tracking-wide">Save. Organize. Build Together</span>
         </div>
 
-        <div className="rounded-xl border border-[#2D2F39] bg-[#1A1C23] shadow-[0_24px_64px_rgba(0,0,0,0.55)] p-6 fade-in">
+        <div className="rounded-xl border border-line bg-surface shadow-modal p-6 fade-in">
           <h1 className="text-xl font-semibold mb-1 text-ink">
             {mode === "signin" ? t("login.signIn") : t("login.createAccount")}
           </h1>

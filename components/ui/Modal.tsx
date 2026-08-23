@@ -27,7 +27,7 @@ export default function Modal({
       onClick={onClose}
     >
       <div
-        className={`w-full ${maxWidth} rounded-xl border border-[#2D2F39] bg-[#1A1C23] shadow-[0_24px_64px_rgba(0,0,0,0.55)] p-6 max-h-[85vh] overflow-y-auto thin-scroll`}
+        className={`w-full ${maxWidth} rounded-xl border border-line bg-surface shadow-modal p-6 max-h-[85vh] overflow-y-auto thin-scroll`}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
@@ -39,7 +39,7 @@ export default function Modal({
               <button
                 type="button"
                 onClick={onClose}
-                className={`h-8 w-8 inline-flex items-center justify-center rounded-lg text-inkFaint hover:text-ink hover:bg-white/5 ${
+                className={`h-8 w-8 inline-flex items-center justify-center rounded-lg text-inkFaint hover:text-ink hover:bg-paperDark ${
                   titleAlign === "center" ? "absolute end-0 top-0" : ""
                 }`}
                 aria-label="Close"

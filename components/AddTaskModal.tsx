@@ -50,10 +50,10 @@ export function writeTaskMeta(taskId: string, extras: NewTaskDraft["extras"]) {
 }
 
 const selectClass =
-  "w-full rounded-lg border border-[#2D2F39] bg-[#12141c] px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-[#8C3AED] focus:ring-2 focus:ring-[#8C3AED]/20";
+  "w-full rounded-lg border border-line bg-surfaceSunken px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-[#8C3AED] focus:ring-2 focus:ring-[#8C3AED]/20";
 
 const chipSelectClass =
-  "h-8 rounded-lg border border-[#2D2F39] bg-[#12141c] px-2 text-xs text-ink outline-none focus:border-[#8C3AED]";
+  "h-8 rounded-lg border border-line bg-surfaceSunken px-2 text-xs text-ink outline-none focus:border-[#8C3AED]";
 
 export default function AddTaskModal({
   mode,
@@ -157,7 +157,7 @@ export default function AddTaskModal({
               <button
                 type="button"
                 onClick={onExpand}
-                className="absolute end-2 top-1/2 -translate-y-1/2 h-7 w-7 inline-flex items-center justify-center rounded-md text-inkFaint hover:text-ink hover:bg-white/5"
+                className="absolute end-2 top-1/2 -translate-y-1/2 h-7 w-7 inline-flex items-center justify-center rounded-md text-inkFaint hover:text-ink hover:bg-paperDark"
                 aria-label={t("board.expandForm")}
               >
                 <Maximize2 size={14} />
@@ -180,7 +180,7 @@ export default function AddTaskModal({
                   </option>
                 ))}
               </select>
-              <label className="h-8 inline-flex items-center gap-1.5 rounded-lg border border-[#2D2F39] bg-[#12141c] px-2 text-inkFaint">
+              <label className="h-8 inline-flex items-center gap-1.5 rounded-lg border border-line bg-surfaceSunken px-2 text-inkFaint">
                 <Calendar size={13} />
                 <input
                   type="date"
@@ -197,7 +197,7 @@ export default function AddTaskModal({
               <button
                 type="button"
                 onClick={onCollapse}
-                className="h-7 w-7 inline-flex items-center justify-center rounded-md text-inkFaint hover:text-ink hover:bg-white/5"
+                className="h-7 w-7 inline-flex items-center justify-center rounded-md text-inkFaint hover:text-ink hover:bg-paperDark"
                 aria-label={t("board.collapseForm")}
               >
                 <Minimize2 size={14} />
@@ -309,7 +309,7 @@ export default function AddTaskModal({
                 <span className="mb-1.5 block text-xs text-inkSoft">{t("board.fieldAttachments")}</span>
                 <button
                   type="button"
-                  className="h-[42px] w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#2D2F39] text-xs text-inkSoft hover:border-[#8C3AED] hover:text-ink"
+                  className="h-[42px] w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line text-xs text-inkSoft hover:border-[#8C3AED] hover:text-ink"
                 >
                   <Paperclip size={14} />
                   {t("board.addFile")}

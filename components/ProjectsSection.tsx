@@ -466,7 +466,7 @@ export default function ProjectsSection({
                       type="button"
                       onClick={() => setNewIcon(id)}
                       className={`h-10 w-10 rounded-full inline-flex items-center justify-center transition-colors ${
-                        active ? "ring-2 ring-[#6C5CE7] ring-offset-2 ring-offset-[#1A1C23]" : ""
+                        active ? "ring-2 ring-[#6C5CE7] ring-offset-2 ring-offset-surface" : ""
                       }`}
                       style={{ backgroundColor: `${newColor}22`, color: newColor }}
                     >
@@ -493,7 +493,7 @@ export default function ProjectsSection({
                       key={color}
                       type="button"
                       onClick={() => setNewColor(color)}
-                      className={`h-7 w-7 rounded-full ${active ? "ring-2 ring-[#60A5FA] ring-offset-2 ring-offset-[#1A1C23]" : ""}`}
+                      className={`h-7 w-7 rounded-full ${active ? "ring-2 ring-[#60A5FA] ring-offset-2 ring-offset-surface" : ""}`}
                       style={{ backgroundColor: color }}
                     />
                   );
@@ -528,10 +528,10 @@ function ProjectIcon({ name }: { name: string }) {
 
 function StatusBadge({ status, t }: { status: ProjectStatus; t: (key: string) => string }) {
   const styles: Record<ProjectStatus, string> = {
-    active: "bg-[#3B82F6]/15 text-[#60A5FA]",
-    on_hold: "bg-[#F59E0B]/15 text-[#FBBF24]",
-    completed: "bg-[#22C55E]/15 text-[#4ADE80]",
-    archived: "bg-white/8 text-inkSoft",
+    active: "bg-[#3B82F6]/15 text-[#2563EB] dark:text-[#60A5FA]",
+    on_hold: "bg-[#F59E0B]/15 text-[#B45309] dark:text-[#FBBF24]",
+    completed: "bg-[#22C55E]/15 text-[#15803D] dark:text-[#4ADE80]",
+    archived: "bg-paperDark text-inkSoft",
   };
   return (
     <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${styles[status]}`}>
