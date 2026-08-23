@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
-type Mode = "signin" | "signup";
+type Mode = "signin" | "signup" | "reset";
 
 const INVITE_KEY = "viora_invite_token";
 
@@ -53,6 +53,21 @@ function LoginPageInner() {
     setLoading(true);
 
     try {
+      if (mode === "reset") {
+        if (!email.trim()) {
+          setError(t("login.err.generic"));
+          setLoading(false);
+          return;
+        }
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: `${window.location.origin}/auth/reset-password`,
+        });
+        if (error) throw error;
+        setInfo(t("login.resetEmailSent"));
+        setLoading(false);
+        return;
+      }
+
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -142,10 +157,16 @@ function LoginPageInner() {
 
         <div className="rounded-xl border border-line bg-surface shadow-modal p-6 fade-in">
           <h1 className="text-xl font-semibold mb-1 text-ink">
-            {mode === "signin" ? t("login.signIn") : t("login.createAccount")}
+            {mode === "signin"
+              ? t("login.signIn")
+              : mode === "reset"
+              ? t("login.resetTitle")
+              : t("login.createAccount")}
           </h1>
-          <p className="text-inkSoft text-sm mb-6">
-            {hasInvite
+          <p className="text-inkSoft text-sm mb-6 leading-relaxed">
+            {mode === "reset"
+              ? t("login.resetHint")
+              : hasInvite
               ? t("login.inviteHint")
               : mode === "signin"
               ? t("login.welcomeBack")
@@ -205,20 +226,38 @@ function LoginPageInner() {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-inkFaint mb-1.5">
-                {t("login.password")}
-              </label>
-              <Input
-                type="password"
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                dir="ltr"
-              />
-            </div>
+            {mode !== "reset" && (
+              <div>
+                <label className="block text-xs font-medium text-inkFaint mb-1.5">
+                  {t("login.password")}
+                </label>
+                <Input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  dir="ltr"
+                />
+              </div>
+            )}
+
+            {mode === "signin" && (
+              <div className="text-end -mt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("reset");
+                    setError(null);
+                    setInfo(null);
+                  }}
+                  className="text-xs text-[#8C3AED] font-medium hover:underline"
+                >
+                  {t("login.forgotPassword")}
+                </button>
+              </div>
+            )}
 
             {error && (
               <p className="text-sm text-[#E85D4C] bg-[#E85D4C]/10 rounded-lg px-3 py-2">
@@ -232,23 +271,42 @@ function LoginPageInner() {
             )}
 
             <Button type="submit" variant="primary" fullWidth loading={loading} className="mt-2">
-              {mode === "signin" ? t("login.signIn") : t("login.createAccountBtn")}
+              {mode === "signin"
+                ? t("login.signIn")
+                : mode === "reset"
+                ? t("login.sendResetLink")
+                : t("login.createAccountBtn")}
             </Button>
           </form>
 
           <p className="text-center text-sm text-inkSoft mt-5">
-            {mode === "signin" ? t("login.noAccountYet") : t("login.haveAccount")}{" "}
-            <button
-              onClick={() => {
-                setMode(mode === "signin" ? "signup" : "signin");
-                setError(null);
-                setInfo(null);
-                setUsername("");
-              }}
-              className="text-[#8C3AED] font-medium hover:underline"
-            >
-              {mode === "signin" ? t("login.createAccount") : t("login.signIn")}
-            </button>
+            {mode === "reset" ? (
+              <button
+                onClick={() => {
+                  setMode("signin");
+                  setError(null);
+                  setInfo(null);
+                }}
+                className="text-[#8C3AED] font-medium hover:underline"
+              >
+                {t("login.backToSignIn")}
+              </button>
+            ) : (
+              <>
+                {mode === "signin" ? t("login.noAccountYet") : t("login.haveAccount")}{" "}
+                <button
+                  onClick={() => {
+                    setMode(mode === "signin" ? "signup" : "signin");
+                    setError(null);
+                    setInfo(null);
+                    setUsername("");
+                  }}
+                  className="text-[#8C3AED] font-medium hover:underline"
+                >
+                  {mode === "signin" ? t("login.createAccount") : t("login.signIn")}
+                </button>
+              </>
+            )}
           </p>
         </div>
       </div>

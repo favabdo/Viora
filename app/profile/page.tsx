@@ -47,10 +47,7 @@ export default function ProfilePage() {
   const [avatarError, setAvatarError] = useState("");
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [changingPassword, setChangingPassword] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
   const [passwordMsg, setPasswordMsg] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
@@ -308,51 +305,27 @@ export default function ProfilePage() {
     }
   }
 
-  async function changePassword() {
+  async function sendPasswordReset() {
     setPasswordError("");
     setPasswordMsg("");
 
-    if (!currentPassword) {
-      setPasswordError(t("profile.err.enterCurrentPassword"));
-      return;
-    }
-    if (newPassword.length < 6) {
-      setPasswordError(t("profile.err.passwordMinLength"));
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError(t("profile.err.passwordMismatch"));
-      return;
-    }
-    if (!session?.user.email) {
+    const email = profile?.email || session?.user.email;
+    if (!email) {
       setPasswordError(t("profile.err.verifyAccountFailed"));
       return;
     }
 
-    setChangingPassword(true);
+    setSendingReset(true);
     try {
-      // بنتأكد إن كلمة المرور الحالية صح قبل ما نغيّرها
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: session.user.email,
-        password: currentPassword,
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
       });
-      if (verifyError) {
-        setPasswordError(t("profile.err.wrongCurrentPassword"));
-        setChangingPassword(false);
-        return;
-      }
-
-      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-      if (updateError) throw updateError;
-
-      setPasswordMsg(t("profile.msg.passwordChanged"));
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (err: any) {
-      setPasswordError(err?.message || t("profile.err.generic"));
+      if (error) throw error;
+      setPasswordMsg(t("profile.msg.resetEmailSent"));
+    } catch {
+      setPasswordError(t("profile.err.resetEmailFailed"));
     } finally {
-      setChangingPassword(false);
+      setSendingReset(false);
     }
   }
 
@@ -462,54 +435,19 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* تغيير كلمة المرور */}
+        {/* إعادة تعيين كلمة المرور عبر البريد */}
         <section className="bg-surface border border-line rounded-lg p-5 fade-in">
-          <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-4">
-            {t("profile.changePassword")}
+          <h2 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-2">
+            {t("profile.resetPassword")}
           </h2>
+          <p className="text-sm text-inkSoft leading-relaxed mb-4">{t("profile.resetPasswordHint")}</p>
 
           <div className="space-y-3.5">
-            <div>
-              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.currentPassword")}</label>
-              <Input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                dir="ltr"
-                className="text-end"
-                placeholder="••••••••"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.newPassword")}</label>
-              <Input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                dir="ltr"
-                className="text-end"
-                placeholder="••••••••"
-                minLength={6}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.confirmNewPassword")}</label>
-              <Input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                dir="ltr"
-                className="text-end"
-                placeholder="••••••••"
-                minLength={6}
-              />
-            </div>
-
             {passwordError && <p className="text-sm text-clay bg-claySoft rounded-md px-3 py-2">{passwordError}</p>}
             {passwordMsg && <p className="text-sm text-[#3F6136] bg-sageSoft rounded-md px-3 py-2">{passwordMsg}</p>}
 
-            <Button variant="secondary" loading={changingPassword} onClick={changePassword}>
-              {t("profile.changePassword")}
+            <Button variant="secondary" loading={sendingReset} onClick={sendPasswordReset}>
+              {t("profile.resetPasswordButton")}
             </Button>
           </div>
         </section>

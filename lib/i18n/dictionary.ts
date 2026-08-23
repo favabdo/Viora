@@ -38,6 +38,20 @@ const dict: Record<string, { en: string; ar: string }> = {
   "profile.email": { en: "Email", ar: "البريد الإلكتروني" },
   "profile.saveChanges": { en: "Save changes", ar: "حفظ التغييرات" },
   "profile.changePassword": { en: "Change password", ar: "تغيير كلمة المرور" },
+  "profile.resetPassword": { en: "Reset password", ar: "إعادة تعيين كلمة المرور" },
+  "profile.resetPasswordHint": {
+    en: "We will send an official message from Viora to your email with a secure link to set a new password.",
+    ar: "سنرسل إلى بريدك الإلكتروني رسالة رسمية من فيورا تتضمن رابطًا آمنًا لتعيين كلمة مرور جديدة.",
+  },
+  "profile.resetPasswordButton": { en: "Send reset link", ar: "إرسال رابط إعادة التعيين" },
+  "profile.msg.resetEmailSent": {
+    en: "A message has been sent to your email. Please open it and follow the link to set a new password. If it does not arrive within a few minutes, check your spam folder.",
+    ar: "لقد أُرسلت رسالة إلى بريدك الإلكتروني. يُرجى فتحها واتباع الرابط لتعيين كلمة مرور جديدة. إن لم تصلك خلال دقائق، يُرجى مراجعة مجلد الرسائل غير المرغوب فيها.",
+  },
+  "profile.err.resetEmailFailed": {
+    en: "Could not send the reset message. Please try again.",
+    ar: "تعذّر إرسال رسالة إعادة التعيين. يُرجى المحاولة مرة أخرى.",
+  },
   "profile.currentPassword": { en: "Current password", ar: "كلمة المرور الحالية" },
   "profile.newPassword": { en: "New password", ar: "كلمة المرور الجديدة" },
   "profile.confirmNewPassword": { en: "Confirm new password", ar: "تأكيد كلمة المرور الجديدة" },
@@ -161,9 +175,54 @@ const dict: Record<string, { en: string; ar: string }> = {
   "login.usernameHint": { en: "Lowercase English letters, numbers, or underscores (_) only, 3–20 characters", ar: "يُسمح فقط بأحرف إنجليزية صغيرة أو أرقام أو الشرطة السفلية (_)، من 3 إلى 20 حرفًا" },
   "login.email": { en: "Email", ar: "البريد الإلكتروني" },
   "login.password": { en: "Password", ar: "كلمة المرور" },
+  "login.forgotPassword": { en: "Forgot your password?", ar: "هل نسيت كلمة المرور؟" },
+  "login.resetTitle": { en: "Reset password", ar: "إعادة تعيين كلمة المرور" },
+  "login.resetHint": {
+    en: "Enter the email linked to your account. We will send you an official message from Viora with a link to set a new password.",
+    ar: "أدخل البريد الإلكتروني المرتبط بحسابك، وسنرسل إليك رسالة رسمية من فيورا تتضمن رابطًا لتعيين كلمة مرور جديدة.",
+  },
+  "login.sendResetLink": { en: "Send reset link", ar: "إرسال رابط إعادة التعيين" },
+  "login.backToSignIn": { en: "Back to sign in", ar: "العودة إلى تسجيل الدخول" },
+  "login.resetEmailSent": {
+    en: "A message has been sent to your email. Please open it and follow the link to set a new password. If it does not arrive within a few minutes, check your spam folder.",
+    ar: "لقد أُرسلت رسالة إلى بريدك الإلكتروني. يُرجى فتحها واتباع الرابط لتعيين كلمة مرور جديدة. إن لم تصلك خلال دقائق، يُرجى مراجعة مجلد الرسائل غير المرغوب فيها.",
+  },
   "login.createAccountBtn": { en: "Create account", ar: "إنشاء الحساب" },
   "login.noAccountYet": { en: "Don't have an account yet?", ar: "ليس لديك حساب بعد؟" },
   "login.haveAccount": { en: "Already have an account?", ar: "لديك حساب بالفعل؟" },
+
+  // ===== app/auth/reset-password/page.tsx =====
+  "resetPassword.title": { en: "Set a new password", ar: "تعيين كلمة مرور جديدة" },
+  "resetPassword.subtitle": {
+    en: "Enter your new password, then confirm it to complete the reset.",
+    ar: "أدخل كلمة المرور الجديدة، ثم أكّدها لإتمام إعادة التعيين.",
+  },
+  "resetPassword.submit": { en: "Save new password", ar: "حفظ كلمة المرور الجديدة" },
+  "resetPassword.checking": { en: "Verifying the reset link...", ar: "جارٍ التحقق من رابط إعادة التعيين..." },
+  "resetPassword.checkingTitle": { en: "One moment please...", ar: "لحظة من فضلك..." },
+  "resetPassword.successTitle": { en: "Password updated", ar: "تم تعيين كلمة المرور" },
+  "resetPassword.success": {
+    en: "Your new password has been set successfully. You can now sign in with it.",
+    ar: "تم تعيين كلمة المرور الجديدة بنجاح. يمكنك الآن تسجيل الدخول بها.",
+  },
+  "resetPassword.goToLogin": { en: "Go to sign in", ar: "الانتقال إلى تسجيل الدخول" },
+  "resetPassword.errorTitle": { en: "Reset failed", ar: "تعذّرت إعادة التعيين" },
+  "resetPassword.err.invalidLink": {
+    en: "This reset link is invalid or has expired. Please request a new link and try again.",
+    ar: "رابط إعادة التعيين غير صالح أو منتهية صلاحيته. يُرجى طلب رابط جديد والمحاولة مرة أخرى.",
+  },
+  "resetPassword.err.minLength": {
+    en: "The new password must be at least 6 characters.",
+    ar: "يجب ألا تقل كلمة المرور الجديدة عن ستة أحرف.",
+  },
+  "resetPassword.err.mismatch": {
+    en: "The new password does not match the confirmation.",
+    ar: "كلمة المرور الجديدة غير مطابقة للتأكيد.",
+  },
+  "resetPassword.err.generic": {
+    en: "Could not save the new password. Please try again.",
+    ar: "تعذّر حفظ كلمة المرور الجديدة. يُرجى المحاولة مرة أخرى.",
+  },
 
   // ===== app/page.tsx =====
   "tabs.tasks": { en: "Tasks", ar: "المهام" },

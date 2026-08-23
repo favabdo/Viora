@@ -11,6 +11,12 @@ export default function AuthCallback() {
 
   useEffect(() => {
     (async () => {
+      const hash = typeof window !== "undefined" ? window.location.hash : "";
+      if (/type=recovery/i.test(hash)) {
+        router.replace(`/auth/reset-password${hash}`);
+        return;
+      }
+
       // supabase-js بيقرأ التوكن من اللينك ويعمل سيشن تلقائي أول ما الصفحة تفتح
       await supabase.auth.getSession();
       // بنسجّل خروج ونرجّعه لصفحة الدخول عشان يدخل بنفسه بعد التأكيد

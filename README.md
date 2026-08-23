@@ -28,8 +28,9 @@
 4. من **Authentication → Providers → Email**، سيب "Confirm email" شغالة (ده اللي بيخلي رسالة التأكيد تتبعت). لو حابب تقفلها، اليوزر هيقدر يسجّل دخول على طول من غير تأكيد إيميل.
 5. من **Authentication → URL Configuration**:
    - حط **Site URL** = رابط موقعك (مثلاً `https://your-app.vercel.app` أو `http://localhost:3000` وقت التجربة).
-   - ضيف في **Redirect URLs** الرابط: `.../auth/callback` (استبدل `...` برابط موقعك، أو حط `http://localhost:3000/**` وقت التجربة المحلية عشان يشتغل مع أي بورت/رابط).
-   - ده اللي بيخلي لينك تأكيد الإيميل ياخد اليوزر لصفحة تسجيل الدخول بدل ما يفتحله حاجة تانية.
+   - ضيف في **Redirect URLs** الروابط: `.../auth/callback` و `.../auth/reset-password` (استبدل `...` برابط موقعك، أو حط `http://localhost:3000/**` وقت التجربة المحلية عشان يشتغل مع أي بورت/رابط).
+   - ده اللي بيخلي لينك تأكيد الإيميل ياخد اليوزر لصفحة تسجيل الدخول، ولينك إعادة تعيين كلمة المرور يفتح صفحة تعيين كلمة مرور جديدة.
+   - من **Authentication → Email Templates → Reset Password**: انسخ محتوى `supabase/emails/reset-password.html`، وحط الموضوع: `إعادة تعيين كلمة المرور — فيورا | Reset your password — Viora`.
 6. من **Project Settings → API** خد:
    - `Project URL`
    - `anon public key`
