@@ -635,6 +635,10 @@ export default function TasksSection({
                 onRequestDeleteTask={requestDeleteTask}
                 onTasksMutated={setTasks}
                 onColumnsMutated={setColumns}
+                onCommentCountChange={(taskId, delta) => {
+                  setCommentCounts((prev) => ({ ...prev, [taskId]: Math.max(0, (prev[taskId] ?? 0) + delta) }));
+                }}
+                onInvitePeople={() => setShowTeam(true)}
               />
             ) : viewMode === "calendar" ? (
               <CalendarView tasks={tasks} onTasksMutated={setTasks} />
@@ -873,7 +877,9 @@ export default function TasksSection({
       {showTeam && activeProject && (
         <TeamPanel
           projectId={activeProject.id}
+          projectName={activeProject.name}
           currentUserId={currentUserId}
+          ownerId={activeProject.user_id}
           onClose={() => setShowTeam(false)}
         />
       )}
