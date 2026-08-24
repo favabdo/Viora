@@ -58,15 +58,16 @@ function HomeInner() {
     { id: "settings", label: t("nav.settings"), icon: Settings },
   ];
   const requestedTab = searchParams.get("tab");
+  const requestedProject = searchParams.get("project");
   const initialTab = (requestedTab === "tasks" ? "projects" : requestedTab) as Tab || "projects";
-  const [tab, setTab] = useState<Tab>(initialTab);
+  const [tab, setTab] = useState<Tab>(requestedProject ? "projects" : initialTab);
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
   const [currentUserName, setCurrentUserName] = useState("");
   const [currentUserAvatar, setCurrentUserAvatar] = useState<string | null>(null);
   const [roomsInitialFilter, setRoomsInitialFilter] = useState<"open" | "pending">("open");
   const [openCreateSignal, setOpenCreateSignal] = useState(0);
-  const [openProjectId, setOpenProjectId] = useState<string | null>(null);
+  const [openProjectId, setOpenProjectId] = useState<string | null>(requestedProject);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {

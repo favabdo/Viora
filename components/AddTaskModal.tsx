@@ -20,14 +20,13 @@ import Button from "./ui/Button";
 import Modal from "./ui/Modal";
 import { Input, Textarea } from "./ui/Input";
 
-const TASK_META_KEY = "viora-task-meta";
-
 export type NewTaskDraft = {
   title: string;
   projectId: string;
   columnId: string | null;
   color: string | null;
   dueDate: string | null;
+  assigneeId: string;
   createAnother: boolean;
   extras: {
     description: string;
@@ -37,17 +36,6 @@ export type NewTaskDraft = {
     subtasks: string[];
   };
 };
-
-export function writeTaskMeta(taskId: string, extras: NewTaskDraft["extras"]) {
-  try {
-    const raw = localStorage.getItem(TASK_META_KEY);
-    const all = raw ? (JSON.parse(raw) as Record<string, NewTaskDraft["extras"]>) : {};
-    all[taskId] = extras;
-    localStorage.setItem(TASK_META_KEY, JSON.stringify(all));
-  } catch {
-    // ignore storage errors
-  }
-}
 
 const selectClass =
   "w-full rounded-[1.75rem] border-0 bg-surfaceSunken px-4 py-2.5 text-sm text-ink outline-none shadow-none focus:outline-none focus:ring-0";
@@ -118,6 +106,7 @@ export default function AddTaskModal({
       columnId: columnId || null,
       color: color || null,
       dueDate: dueDate || null,
+      assigneeId,
       createAnother,
       extras: { description, tags, estimate, recurrence, subtasks },
     });

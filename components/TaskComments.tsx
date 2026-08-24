@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase, TaskComment } from "@/lib/supabase";
 import { ChevronDown, MessageCircle, Send } from "lucide-react";
 import { displayName } from "@/lib/displayName";
@@ -21,20 +21,42 @@ export default function TaskComments({
   currentUserId,
   count,
   onCountChange,
+  alwaysOpen = false,
 }: {
   taskId: string;
   projectId: string;
   currentUserId: string;
   count: number;
   onCountChange: (taskId: string, delta: number) => void;
+  alwaysOpen?: boolean;
 }) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(alwaysOpen);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (!alwaysOpen || loaded) return;
+    let cancelled = false;
+    setLoading(true);
+    supabase
+      .from("task_comments")
+      .select("*, profiles!task_comments_user_id_fkey(username, full_name, avatar_url)")
+      .eq("task_id", taskId)
+      .order("created_at", { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (!error && data) setComments(data as unknown as TaskComment[]);
+        setLoaded(true);
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [alwaysOpen, loaded, taskId]);
 
   async function toggle() {
     const next = !open;
@@ -73,7 +95,8 @@ export default function TaskComments({
   }
 
   return (
-    <div className="mt-1">
+    <div className={alwaysOpen ? "" : "mt-1"}>
+      {!alwaysOpen && (
       <button
         onClick={toggle}
         className="flex items-center gap-1 text-2xs text-inkFaint hover:text-teal transition-colors"
@@ -82,6 +105,7 @@ export default function TaskComments({
         <MessageCircle size={11} strokeWidth={2} />
         {count > 0 ? `${count} ${count === 1 ? t("comments.one") : t("comments.many")}` : t("comments.one")}
       </button>
+      )}
 
       {open && (
         <div className="mt-1.5 border-s-2 border-line ps-3 space-y-2 fade-in">

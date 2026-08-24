@@ -75,6 +75,7 @@ export default function ProjectWorkspace({
   const [view, setView] = useState<WorkspaceView>("board");
   const [loading, setLoading] = useState(true);
   const [showTeam, setShowTeam] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const [favorited, setFavorited] = useState(false);
   const [deleteTask, setDeleteTask] = useState<Task | null>(null);
   const [nameDraft, setNameDraft] = useState("");
@@ -145,6 +146,17 @@ export default function ProjectWorkspace({
       cancelled = true;
     };
   }, [projectId]);
+
+  async function reloadMembers() {
+    const { data, error } = await supabase
+      .from("project_members")
+      .select(
+        "id, project_id, user_id, status, invited_by, created_at, profiles!project_members_user_id_fkey(username, full_name, avatar_url)"
+      )
+      .eq("project_id", projectId)
+      .eq("status", "accepted");
+    if (!error && data) setMembers(data.map(normalizeProjectMember));
+  }
 
   useEffect(() => {
     const tasksChannel = supabase
@@ -308,11 +320,48 @@ export default function ProjectWorkspace({
               )}
             </div>
             <button
-              onClick={() => setShowTeam(true)}
-              className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-inkFaint hover:text-ink hover:bg-surface"
+              onClick={() => setShowMore((v) => !v)}
+              className="relative h-8 w-8 inline-flex items-center justify-center rounded-lg text-inkFaint hover:text-ink hover:bg-surface"
               aria-label={t("workspace.more")}
             >
               <MoreHorizontal size={16} />
+              {showMore && (
+                <div
+                  className="absolute top-full end-0 mt-1 w-48 rounded-xl border border-line bg-paper shadow-modal p-1 z-30 text-start"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    className="w-full rounded-lg px-3 py-2 text-sm text-ink hover:bg-paperDark"
+                    onClick={() => {
+                      setShowMore(false);
+                      setView("settings");
+                    }}
+                  >
+                    {t("workspace.projectSettings")}
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full rounded-lg px-3 py-2 text-sm text-ink hover:bg-paperDark"
+                    onClick={() => {
+                      setShowMore(false);
+                      setShowTeam(true);
+                    }}
+                  >
+                    {t("workspace.shareProject")}
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full rounded-lg px-3 py-2 text-sm text-ink hover:bg-paperDark"
+                    onClick={() => {
+                      setShowMore(false);
+                      setShowTeam(true);
+                    }}
+                  >
+                    {t("workspace.menuMembers")}
+                  </button>
+                </div>
+              )}
             </button>
           </div>
         </div>
@@ -350,6 +399,10 @@ export default function ProjectWorkspace({
             onRequestDeleteTask={setDeleteTask}
             onTasksMutated={setTasks}
             onColumnsMutated={setColumns}
+            onCommentCountChange={(taskId, delta) => {
+              setCommentCounts((prev) => ({ ...prev, [taskId]: Math.max(0, (prev[taskId] ?? 0) + delta) }));
+            }}
+            onInvitePeople={() => setShowTeam(true)}
           />
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 mt-6">
             <div className="xl:col-span-3">
@@ -410,7 +463,18 @@ export default function ProjectWorkspace({
         </div>
       )}
 
-      {showTeam && <TeamPanel projectId={project.id} currentUserId={currentUserId} onClose={() => setShowTeam(false)} />}
+      {showTeam && (
+        <TeamPanel
+          projectId={project.id}
+          projectName={project.name}
+          currentUserId={currentUserId}
+          ownerId={project.user_id}
+          onClose={() => {
+            setShowTeam(false);
+            void reloadMembers();
+          }}
+        />
+      )}
       {deleteTask && (
         <ConfirmPasswordModal
           email={currentUserEmail}
