@@ -164,7 +164,13 @@ function HomeInner() {
         {tab === "ideas" && <ComingSoon title={t("nav.ideas")} icon={Lightbulb} />}
         {tab === "timeline" && <ComingSoon title={t("nav.timeline")} icon={GanttChart} />}
         {tab === "files" && <ComingSoon title={t("nav.files")} icon={FileText} />}
-        {tab === "links" && <LinksSection />}
+        {tab === "links" && (
+          <LinksSection
+            currentUserId={session.user.id}
+            userName={currentUserName}
+            avatarUrl={currentUserAvatar}
+          />
+        )}
         {tab === "reports" && <ComingSoon title={t("nav.reports")} icon={BarChart3} />}
         {tab === "rooms" && (
           <RoomsSection currentUserId={session.user.id} initialFilter={roomsInitialFilter} />
