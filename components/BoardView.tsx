@@ -15,7 +15,7 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { Eye, Paperclip, Pin, Plus, X, Check, Calendar, Palette, MessageCircle } from "lucide-react";
+import { Eye, Paperclip, Pin, Plus, X, Check, Palette, MessageCircle } from "lucide-react";
 import { supabase, Task, BoardColumn, Project, ProjectMember, TASK_COLORS } from "@/lib/supabase";
 import { normalizeTask } from "@/lib/taskShape";
 import {
@@ -36,6 +36,7 @@ import ClickableName from "./ClickableName";
 import AddTaskModal, { type NewTaskDraft } from "./AddTaskModal";
 import TaskContextMenu, { type TaskMenuState } from "./TaskContextMenu";
 import TaskComments from "./TaskComments";
+import TaskDetailModal from "./TaskDetailModal";
 import Modal from "./ui/Modal";
 import Button from "./ui/Button";
 
@@ -45,10 +46,18 @@ const MAX_ATTACHMENT_BYTES = 1.5 * 1024 * 1024;
 function formatDueDate(iso: string | null | undefined, locale: string): string {
   if (!iso) return "";
   try {
-    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(iso));
+    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`));
   } catch {
     return "";
   }
+}
+
+function isOverdue(iso: string | null | undefined) {
+  if (!iso) return false;
+  const due = new Date(`${iso.slice(0, 10)}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return due < today;
 }
 
 function TaskCard({
@@ -64,6 +73,7 @@ function TaskCard({
   onSetColor,
   onSetDueDate,
   onContextMenu,
+  onOpenDetail,
 }: {
   task: Task;
   extras: TaskExtras;
@@ -77,12 +87,12 @@ function TaskCard({
   onSetColor: (task: Task, color: string | null) => void;
   onSetDueDate: (task: Task, date: string | null) => void;
   onContextMenu: (task: Task, x: number, y: number) => void;
+  onOpenDetail: (task: Task) => void;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [titleDraft, setTitleDraft] = useState(task.title);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     disabled: editing,
@@ -108,12 +118,15 @@ function TaskCard({
       style={style}
       {...attributes}
       {...listeners}
+      onClick={() => {
+        if (!editing) onOpenDetail(task);
+      }}
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();
         onContextMenu(task, e.clientX, e.clientY);
       }}
-      className="group bg-surfaceSunken border border-line rounded-lg p-3 hover:border-lineStrong transition-colors cursor-grab active:cursor-grabbing touch-none"
+      className="group bg-surfaceSunken border border-line rounded-lg p-3 hover:border-lineStrong transition-colors cursor-pointer touch-none"
     >
       <div className="flex items-start gap-1.5">
         {editing ? (
@@ -137,22 +150,17 @@ function TaskCard({
             />
           </div>
         ) : (
-          <p
-            onClick={() => {
-              setTitleDraft(task.title);
-              setEditing(true);
-            }}
-            className="flex-1 text-sm text-ink leading-snug cursor-text break-words"
-          >
-            {task.title}
-          </p>
+          <p className="flex-1 text-sm text-ink leading-snug break-words">{task.title}</p>
         )}
 
         <IconButton
           size="sm"
           tone="danger"
           aria-label={t("tasks.deleteTask")}
-          onClick={() => onRequestDelete(task)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRequestDelete(task);
+          }}
           onPointerDown={(e) => e.stopPropagation()}
           className="shrink-0 opacity-0 group-hover:opacity-100"
         >
@@ -225,28 +233,10 @@ function TaskCard({
         </div>
 
         <div className="relative ms-auto" onPointerDown={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => setShowDatePicker((v) => !v)}
-            className={`flex items-center gap-1 text-2xs transition-colors ${
-              task.due_date ? "text-inkSoft" : "text-inkFaint opacity-0 group-hover:opacity-100"
-            } hover:text-teal`}
-          >
-            <Calendar size={11} strokeWidth={1.75} />
-            {task.due_date && formatDueDate(task.due_date, locale)}
-          </button>
-          {showDatePicker && (
-            <div className="absolute z-30 top-full mt-1 end-0 bg-paper border border-line rounded-md shadow-modal p-2 fade-in">
-              <input
-                type="date"
-                autoFocus
-                defaultValue={task.due_date || ""}
-                onChange={(e) => {
-                  onSetDueDate(task, e.target.value || null);
-                  setShowDatePicker(false);
-                }}
-                className="text-xs bg-transparent text-ink focus:outline-none"
-              />
-            </div>
+          {task.due_date && (
+            <span className={`text-2xs font-medium ${isOverdue(task.due_date) && !task.is_done ? "text-[#EF4444]" : "text-[#3B82F6]"}`}>
+              {formatDueDate(task.due_date, "en-US")}
+            </span>
           )}
         </div>
 
@@ -288,6 +278,7 @@ function ColumnContainer({
   onDeleteColumn,
   onAddTask,
   onContextMenu,
+  onOpenDetail,
 }: {
   column: BoardColumn;
   tasks: Task[];
@@ -305,6 +296,7 @@ function ColumnContainer({
   onDeleteColumn: (column: BoardColumn) => void;
   onAddTask: (columnId: string) => void;
   onContextMenu: (task: Task, x: number, y: number) => void;
+  onOpenDetail: (task: Task) => void;
 }) {
   const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
@@ -371,6 +363,7 @@ function ColumnContainer({
               onSetColor={onSetColor}
               onSetDueDate={onSetDueDate}
               onContextMenu={onContextMenu}
+              onOpenDetail={onOpenDetail}
             />
           ))}
         </SortableContext>
@@ -427,6 +420,8 @@ export default function BoardView({
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [extrasTick, setExtrasTick] = useState(0);
   const [commentTask, setCommentTask] = useState<Task | null>(null);
+  const [detailTask, setDetailTask] = useState<Task | null>(null);
+  const skipCardClickRef = useRef(false);
   const [subtaskTask, setSubtaskTask] = useState<Task | null>(null);
   const [subtaskDraft, setSubtaskDraft] = useState("");
   const [toast, setToast] = useState("");
@@ -439,8 +434,8 @@ export default function BoardView({
   }, []);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { delay: 320, tolerance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 320, tolerance: 8 } })
   );
 
   const extrasByTask = useMemo(() => {
@@ -482,12 +477,17 @@ export default function BoardView({
   }
 
   function handleDragStart(event: DragStartEvent) {
+    skipCardClickRef.current = true;
     setActiveTaskId(String(event.active.id));
     setMenu(null);
+    setDetailTask(null);
   }
 
   async function handleDragEnd(event: DragEndEvent) {
     setActiveTaskId(null);
+    window.setTimeout(() => {
+      skipCardClickRef.current = false;
+    }, 80);
     const { active, over } = event;
     if (!over) return;
 
@@ -762,6 +762,10 @@ export default function BoardView({
             onDeleteColumn={deleteColumn}
             onAddTask={(columnId) => openAddTask(columnId, "quick")}
             onContextMenu={(task, x, y) => setMenu({ task, x, y })}
+            onOpenDetail={(task) => {
+              if (skipCardClickRef.current) return;
+              setDetailTask(task);
+            }}
           />
         ))}
 
@@ -883,6 +887,20 @@ export default function BoardView({
             onRequestDeleteTask(menu.task);
             setMenu(null);
           }}
+        />
+      )}
+
+      {detailTask && (
+        <TaskDetailModal
+          task={tasks.find((item) => item.id === detailTask.id) || detailTask}
+          extras={extrasByTask[detailTask.id] || {}}
+          project={projects.find((item) => item.id === projectId) || null}
+          column={columns.find((item) => item.id === (tasks.find((row) => row.id === detailTask.id)?.column_id || detailTask.column_id)) || null}
+          currentUserId={currentUserId}
+          commentCount={commentCounts[detailTask.id] ?? 0}
+          onClose={() => setDetailTask(null)}
+          onExtrasChange={bumpExtras}
+          onCommentCountChange={onCommentCountChange}
         />
       )}
 
