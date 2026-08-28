@@ -1,4 +1,9 @@
-export type TaskSubtask = { text: string; done: boolean };
+export type TaskSubtask = {
+  text: string;
+  done: boolean;
+  due?: string | null;
+  assigneeId?: string | null;
+};
 
 export type TaskAttachment = {
   id: string;
@@ -11,7 +16,10 @@ export type TaskAttachment = {
 export type TaskExtras = {
   description?: string;
   tags?: string;
+  labels?: string;
+  category?: string;
   estimate?: string;
+  timeSpent?: string;
   recurrence?: string;
   subtasks?: TaskSubtask[];
   attachments?: TaskAttachment[];
@@ -50,9 +58,15 @@ function normalizeSubtasks(value: unknown): TaskSubtask[] {
         return text ? { text, done: false } : null;
       }
       if (item && typeof item === "object" && "text" in item) {
-        const text = String((item as TaskSubtask).text || "").trim();
+        const row = item as TaskSubtask;
+        const text = String(row.text || "").trim();
         if (!text) return null;
-        return { text, done: Boolean((item as TaskSubtask).done) };
+        return {
+          text,
+          done: Boolean(row.done),
+          due: typeof row.due === "string" && row.due ? row.due : null,
+          assigneeId: typeof row.assigneeId === "string" && row.assigneeId ? row.assigneeId : null,
+        };
       }
       return null;
     })
@@ -68,7 +82,10 @@ export function normalizeExtras(value: unknown): TaskExtras {
   return {
     description: typeof row.description === "string" ? row.description : "",
     tags: typeof row.tags === "string" ? row.tags : "",
+    labels: typeof row.labels === "string" ? row.labels : "",
+    category: typeof row.category === "string" ? row.category : "",
     estimate: typeof row.estimate === "string" ? row.estimate : "",
+    timeSpent: typeof row.timeSpent === "string" ? row.timeSpent : "",
     recurrence: typeof row.recurrence === "string" ? row.recurrence : "none",
     subtasks: normalizeSubtasks(row.subtasks),
     attachments,

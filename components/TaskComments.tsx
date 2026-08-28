@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase, TaskComment } from "@/lib/supabase";
-import { ChevronDown, MessageCircle, Send } from "lucide-react";
+import { AtSign, ChevronDown, MessageCircle, Paperclip, Send, Smile } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
@@ -22,6 +22,7 @@ export default function TaskComments({
   count,
   onCountChange,
   alwaysOpen = false,
+  variant = "inline",
 }: {
   taskId: string;
   projectId: string;
@@ -29,6 +30,7 @@ export default function TaskComments({
   count: number;
   onCountChange: (taskId: string, delta: number) => void;
   alwaysOpen?: boolean;
+  variant?: "inline" | "detail";
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(alwaysOpen);
@@ -94,6 +96,8 @@ export default function TaskComments({
     setSending(false);
   }
 
+  const isDetail = variant === "detail";
+
   return (
     <div className={alwaysOpen ? "" : "mt-1"}>
       {!alwaysOpen && (
@@ -108,25 +112,62 @@ export default function TaskComments({
       )}
 
       {open && (
-        <div className="mt-1.5 border-s-2 border-line ps-3 space-y-2 fade-in">
+        <div className={isDetail ? "flex flex-col min-h-[22rem]" : "mt-1.5 border-s-2 border-line ps-3 space-y-2 fade-in"}>
+          <div className={isDetail ? "flex-1 space-y-3" : "space-y-2"}>
           {loading ? (
             <p className="text-2xs text-inkFaint">{t("common.loading")}</p>
           ) : comments.length === 0 ? (
             <p className="text-2xs text-inkFaint">{t("comments.empty")}</p>
           ) : (
             comments.map((c) => (
-              <div key={c.id} className="flex items-start gap-1.5 text-2xs">
+              <div key={c.id} className={`flex items-start gap-2 ${isDetail ? "text-xs" : "text-2xs"}`}>
                 <Avatar name={displayName(c.user_id, c.profiles, currentUserId, t("common.you"))} src={c.profiles?.avatar_url} size="xs" className="mt-0.5" />
                 <div className="min-w-0 flex-1">
-                  <ClickableName userId={c.user_id} className="text-inkSoft">
+                  <ClickableName userId={c.user_id} className="text-ink font-medium">
                     {displayName(c.user_id, c.profiles, currentUserId, t("common.you"))}
                   </ClickableName>{" "}
-                  <span className="opacity-70">— {timeAgo(c.created_at, t)}</span>
-                  <p className="text-inkFaint mt-0.5 break-words leading-relaxed">{c.message}</p>
+                  <span className="text-inkFaint">— {timeAgo(c.created_at, t)}</span>
+                  <p className="text-inkSoft mt-0.5 break-words leading-relaxed">{c.message}</p>
                 </div>
               </div>
             ))
           )}
+          </div>
+          {isDetail ? (
+            <div className="mt-auto pt-3">
+              <Textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    addComment();
+                  }
+                }}
+                placeholder={t("taskDetail.writeComment")}
+                className="text-sm min-h-[4.5rem]"
+              />
+              <div className="flex items-center gap-1 mt-2">
+                <span className="inline-flex text-inkFaint">
+                  <Paperclip size={14} />
+                </span>
+                <span className="inline-flex text-inkFaint">
+                  <Smile size={14} />
+                </span>
+                <span className="inline-flex text-inkFaint">
+                  <AtSign size={14} />
+                </span>
+                <button
+                  type="button"
+                  onClick={addComment}
+                  disabled={sending || !draft.trim()}
+                  className="ms-auto rounded-lg bg-[#6C5CE7] text-white text-xs font-medium px-3 py-1.5 disabled:opacity-40"
+                >
+                  {t("taskDetail.postComment")}
+                </button>
+              </div>
+            </div>
+          ) : (
           <div className="flex items-center gap-1.5 pt-0.5">
             <Textarea
               value={draft}
@@ -150,6 +191,7 @@ export default function TaskComments({
               <Send size={12} strokeWidth={2} />
             </IconButton>
           </div>
+          )}
         </div>
       )}
     </div>

@@ -182,6 +182,21 @@ function TaskCard({
             ) : null;
           })()}
 
+        {extras.category && (
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#6C5CE7]/15 text-[#A78BFA]">
+            {t(`taskDetail.category.${extras.category}`)}
+          </span>
+        )}
+        {(extras.tags || "")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .slice(0, 3)
+          .map((tag) => (
+            <span key={tag} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#3B82F6]/15 text-[#60A5FA]">
+              {tag}
+            </span>
+          ))}
         {progress.total > 0 && (
           <span className="text-[10px] text-inkSoft">{`${progress.done}/${progress.total}`}</span>
         )}
@@ -606,11 +621,11 @@ export default function BoardView({
     await supabase.from("board_columns").delete().eq("id", column.id);
   }
 
-  async function assignTask(task: Task, userId: string) {
-    const member = members.find((item) => item.user_id === userId);
+  async function assignTask(task: Task, userId: string | null) {
+    const member = userId ? members.find((item) => item.user_id === userId) : null;
     onTasksMutated((prev) =>
       prev.map((item) =>
-        item.id === task.id ? { ...item, user_id: userId, profiles: member?.profiles || item.profiles } : item
+        item.id === task.id ? { ...item, user_id: userId || "", profiles: member?.profiles || null } : item
       )
     );
     await supabase.from("tasks").update({ user_id: userId }).eq("id", task.id);
@@ -896,11 +911,19 @@ export default function BoardView({
           extras={extrasByTask[detailTask.id] || {}}
           project={projects.find((item) => item.id === projectId) || null}
           column={columns.find((item) => item.id === (tasks.find((row) => row.id === detailTask.id)?.column_id || detailTask.column_id)) || null}
+          members={members}
           currentUserId={currentUserId}
           commentCount={commentCounts[detailTask.id] ?? 0}
           onClose={() => setDetailTask(null)}
           onExtrasChange={bumpExtras}
           onCommentCountChange={onCommentCountChange}
+          onAttach={() => {
+            attachTaskRef.current = tasks.find((item) => item.id === detailTask.id) || detailTask;
+            fileInputRef.current?.click();
+          }}
+          onSetColor={(color) => void setColor(tasks.find((item) => item.id === detailTask.id) || detailTask, color)}
+          onSetDueDate={(date) => void setDueDate(tasks.find((item) => item.id === detailTask.id) || detailTask, date)}
+          onAssign={(userId) => void assignTask(tasks.find((item) => item.id === detailTask.id) || detailTask, userId)}
         />
       )}
 
