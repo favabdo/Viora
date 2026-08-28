@@ -51,26 +51,26 @@ function writeAll(all: Record<string, TaskExtras>) {
 
 function normalizeSubtasks(value: unknown): TaskSubtask[] {
   if (!Array.isArray(value)) return [];
-  return value
-    .map((item) => {
-      if (typeof item === "string") {
-        const text = item.trim();
-        return text ? { text, done: false } : null;
-      }
-      if (item && typeof item === "object" && "text" in item) {
-        const row = item as TaskSubtask;
-        const text = String(row.text || "").trim();
-        if (!text) return null;
-        return {
-          text,
-          done: Boolean(row.done),
-          due: typeof row.due === "string" && row.due ? row.due : null,
-          assigneeId: typeof row.assigneeId === "string" && row.assigneeId ? row.assigneeId : null,
-        };
-      }
-      return null;
-    })
-    .filter((item): item is TaskSubtask => Boolean(item));
+  const list: TaskSubtask[] = [];
+  for (const item of value) {
+    if (typeof item === "string") {
+      const text = item.trim();
+      if (text) list.push({ text, done: false, due: null, assigneeId: null });
+      continue;
+    }
+    if (item && typeof item === "object" && "text" in item) {
+      const row = item as TaskSubtask;
+      const text = String(row.text || "").trim();
+      if (!text) continue;
+      list.push({
+        text,
+        done: Boolean(row.done),
+        due: typeof row.due === "string" && row.due ? row.due : null,
+        assigneeId: typeof row.assigneeId === "string" && row.assigneeId ? row.assigneeId : null,
+      });
+    }
+  }
+  return list;
 }
 
 export function normalizeExtras(value: unknown): TaskExtras {
