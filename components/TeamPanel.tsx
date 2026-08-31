@@ -7,6 +7,7 @@ import { normalizeProjectMember } from "@/lib/taskShape";
 import { resolveName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import ClickableAvatar from "./ClickableAvatar";
+import Avatar from "./ui/Avatar";
 import Button from "./ui/Button";
 import ClickableName from "./ClickableName";
 import Modal from "./ui/Modal";
