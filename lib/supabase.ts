@@ -118,8 +118,9 @@ export type ActivityEntry = {
   actor_name: string;
   message: string;
   action?: string | null;
-  action_params?: Record<string, string> | null;
+  action_params?: Record<string, string | number | boolean | null> | null;
   created_at: string;
+  profiles?: { username: string; full_name: string; avatar_url?: string | null } | null;
 };
 
 export type LinkLogEntry = {

@@ -11,6 +11,7 @@ import {
   CalendarDays,
   GanttChart,
   FileText,
+  History,
   Settings,
   ArrowRight,
   CheckSquare,
@@ -23,6 +24,7 @@ import BoardView from "./BoardView";
 import ProjectListView from "./ProjectListView";
 import ProjectCalendarView from "./ProjectCalendarView";
 import ProjectTimelineView from "./ProjectTimelineView";
+import ProjectHistoryView from "./ProjectHistoryView";
 import ComingSoon from "./ComingSoon";
 import BoardAnalytics from "./BoardAnalytics";
 import ActivityFeed from "./ActivityFeed";
@@ -33,7 +35,7 @@ import EmptyState from "./ui/EmptyState";
 import { Input } from "./ui/Input";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
 
-type WorkspaceView = "board" | "list" | "calendar" | "timeline" | "files" | "settings";
+type WorkspaceView = "board" | "list" | "calendar" | "timeline" | "files" | "history" | "settings";
 
 const DEFAULT_COLUMNS = [
   { name: "Backlog", color: "#6C5CE7", position: 0, is_done_column: false },
@@ -237,6 +239,7 @@ export default function ProjectWorkspace({
     { id: "list", label: t("workspace.list"), icon: List },
     { id: "calendar", label: t("workspace.calendar"), icon: CalendarDays },
     { id: "timeline", label: t("workspace.timeline"), icon: GanttChart },
+    { id: "history", label: t("workspace.history"), icon: History },
     { id: "files", label: t("workspace.files"), icon: FileText },
     { id: "settings", label: t("workspace.settings"), icon: Settings },
   ];
@@ -446,6 +449,14 @@ export default function ProjectWorkspace({
           tasks={tasks}
           currentUserId={currentUserId}
           onTasksMutated={setTasks}
+        />
+      )}
+      {view === "history" && (
+        <ProjectHistoryView
+          project={project}
+          members={acceptedMembers}
+          tasks={tasks}
+          currentUserId={currentUserId}
         />
       )}
       {view === "files" && <ComingSoon title={t("workspace.files")} icon={FileText} />}

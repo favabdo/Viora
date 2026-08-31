@@ -49,19 +49,19 @@ set search_path = public
 as $$
 begin
   if not public.is_project_member(p_project_id) then
-    raise exception 'مش عضو في المشروع ده';
+    raise exception 'ليس لديك عضوية في هذا المشروع';
   end if;
   if p_user_id = auth.uid() then
-    raise exception 'متقدرش تدعي نفسك';
+    raise exception 'لا يجوز دعوة نفسك إلى المشروع';
   end if;
   if not exists (select 1 from profiles where id = p_user_id and coalesce(is_deleted, false) = false) then
-    raise exception 'مفيش يوزر بالاسم ده';
+    raise exception 'لا يوجد مستخدم مطابق لهذا المعرّف';
   end if;
   if exists (
     select 1 from project_members
     where project_id = p_project_id and user_id = p_user_id and status = 'accepted'
   ) then
-    raise exception 'اليوزر ده عضو بالفعل في المشروع';
+    raise exception 'هذا المستخدم عضو في المشروع بالفعل';
   end if;
 
   insert into project_members (project_id, user_id, status, invited_by)
@@ -82,7 +82,7 @@ declare
   v_token uuid;
 begin
   if not public.is_project_member(p_project_id) then
-    raise exception 'مش عضو في المشروع ده';
+    raise exception 'ليس لديك عضوية في هذا المشروع';
   end if;
 
   if p_enabled then
@@ -112,7 +112,7 @@ set search_path = public
 as $$
 begin
   if not public.is_project_member(p_project_id) then
-    raise exception 'مش عضو في المشروع ده';
+    raise exception 'ليس لديك عضوية في هذا المشروع';
   end if;
 
   update invite_links
@@ -173,7 +173,7 @@ declare
   v_revoked boolean;
 begin
   if auth.uid() is null then
-    raise exception 'لازم تسجل دخول الأول';
+    raise exception 'يُرجى تسجيل الدخول أولًا';
   end if;
 
   select project_id, created_by, expires_at, max_uses, use_count, revoked
@@ -182,13 +182,13 @@ begin
   where token = p_token;
 
   if v_project_id is null or v_revoked then
-    raise exception 'رابط الدعوة ده مش شغال';
+    raise exception 'رابط الدعوة غير صالح أو انتهت صلاحيته';
   end if;
   if v_expires is not null and v_expires <= now() then
-    raise exception 'رابط الدعوة ده مش شغال';
+    raise exception 'رابط الدعوة غير صالح أو انتهت صلاحيته';
   end if;
   if v_max is not null and v_count >= v_max then
-    raise exception 'رابط الدعوة ده مش شغال';
+    raise exception 'رابط الدعوة غير صالح أو انتهت صلاحيته';
   end if;
 
   insert into project_members (project_id, user_id, status, invited_by)

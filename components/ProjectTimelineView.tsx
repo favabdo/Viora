@@ -12,8 +12,22 @@ import { Textarea } from "./ui/Input";
 
 const LABEL_WIDTH = 260;
 const ROW_HEIGHT = 48;
+/** أصغر بابل — يوم واحد يفضل مقروء من غير ما نضخّم باقي الأيام بنفس النسبة */
+const MIN_BAR_PX = 140;
 const BAR_COLORS = ["#6C5CE7", "#22C55E", "#3B82F6", "#C4A574", "#F59E0B", "#14B8A6", "#EC4899"];
 const OVERDUE_COLOR = "#EF4444";
+
+function barSegmentWidths(plannedDays: number, overdueDaysCount: number, dayWidth: number) {
+  const plannedRaw = Math.max(plannedDays, 1) * dayWidth;
+  const overdueRaw = Math.max(overdueDaysCount, 0) * dayWidth;
+  const rawTotal = plannedRaw + overdueRaw;
+  const displayTotal = Math.max(MIN_BAR_PX, rawTotal - 8);
+  if (overdueDaysCount <= 0) {
+    return { plannedWidth: displayTotal, overdueWidth: 0 };
+  }
+  const plannedWidth = (plannedRaw / rawTotal) * displayTotal;
+  return { plannedWidth, overdueWidth: displayTotal - plannedWidth };
+}
 
 function barColor(id: string): string {
   let hash = 0;
@@ -294,8 +308,7 @@ export default function ProjectTimelineView({
                 const offset = Math.max(diffDays(rangeStart, toDate(plannedStart)), 0);
                 const plannedSpan = Math.max(diffDays(toDate(plannedStart), toDate(plannedStop)) + 1, 1);
                 const colorBar = task.color || barColor(task.id);
-                const plannedWidth = Math.max(plannedSpan * dayWidth - (late > 0 ? 0 : 8), 6);
-                const overdueWidth = late > 0 ? Math.max(late * dayWidth - 8, 8) : 0;
+                const { plannedWidth, overdueWidth } = barSegmentWidths(plannedSpan, late, dayWidth);
                 const dateText = due
                   ? `${formatTaskDate(created, locale)} – ${formatTaskDate(due, locale)}`
                   : formatTaskDate(created, locale);

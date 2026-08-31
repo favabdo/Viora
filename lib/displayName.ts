@@ -1,3 +1,28 @@
+/** إعادة صياغة الجمل العامية المخزّنة في سجل النشاط إلى فصحى رسمية عند العرض */
+export function formalizeStoredArabic(text: string): string {
+  return text
+    .replaceAll("حد ما", "أحد المستخدمين")
+    .replaceAll(" خلّص المهمة", " أتمّ المهمة")
+    .replaceAll(" خلّص مهمة: ", " أتمّ المهمة: ")
+    .replaceAll(" رجّع المهمة معلّقة", " أعاد فتح المهمة")
+    .replaceAll(" رجّع مهمة معلّقة: ", " أعاد فتح المهمة: ")
+    .replaceAll(" أكمل المهمة", " أتمّ المهمة")
+    .replaceAll(" أضاف مهمة جديدة: ", " قام بإضافة مهمة جديدة: ")
+    .replaceAll(" أضاف مهمة: ", " قام بإضافة مهمة جديدة: ")
+    .replaceAll(" انضم للمشروع", " انضم إلى المشروع")
+    .replaceAll(" علّق على المهمة", " أضاف تعليقًا على المهمة")
+    .replaceAll("تمت إضافة الرابط", "أُضيف الرابط")
+    .replaceAll("تم تعديل الرابط والوصف", "عُدّل الرابط والوصف")
+    .replaceAll("تم تعديل الرابط", "عُدّل الرابط")
+    .replaceAll("تم تعديل الوصف", "عُدّل الوصف")
+    .replace(/ دعا (.+) إلى المشروع$/, " وجّه دعوة إلى $1 للانضمام إلى المشروع");
+}
+
+function formalActorName(name: string | null | undefined, fallback: string): string {
+  if (!name || name === "حد ما" || name === "مستخدم") return fallback;
+  return name;
+}
+
 export function resolveName(
   profile: { username?: string | null; full_name?: string | null } | null | undefined,
   fallback: string = "User"
@@ -27,16 +52,16 @@ export function toDisplayMessage(
   youLabel: string = "You"
 ) {
   if (!entry.actor_id || entry.actor_id !== currentUserId || !entry.actor_name) {
-    return entry.message;
+    return formalizeStoredArabic(entry.message);
   }
   const name = entry.actor_name;
   if (entry.message.startsWith(`@${name}`)) {
-    return `${youLabel}${entry.message.slice(name.length + 1)}`;
+    return formalizeStoredArabic(`${youLabel}${entry.message.slice(name.length + 1)}`);
   }
   if (entry.message.startsWith(name)) {
-    return `${youLabel}${entry.message.slice(name.length)}`;
+    return formalizeStoredArabic(`${youLabel}${entry.message.slice(name.length)}`);
   }
-  return entry.message;
+  return formalizeStoredArabic(entry.message);
 }
 
 /**
@@ -52,14 +77,23 @@ export function splitActorMessage(
   const actorId = entry.actor_id ?? null;
   const name = entry.actor_name;
   const isSelf = !!currentUserId && !!actorId && actorId === currentUserId;
+  const message = entry.message;
 
-  if (name && entry.message.startsWith(`@${name}`)) {
-    return { label: isSelf ? youLabel : name, rest: entry.message.slice(name.length + 1), actorId };
+  if (name && message.startsWith(`@${name}`)) {
+    return {
+      label: isSelf ? youLabel : formalActorName(name, youLabel),
+      rest: formalizeStoredArabic(message.slice(name.length + 1)),
+      actorId,
+    };
   }
-  if (name && entry.message.startsWith(name)) {
-    return { label: isSelf ? youLabel : name, rest: entry.message.slice(name.length), actorId };
+  if (name && message.startsWith(name)) {
+    return {
+      label: isSelf ? youLabel : formalActorName(name, youLabel),
+      rest: formalizeStoredArabic(message.slice(name.length)),
+      actorId,
+    };
   }
-  return { label: "", rest: entry.message, actorId };
+  return { label: "", rest: formalizeStoredArabic(message), actorId };
 }
 
 /**
@@ -76,7 +110,7 @@ export function renderActivity(
     actor_name?: string | null;
     message: string;
     action?: string | null;
-    action_params?: Record<string, string> | null;
+    action_params?: Record<string, string | number | boolean | null> | null;
   },
   t: (key: string) => string,
   currentUserId?: string,
@@ -98,7 +132,7 @@ export function renderActivity(
     }
 
     const isSelf = !!currentUserId && !!actorId && actorId === currentUserId;
-    const label = isSelf ? t("common.you") : entry.actor_name || t("common.someone");
+    const label = isSelf ? t("common.you") : formalActorName(entry.actor_name, t("common.someone"));
     return { label, rest: ` ${text}`, actorId };
   }
 
