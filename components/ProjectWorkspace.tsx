@@ -27,9 +27,8 @@ import ProjectTimelineView from "./ProjectTimelineView";
 import ProjectHistoryView from "./ProjectHistoryView";
 import ComingSoon from "./ComingSoon";
 import BoardAnalytics from "./BoardAnalytics";
-import ActivityFeed from "./ActivityFeed";
 import TeamPanel from "./TeamPanel";
-import Avatar from "./ui/Avatar";
+import ClickableAvatar from "./ClickableAvatar";
 import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
 import { Input } from "./ui/Input";
@@ -308,7 +307,8 @@ export default function ProjectWorkspace({
             <div className="flex items-center ps-1">
               {shownMembers.map((member, index) => (
                 <div key={member.id} className={index === 0 ? "" : "-ms-2"} style={{ zIndex: shownMembers.length - index }}>
-                  <Avatar
+                  <ClickableAvatar
+                    userId={member.user_id}
                     name={displayName(member.user_id, member.profiles, currentUserId, t("common.you"))}
                     src={member.profiles?.avatar_url}
                     size="sm"
@@ -407,17 +407,14 @@ export default function ProjectWorkspace({
             }}
             onInvitePeople={() => setShowTeam(true)}
           />
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 mt-6">
-            <div className="xl:col-span-3">
-              <BoardAnalytics
-                projects={projects}
-                activeProjectId={project.id}
-                tasks={tasks}
-                columns={columns}
-                layout="workspace"
-              />
-            </div>
-            <ActivityFeed projectId={project.id} currentUserId={currentUserId} variant="panel" />
+          <div className="mt-6">
+            <BoardAnalytics
+              projects={projects}
+              activeProjectId={project.id}
+              tasks={tasks}
+              columns={columns}
+              layout="workspace"
+            />
           </div>
         </>
       )}

@@ -30,10 +30,9 @@ import {
 } from "@/lib/taskExtras";
 import { displayName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import Avatar from "./ui/Avatar";
+import ClickableAvatar from "./ClickableAvatar";
 import IconButton from "./ui/IconButton";
 import { Input, Textarea } from "./ui/Input";
-import ClickableName from "./ClickableName";
 import AddTaskModal, { type NewTaskDraft } from "./AddTaskModal";
 import TaskContextMenu, { type TaskMenuState } from "./TaskContextMenu";
 import TaskComments from "./TaskComments";
@@ -267,13 +266,12 @@ function TaskCard({
         )}
 
         {task.profiles && (
-          <ClickableName userId={task.user_id}>
-            <Avatar
-              name={displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
-              src={task.profiles.avatar_url}
-              size="xs"
-            />
-          </ClickableName>
+          <ClickableAvatar
+            userId={task.user_id}
+            name={displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
+            src={task.profiles.avatar_url}
+            size="xs"
+          />
         )}
       </div>
     </div>

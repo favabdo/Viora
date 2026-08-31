@@ -19,7 +19,7 @@ import { displayName, renderActivity } from "@/lib/displayName";
 import { patchTaskExtras, subtaskProgress, type TaskExtras, type TaskSubtask } from "@/lib/taskExtras";
 import { timeAgo } from "@/lib/timeAgo";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import Avatar from "./ui/Avatar";
+import ClickableAvatar from "./ClickableAvatar";
 import ClickableName from "./ClickableName";
 import ItemHistory from "./ItemHistory";
 import TaskComments from "./TaskComments";
@@ -267,7 +267,7 @@ export default function TaskDetailModal({
                 <p className="text-[11px] text-inkFaint mb-1.5">{t("taskDetail.assignee")}</p>
                 <div className="flex items-center gap-2">
                   {assignee?.profiles ? (
-                    <Avatar name={assigneeName} src={assignee.profiles.avatar_url} size="sm" />
+                    <ClickableAvatar userId={assignee.user_id} name={assigneeName} src={assignee.profiles.avatar_url} size="sm" />
                   ) : (
                     <span className="h-6 w-6 rounded-full bg-paperDark" />
                   )}
@@ -347,7 +347,9 @@ export default function TaskDetailModal({
                       <span className={`flex-1 min-w-0 text-sm ${item.done ? "text-inkFaint line-through" : "text-ink"}`}>
                         {item.text}
                       </span>
-                      {person && <Avatar name={name} src={person.profiles?.avatar_url} size="xs" />}
+                      {person && (
+                        <ClickableAvatar userId={person.user_id} name={name} src={person.profiles?.avatar_url} size="xs" />
+                      )}
                       <select
                         value={item.assigneeId || ""}
                         onChange={(e) => updateSubtask(index, { assigneeId: e.target.value || null })}

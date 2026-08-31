@@ -8,7 +8,6 @@ import CalendarView from "./CalendarView";
 import TimelineView from "./TimelineView";
 import BoardAnalytics from "./BoardAnalytics";
 import TeamPanel from "./TeamPanel";
-import ActivityFeed from "./ActivityFeed";
 import ItemHistory from "./ItemHistory";
 import TaskComments from "./TaskComments";
 import Button from "./ui/Button";
@@ -857,8 +856,6 @@ export default function TasksSection({
             <div className="lg:hidden mt-6">
               <BoardAnalytics projects={projects} activeProjectId={activeProject.id} tasks={tasks} columns={columns} />
             </div>
-
-            <ActivityFeed projectId={activeProject.id} currentUserId={currentUserId} />
           </>
         ) : projects.length > 0 ? (
           <EmptyState

@@ -540,7 +540,11 @@ create policy "profiles select shared" on profiles
 -- ============================================================
 alter table profiles
   add column if not exists email text,
-  add column if not exists avatar_url text;
+  add column if not exists avatar_url text,
+  add column if not exists bio text,
+  add column if not exists location text,
+  add column if not exists timezone text,
+  add column if not exists skills text;
 
 -- نخزّن الإيميل في profiles وقت التسجيل عشان يظهر في صفحة البروفايل والكارت الشخصي لأي عضو تاني بنفس المشروع
 create or replace function public.handle_new_user()

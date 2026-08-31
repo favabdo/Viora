@@ -25,6 +25,10 @@ export type Profile = {
   avatar_url: string | null;
   created_at: string;
   is_deleted?: boolean;
+  bio?: string | null;
+  location?: string | null;
+  timezone?: string | null;
+  skills?: string | null;
 };
 
 export type Project = {

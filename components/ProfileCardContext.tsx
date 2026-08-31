@@ -5,7 +5,7 @@ import UserProfileCard from "./UserProfileCard";
 
 const Ctx = createContext<(userId: string) => void>(() => {});
 
-/** نادِ على الدالة دي بمعرّف أي مستخدم عشان تفتح كارت البروفايل بتاعه (اسمه، يوزره، إيميله، صورته) */
+/** نادِ على الدالة دي بمعرّف أي مستخدم لفتح بطاقة ملفه الشخصي */
 export function useOpenProfileCard() {
   return useContext(Ctx);
 }

@@ -6,7 +6,7 @@ import { supabase, ProjectMember } from "@/lib/supabase";
 import { normalizeProjectMember } from "@/lib/taskShape";
 import { resolveName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import Avatar from "./ui/Avatar";
+import ClickableAvatar from "./ClickableAvatar";
 import Button from "./ui/Button";
 import ClickableName from "./ClickableName";
 import Modal from "./ui/Modal";
@@ -410,7 +410,12 @@ export default function TeamPanel({
                   const role = isOwner ? "admin" : roles[m.user_id] || "editor";
                   return (
                     <li key={m.id} className="flex items-center gap-2.5 py-1.5">
-                      <Avatar name={resolveName(m.profiles, t("common.user"))} src={m.profiles?.avatar_url} size="sm" />
+                      <ClickableAvatar
+                        userId={m.user_id}
+                        name={resolveName(m.profiles, t("common.user"))}
+                        src={m.profiles?.avatar_url}
+                        size="sm"
+                      />
                       <span className="flex-1 min-w-0">
                         <ClickableName userId={m.user_id} className="text-sm text-ink block truncate">
                           {resolveName(m.profiles, t("common.user"))}
@@ -445,7 +450,12 @@ export default function TeamPanel({
               <ul className="space-y-1">
                 {pending.map((m) => (
                   <li key={m.id} className="flex items-center gap-2.5 py-1.5">
-                    <Avatar name={resolveName(m.profiles, t("common.user"))} src={m.profiles?.avatar_url} size="sm" />
+                    <ClickableAvatar
+                      userId={m.user_id}
+                      name={resolveName(m.profiles, t("common.user"))}
+                      src={m.profiles?.avatar_url}
+                      size="sm"
+                    />
                     <span className="flex-1 min-w-0 text-sm text-ink truncate">
                       {resolveName(m.profiles, m.profiles?.username || t("common.user"))}
                     </span>

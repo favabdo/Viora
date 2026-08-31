@@ -7,7 +7,7 @@ import { supabase, Profile } from "@/lib/supabase";
 import Button from "@/components/ui/Button";
 import IconButton from "@/components/ui/IconButton";
 import Avatar from "@/components/ui/Avatar";
-import { Input } from "@/components/ui/Input";
+import { Input, Textarea } from "@/components/ui/Input";
 import { ArrowRight, Camera, Loader2 } from "lucide-react";
 import AvatarCropModal from "@/components/AvatarCropModal";
 import ConfirmPasswordModal from "@/components/ConfirmPasswordModal";
@@ -39,6 +39,10 @@ export default function ProfilePage() {
 
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [location, setLocation] = useState("");
+  const [skills, setSkills] = useState("");
+  const [timezone, setTimezone] = useState("");
   const [savingInfo, setSavingInfo] = useState(false);
   const [infoMsg, setInfoMsg] = useState("");
   const [infoError, setInfoError] = useState("");
@@ -195,14 +199,30 @@ export default function ProfilePage() {
     setLoadingProfile(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, username, full_name, email, avatar_url, created_at")
+      .select("id, username, full_name, email, avatar_url, created_at, bio, location, timezone, skills")
       .eq("id", userId)
       .single();
-    if (!error && data) {
+    if (error) {
+      const fallback = await supabase
+        .from("profiles")
+        .select("id, username, full_name, email, avatar_url, created_at")
+        .eq("id", userId)
+        .single();
+      if (!fallback.error && fallback.data) {
+        const p = fallback.data as Profile;
+        setProfile(p);
+        setFullName(p.full_name || "");
+        setUsername(p.username || "");
+      }
+    } else if (data) {
       const p = data as Profile;
       setProfile(p);
       setFullName(p.full_name || "");
       setUsername(p.username || "");
+      setBio(p.bio || "");
+      setLocation(p.location || "");
+      setTimezone(p.timezone || "");
+      setSkills(p.skills || "");
     }
     setLoadingProfile(false);
   }
@@ -238,13 +258,24 @@ export default function ProfilePage() {
         }
       }
 
-      const { error } = await supabase
-        .from("profiles")
-        .update({ full_name: trimmedName, username: normalizedUsername })
-        .eq("id", profile.id);
-      if (error) throw error;
+      const extras = {
+        full_name: trimmedName,
+        username: normalizedUsername,
+        bio: bio.trim() || null,
+        location: location.trim() || null,
+        timezone: timezone.trim() || null,
+        skills: skills.trim() || null,
+      };
+      const { error } = await supabase.from("profiles").update(extras).eq("id", profile.id);
+      if (error) {
+        const { error: basicError } = await supabase
+          .from("profiles")
+          .update({ full_name: trimmedName, username: normalizedUsername })
+          .eq("id", profile.id);
+        if (basicError) throw basicError;
+      }
 
-      setProfile({ ...profile, full_name: trimmedName, username: normalizedUsername });
+      setProfile({ ...profile, ...extras });
       setInfoMsg(t("profile.msg.infoSaved"));
     } catch (err: any) {
       setInfoError(err?.message || t("profile.err.generic"));
@@ -424,6 +455,27 @@ export default function ProfilePage() {
                 dir="ltr"
                 className="text-end opacity-70 cursor-not-allowed"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.bio")}</label>
+              <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t("profile.bioPlaceholder")} rows={3} />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.location")}</label>
+              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder={t("profile.locationPlaceholder")} />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.timezone")}</label>
+              <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="Africa/Cairo" dir="ltr" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-inkSoft mb-1.5">{t("profile.skills")}</label>
+              <Input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="Python, SQL" dir="ltr" />
+              <p className="text-xs text-inkFaint mt-1">{t("profile.skillsHint")}</p>
             </div>
 
             {infoError && <p className="text-sm text-clay bg-claySoft rounded-md px-3 py-2">{infoError}</p>}

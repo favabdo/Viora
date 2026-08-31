@@ -24,6 +24,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useRoomsPendingPoll } from "@/lib/useRoomsPendingPoll";
 import { usePushSubscription } from "@/lib/usePushSubscription";
 import { supabase } from "@/lib/supabase";
+import { useOpenProfileCard } from "./ProfileCardContext";
 
 export type ShellTab = {
   id: string;
@@ -56,6 +57,7 @@ export default function AppShell({
 }) {
   const router = useRouter();
   const { t, lang } = useTranslation();
+  const openProfileCard = useOpenProfileCard();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [theme, setTheme] = useState<Theme>("dark");
@@ -132,7 +134,7 @@ export default function AppShell({
   function goToProfile() {
     setShowAccountMenu(false);
     setShowMobileNav(false);
-    router.push("/profile");
+    openProfileCard(currentUserId);
   }
 
   function goToSettings() {

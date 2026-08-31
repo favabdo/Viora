@@ -6,9 +6,9 @@ import { AtSign, ChevronDown, MessageCircle, Paperclip, Send, Smile } from "luci
 import { displayName } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
+import ClickableAvatar from "./ClickableAvatar";
 import { Textarea } from "./ui/Input";
 import IconButton from "./ui/IconButton";
-import Avatar from "./ui/Avatar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 /**
@@ -121,7 +121,13 @@ export default function TaskComments({
           ) : (
             comments.map((c) => (
               <div key={c.id} className={`flex items-start gap-2 ${isDetail ? "text-xs" : "text-2xs"}`}>
-                <Avatar name={displayName(c.user_id, c.profiles, currentUserId, t("common.you"))} src={c.profiles?.avatar_url} size="xs" className="mt-0.5" />
+                <ClickableAvatar
+                  userId={c.user_id}
+                  name={displayName(c.user_id, c.profiles, currentUserId, t("common.you"))}
+                  src={c.profiles?.avatar_url}
+                  size="xs"
+                  className="mt-0.5"
+                />
                 <div className="min-w-0 flex-1">
                   <ClickableName userId={c.user_id} className="text-ink font-medium">
                     {displayName(c.user_id, c.profiles, currentUserId, t("common.you"))}

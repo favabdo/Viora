@@ -16,7 +16,8 @@ import { supabase, Project, Task, BoardColumn, TASK_COLORS } from "@/lib/supabas
 import { displayName } from "@/lib/displayName";
 import { formatTaskDate, normalizeTask } from "@/lib/taskShape";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import Avatar from "./ui/Avatar";
+import ClickableAvatar from "./ClickableAvatar";
+import ClickableName from "./ClickableName";
 import DonutChart from "./ui/DonutChart";
 import { Input, Textarea } from "./ui/Input";
 
@@ -474,14 +475,15 @@ function TaskRow({
       <div className="flex items-center gap-1.5 min-w-0">
         {task.profiles ? (
           <>
-            <Avatar
+            <ClickableAvatar
+              userId={task.user_id}
               name={displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
               src={task.profiles.avatar_url}
               size="xs"
             />
-            <span className="text-xs text-inkSoft truncate">
+            <ClickableName userId={task.user_id} className="text-xs text-inkSoft truncate">
               {displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
-            </span>
+            </ClickableName>
           </>
         ) : (
           <span className="text-xs text-inkFaint">—</span>
