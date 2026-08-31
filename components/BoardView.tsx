@@ -6,9 +6,10 @@ import {
   DragOverlay,
   PointerSensor,
   TouchSensor,
-  closestCenter,
+  pointerWithin,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
@@ -42,6 +43,9 @@ import Button from "./ui/Button";
 
 const COLUMN_PALETTE = ["#3b82f6", "#a855f7", "#22c55e", "#f97316", "#ef4444", "#06b6d4", "#eab308", "#6b7280"];
 const MAX_ATTACHMENT_BYTES = 1.5 * 1024 * 1024;
+
+/** إسقاط فقط لو المؤشر فوق العمود أو المهمة فعلًا — مش أقرب عمود في الفاضي */
+const exactDropCollision: CollisionDetection = (args) => pointerWithin(args);
 
 function formatDueDate(iso: string | null | undefined, locale: string): string {
   if (!iso) return "";
@@ -319,7 +323,12 @@ function ColumnContainer({
   const [nameDraft, setNameDraft] = useState(column.name);
 
   return (
-    <div className="flex flex-col w-[280px] shrink-0 rounded-xl border border-line bg-surface p-3 min-h-[28rem]">
+    <div
+      ref={setNodeRef}
+      className={`flex flex-col w-[280px] shrink-0 rounded-xl border p-3 min-h-[28rem] transition-colors ${
+        isOver ? "border-[#8C3AED] bg-[#8C3AED]/10" : "border-line bg-surface"
+      }`}
+    >
       <div className="flex items-center gap-2 mb-3 px-0.5">
         <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: column.color }} />
         {editingName ? (
@@ -356,12 +365,7 @@ function ColumnContainer({
         </IconButton>
       </div>
 
-      <div
-        ref={setNodeRef}
-        className={`flex-1 flex flex-col gap-2 min-h-[80px] rounded-lg p-0.5 transition-colors ${
-          isOver ? "bg-[#8C3AED]/10" : ""
-        }`}
-      >
+      <div className="flex-1 flex flex-col gap-2 min-h-[80px] rounded-lg p-0.5">
         <SortableContext items={tasks.map((t2) => t2.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
             <TaskCard
@@ -449,8 +453,8 @@ export default function BoardView({
   }, []);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { delay: 320, tolerance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 320, tolerance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { distance: 8 } })
   );
 
   const extrasByTask = useMemo(() => {
@@ -504,18 +508,19 @@ export default function BoardView({
       skipCardClickRef.current = false;
     }, 80);
     const { active, over } = event;
-    if (!over) return;
+    if (!over || over.id === active.id) return;
 
     const activeTaskItem = tasks.find((t2) => t2.id === active.id);
     if (!activeTaskItem) return;
 
     const overIsColumn = columns.some((c) => c.id === over.id);
-    const targetColumnId = overIsColumn ? String(over.id) : tasks.find((t2) => t2.id === over.id)?.column_id;
+    const overTask = tasks.find((t2) => t2.id === over.id);
+    const targetColumnId = overIsColumn ? String(over.id) : overTask?.column_id;
     if (!targetColumnId) return;
 
     const columnTasks = (tasksByColumn.get(targetColumnId) || []).filter((t2) => t2.id !== activeTaskItem.id);
     let newPosition: number;
-    if (overIsColumn || !tasks.find((t2) => t2.id === over.id)) {
+    if (overIsColumn || !overTask) {
       newPosition = columnTasks.length > 0 ? columnTasks[columnTasks.length - 1].position + 1000 : 1000;
     } else {
       const overIndex = columnTasks.findIndex((t2) => t2.id === over.id);
@@ -532,6 +537,13 @@ export default function BoardView({
       prev.map((t2) => (t2.id === activeTaskItem.id ? { ...t2, column_id: targetColumnId, position: newPosition } : t2))
     );
     await supabase.from("tasks").update({ column_id: targetColumnId, position: newPosition }).eq("id", activeTaskItem.id);
+  }
+
+  function handleDragCancel() {
+    setActiveTaskId(null);
+    window.setTimeout(() => {
+      skipCardClickRef.current = false;
+    }, 80);
   }
 
   async function renameTask(task: Task, title: string) {
@@ -746,7 +758,13 @@ export default function BoardView({
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={exactDropCollision}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
       <div className="flex items-center justify-end mb-3">
         <button
           type="button"
