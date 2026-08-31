@@ -345,6 +345,8 @@ const dict: Record<string, { en: string; ar: string }> = {
   "timeline.inProgress": { en: "In Progress", ar: "قيد التنفيذ" },
   "timeline.criticalPath": { en: "Critical path", ar: "المسار الحرج" },
   "timeline.overdueHint": { en: "Still open after the deadline", ar: "ما زالت مفتوحة بعد موعد التسليم" },
+  "timeline.overdue1": { en: "1 day overdue", ar: "متأخرة يومًا" },
+  "timeline.overdueN": { en: "{n} days overdue", ar: "متأخرة {n} أيام" },
   "timeline.months": { en: "Months", ar: "أشهر" },
   "timeline.todo": { en: "To Do", ar: "للتنفيذ" },
   "timeline.allLabels": { en: "All Labels", ar: "كل الوسوم" },

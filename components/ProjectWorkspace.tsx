@@ -443,7 +443,6 @@ export default function ProjectWorkspace({
       {view === "timeline" && (
         <ProjectTimelineView
           project={project}
-          projects={projects}
           tasks={tasks}
           currentUserId={currentUserId}
           onTasksMutated={setTasks}

@@ -1,27 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ChevronDown,
-  Plus,
-  Check,
-  Folder,
-  Minus,
-  Filter,
-  MoreHorizontal,
-  ArrowDown,
-} from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { ChevronDown, Plus, Check, Minus, Filter, MoreHorizontal, ArrowDown } from "lucide-react";
 import { supabase, Project, Task } from "@/lib/supabase";
 import { dateKey, formatTaskDate, normalizeTask } from "@/lib/taskShape";
 import { displayName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Avatar from "./ui/Avatar";
 import DonutChart from "./ui/DonutChart";
-import { Input, Textarea } from "./ui/Input";
+import { Textarea } from "./ui/Input";
 
 const LABEL_WIDTH = 260;
 const ROW_HEIGHT = 48;
 const BAR_COLORS = ["#6C5CE7", "#22C55E", "#3B82F6", "#C4A574", "#F59E0B", "#14B8A6", "#EC4899"];
+const OVERDUE_COLOR = "#EF4444";
 
 function barColor(id: string): string {
   let hash = 0;
@@ -50,25 +42,36 @@ function addDays(date: Date, n: number): Date {
   return copy;
 }
 
-function taskStart(task: Task): string {
-  return dateKey(task.start_date) || dateKey(task.created_at) || ymd(new Date());
+function maxIso(a: string, b: string): string {
+  return a > b ? a : b;
 }
 
-function taskEnd(task: Task): string {
-  const due = dateKey(task.due_date);
-  if (due) return due;
-  return ymd(addDays(toDate(taskStart(task)), 14));
+function minIso(a: string, b: string): string {
+  return a < b ? a : b;
+}
+
+/** يوم إنشاء المهمة — بداية البابل على التايم لاين */
+function taskCreated(task: Task): string {
+  return dateKey(task.created_at) || dateKey(task.start_date) || ymd(new Date());
+}
+
+function taskDue(task: Task): string | null {
+  return dateKey(task.due_date);
+}
+
+function overdueDays(task: Task, today: string): number {
+  const due = taskDue(task);
+  if (task.is_done || !due || due >= today) return 0;
+  return Math.max(diffDays(toDate(due), toDate(today)), 0);
 }
 
 export default function ProjectTimelineView({
   project,
-  projects,
   tasks: projectTasks,
   currentUserId,
   onTasksMutated,
 }: {
   project: Project;
-  projects: Project[];
   tasks: Task[];
   currentUserId: string;
   onTasksMutated: (updater: (prev: Task[]) => Task[]) => void;
@@ -76,53 +79,27 @@ export default function ProjectTimelineView({
   const { t, lang } = useTranslation();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [allTasks, setAllTasks] = useState<Task[]>(projectTasks);
-  const [projectFilter, setProjectFilter] = useState("all");
   const [assigneeFilter, setAssigneeFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [showCompleted, setShowCompleted] = useState(true);
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [addingFor, setAddingFor] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [dayWidth, setDayWidth] = useState(16);
-
-  useEffect(() => {
-    if (projects.length === 0) return;
-    supabase
-      .from("tasks")
-      .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
-      .in(
-        "project_id",
-        projects.map((item) => item.id)
-      )
-      .then(({ data, error }) => {
-        if (error || !data) return;
-        setAllTasks(data.map(normalizeTask));
-      });
-  }, [projects]);
-
-  useEffect(() => {
-    setAllTasks((prev) => {
-      const others = prev.filter((task) => task.project_id !== project.id);
-      return [...others, ...projectTasks];
-    });
-  }, [projectTasks, project.id]);
 
   const today = ymd(new Date());
   const todayDate = toDate(today);
 
   const assignees = useMemo(() => {
     const map = new Map<string, string>();
-    for (const task of allTasks) {
+    for (const task of projectTasks) {
       const name = (task.profiles?.full_name || task.profiles?.username || "").trim();
       if (task.user_id && name) map.set(task.user_id, name);
     }
     return Array.from(map.entries());
-  }, [allTasks]);
+  }, [projectTasks]);
 
   const visible = useMemo(() => {
-    return allTasks.filter((task) => {
-      if (projectFilter !== "all" && task.project_id !== projectFilter) return false;
+    return projectTasks.filter((task) => {
       if (assigneeFilter !== "all" && task.user_id !== assigneeFilter) return false;
       if (!showCompleted && task.is_done) return false;
       if (priorityFilter === "high" && task.color !== "#ef4444") return false;
@@ -130,27 +107,24 @@ export default function ProjectTimelineView({
       if (priorityFilter === "low" && task.color && task.color !== "#3b82f6" && task.color !== "#22c55e") return false;
       return true;
     });
-  }, [allTasks, projectFilter, assigneeFilter, priorityFilter, showCompleted]);
-
-  const groups = useMemo(() => {
-    return projects
-      .map((item) => ({
-        project: item,
-        tasks: visible.filter((task) => task.project_id === item.id),
-      }))
-      .filter((group) => group.tasks.length > 0 || group.project.id === project.id);
-  }, [projects, visible, project.id]);
+  }, [projectTasks, assigneeFilter, priorityFilter, showCompleted]);
 
   const { rangeStart, totalDays, months } = useMemo(() => {
-    let min = addDays(todayDate, -45);
-    let max = addDays(todayDate, 60);
+    let min = addDays(todayDate, -14);
+    let max = addDays(todayDate, 21);
     for (const task of visible) {
-      const start = toDate(taskStart(task));
-      const end = toDate(taskEnd(task));
-      if (start < min) min = start;
-      if (end > max) max = end;
+      const created = toDate(taskCreated(task));
+      const due = taskDue(task);
+      const late = overdueDays(task, today);
+      if (created < min) min = created;
+      if (due) {
+        const dueDate = toDate(due);
+        if (dueDate > max) max = dueDate;
+      }
+      if (late > 0 && todayDate > max) max = todayDate;
+      if (!due && !task.is_done && todayDate > max) max = todayDate;
     }
-    const total = Math.max(diffDays(min, max) + 1, 90);
+    const total = Math.max(diffDays(min, max) + 1, 30);
     const monthGroups: { label: string; days: number }[] = [];
     let cursor = new Date(min);
     for (let i = 0; i < total; ) {
@@ -162,50 +136,46 @@ export default function ProjectTimelineView({
       i += span;
     }
     return { rangeStart: min, totalDays: total, months: monthGroups };
-  }, [visible, locale, todayDate]);
+  }, [visible, locale, todayDate, today]);
 
   const todayOffset = diffDays(rangeStart, todayDate);
   const gridWidth = totalDays * dayWidth;
 
-  const countsByProject = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const task of allTasks) map[task.project_id] = (map[task.project_id] ?? 0) + 1;
-    return map;
-  }, [allTasks]);
-
   const overview = useMemo(() => {
     const done = visible.filter((task) => task.is_done).length;
-    const overdue = visible.filter((task) => !task.is_done && dateKey(task.due_date) && (dateKey(task.due_date) as string) < today).length;
+    const overdue = visible.filter((task) => overdueDays(task, today) > 0).length;
     const remaining = visible.length - done;
-    const inProgress = Math.ceil(remaining * 0.45);
-    const todo = Math.max(remaining - inProgress - overdue, 0);
+    const inProgress = Math.max(remaining - overdue, 0);
     return [
       { label: t("timeline.completed"), color: "#22C55E", count: done },
       { label: t("timeline.inProgress"), color: "#3B82F6", count: inProgress },
-      { label: t("timeline.todo"), color: "#6C5CE7", count: todo },
-      { label: t("list.overdue"), color: "#F59E0B", count: overdue },
+      { label: t("list.overdue"), color: OVERDUE_COLOR, count: overdue },
     ];
   }, [visible, today, t]);
 
   const critical = visible
-    .filter((task) => dateKey(task.due_date))
+    .filter((task) => taskDue(task) && !task.is_done)
     .sort((a, b) => (a.due_date || "").localeCompare(b.due_date || ""))
     .slice(0, 4);
 
-  async function addTask(projectId: string) {
+  function overdueLabel(days: number): string {
+    if (days === 1) return t("timeline.overdue1");
+    return t("timeline.overdueN").replace("{n}", String(days));
+  }
+
+  async function addTask() {
     const title = newTitle.trim();
     if (!title) return;
     const { data, error } = await supabase
       .from("tasks")
-      .insert({ title, project_id: projectId, position: 1000 })
+      .insert({ title, project_id: project.id, position: 1000 })
       .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
       .single();
     if (error || !data) return;
     const next = normalizeTask(data);
-    setAllTasks((prev) => [...prev, next]);
-    if (projectId === project.id) onTasksMutated((prev) => [...prev, next]);
+    onTasksMutated((prev) => [...prev, next]);
     setNewTitle("");
-    setAddingFor(null);
+    setAdding(false);
   }
 
   function goToday() {
@@ -314,108 +284,119 @@ export default function ProjectTimelineView({
                 </div>
               )}
 
-              {groups.map((group) => {
-                const closed = collapsed[group.project.id];
-                const color = barColor(group.project.id);
+              {visible.map((task) => {
+                const created = taskCreated(task);
+                const due = taskDue(task);
+                const late = overdueDays(task, today);
+                const plannedEnd = due || (task.is_done ? dateKey(task.completed_at) || created : today);
+                const plannedStart = minIso(created, plannedEnd);
+                const plannedStop = maxIso(created, plannedEnd);
+                const offset = Math.max(diffDays(rangeStart, toDate(plannedStart)), 0);
+                const plannedSpan = Math.max(diffDays(toDate(plannedStart), toDate(plannedStop)) + 1, 1);
+                const colorBar = task.color || barColor(task.id);
+                const plannedWidth = Math.max(plannedSpan * dayWidth - (late > 0 ? 0 : 8), 6);
+                const overdueWidth = late > 0 ? Math.max(late * dayWidth - 8, 8) : 0;
+                const dateText = due
+                  ? `${formatTaskDate(created, locale)} – ${formatTaskDate(due, locale)}`
+                  : formatTaskDate(created, locale);
+
                 return (
-                  <div key={group.project.id}>
-                    <button
-                      onClick={() => setCollapsed((prev) => ({ ...prev, [group.project.id]: !prev[group.project.id] }))}
-                      className="flex items-center gap-2 px-3 py-2.5 w-full text-start bg-surfaceSunken border-b border-line"
+                  <div key={task.id} className="flex items-center border-b border-line/70" style={{ height: ROW_HEIGHT }}>
+                    <div
+                      className="shrink-0 sticky start-0 z-[5] bg-surface px-3 flex items-center gap-2 border-e border-line"
+                      style={{ width: LABEL_WIDTH, height: ROW_HEIGHT }}
                     >
-                      <ChevronDown size={14} className={`text-inkFaint ${closed ? "-rotate-90" : ""}`} />
-                      <Folder size={14} style={{ color }} />
-                      <span className="text-sm font-semibold text-ink">{group.project.name}</span>
-                      <span className="text-xs text-inkFaint">{group.tasks.length}</span>
-                    </button>
-
-                    {!closed &&
-                      group.tasks.map((task) => {
-                        const start = taskStart(task);
-                        const end = taskEnd(task);
-                        const offset = Math.max(diffDays(rangeStart, toDate(start)), 0);
-                        const span = Math.max(diffDays(toDate(start), toDate(end)) + 1, 3);
-                        const colorBar = task.color || barColor(task.id);
-                        return (
-                          <div key={task.id} className="flex items-center border-b border-line/70" style={{ height: ROW_HEIGHT }}>
-                            <div
-                              className="shrink-0 sticky start-0 z-[5] bg-surface px-3 flex items-center gap-2 border-e border-line"
-                              style={{ width: LABEL_WIDTH, height: ROW_HEIGHT }}
-                            >
-                              <span
-                                className="h-2 w-2 rounded-full shrink-0"
-                                style={{ backgroundColor: task.is_done ? "#22C55E" : colorBar }}
-                              />
-                              <span className="truncate text-[13px] text-ink" title={task.title}>
-                                {task.title}
-                              </span>
-                            </div>
-                            <div className="relative" style={{ width: gridWidth, height: ROW_HEIGHT }}>
-                              <div
-                                className="absolute top-2.5 h-7 rounded-full flex items-center ps-3 pe-1 text-[11px] font-medium text-white shadow-sm"
-                                style={{
-                                  insetInlineStart: offset * dayWidth + 4,
-                                  width: Math.max(span * dayWidth - 8, 72),
-                                  backgroundColor: colorBar,
-                                }}
-                              >
-                                <span className="truncate flex-1">
-                                  {formatTaskDate(start, locale)} – {formatTaskDate(end, locale)}
-                                </span>
-                                {task.profiles && (
-                                  <Avatar
-                                    name={displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
-                                    src={task.profiles.avatar_url}
-                                    size="xs"
-                                    className="ms-2 ring-2 ring-black/20"
-                                  />
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                    {!closed &&
-                      (addingFor === group.project.id ? (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-surface border-b border-line">
-                          <Textarea
-                            autoFocus
-                            value={newTitle}
-                            onChange={(e) => setNewTitle(e.target.value)}
-                            placeholder={t("tasks.newTaskPlaceholder")}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                addTask(group.project.id);
-                              }
-                              if (e.key === "Escape") setAddingFor(null);
-                            }}
-                            className="text-sm py-1.5 max-w-sm"
-                          />
-                          <button
-                            onClick={() => addTask(group.project.id)}
-                            className="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-[#6C5CE7] text-white"
-                            aria-label={t("tasks.add")}
-                          >
-                            <Check size={14} />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setAddingFor(group.project.id);
-                            setNewTitle("");
-                          }}
-                          className="flex items-center gap-1.5 px-8 py-2.5 text-xs text-inkFaint hover:text-[#6C5CE7] border-b border-line w-full text-start"
+                      <span
+                        className="h-2 w-2 rounded-full shrink-0"
+                        style={{ backgroundColor: late > 0 ? OVERDUE_COLOR : task.is_done ? "#22C55E" : colorBar }}
+                      />
+                      <span className="truncate text-[13px] text-ink" title={task.title}>
+                        {task.title}
+                      </span>
+                    </div>
+                    <div className="relative" style={{ width: gridWidth, height: ROW_HEIGHT }}>
+                      <div
+                        className="absolute top-2.5 h-7 flex items-stretch overflow-hidden shadow-sm"
+                        style={{
+                          insetInlineStart: offset * dayWidth + 4,
+                          width: plannedWidth + overdueWidth,
+                          borderRadius: 9999,
+                          opacity: task.is_done ? 0.7 : 1,
+                        }}
+                        title={late > 0 ? `${task.title} — ${overdueLabel(late)}` : task.title}
+                      >
+                        <div
+                          className="flex min-w-0 items-center ps-3 pe-2 text-[11px] font-medium text-white"
+                          style={{ width: plannedWidth, backgroundColor: colorBar }}
                         >
-                          <Plus size={13} />
-                          {t("list.addTask")}
-                        </button>
-                      ))}
+                          <span className="truncate flex-1">{dateText}</span>
+                          {task.profiles && late === 0 && (
+                            <Avatar
+                              name={displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
+                              src={task.profiles.avatar_url}
+                              size="xs"
+                              className="ms-2 ring-2 ring-black/20 shrink-0"
+                            />
+                          )}
+                        </div>
+                        {late > 0 && (
+                          <div
+                            className="flex items-center justify-center px-1.5 text-[10px] font-semibold text-white truncate"
+                            style={{ width: overdueWidth, backgroundColor: OVERDUE_COLOR }}
+                          >
+                            {overdueWidth >= 88 ? overdueLabel(late) : `+${late}`}
+                          </div>
+                        )}
+                      </div>
+                      {late > 0 && overdueWidth < 88 && (
+                        <span
+                          className="absolute top-3 text-[10px] font-semibold whitespace-nowrap"
+                          style={{ insetInlineStart: offset * dayWidth + plannedWidth + overdueWidth + 8, color: OVERDUE_COLOR }}
+                        >
+                          {overdueLabel(late)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
+
+              {adding ? (
+                <div className="flex items-center gap-2 px-3 py-2 bg-surface border-b border-line">
+                  <Textarea
+                    autoFocus
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    placeholder={t("tasks.newTaskPlaceholder")}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        addTask();
+                      }
+                      if (e.key === "Escape") setAdding(false);
+                    }}
+                    className="text-sm py-1.5 max-w-sm"
+                  />
+                  <button
+                    onClick={addTask}
+                    className="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-[#6C5CE7] text-white"
+                    aria-label={t("tasks.add")}
+                  >
+                    <Check size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setAdding(true);
+                    setNewTitle("");
+                  }}
+                  className="flex items-center gap-1.5 px-8 py-2.5 text-xs text-inkFaint hover:text-[#6C5CE7] border-b border-line w-full text-start"
+                >
+                  <Plus size={13} />
+                  {t("list.addTask")}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -424,14 +405,6 @@ export default function ProjectTimelineView({
       <aside className="w-full xl:w-[280px] shrink-0 space-y-4">
         <div className="rounded-xl border border-line bg-surface p-3 space-y-2">
           <h3 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-1">{t("list.filter")}</h3>
-          <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)} className={selectClass}>
-            <option value="all">{t("calendar.allProjects")}</option>
-            {projects.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
           <select value={assigneeFilter} onChange={(e) => setAssigneeFilter(e.target.value)} className={selectClass}>
             <option value="all">{t("calendar.allAssignees")}</option>
             {assignees.map(([id, name]) => (
@@ -449,10 +422,6 @@ export default function ProjectTimelineView({
             <option value="medium">{t("list.priority.medium")}</option>
             <option value="low">{t("list.priority.low")}</option>
           </select>
-          <div className="grid grid-cols-2 gap-2">
-            <input type="date" className={selectClass} />
-            <input type="date" className={selectClass} />
-          </div>
           <label className="flex items-center justify-between gap-2 pt-1 text-xs text-inkSoft">
             <span>{t("calendar.showCompleted")}</span>
             <button
@@ -464,21 +433,6 @@ export default function ProjectTimelineView({
               <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${showCompleted ? "start-4" : "start-0.5"}`} />
             </button>
           </label>
-        </div>
-
-        <div className="rounded-xl border border-line bg-surface p-3">
-          <h3 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-3">{t("list.projectsSummary")}</h3>
-          <ul className="space-y-2.5">
-            {projects.map((item) => (
-              <li key={item.id} className="flex items-center justify-between text-sm">
-                <span className="inline-flex items-center gap-2 text-inkSoft">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: barColor(item.id) }} />
-                  {item.name}
-                </span>
-                <span className="text-inkFaint">{countsByProject[item.id] ?? 0}</span>
-              </li>
-            ))}
-          </ul>
         </div>
 
         <div className="rounded-xl border border-line bg-surface p-3">
@@ -509,21 +463,26 @@ export default function ProjectTimelineView({
             <p className="text-xs text-inkFaint">{t("board.noDeadlines")}</p>
           ) : (
             <div className="flex flex-col items-stretch">
-              {critical.map((task, index) => (
-                <div key={task.id}>
-                  <div className="rounded-lg border border-line bg-paperDark px-2.5 py-2">
-                    <p className="text-xs text-ink truncate">{task.title}</p>
-                    <p className="text-[11px] text-inkFaint mt-0.5">
-                      {formatTaskDate(taskStart(task), locale)} – {formatTaskDate(taskEnd(task), locale)}
-                    </p>
-                  </div>
-                  {index < critical.length - 1 && (
-                    <div className="flex justify-center py-1 text-inkFaint">
-                      <ArrowDown size={12} />
+              {critical.map((task, index) => {
+                const late = overdueDays(task, today);
+                return (
+                  <div key={task.id}>
+                    <div className="rounded-lg border border-line bg-paperDark px-2.5 py-2">
+                      <p className="text-xs text-ink truncate">{task.title}</p>
+                      <p className={`text-[11px] mt-0.5 ${late > 0 ? "text-red-500" : "text-inkFaint"}`}>
+                        {late > 0
+                          ? overdueLabel(late)
+                          : `${formatTaskDate(taskCreated(task), locale)} – ${formatTaskDate(taskDue(task), locale)}`}
+                      </p>
                     </div>
-                  )}
-                </div>
-              ))}
+                    {index < critical.length - 1 && (
+                      <div className="flex justify-center py-1 text-inkFaint">
+                        <ArrowDown size={12} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
