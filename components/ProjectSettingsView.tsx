@@ -34,7 +34,6 @@ import {
   defaultProjectColor,
   defaultProjectKey,
   getProjectMeta,
-  PROJECT_COLORS,
   writeProjectMeta,
   type ProjectDefaultView,
   type ProjectMeta,
@@ -49,20 +48,9 @@ import ConfirmPasswordModal from "./ConfirmPasswordModal";
 import ComingSoon from "./ComingSoon";
 import Button from "./ui/Button";
 import { Input } from "./ui/Input";
+import ProjectAppearanceFields from "./ProjectAppearanceFields";
 
 const DESC_MAX = 500;
-
-const PROJECT_ICONS: { id: string; icon: LucideIcon }[] = [
-  { id: "monitor", icon: Monitor },
-  { id: "folder", icon: FolderKanban },
-  { id: "chat", icon: MessageCircle },
-  { id: "globe", icon: Globe },
-  { id: "code", icon: Code2 },
-  { id: "palette", icon: Palette },
-  { id: "chart", icon: BarChart3 },
-  { id: "phone", icon: Smartphone },
-  { id: "briefcase", icon: Briefcase },
-];
 
 type SettingsTab =
   | "general"
@@ -90,6 +78,7 @@ type Draft = {
   key: string;
   description: string;
   icon: string;
+  imageUrl: string | null;
   color: string;
   visibility: "private" | "public";
   guestAccess: boolean;
@@ -114,6 +103,7 @@ function metaToDraft(project: Project, meta: ProjectMeta | undefined, columns: B
     key: meta?.key || defaultProjectKey(project.name),
     description: meta?.description || "",
     icon: meta?.icon || "monitor",
+    imageUrl: meta?.imageUrl || null,
     color: meta?.color || defaultProjectColor(project.id),
     visibility: meta?.visibility || "private",
     guestAccess: meta?.guestAccess ?? false,
@@ -230,7 +220,6 @@ export default function ProjectSettingsView({
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
-  const [showIcons, setShowIcons] = useState(false);
   const [importNotice, setImportNotice] = useState(false);
 
   const saved = useMemo(() => metaToDraft(project, getProjectMeta(project.id), columns), [project, columns]);
@@ -285,7 +274,6 @@ export default function ProjectSettingsView({
     day: "numeric",
     year: "numeric",
   });
-  const Icon = PROJECT_ICONS.find((item) => item.id === draft.icon)?.icon || Monitor;
   const memberCount = Math.max(1, members.length);
   const isOwner = currentUserId === project.user_id;
 
@@ -319,6 +307,7 @@ export default function ProjectSettingsView({
     writeProjectMeta(project.id, {
       description: draft.description.trim(),
       icon: draft.icon,
+      imageUrl: draft.imageUrl,
       color: draft.color,
       key: draft.key.trim().toUpperCase() || defaultProjectKey(name),
       visibility: draft.visibility,
@@ -420,42 +409,8 @@ export default function ProjectSettingsView({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="lg:col-span-2">
               <Card>
-                <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                  <div className="relative shrink-0 self-start">
-                    <button
-                      type="button"
-                      onClick={() => setShowIcons((v) => !v)}
-                      className="h-16 w-16 rounded-2xl flex items-center justify-center text-white"
-                      style={{ backgroundColor: draft.color }}
-                      aria-label={t("projects.iconLabel")}
-                    >
-                      <Icon size={28} strokeWidth={1.75} />
-                    </button>
-                    <span className="absolute -bottom-1 -end-1 h-6 w-6 rounded-full bg-surface border border-line text-ink flex items-center justify-center pointer-events-none">
-                      <Pencil size={11} />
-                    </span>
-                    {showIcons && (
-                      <div className="absolute top-full start-0 mt-2 z-20 w-52 rounded-xl border border-line bg-paper shadow-modal p-2 grid grid-cols-5 gap-1">
-                        {PROJECT_ICONS.map(({ id, icon: ItemIcon }) => (
-                          <button
-                            key={id}
-                            type="button"
-                            onClick={() => {
-                              patch({ icon: id });
-                              setShowIcons(false);
-                            }}
-                            className={`h-9 w-9 rounded-lg inline-flex items-center justify-center ${
-                              draft.icon === id ? "bg-[#6C5CE7]/20 text-[#6C5CE7]" : "text-inkSoft hover:bg-paperDark"
-                            }`}
-                          >
-                            <ItemIcon size={16} />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1 min-w-0">
-                    <div className="sm:col-span-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <div>
                       <label className="block text-xs font-medium text-inkSoft mb-1.5">
                         {t("projects.nameLabel")} <span className="text-[#EF4444]">*</span>
                       </label>
@@ -473,7 +428,6 @@ export default function ProjectSettingsView({
                         onChange={(e) => patch({ key: e.target.value.toUpperCase() })}
                       />
                     </div>
-                  </div>
                 </div>
 
                 <label className="block text-xs font-medium text-inkSoft mb-1.5">{t("projects.descLabel")}</label>
@@ -491,23 +445,13 @@ export default function ProjectSettingsView({
                   </span>
                 </div>
 
-                <label className="block text-xs font-medium text-inkSoft mb-2">{t("projects.colorLabel")}</label>
-                <div className="flex flex-wrap items-center gap-2.5 mb-4">
-                  {PROJECT_COLORS.map((color) => {
-                    const active = draft.color === color;
-                    return (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => patch({ color })}
-                        className="h-7 w-7 rounded-full inline-flex items-center justify-center"
-                        style={{ backgroundColor: color }}
-                        aria-label={color}
-                      >
-                        {active && <Check size={13} strokeWidth={3} className="text-white" />}
-                      </button>
-                    );
-                  })}
+                <div className="mb-4">
+                  <ProjectAppearanceFields
+                    color={draft.color}
+                    icon={draft.icon}
+                    imageUrl={draft.imageUrl}
+                    onChange={(next) => patch(next)}
+                  />
                 </div>
 
                 <label className="block text-xs font-medium text-inkSoft mb-1.5">{t("projectSettings.owner")}</label>

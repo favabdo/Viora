@@ -11,24 +11,16 @@ import {
   Search,
   FolderKanban,
   Plus,
-  MessageCircle,
-  Globe,
-  Code2,
-  Palette,
-  BarChart3,
-  Smartphone,
-  Monitor,
-  Briefcase,
-  MoreHorizontal,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
 import { getProjectMeta, PROJECT_COLORS, writeProjectMeta } from "@/lib/projectMeta";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
 import Modal from "./ui/Modal";
-import { Input, Textarea } from "./ui/Input";
+import { Textarea } from "./ui/Input";
+import ProjectAppearanceFields from "./ProjectAppearanceFields";
+import ProjectMark from "./ProjectMark";
 
 type ProjectStatus = "active" | "completed" | "archived" | "on_hold";
 type StatusFilter = "all" | "active" | "completed" | "archived";
@@ -46,6 +38,7 @@ type ProjectCard = {
   accent: Accent;
   color: string;
   icon: string;
+  imageUrl?: string | null;
 };
 
 type Accent = {
@@ -63,18 +56,6 @@ const ACCENTS: Accent[] = [
   { bar: "bg-[#EC4899]", iconBg: "bg-[#EC4899]/18", iconText: "text-[#EC4899]" },
   { bar: "bg-[#14B8A6]", iconBg: "bg-[#14B8A6]/18", iconText: "text-[#14B8A6]" },
   { bar: "bg-[#EAB308]", iconBg: "bg-[#EAB308]/18", iconText: "text-[#EAB308]" },
-];
-
-const PROJECT_ICONS: { id: string; icon: LucideIcon }[] = [
-  { id: "monitor", icon: Monitor },
-  { id: "folder", icon: FolderKanban },
-  { id: "chat", icon: MessageCircle },
-  { id: "globe", icon: Globe },
-  { id: "code", icon: Code2 },
-  { id: "palette", icon: Palette },
-  { id: "chart", icon: BarChart3 },
-  { id: "phone", icon: Smartphone },
-  { id: "briefcase", icon: Briefcase },
 ];
 
 function hashIndex(id: string, size: number): number {
@@ -120,6 +101,7 @@ export default function ProjectsSection({
   const [newDescription, setNewDescription] = useState("");
   const [newIcon, setNewIcon] = useState("folder");
   const [newColor, setNewColor] = useState(PROJECT_COLORS[0]);
+  const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -209,6 +191,7 @@ export default function ProjectsSection({
         accent: accentFor(project.id),
         color,
         icon: extra?.icon || "folder",
+        imageUrl: extra?.imageUrl || null,
       };
     });
 
@@ -221,6 +204,7 @@ export default function ProjectsSection({
     setNewDescription("");
     setNewIcon("folder");
     setNewColor(PROJECT_COLORS[0]);
+    setNewImageUrl(null);
   }
 
   async function createProject() {
@@ -234,6 +218,7 @@ export default function ProjectsSection({
         description: newDescription.trim(),
         icon: newIcon,
         color: newColor,
+        imageUrl: newImageUrl,
       });
       resetCreateForm();
       setShowCreate(false);
@@ -382,7 +367,7 @@ export default function ProjectsSection({
                 className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0"
                 style={{ backgroundColor: `${card.color}22`, color: card.color }}
               >
-                <ProjectIcon name={card.icon} />
+                <ProjectIcon name={card.icon} imageUrl={card.imageUrl} color={card.color} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -413,7 +398,7 @@ export default function ProjectsSection({
           }}
           title={t("projects.newTitle")}
           titleAlign="center"
-          maxWidth="max-w-md"
+          maxWidth="max-w-lg"
         >
           <div className="space-y-4">
             <div>
@@ -439,51 +424,16 @@ export default function ProjectsSection({
                 placeholder={t("projects.descPlaceholder")}
               />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-inkFaint mb-2">{t("projects.iconLabel")}</label>
-              <div className="flex flex-wrap items-center gap-2">
-                {PROJECT_ICONS.map(({ id, icon: Icon }) => {
-                  const active = newIcon === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setNewIcon(id)}
-                      className={`h-10 w-10 rounded-full inline-flex items-center justify-center transition-colors ${
-                        active ? "ring-2 ring-[#6C5CE7] ring-offset-2 ring-offset-surface" : ""
-                      }`}
-                      style={{ backgroundColor: `${newColor}22`, color: newColor }}
-                    >
-                      <Icon size={16} strokeWidth={1.75} />
-                    </button>
-                  );
-                })}
-                <button
-                  type="button"
-                  className="h-10 w-10 rounded-full inline-flex items-center justify-center bg-paperDark text-inkFaint"
-                  aria-label={t("workspace.more")}
-                >
-                  <MoreHorizontal size={16} />
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-inkFaint mb-2">{t("projects.colorLabel")}</label>
-              <div className="flex flex-wrap items-center gap-2">
-                {PROJECT_COLORS.map((color) => {
-                  const active = newColor === color;
-                  return (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setNewColor(color)}
-                      className={`h-7 w-7 rounded-full ${active ? "ring-2 ring-[#60A5FA] ring-offset-2 ring-offset-surface" : ""}`}
-                      style={{ backgroundColor: color }}
-                    />
-                  );
-                })}
-              </div>
-            </div>
+            <ProjectAppearanceFields
+              color={newColor}
+              icon={newIcon}
+              imageUrl={newImageUrl}
+              onChange={(next) => {
+                if (next.color) setNewColor(next.color);
+                if (next.icon) setNewIcon(next.icon);
+                if (next.imageUrl !== undefined) setNewImageUrl(next.imageUrl);
+              }}
+            />
           </div>
           <div className="flex items-center justify-between gap-3 mt-6">
             <Button
@@ -505,9 +455,8 @@ export default function ProjectsSection({
   );
 }
 
-function ProjectIcon({ name }: { name: string }) {
-  const Icon = PROJECT_ICONS.find((item) => item.id === name)?.icon || FolderKanban;
-  return <Icon size={18} strokeWidth={1.75} />;
+function ProjectIcon({ name, imageUrl, color }: { name: string; imageUrl?: string | null; color?: string }) {
+  return <ProjectMark icon={name} imageUrl={imageUrl} color={color} size={18} />;
 }
 
 function StatusBadge({ status, t }: { status: ProjectStatus; t: (key: string) => string }) {
@@ -543,7 +492,7 @@ function ProjectCardView({
           className="h-10 w-10 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: `${card.color}22`, color: card.color }}
         >
-          <ProjectIcon name={card.icon} />
+          <ProjectIcon name={card.icon} imageUrl={card.imageUrl} color={card.color} />
         </div>
         <StatusBadge status={card.status} t={t} />
       </div>

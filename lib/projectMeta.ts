@@ -34,6 +34,7 @@ export type ProjectMeta = {
   tags?: string[];
   category?: string;
   sourceIdeaId?: string;
+  imageUrl?: string | null;
 };
 
 export function defaultProjectColor(id: string): string {
