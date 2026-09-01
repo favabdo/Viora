@@ -11,6 +11,7 @@ import { Input, Textarea } from "@/components/ui/Input";
 import { ArrowRight, Camera, Loader2 } from "lucide-react";
 import AvatarCropModal from "@/components/AvatarCropModal";
 import ConfirmPasswordModal from "@/components/ConfirmPasswordModal";
+import { HOME_PATH } from "@/lib/appRoutes";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
 import { Languages, Sun, Moon, Lock, DoorOpen } from "lucide-react";
@@ -383,7 +384,7 @@ export default function ProfilePage() {
     <main className="min-h-screen px-5 py-6 md:px-10 md:py-8 bg-paper">
       <div className="max-w-lg mx-auto">
         <header className="mb-7 flex items-center gap-3">
-          <IconButton aria-label={t("profile.back")} onClick={() => router.push("/projects")}>
+          <IconButton aria-label={t("profile.back")} onClick={() => router.push(HOME_PATH)}>
             <ArrowRight size={16} strokeWidth={1.75} />
           </IconButton>
           <h1 className="font-display text-xl font-medium">{t("profile.title")}</h1>
@@ -414,6 +415,11 @@ export default function ProfilePage() {
             />
           </div>
           {avatarError && <p className="text-clay text-xs mt-2 text-center max-w-xs">{avatarError}</p>}
+          {profile.username && (
+            <p className="mt-3 text-sm text-inkSoft" dir="ltr">
+              @{profile.username}
+            </p>
+          )}
         </section>
 
         {cropImageSrc && (
@@ -442,7 +448,7 @@ export default function ProfilePage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
                 dir="ltr"
-                className="font-mono text-end"
+                className="font-mono"
               />
               <p className="text-xs text-inkFaint mt-1">{t("profile.usernameHint")}</p>
             </div>

@@ -30,6 +30,7 @@ export default function AppFrame({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
   const [userName, setUserName] = useState("");
+  const [userUsername, setUserUsername] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const tabs: ShellTab[] = [
@@ -73,6 +74,7 @@ export default function AppFrame({ children }: { children: ReactNode }) {
       .then(({ data }) => {
         if (data) {
           setUserName((data.full_name && data.full_name.trim()) || data.username || "");
+          setUserUsername(data.username || "");
           setAvatarUrl(data.avatar_url || null);
         }
       });
@@ -101,6 +103,7 @@ export default function AppFrame({ children }: { children: ReactNode }) {
             router.push("/projects?new=1");
           }}
           userName={userName}
+          userUsername={userUsername}
           avatarUrl={avatarUrl}
           onSignOut={async () => {
             await supabase.auth.signOut();

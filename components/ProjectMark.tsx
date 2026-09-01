@@ -54,21 +54,19 @@ export default function ProjectMark({
   className?: string;
 }) {
   if (imageUrl) {
-    const slot = size + 8;
     const fit = resolveImageFit({ imageScale, imageScaleX, imageScaleY, imagePosX, imagePosY });
     return (
-      <span className={`inline-flex items-center justify-center overflow-hidden rounded-lg ${className}`} style={{ width: slot, height: slot }}>
+      <span className={`relative block overflow-hidden ${className}`} style={{ width: size, height: size }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageUrl}
           alt=""
-          className="max-w-none select-none"
           draggable={false}
+          className="absolute inset-0 h-full w-full max-w-none select-none"
           style={{
-            width: slot * (fit.scaleX / 100),
-            height: slot * (fit.scaleY / 100),
-            objectFit: "cover",
-            objectPosition: `${fit.posX}% ${fit.posY}%`,
+            objectFit: "fill",
+            transform: `scale(${fit.scaleX / 100}, ${fit.scaleY / 100})`,
+            transformOrigin: `${fit.posX}% ${fit.posY}%`,
           }}
         />
       </span>

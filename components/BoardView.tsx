@@ -329,11 +329,11 @@ function ColumnContainer({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col w-[280px] shrink-0 rounded-xl border p-3 min-h-[28rem] transition-colors ${
+      className={`flex flex-col w-[280px] h-full min-h-0 shrink-0 rounded-xl border p-3 transition-colors ${
         isOver ? "border-[#8C3AED] bg-[#8C3AED]/10" : "border-line bg-surface"
       }`}
     >
-      <div className="flex items-center gap-2 mb-3 px-0.5">
+      <div className="flex items-center gap-2 mb-3 px-0.5 shrink-0">
         <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: column.color }} />
         {editingName ? (
           <input
@@ -369,7 +369,7 @@ function ColumnContainer({
         </IconButton>
       </div>
 
-      <div className="flex-1 flex flex-col gap-2 min-h-[80px] rounded-lg p-0.5">
+      <div className="flex-1 min-h-0 overflow-y-auto thin-scroll flex flex-col gap-2 rounded-lg p-0.5">
         <SortableContext items={tasks.map((t2) => t2.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
             <TaskCard
@@ -394,7 +394,7 @@ function ColumnContainer({
 
       <button
         onClick={() => onAddTask(column.id)}
-        className="flex items-center gap-1.5 mt-2 px-2 py-2 text-xs text-inkFaint hover:text-[#8C3AED] rounded-md border border-transparent hover:border-dashed hover:border-[#8C3AED] transition-colors"
+        className="flex items-center gap-1.5 mt-2 shrink-0 px-2 py-2 text-xs text-inkFaint hover:text-[#8C3AED] rounded-md border border-transparent hover:border-dashed hover:border-[#8C3AED] transition-colors"
       >
         <Plus size={13} strokeWidth={2} />
         {t("board.addTask")}
@@ -814,7 +814,7 @@ export default function BoardView({
           {t("board.addTask")}
         </button>
       </div>
-      <div className="flex items-start gap-4 overflow-x-auto pb-4 thin-scroll">
+      <div className="flex items-stretch gap-4 overflow-x-auto pb-2 thin-scroll h-[calc(100dvh-16.5rem)] min-h-[32rem]">
         {columns.map((column) => (
           <ColumnContainer
             key={column.id}
@@ -841,7 +841,7 @@ export default function BoardView({
           />
         ))}
 
-        <div className="w-[280px] shrink-0 rounded-xl border border-dashed border-line bg-paperDark/60 p-3 min-h-[28rem]">
+        <div className="w-[280px] h-full shrink-0 rounded-xl border border-dashed border-line bg-paperDark/60 p-3">
           {showAddColumn ? (
             <div className="flex items-center gap-1">
               <Input

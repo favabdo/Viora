@@ -38,6 +38,7 @@ export default function AppShell({
   onRoomsTabActivated,
   onNew,
   userName,
+  userUsername,
   avatarUrl,
   onSignOut,
   currentUserId,
@@ -49,6 +50,7 @@ export default function AppShell({
   onRoomsTabActivated?: (hasPending: boolean) => void;
   onNew?: () => void;
   userName: string;
+  userUsername?: string;
   avatarUrl?: string | null;
   onSignOut: () => void;
   currentUserId: string;
@@ -178,6 +180,7 @@ export default function AppShell({
     activeTab,
     notifCount,
     userName,
+    userUsername,
     avatarUrl,
     showAccountMenu,
     accountMenuRef,
@@ -303,6 +306,7 @@ function SidebarPanel({
   activeTab,
   notifCount,
   userName,
+  userUsername,
   avatarUrl,
   showAccountMenu,
   accountMenuRef,
@@ -319,6 +323,7 @@ function SidebarPanel({
   activeTab: string;
   notifCount: number;
   userName: string;
+  userUsername?: string;
   avatarUrl?: string | null;
   showAccountMenu: boolean;
   accountMenuRef: RefObject<HTMLDivElement>;
@@ -394,13 +399,16 @@ function SidebarPanel({
           <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="md" />
           <div className="min-w-0 text-start flex-1">
             <p className="text-sm font-medium text-ink truncate">{userName || t("shell.myAccount")}</p>
-            <p className="text-[11px] text-inkFaint">{t("shell.admin")}</p>
+            <p className="text-[11px] text-inkFaint truncate" dir="ltr">
+              {userUsername ? `@${userUsername}` : t("shell.admin")}
+            </p>
           </div>
           <ChevronDown size={14} className="text-inkFaint shrink-0" />
         </button>
         {showAccountMenu && (
           <AccountMenu
             userName={userName}
+            userUsername={userUsername}
             avatarUrl={avatarUrl}
             t={t}
             onProfile={onProfile}
@@ -415,6 +423,7 @@ function SidebarPanel({
 
 function AccountMenu({
   userName,
+  userUsername,
   avatarUrl,
   t,
   onProfile,
@@ -422,6 +431,7 @@ function AccountMenu({
   onSignOut,
 }: {
   userName: string;
+  userUsername?: string;
   avatarUrl?: string | null;
   t: (key: string) => string;
   onProfile: () => void;
@@ -432,7 +442,14 @@ function AccountMenu({
     <div className="absolute z-40 bg-surface border border-line rounded-xl shadow-modal p-1.5 min-w-[180px] fade-in bottom-16 start-3 end-3 md:start-auto">
       <div className="flex items-center gap-2.5 px-2.5 py-2 border-b border-line mb-1">
         <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="sm" />
-        <span className="text-sm font-medium text-ink truncate">{userName || t("shell.myAccount")}</span>
+        <span className="min-w-0">
+          <span className="block text-sm font-medium text-ink truncate">{userName || t("shell.myAccount")}</span>
+          {userUsername && (
+            <span className="block text-[11px] text-inkFaint truncate" dir="ltr">
+              @{userUsername}
+            </span>
+          )}
+        </span>
       </div>
       <button
         onClick={onProfile}

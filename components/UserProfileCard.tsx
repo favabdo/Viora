@@ -392,6 +392,11 @@ export default function UserProfileCard({
             <div className="flex flex-col items-center text-center">
               <Avatar name={name} src={profile.avatar_url} size="lg" className="h-[72px] w-[72px] text-2xl mb-3" />
               <h3 className="text-lg font-semibold text-ink tracking-tight">{name}</h3>
+              {profile.username && (
+                <p className="mt-0.5 text-sm text-inkSoft" dir="ltr">
+                  @{profile.username}
+                </p>
+              )}
               {headerRole && (
                 <span className={`mt-1.5 inline-flex text-[11px] font-semibold rounded-full px-2.5 py-0.5 ${roleClass(headerRole)}`}>
                   {roleLabel(headerRole)}
@@ -512,6 +517,19 @@ export default function UserProfileCard({
                   {profile.bio?.trim() || t("userCard.noBio")}
                 </p>
                 <dl className="space-y-2.5 text-sm">
+                  <div className="flex gap-3">
+                    <dt className="w-24 shrink-0 text-inkFaint">{t("userCard.username")}</dt>
+                    <dd className="min-w-0 flex items-center gap-1.5 text-ink">
+                      <span dir="ltr" className="truncate">
+                        {profile.username ? `@${profile.username}` : "—"}
+                      </span>
+                      {profile.username && (
+                        <button type="button" onClick={() => copyText(`@${profile.username}`, "user")} className="text-inkFaint hover:text-ink">
+                          <Copy size={12} />
+                        </button>
+                      )}
+                    </dd>
+                  </div>
                   <div className="flex gap-3">
                     <dt className="w-24 shrink-0 text-inkFaint">{t("userCard.email")}</dt>
                     <dd className="min-w-0 flex items-center gap-1.5 text-ink">

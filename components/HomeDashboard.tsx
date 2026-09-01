@@ -34,12 +34,15 @@ import {
   countsForDays,
   dueLabel,
   inWindow,
+  keysBetween,
   localYmd,
   pctChange,
   priorityOf,
   rangeKeys,
   startOfDay,
   statusKind,
+  taskTouchesRange,
+  windowFromKeys,
 } from "@/lib/homeDashboard";
 
 const OVERVIEW = [
@@ -63,7 +66,9 @@ export default function HomeDashboard() {
   const today = localYmd(new Date());
   const firstName = (userName || "").trim().split(/\s+/)[0] || t("common.you");
 
-  const [days, setDays] = useState(7);
+  const [preset, setPreset] = useState<7 | 14 | 30 | "custom">(7);
+  const [customFrom, setCustomFrom] = useState(today);
+  const [customTo, setCustomTo] = useState(today);
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -99,7 +104,7 @@ export default function HomeDashboard() {
           .select("id, project_id, task_id, actor_id, actor_name, message, action, action_params, created_at")
           .in("project_id", ids)
           .order("created_at", { ascending: false })
-          .limit(40),
+          .limit(200),
         supabase.from("task_comments").select("id, created_at, project_id").in("project_id", ids),
       ]);
       if (cancelled) return;
@@ -116,16 +121,42 @@ export default function HomeDashboard() {
 
   const columnsById = useMemo(() => new Map(columns.map((c) => [c.id, c])), [columns]);
   const projectById = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);
-  const keys = useMemo(() => rangeKeys(days), [days]);
-  const from = startOfDay(new Date(`${keys[0]}T00:00:00`));
-  const to = addDays(startOfDay(new Date(`${keys[keys.length - 1]}T00:00:00`)), 1);
+  const keys = useMemo(() => {
+    if (preset === "custom") return keysBetween(customFrom, customTo);
+    return rangeKeys(preset);
+  }, [preset, customFrom, customTo]);
+  const { from, to, days } = useMemo(() => windowFromKeys(keys), [keys]);
   const prevFrom = addDays(from, -days);
   const prevTo = from;
+  const rangeEndYmd = keys[keys.length - 1];
+  const overdueCutoff = rangeEndYmd < today ? rangeEndYmd : today;
 
-  const kinds = useMemo(() => tasks.map((task) => ({ task, kind: statusKind(task, columnsById) })), [tasks, columnsById]);
+  const scopedTasks = useMemo(
+    () => tasks.filter((task) => taskTouchesRange(task, from, to)),
+    [tasks, from, to]
+  );
+  const scopedProjects = useMemo(() => {
+    const ids = new Set(scopedTasks.map((task) => task.project_id));
+    return projects.filter((project) => inWindow(project.created_at, from, to) || ids.has(project.id));
+  }, [projects, scopedTasks, from, to]);
+  const scopedActivity = useMemo(
+    () => activity.filter((row) => inWindow(row.created_at, from, to)),
+    [activity, from, to]
+  );
+  const scopedComments = useMemo(
+    () => comments.filter((row) => inWindow(row.created_at, from, to)),
+    [comments, from, to]
+  );
+
+  const kinds = useMemo(
+    () => scopedTasks.map((task) => ({ task, kind: statusKind(task, columnsById) })),
+    [scopedTasks, columnsById]
+  );
   const completed = kinds.filter((row) => row.kind === "done").length;
   const inProgress = kinds.filter((row) => row.kind === "progress").length;
-  const overdue = tasks.filter((task) => !task.is_done && task.due_date && task.due_date < today).length;
+  const overdue = scopedTasks.filter(
+    (task) => !task.is_done && task.due_date && task.due_date <= overdueCutoff && inWindow(task.due_date, from, to)
+  ).length;
 
   const createdNow = tasks.filter((task) => inWindow(task.created_at, from, to)).length;
   const createdPrev = tasks.filter((task) => inWindow(task.created_at, prevFrom, prevTo)).length;
@@ -133,10 +164,14 @@ export default function HomeDashboard() {
   const donePrev = tasks.filter((task) => task.is_done && inWindow(task.completed_at, prevFrom, prevTo)).length;
   const projectsNow = projects.filter((p) => inWindow(p.created_at, from, to)).length;
   const projectsPrev = projects.filter((p) => inWindow(p.created_at, prevFrom, prevTo)).length;
-  const progressNow = tasks.filter((task) => statusKind(task, columnsById) === "progress" && inWindow(task.created_at, from, to)).length;
-  const progressPrev = tasks.filter((task) => statusKind(task, columnsById) === "progress" && inWindow(task.created_at, prevFrom, prevTo)).length;
-  const overdueNow = tasks.filter((task) => !task.is_done && task.due_date && inWindow(task.due_date, from, to) && task.due_date < today).length;
-  const overduePrev = tasks.filter((task) => !task.is_done && task.due_date && inWindow(task.due_date, prevFrom, prevTo)).length;
+  const progressNow = scopedTasks.filter((task) => statusKind(task, columnsById) === "progress").length;
+  const progressPrev = tasks.filter(
+    (task) => statusKind(task, columnsById) === "progress" && taskTouchesRange(task, prevFrom, prevTo)
+  ).length;
+  const overdueNow = overdue;
+  const overduePrev = tasks.filter(
+    (task) => !task.is_done && task.due_date && inWindow(task.due_date, prevFrom, prevTo)
+  ).length;
 
   const sparkProjects = countsForDays(
     projects.map((p) => p.created_at),
@@ -155,7 +190,7 @@ export default function HomeDashboard() {
     keys
   );
   const sparkOverdue = countsForDays(
-    tasks.filter((task) => !task.is_done && task.due_date && task.due_date < today).map((task) => task.due_date),
+    tasks.filter((task) => !task.is_done && task.due_date).map((task) => task.due_date),
     keys
   );
 
@@ -165,12 +200,12 @@ export default function HomeDashboard() {
   }));
   const priorities = PRIORITY.map((item) => ({
     ...item,
-    count: tasks.filter((task) => priorityOf(task) === item.id).length,
+    count: scopedTasks.filter((task) => priorityOf(task) === item.id).length,
   }));
 
   const progressRows = useMemo(() => {
-    return projects.slice(0, 6).map((project) => {
-      const list = tasks.filter((task) => task.project_id === project.id);
+    return scopedProjects.slice(0, 6).map((project) => {
+      const list = scopedTasks.filter((task) => task.project_id === project.id);
       const done = list.filter((task) => task.is_done).length;
       const pct = list.length ? Math.round((done / list.length) * 100) : 0;
       const meta = getProjectMeta(project.id);
@@ -187,11 +222,11 @@ export default function HomeDashboard() {
         imagePosY: meta?.imagePosY ?? 50,
       };
     });
-  }, [projects, tasks]);
+  }, [scopedProjects, scopedTasks]);
 
   const workload = useMemo(() => {
     const map = new Map<string, { id: string; name: string; avatar: string | null; open: number }>();
-    for (const task of tasks) {
+    for (const task of scopedTasks) {
       if (task.is_done) continue;
       const id = task.user_id || "unassigned";
       const name = task.user_id
@@ -207,14 +242,14 @@ export default function HomeDashboard() {
       .slice(0, 5);
     const max = Math.max(...rows.map((row) => row.open), 1);
     return rows.map((row) => ({ ...row, pct: Math.round((row.open / max) * 100) }));
-  }, [tasks, session.user.id, t]);
+  }, [scopedTasks, session.user.id, t]);
 
   const myTasks = useMemo(() => {
-    return tasks
+    return scopedTasks
       .filter((task) => task.user_id === session.user.id && !task.is_done)
       .sort((a, b) => (a.due_date || "9999").localeCompare(b.due_date || "9999"))
       .slice(0, 6);
-  }, [tasks, session.user.id]);
+  }, [scopedTasks, session.user.id]);
 
   const weekDays = useMemo(() => {
     const start = addDays(cursor, -((cursor.getDay() + 6) % 7));
@@ -222,7 +257,17 @@ export default function HomeDashboard() {
   }, [cursor]);
 
   const dayEvents = tasks.filter((task) => task.due_date === pickedDay);
-  const files = activity.filter((row) => row.action === "file_uploaded");
+  const files = scopedActivity.filter((row) => row.action === "file_uploaded");
+  const periodLabel =
+    preset === "custom"
+      ? customFrom === customTo
+        ? customFrom
+        : `${customFrom} → ${customTo}`
+      : preset === 7
+        ? t("home.last7")
+        : preset === 14
+          ? t("home.last14")
+          : t("home.last30");
   const Prev = dir === "rtl" ? ChevronRight : ChevronLeft;
   const Next = dir === "rtl" ? ChevronLeft : ChevronRight;
 
@@ -245,14 +290,48 @@ export default function HomeDashboard() {
           </div>
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
             <select
-              value={days}
-              onChange={(e) => setDays(Number(e.target.value))}
+              value={preset}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "custom") {
+                  setCustomFrom(keys[0]);
+                  setCustomTo(keys[keys.length - 1]);
+                  setPreset("custom");
+                  return;
+                }
+                setPreset(Number(value) as 7 | 14 | 30);
+              }}
               className="col-span-2 sm:col-auto h-9 w-full sm:w-auto min-w-0 rounded-xl border border-line bg-surface px-3 text-xs text-ink outline-none"
             >
               <option value={7}>{t("home.last7")}</option>
               <option value={14}>{t("home.last14")}</option>
               <option value={30}>{t("home.last30")}</option>
+              <option value="custom">{t("home.customRange")}</option>
             </select>
+            {preset === "custom" && (
+              <div className="col-span-2 flex flex-wrap items-center gap-2">
+                <label className="inline-flex items-center gap-1.5 text-xs text-inkSoft">
+                  {t("home.fromDate")}
+                  <input
+                    type="date"
+                    value={customFrom}
+                    max={customTo}
+                    onChange={(e) => setCustomFrom(e.target.value || customFrom)}
+                    className="h-9 rounded-xl border border-line bg-surface px-2 text-xs text-ink outline-none"
+                  />
+                </label>
+                <label className="inline-flex items-center gap-1.5 text-xs text-inkSoft">
+                  {t("home.toDate")}
+                  <input
+                    type="date"
+                    value={customTo}
+                    min={customFrom}
+                    onChange={(e) => setCustomTo(e.target.value || customTo)}
+                    className="h-9 rounded-xl border border-line bg-surface px-2 text-xs text-ink outline-none"
+                  />
+                </label>
+              </div>
+            )}
             <Button size="sm" className="w-full sm:w-auto justify-center" onClick={() => setShowWidgets((v) => !v)}>
               <Sliders size={14} />
               {t("home.customize")}
@@ -278,8 +357,8 @@ export default function HomeDashboard() {
         </div>
 
         <div className="grid grid-cols-2 xl:grid-cols-5 gap-2.5 sm:gap-3">
-          <StatCard title={t("home.totalProjects")} value={projects.length} change={pctChange(projectsNow, projectsPrev)} color="#6C5CE7" Icon={FolderKanban} spark={sparkProjects} vs={t("home.vsPrev")} />
-          <StatCard title={t("home.totalTasks")} value={tasks.length} change={pctChange(createdNow, createdPrev)} color="#3B82F6" Icon={CheckSquare} spark={sparkTasks} vs={t("home.vsPrev")} />
+          <StatCard title={t("home.totalProjects")} value={scopedProjects.length} change={pctChange(projectsNow, projectsPrev)} color="#6C5CE7" Icon={FolderKanban} spark={sparkProjects} vs={t("home.vsPrev")} />
+          <StatCard title={t("home.totalTasks")} value={scopedTasks.length} change={pctChange(createdNow, createdPrev)} color="#3B82F6" Icon={CheckSquare} spark={sparkTasks} vs={t("home.vsPrev")} />
           <StatCard title={t("home.completedTasks")} value={completed} change={pctChange(doneNow, donePrev)} color="#22C55E" Icon={CheckCircle2} spark={sparkDone} vs={t("home.vsPrev")} />
           <StatCard title={t("home.inProgress")} value={inProgress} change={pctChange(progressNow, progressPrev)} color="#F59E0B" Icon={Timer} spark={sparkProgress} vs={t("home.vsPrev")} />
           <StatCard title={t("home.overdue")} value={overdue} change={pctChange(overdueNow, overduePrev)} color="#EF4444" Icon={AlertTriangle} spark={sparkOverdue} vs={t("home.vsPrev")} />
@@ -287,7 +366,7 @@ export default function HomeDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Panel title={t("home.tasksOverview")}>
-            {tasks.length === 0 ? (
+            {scopedTasks.length === 0 ? (
               <p className="text-sm text-inkFaint">{t("board.noTasksYet")}</p>
             ) : (
               <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 min-w-0">
@@ -295,7 +374,7 @@ export default function HomeDashboard() {
                   size={148}
                   strokeWidth={18}
                   segments={overview.map((item) => ({ value: item.count, color: item.color }))}
-                  centerLabel={String(tasks.length)}
+                  centerLabel={String(scopedTasks.length)}
                   centerSubLabel={t("home.total")}
                 />
                 <ul className="w-full min-w-0 space-y-2.5">
@@ -304,14 +383,14 @@ export default function HomeDashboard() {
                       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                       <span className="flex-1 text-inkSoft">{t(item.labelKey)}</span>
                       <span className="font-medium text-ink tabular-nums">{item.count}</span>
-                      <span className="text-xs text-inkFaint w-8 text-end">{tasks.length ? Math.round((item.count / tasks.length) * 100) : 0}%</span>
+                      <span className="text-xs text-inkFaint w-8 text-end">{scopedTasks.length ? Math.round((item.count / scopedTasks.length) * 100) : 0}%</span>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
           </Panel>
-          <Panel title={t("home.tasksCompleted")} action={<span className="text-[11px] text-inkFaint">{days === 7 ? t("home.last7") : days === 14 ? t("home.last14") : t("home.last30")}</span>}>
+          <Panel title={t("home.tasksCompleted")} action={<span className="text-[11px] text-inkFaint">{periodLabel}</span>}>
             <BarChart values={sparkDone} labels={keys.map((key) => weekday(key, locale))} color="#6C5CE7" />
           </Panel>
         </div>
@@ -325,12 +404,12 @@ export default function HomeDashboard() {
                 progressRows.map((row) => (
                   <button key={row.project.id} type="button" onClick={() => router.push(projectPath(row.project.id))} className="w-full text-start">
                     <div className="flex items-center gap-2.5 mb-1.5">
-                      <span className="h-7 w-7 rounded-lg overflow-hidden inline-flex items-center justify-center" style={{ backgroundColor: `${row.color}22`, color: row.color }}>
+                      <span className="h-7 w-7 rounded-lg overflow-hidden inline-flex items-center justify-center" style={row.imageUrl ? undefined : { backgroundColor: `${row.color}22`, color: row.color }}>
                         <ProjectMark
                           icon={row.icon}
                           imageUrl={row.imageUrl}
                           color={row.color}
-                          size={14}
+                          size={28}
                           imageScale={row.imageScale}
                           imageScaleX={row.imageScaleX}
                           imageScaleY={row.imageScaleY}
@@ -350,7 +429,7 @@ export default function HomeDashboard() {
             </div>
           </Panel>
           <Panel title={t("home.byPriority")}>
-            {tasks.length === 0 ? (
+            {scopedTasks.length === 0 ? (
               <p className="text-sm text-inkFaint">{t("board.noTasksYet")}</p>
             ) : (
               <div className="flex flex-col sm:flex-row items-center gap-4 min-w-0">
@@ -358,7 +437,7 @@ export default function HomeDashboard() {
                   size={132}
                   strokeWidth={16}
                   segments={priorities.map((item) => ({ value: item.count, color: item.color }))}
-                  centerLabel={String(tasks.length)}
+                  centerLabel={String(scopedTasks.length)}
                   centerSubLabel={t("home.total")}
                 />
                 <ul className="w-full min-w-0 space-y-2">
@@ -405,7 +484,7 @@ export default function HomeDashboard() {
             series={[
               { label: t("home.created"), color: "#6C5CE7", values: sparkTasks },
               { label: t("home.completedLine"), color: "#22C55E", values: sparkDone },
-              { label: t("home.comments"), color: "#3B82F6", values: countsForDays(comments.map((c) => c.created_at), keys) },
+              { label: t("home.comments"), color: "#3B82F6", values: countsForDays(scopedComments.map((c) => c.created_at), keys) },
               { label: t("home.files"), color: "#F97316", values: countsForDays(files.map((row) => row.created_at), keys) },
             ]}
           />
@@ -487,11 +566,11 @@ export default function HomeDashboard() {
           </Panel>
 
           <Panel title={t("home.recent")}>
-            {activity.length === 0 ? (
+            {scopedActivity.length === 0 ? (
               <p className="text-sm text-inkFaint">{t("home.noActivity")}</p>
             ) : (
               <ul className="space-y-3">
-                {activity.slice(0, 6).map((entry) => {
+                {scopedActivity.slice(0, 6).map((entry) => {
                   const rendered = renderActivity(entry, t, session.user.id);
                   return (
                     <li key={entry.id} className="flex gap-2.5">

@@ -178,12 +178,13 @@ export default function ProjectAppearanceFields({
         <div className="flex flex-wrap items-center gap-2">
           <div
             className="h-12 w-12 rounded-xl overflow-hidden flex items-center justify-center shrink-0"
-            style={{ backgroundColor: `${color}22`, color }}
+            style={imageUrl ? undefined : { backgroundColor: `${color}22`, color }}
           >
             <ProjectMark
               icon={icon}
               imageUrl={imageUrl}
-              size={22}
+              color={color}
+              size={48}
               imageScale={imageScale}
               imageScaleX={imageScaleX}
               imageScaleY={imageScaleY}
@@ -231,8 +232,7 @@ export default function ProjectAppearanceFields({
         {imageUrl && (
           <div className="mt-3 space-y-3">
             <div
-              className="relative mx-auto h-28 w-28 rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing touch-none"
-              style={{ backgroundColor: `${color}22` }}
+              className="relative mx-auto h-28 w-28 overflow-hidden cursor-grab active:cursor-grabbing touch-none"
               onPointerDown={onPreviewPointerDown}
               onPointerMove={onPreviewPointerMove}
               onPointerUp={onPreviewPointerUp}
@@ -241,7 +241,7 @@ export default function ProjectAppearanceFields({
               <ProjectMark
                 icon={icon}
                 imageUrl={imageUrl}
-                size={104}
+                size={112}
                 imageScale={imageScale}
                 imageScaleX={imageScaleX}
                 imageScaleY={imageScaleY}

@@ -12,6 +12,7 @@ import Modal from "@/components/ui/Modal";
 import { ArrowRight, Languages, Clock, Calendar, Timer, ListTodo, LayoutGrid, Archive, Trash2, Keyboard, Download } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings, DateFormat, TimeFormat, WeekStart, DefaultView } from "@/lib/useSettings";
+import { HOME_PATH } from "@/lib/appRoutes";
 
 const TIMEZONES = [
   "auto",
@@ -136,7 +137,7 @@ export default function SettingsPage() {
     <main className="min-h-screen bg-paper">
       <div className="max-w-5xl mx-auto px-5 py-6 md:px-8 md:py-8">
         <div className="flex items-center gap-3 mb-1">
-          <IconButton aria-label={t("profile.back")} onClick={() => router.push("/projects")}>
+          <IconButton aria-label={t("profile.back")} onClick={() => router.push(HOME_PATH)}>
             <ArrowRight size={18} strokeWidth={1.75} className="rtl:rotate-180" />
           </IconButton>
           <h1 className="font-display text-xl font-medium">{t("settings.title")}</h1>

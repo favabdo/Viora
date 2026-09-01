@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, Copy, Info, Link2, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, ChevronDown, Copy, Info, Link2 } from "lucide-react";
 import { supabase, ProjectMember } from "@/lib/supabase";
 import { normalizeProjectMember } from "@/lib/taskShape";
 import { resolveName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import ClickableAvatar from "./ClickableAvatar";
-import Avatar from "./ui/Avatar";
 import Button from "./ui/Button";
 import ClickableName from "./ClickableName";
 import Modal from "./ui/Modal";
@@ -97,9 +96,6 @@ export default function TeamPanel({
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<Record<string, AccessRole>>({});
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<ProfileHit[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [picked, setPicked] = useState<ProfileHit | null>(null);
   const [inviteRole, setInviteRole] = useState<AccessRole>("viewer");
   const [inviting, setInviting] = useState(false);
   const [toast, setToast] = useState("");
@@ -113,7 +109,6 @@ export default function TeamPanel({
   const [copying, setCopying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [linkError, setLinkError] = useState("");
-  const searchTimer = useRef<number | null>(null);
 
   useEffect(() => {
     setRoles(readRoles(projectId));
@@ -139,99 +134,24 @@ export default function TeamPanel({
     setLoading(false);
   }
 
-  async function searchPeople(value: string) {
-    const q = value.trim();
-    if (q.length < 1) {
-      setHits([]);
-      return;
-    }
-    setSearching(true);
-    const { data, error } = await supabase.rpc("search_profiles_for_invite", { p_query: q });
-    if (!error && Array.isArray(data)) {
-      setHits(data as ProfileHit[]);
-      setSearching(false);
-      return;
-    }
-    const { data: fallback } = await supabase
-      .from("profiles")
-      .select("id, username, full_name, email, avatar_url")
-      .or(`username.ilike.%${q}%,full_name.ilike.%${q}%,email.ilike.%${q}%`)
-      .limit(8);
-    setHits((fallback as ProfileHit[]) || []);
-    setSearching(false);
-  }
-
-  function onQueryChange(value: string) {
-    setQuery(value);
-    setInviteError("");
-    if (picked) setPicked(null);
-    if (searchTimer.current) window.clearTimeout(searchTimer.current);
-    searchTimer.current = window.setTimeout(() => {
-      void searchPeople(value);
-    }, 220);
-  }
-
-  async function sendInvite(target: ProfileHit, role: AccessRole) {
-    setInviting(true);
-    setInviteError("");
-    const byId = await supabase.rpc("invite_user_to_project", {
-      p_project_id: projectId,
-      p_user_id: target.id,
-    });
-    let error = byId.error;
-    if (error) {
-      const byName = await supabase.rpc("invite_user_by_username", {
-        p_project_id: projectId,
-        p_username: target.username,
-      });
-      error = byName.error;
-    }
-    setInviting(false);
-    if (error) {
-      setInviteError(error.message || t("team.err.generic"));
-      return;
-    }
-    const next = { ...roles, [target.id]: role };
-    setRoles(next);
-    writeRoles(projectId, next);
-    showToast(t("share.inviteSentTo").replace("{name}", resolveName(target, target.username)));
-    setQuery("");
-    setHits([]);
-    setPicked(null);
-    loadMembers();
-  }
-
-  async function inviteFromQuery() {
-    if (picked) {
-      await sendInvite(picked, inviteRole);
-      return;
-    }
+  async function inviteByUsername() {
     const username = query.trim().replace(/^@/, "").toLowerCase();
     if (!username) return;
-    const hit = hits.find((item) => item.username === username) || {
-      id: "",
-      username,
-      full_name: username,
-      email: null,
-      avatar_url: null,
-    };
-    if (hit.id) {
-      await sendInvite(hit, inviteRole);
-      return;
-    }
     setInviting(true);
+    setInviteError("");
     const { error } = await supabase.rpc("invite_user_by_username", {
       p_project_id: projectId,
       p_username: username,
     });
     setInviting(false);
     if (error) {
-      setInviteError(error.message || t("team.err.generic"));
+      const message = error.message || "";
+      const missing = /مفيش يوزر|not found|does not exist|no rows|unknown user|no user|غير موجود|لا يوجد/i.test(message);
+      setInviteError(missing ? t("team.userNotFound") : message || t("team.err.generic"));
       return;
     }
     showToast(t("team.inviteSent").replace("{username}", username));
     setQuery("");
-    setHits([]);
     loadMembers();
   }
 
@@ -294,10 +214,8 @@ export default function TeamPanel({
     writeRoles(projectId, next);
   }
 
-  const memberIds = useMemo(() => new Set(members.filter((m) => m.status === "accepted").map((m) => m.user_id)), [members]);
   const accepted = members.filter((m) => m.status === "accepted");
   const pending = members.filter((m) => m.status === "pending");
-  const visibleHits = hits.filter((hit) => hit.id !== currentUserId && !memberIds.has(hit.id));
 
   const roleLabel = (role: AccessRole) => t(`share.role.${role}`);
   const roleHint = (role: AccessRole) => t(`share.roleHint.${role}`);
@@ -321,66 +239,29 @@ export default function TeamPanel({
 
       {tab === "people" && (
         <div className="space-y-5">
-          <div className="relative">
-            <Search size={15} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-inkFaint" />
-            <Input
-              value={query}
-              onChange={(e) => onQueryChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  void inviteFromQuery();
-                }
-              }}
-              placeholder={t("share.searchPlaceholder")}
-              className="ps-10"
-            />
-            {query.trim() && !picked && (
-              <div className="absolute z-20 inset-x-0 top-full mt-1 rounded-xl border border-line bg-paper shadow-modal overflow-hidden">
-                {searching ? (
-                  <p className="px-3 py-2.5 text-xs text-inkFaint">{t("common.loading")}</p>
-                ) : visibleHits.length === 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => void inviteFromQuery()}
-                    className="w-full text-start px-3 py-2.5 text-sm text-ink hover:bg-paperDark"
-                  >
-                    {t("share.inviteByQuery").replace("{q}", query.trim())}
-                  </button>
-                ) : (
-                  visibleHits.map((hit) => (
-                    <button
-                      key={hit.id}
-                      type="button"
-                      onClick={() => {
-                        setPicked(hit);
-                        setQuery(resolveName(hit, hit.username));
-                        setHits([]);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-start hover:bg-paperDark"
-                    >
-                      <Avatar name={resolveName(hit, hit.username)} src={hit.avatar_url} size="sm" />
-                      <span className="min-w-0">
-                        <span className="block text-sm text-ink truncate">{resolveName(hit, hit.username)}</span>
-                        <span className="block text-[11px] text-inkFaint truncate" dir="ltr">
-                          {hit.email || `@${hit.username}`}
-                        </span>
-                      </span>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-
-          {picked && (
-            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surfaceSunken p-3">
-              <Avatar name={resolveName(picked, picked.username)} src={picked.avatar_url} size="sm" />
-              <span className="flex-1 min-w-0 text-sm text-ink truncate">{resolveName(picked, picked.username)}</span>
+          <div className="space-y-2">
+            <p className="text-xs text-inkFaint">{t("team.inviteByUsername")}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setInviteError("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    void inviteByUsername();
+                  }
+                }}
+                placeholder={t("share.searchPlaceholder")}
+                dir="ltr"
+                className="flex-1 min-w-[10rem]"
+              />
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value as AccessRole)}
-                className="rounded-lg border-0 bg-paper px-2 py-1.5 text-xs text-ink outline-none"
+                className="rounded-lg border-0 bg-surfaceSunken px-2 py-2 text-xs text-ink outline-none"
               >
                 {ROLES.map((role) => (
                   <option key={role} value={role}>
@@ -388,11 +269,11 @@ export default function TeamPanel({
                   </option>
                 ))}
               </select>
-              <Button variant="primary" size="sm" loading={inviting} onClick={() => void sendInvite(picked, inviteRole)}>
+              <Button variant="primary" size="sm" loading={inviting} onClick={() => void inviteByUsername()}>
                 {t("team.invite")}
               </Button>
             </div>
-          )}
+          </div>
 
           {inviteError && <p className="text-clay text-xs">{inviteError}</p>}
 
@@ -422,6 +303,11 @@ export default function TeamPanel({
                           {resolveName(m.profiles, t("common.user"))}
                           {m.user_id === currentUserId ? ` (${t("team.you")})` : ""}
                         </ClickableName>
+                        {m.profiles?.username && (
+                          <span className="block text-[11px] text-inkFaint truncate" dir="ltr">
+                            @{m.profiles.username}
+                          </span>
+                        )}
                       </span>
                       {isOwner ? (
                         <span className="text-xs text-inkSoft px-2">{roleLabel("admin")}</span>
@@ -457,8 +343,15 @@ export default function TeamPanel({
                       src={m.profiles?.avatar_url}
                       size="sm"
                     />
-                    <span className="flex-1 min-w-0 text-sm text-ink truncate">
-                      {resolveName(m.profiles, m.profiles?.username || t("common.user"))}
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-sm text-ink truncate">
+                        {resolveName(m.profiles, m.profiles?.username || t("common.user"))}
+                      </span>
+                      {m.profiles?.username && (
+                        <span className="block text-[11px] text-inkFaint truncate" dir="ltr">
+                          @{m.profiles.username}
+                        </span>
+                      )}
                     </span>
                     <span className="text-[11px] font-medium rounded-full bg-amberSoft text-amber px-2 py-0.5">
                       {t("team.pending")}
