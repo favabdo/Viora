@@ -305,35 +305,6 @@ export async function uploadIdeaAttachments(ideaId: string, userId: string, file
   if (uploaded) await logIdeaActivity(ideaId, "file", userId);
 }
 
-export async function ideaFilesToTaskAttachments(files: IdeaFile[]): Promise<TaskAttachment[]> {
-  const out: TaskAttachment[] = [];
-  for (const file of files) {
-    let dataUrl = file.dataUrl;
-    if (dataUrl && dataUrl.startsWith("http")) {
-      try {
-        const res = await fetch(dataUrl);
-        const blob = await res.blob();
-        dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result || ""));
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(blob);
-        });
-      } catch {
-        dataUrl = undefined;
-      }
-    }
-    out.push({
-      id: file.id,
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      dataUrl,
-    });
-  }
-  return out;
-}
-
 type LegacyIdea = Idea;
 
 export async function migrateLocalIdeas(userId: string) {

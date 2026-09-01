@@ -6,17 +6,22 @@ import {
   Check,
   Clock,
   Expand,
+  ExternalLink,
   FileText,
+  Film,
   FolderKanban,
   Image as ImageIcon,
   Maximize2,
   MessageCircle,
+  Music,
   Plus,
+  Trash2,
   X,
 } from "lucide-react";
 import { supabase, ActivityEntry, BoardColumn, Project, ProjectMember, Task, TASK_COLORS } from "@/lib/supabase";
 import { displayName, renderActivity } from "@/lib/displayName";
-import { patchTaskExtras, subtaskProgress, type TaskExtras, type TaskSubtask } from "@/lib/taskExtras";
+import { patchTaskExtras, subtaskProgress, type TaskAttachment, type TaskExtras, type TaskSubtask } from "@/lib/taskExtras";
+import { fileKind, previewUrl } from "@/lib/taskAttachments";
 import { isDueAfterCreated, minDueDate } from "@/lib/taskShape";
 import { timeAgo } from "@/lib/timeAgo";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -68,6 +73,81 @@ function splitList(value?: string) {
     .filter(Boolean);
 }
 
+function fileIcon(file: TaskAttachment) {
+  const kind = fileKind(file);
+  if (kind === "image") return ImageIcon;
+  if (kind === "video") return Film;
+  if (kind === "audio") return Music;
+  return FileText;
+}
+
+function AttachmentPreview({ file, onClose }: { file: TaskAttachment; onClose: () => void }) {
+  const { t } = useTranslation();
+  const url = previewUrl(file);
+  const kind = fileKind(file);
+  const [text, setText] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (kind !== "text" || !url) return;
+    let cancelled = false;
+    void fetch(url)
+      .then((res) => res.text())
+      .then((value) => {
+        if (!cancelled) setText(value);
+      })
+      .catch(() => {
+        if (!cancelled) setText("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [kind, url]);
+
+  return (
+    <div className="fixed inset-0 z-[120] bg-black/80 flex flex-col" onClick={onClose}>
+      <div className="flex items-center justify-between gap-3 px-4 py-3 text-white">
+        <p className="text-sm font-medium truncate">{file.name}</p>
+        <div className="flex items-center gap-2 shrink-0">
+          {url && (
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 text-xs text-white/80 hover:text-white"
+            >
+              <ExternalLink size={14} />
+              {t("taskDetail.openFile")}
+            </a>
+          )}
+          <button type="button" onClick={onClose} className="p-1 rounded-md hover:bg-white/10" aria-label={t("common.close")}>
+            <X size={18} />
+          </button>
+        </div>
+      </div>
+      <div className="flex-1 min-h-0 px-4 pb-4" onClick={(e) => e.stopPropagation()}>
+        {!url && <p className="text-sm text-white/70">{t("taskDetail.previewUnavailable")}</p>}
+        {url && kind === "image" && (
+          <img src={url} alt={file.name} className="max-h-full max-w-full mx-auto object-contain rounded-lg" />
+        )}
+        {url && kind === "video" && <video src={url} controls autoPlay className="max-h-full w-full rounded-lg bg-black" />}
+        {url && kind === "audio" && <audio src={url} controls autoPlay className="w-full mt-12" />}
+        {url && kind === "pdf" && (
+          <iframe src={url} title={file.name} className="w-full h-full min-h-[70vh] rounded-lg bg-white" />
+        )}
+        {url && kind === "text" && (
+          <pre className="h-full overflow-auto rounded-lg bg-[#0b0d14] text-white/90 text-xs p-4 whitespace-pre-wrap">
+            {text ?? "…"}
+          </pre>
+        )}
+        {url && kind === "other" && (
+          <iframe src={url} title={file.name} className="w-full h-full min-h-[70vh] rounded-lg bg-white" />
+        )}
+      </div>
+    </div>
+  );
+}
+
 function formatBytes(size: number) {
   if (size >= 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
   if (size >= 1024) return `${Math.round(size / 1024)} KB`;
@@ -94,6 +174,7 @@ export default function TaskDetailModal({
   onSetColor,
   onSetDueDate,
   onAssign,
+  onDeleteAttachment,
 }: {
   task: Task;
   extras: TaskExtras;
@@ -109,6 +190,7 @@ export default function TaskDetailModal({
   onSetColor: (color: string | null) => void;
   onSetDueDate: (date: string | null) => void;
   onAssign: (userId: string | null) => void;
+  onDeleteAttachment?: (file: TaskAttachment) => void;
 }) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<"activity" | "comments" | "history">("activity");
@@ -120,6 +202,7 @@ export default function TaskDetailModal({
   const [subtaskDraft, setSubtaskDraft] = useState("");
   const [tagDraft, setTagDraft] = useState("");
   const [labelDraft, setLabelDraft] = useState("");
+  const [previewFile, setPreviewFile] = useState<TaskAttachment | null>(null);
   const progress = subtaskProgress(extras);
   const tags = splitList(extras.tags);
   const labels = splitList(extras.labels);
@@ -206,6 +289,7 @@ export default function TaskDetailModal({
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-[2px] flex items-center justify-center p-3 fade-in" onClick={onClose}>
       <div
         className={`w-full ${expanded ? "max-w-6xl" : "max-w-5xl"} max-h-[92vh] overflow-hidden rounded-2xl border border-line bg-surface shadow-modal flex flex-col`}
@@ -270,7 +354,7 @@ export default function TaskDetailModal({
                 <p className="text-[11px] text-inkFaint mb-1.5">{t("taskDetail.assignee")}</p>
                 <div className="flex items-center gap-2">
                   {assignee?.profiles ? (
-                    <ClickableAvatar userId={assignee.user_id} name={assigneeName} src={assignee.profiles.avatar_url} size="sm" />
+                    <ClickableAvatar previewCard userId={assignee.user_id} name={assigneeName} src={assignee.profiles.avatar_url} size="sm" />
                   ) : (
                     <span className="h-6 w-6 rounded-full bg-paperDark" />
                   )}
@@ -361,7 +445,7 @@ export default function TaskDetailModal({
                         {item.text}
                       </span>
                       {person && (
-                        <ClickableAvatar userId={person.user_id} name={name} src={person.profiles?.avatar_url} size="xs" />
+                        <ClickableAvatar previewCard userId={person.user_id} name={name} src={person.profiles?.avatar_url} size="xs" />
                       )}
                       <select
                         value={item.assigneeId || ""}
@@ -536,22 +620,41 @@ export default function TaskDetailModal({
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {(extras.attachments || []).map((file) => {
-                  const isImage = (file.type || "").startsWith("image/") || /\.(png|jpe?g|gif|webp)$/i.test(file.name);
+                  const Icon = fileIcon(file);
+                  const thumb = fileKind(file) === "image" ? previewUrl(file) : "";
                   return (
-                    <a
+                    <div
                       key={file.id}
-                      href={file.dataUrl || "#"}
-                      download={file.name}
                       className="flex items-center gap-3 rounded-xl border border-line bg-paperDark/40 px-3 py-2.5"
                     >
-                      <span className="h-9 w-9 rounded-lg bg-surface inline-flex items-center justify-center text-inkSoft">
-                        {isImage ? <ImageIcon size={16} /> : <FileText size={16} />}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-xs font-medium text-ink truncate">{file.name}</span>
-                        <span className="block text-[11px] text-inkFaint">{formatBytes(file.size)}</span>
-                      </span>
-                    </a>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewFile(file)}
+                        className="flex min-w-0 flex-1 items-center gap-3 text-start"
+                      >
+                        {thumb ? (
+                          <img src={thumb} alt="" className="h-9 w-9 rounded-lg object-cover bg-surface" />
+                        ) : (
+                          <span className="h-9 w-9 rounded-lg bg-surface inline-flex items-center justify-center text-inkSoft">
+                            <Icon size={16} />
+                          </span>
+                        )}
+                        <span className="min-w-0">
+                          <span className="block text-xs font-medium text-ink truncate">{file.name}</span>
+                          <span className="block text-[11px] text-inkFaint">{formatBytes(file.size)}</span>
+                        </span>
+                      </button>
+                      {onDeleteAttachment && (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteAttachment(file)}
+                          className="shrink-0 p-1 rounded-md text-inkFaint hover:text-[#EF4444]"
+                          aria-label={t("taskDetail.deleteFile")}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -591,7 +694,7 @@ export default function TaskDetailModal({
                           <span className="absolute start-0 top-1.5 h-2 w-2 rounded-full bg-[#6C5CE7]" />
                           <p>
                             {label && (
-                              <ClickableName userId={actorId} className="text-ink font-medium">
+                              <ClickableName previewCard userId={actorId} className="text-ink font-medium">
                                 {label}
                               </ClickableName>
                             )}{" "}
@@ -623,6 +726,8 @@ export default function TaskDetailModal({
         </div>
       </div>
     </div>
+    {previewFile && <AttachmentPreview file={previewFile} onClose={() => setPreviewFile(null)} />}
+    </>
   );
 }
 

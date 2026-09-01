@@ -122,6 +122,7 @@ export default function TaskComments({
             comments.map((c) => (
               <div key={c.id} className={`flex items-start gap-2 ${isDetail ? "text-xs" : "text-2xs"}`}>
                 <ClickableAvatar
+                  previewCard
                   userId={c.user_id}
                   name={displayName(c.user_id, c.profiles, currentUserId, t("common.you"))}
                   src={c.profiles?.avatar_url}
@@ -129,7 +130,7 @@ export default function TaskComments({
                   className="mt-0.5"
                 />
                 <div className="min-w-0 flex-1">
-                  <ClickableName userId={c.user_id} className="text-ink font-medium">
+                  <ClickableName previewCard userId={c.user_id} className="text-ink font-medium">
                     {displayName(c.user_id, c.profiles, currentUserId, t("common.you"))}
                   </ClickableName>{" "}
                   <span className="text-inkFaint">— {timeAgo(c.created_at, t)}</span>

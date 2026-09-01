@@ -9,16 +9,18 @@ export default function ClickableAvatar({
   src,
   size = "md",
   className = "",
+  previewCard = false,
 }: {
   userId: string | null | undefined;
   name: string;
   src?: string | null;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
+  previewCard?: boolean;
 }) {
   const openProfile = useOpenProfileCard();
 
-  if (!userId) {
+  if (!userId || !previewCard) {
     return <Avatar name={name} src={src} size={size} className={className} />;
   }
 

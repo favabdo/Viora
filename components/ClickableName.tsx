@@ -2,19 +2,21 @@
 
 import { useOpenProfileCard } from "./ProfileCardContext";
 
-/** اسم أي عضو، لما تدوس عليه بيفتح كارت بروفايله (اسمه، يوزره، إيميله، صورته) */
+/** اسم عضو. الكارت بيتفتح بس لو `previewCard` (من جوه تاسك). */
 export default function ClickableName({
   userId,
   children,
   className = "",
+  previewCard = false,
 }: {
   userId: string | null | undefined;
   children: React.ReactNode;
   className?: string;
+  previewCard?: boolean;
 }) {
   const openProfile = useOpenProfileCard();
 
-  if (!userId) return <span className={className}>{children}</span>;
+  if (!userId || !previewCard) return <span className={className}>{children}</span>;
 
   return (
     <button

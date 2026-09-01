@@ -11,6 +11,8 @@ export type TaskAttachment = {
   size: number;
   type: string;
   dataUrl?: string;
+  path?: string;
+  url?: string;
 };
 
 export type TaskExtras = {
@@ -133,7 +135,14 @@ export function patchTaskExtras(taskId: string, patch: Partial<TaskExtras>): Tas
 export function copyTaskExtras(fromId: string, toId: string) {
   const extras = readTaskExtras(fromId);
   if (!extras || Object.keys(extras).length === 0) return;
-  patchTaskExtras(toId, { ...extras, pinned: false, watching: false, archived: false });
+  const localOnly = (extras.attachments || []).filter((file) => file.dataUrl && !file.path);
+  patchTaskExtras(toId, {
+    ...extras,
+    attachments: localOnly,
+    pinned: false,
+    watching: false,
+    archived: false,
+  });
 }
 
 export function subtaskProgress(extras: TaskExtras): { done: number; total: number } {

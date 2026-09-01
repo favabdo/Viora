@@ -28,14 +28,14 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
-import { patchTaskExtras, type TaskAttachment } from "@/lib/taskExtras";
+import { patchTaskExtras } from "@/lib/taskExtras";
+import { copyRemoteFilesToTask } from "@/lib/taskAttachments";
 import { defaultProjectKey, writeProjectMeta } from "@/lib/projectMeta";
 import {
   addIdeaNote,
   createIdea,
   deleteIdea,
   formatBytes,
-  ideaFilesToTaskAttachments,
   IDEA_CATEGORIES,
   IDEA_COLORS,
   loadIdeas,
@@ -381,14 +381,13 @@ export default function IdeasSection({
       .select()
       .single();
     if (task) {
-      const copiedFiles = await ideaFilesToTaskAttachments(idea.attachments);
       patchTaskExtras(task.id, {
         description: idea.description,
         tags: idea.tags.join(", "),
         category: idea.category,
-        attachments: copiedFiles,
         subtasks: idea.notes.map((note) => ({ text: note.message, done: false })),
       });
+      await copyRemoteFilesToTask(task.id, project.id, currentUserId, idea.attachments);
       for (const note of idea.notes) {
         await supabase.from("task_comments").insert({
           task_id: task.id,

@@ -92,7 +92,7 @@ export default function ItemHistory({
                 <p key={e.id} className="text-2xs text-inkFaint">
                   {label && (
                     <>
-                      <ClickableName userId={actorId} className="text-inkSoft">
+                      <ClickableName previewCard={column === "task_id"} userId={actorId} className="text-inkSoft">
                         {label}
                       </ClickableName>{" "}
                     </>

@@ -28,6 +28,13 @@ import {
   type TaskAttachment,
   type TaskExtras,
 } from "@/lib/taskExtras";
+import {
+  copyTaskAttachments,
+  deleteTaskAttachment,
+  listProjectTaskAttachments,
+  migrateLocalTaskAttachments,
+  uploadTaskFiles,
+} from "@/lib/taskAttachments";
 import { displayName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import ClickableAvatar from "./ClickableAvatar";
@@ -41,7 +48,6 @@ import Modal from "./ui/Modal";
 import Button from "./ui/Button";
 
 const COLUMN_PALETTE = ["#3b82f6", "#a855f7", "#22c55e", "#f97316", "#ef4444", "#06b6d4", "#eab308", "#6b7280"];
-const MAX_ATTACHMENT_BYTES = 1.5 * 1024 * 1024;
 
 /** إسقاط فقط لو المؤشر فوق العمود أو المهمة فعلًا — مش أقرب عمود في الفاضي */
 const exactDropCollision: CollisionDetection = (args) => pointerWithin(args);
@@ -443,12 +449,41 @@ export default function BoardView({
   const [subtaskDraft, setSubtaskDraft] = useState("");
   const [toast, setToast] = useState("");
   const [extrasReady, setExtrasReady] = useState(false);
+  const [remoteAttachments, setRemoteAttachments] = useState<Record<string, TaskAttachment[]>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const attachTaskRef = useRef<Task | null>(null);
 
   useEffect(() => {
     setExtrasReady(true);
   }, []);
+
+  async function refreshRemoteAttachments() {
+    const map = await listProjectTaskAttachments(projectId);
+    setRemoteAttachments(map);
+    return map;
+  }
+
+  useEffect(() => {
+    if (!extrasReady) return;
+    let cancelled = false;
+    void (async () => {
+      const map = await listProjectTaskAttachments(projectId);
+      if (cancelled) return;
+      setRemoteAttachments(map);
+      let migrated = false;
+      for (const task of tasks) {
+        const local = readTaskExtras(task.id).attachments || [];
+        const next = await migrateLocalTaskAttachments(task.id, projectId, currentUserId, local);
+        if (next) migrated = true;
+      }
+      if (migrated && !cancelled) {
+        setRemoteAttachments(await listProjectTaskAttachments(projectId));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, extrasReady, currentUserId, tasks.map((task) => task.id).join(",")]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -458,9 +493,17 @@ export default function BoardView({
   const extrasByTask = useMemo(() => {
     const map: Record<string, TaskExtras> = {};
     if (!extrasReady) return map;
-    for (const task of tasks) map[task.id] = readTaskExtras(task.id);
+    for (const task of tasks) {
+      const local = readTaskExtras(task.id);
+      const remote = remoteAttachments[task.id] || [];
+      const localOnly = (local.attachments || []).filter((file) => file.dataUrl && !file.path);
+      map[task.id] = {
+        ...local,
+        attachments: [...remote, ...localOnly],
+      };
+    }
     return map;
-  }, [tasks, extrasTick, extrasReady]);
+  }, [tasks, extrasTick, extrasReady, remoteAttachments]);
 
   const tasksByColumn = useMemo(() => {
     const map = new Map<string, Task[]>();
@@ -680,6 +723,8 @@ export default function BoardView({
     if (error || !data) return;
     const created = normalizeTask(data);
     copyTaskExtras(task.id, created.id);
+    await copyTaskAttachments(task.id, created.id, projectId, currentUserId);
+    await refreshRemoteAttachments();
     bumpExtras();
     onTasksMutated((prev) => [...prev, created]);
   }
@@ -728,33 +773,27 @@ export default function BoardView({
   async function onAttachFiles(files: FileList | null) {
     const task = attachTaskRef.current;
     if (!task || !files || files.length === 0) return;
-    const extras = readTaskExtras(task.id);
-    const next: TaskAttachment[] = [...(extras.attachments || [])];
-    let skipped = false;
-    for (const file of Array.from(files)) {
-      if (file.size > MAX_ATTACHMENT_BYTES) {
-        skipped = true;
-        continue;
-      }
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ""));
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-      });
-      next.push({
-        id: crypto.randomUUID(),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        dataUrl,
-      });
-    }
-    patchTaskExtras(task.id, { attachments: next });
+    const { uploaded, skipped, error } = await uploadTaskFiles(task.id, projectId, currentUserId, Array.from(files));
+    if (error) showToast(t("taskDetail.uploadFailed"));
+    else if (skipped && uploaded.length === 0) showToast(t("board.menu.fileTooLarge"));
+    else if (skipped) showToast(t("board.menu.fileTooLarge"));
+    await refreshRemoteAttachments();
     bumpExtras();
-    if (skipped) showToast(t("board.menu.fileTooLarge"));
     attachTaskRef.current = null;
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function onDeleteAttachment(file: TaskAttachment) {
+    const task = detailTask;
+    if (!file.path && task) {
+      const extras = readTaskExtras(task.id);
+      patchTaskExtras(task.id, {
+        attachments: (extras.attachments || []).filter((item) => item.id !== file.id),
+      });
+    }
+    await deleteTaskAttachment(file);
+    await refreshRemoteAttachments();
+    bumpExtras();
   }
 
   return (
@@ -942,6 +981,7 @@ export default function BoardView({
           onSetColor={(color) => void setColor(tasks.find((item) => item.id === detailTask.id) || detailTask, color)}
           onSetDueDate={(date) => void setDueDate(tasks.find((item) => item.id === detailTask.id) || detailTask, date)}
           onAssign={(userId) => void assignTask(tasks.find((item) => item.id === detailTask.id) || detailTask, userId)}
+          onDeleteAttachment={(file) => void onDeleteAttachment(file)}
         />
       )}
 
