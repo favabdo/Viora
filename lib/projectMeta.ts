@@ -58,12 +58,12 @@ export function readProjectMeta(): Record<string, ProjectMeta> {
 export function writeProjectMeta(id: string, patch: Partial<ProjectMeta>) {
   const all = readProjectMeta();
   const prev = all[id];
+  const merged = { ...prev, ...patch };
   all[id] = {
-    description: patch.description ?? prev?.description ?? "",
-    icon: patch.icon ?? prev?.icon ?? "folder",
-    color: patch.color ?? prev?.color ?? PROJECT_COLORS[0],
-    ...prev,
-    ...patch,
+    ...merged,
+    description: merged.description ?? "",
+    icon: merged.icon ?? "folder",
+    color: merged.color ?? PROJECT_COLORS[0],
   };
   localStorage.setItem(META_KEY, JSON.stringify(all));
 }
