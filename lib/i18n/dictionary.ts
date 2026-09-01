@@ -352,6 +352,9 @@ const dict: Record<string, { en: string; ar: string }> = {
   "timeline.todo": { en: "To Do", ar: "للتنفيذ" },
   "timeline.allLabels": { en: "All Labels", ar: "كل الوسوم" },
   "timeline.overview": { en: "Timeline overview", ar: "نظرة عامة على الجدول" },
+  "timeline.timeLeft": { en: "Time left", ar: "المتبقي" },
+  "timeline.daysProgress": { en: "{done} of {total} days", ar: "{done} من {total} أيام" },
+  "timeline.unassigned": { en: "Unassigned", ar: "غير مسندة" },
 
   // ===== components/ActivityFeed.tsx =====
   "activity.recent": { en: "Recent activity", ar: "النشاط الأخير" },

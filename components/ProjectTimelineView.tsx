@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Plus, Check, Minus, Filter, MoreHorizontal, ArrowDown } from "lucide-react";
 import { supabase, Project, Task } from "@/lib/supabase";
 import { dateKey, formatTaskDate, normalizeTask } from "@/lib/taskShape";
@@ -12,22 +13,9 @@ import { Textarea } from "./ui/Input";
 
 const LABEL_WIDTH = 260;
 const ROW_HEIGHT = 48;
-/** أصغر بابل — يوم واحد يفضل مقروء من غير ما نضخّم باقي الأيام بنفس النسبة */
-const MIN_BAR_PX = 140;
 const BAR_COLORS = ["#6C5CE7", "#22C55E", "#3B82F6", "#C4A574", "#F59E0B", "#14B8A6", "#EC4899"];
 const OVERDUE_COLOR = "#EF4444";
-
-function barSegmentWidths(plannedDays: number, overdueDaysCount: number, dayWidth: number) {
-  const plannedRaw = Math.max(plannedDays, 1) * dayWidth;
-  const overdueRaw = Math.max(overdueDaysCount, 0) * dayWidth;
-  const rawTotal = plannedRaw + overdueRaw;
-  const displayTotal = Math.max(MIN_BAR_PX, rawTotal - 8);
-  if (overdueDaysCount <= 0) {
-    return { plannedWidth: displayTotal, overdueWidth: 0 };
-  }
-  const plannedWidth = (plannedRaw / rawTotal) * displayTotal;
-  return { plannedWidth, overdueWidth: displayTotal - plannedWidth };
-}
+const DONE_COLOR = "#22C55E";
 
 function barColor(id: string): string {
   let hash = 0;
@@ -79,6 +67,17 @@ function overdueDays(task: Task, today: string): number {
   return Math.max(diffDays(toDate(due), toDate(today)), 0);
 }
 
+function inclusiveDays(startIso: string, endIso: string): number {
+  return Math.max(diffDays(toDate(startIso), toDate(endIso)) + 1, 1);
+}
+
+/** أيام اتلوّنت من الإنشاء لحد النهاردة (أو التسليم لو خلص المدى) */
+function elapsedDays(created: string, plannedEnd: string, today: string, isDone: boolean): number {
+  if (!isDone && today < created) return 0;
+  const fillUntil = isDone || today >= plannedEnd ? plannedEnd : today;
+  return Math.min(inclusiveDays(created, fillUntil), inclusiveDays(created, plannedEnd));
+}
+
 export default function ProjectTimelineView({
   project,
   tasks: projectTasks,
@@ -99,6 +98,7 @@ export default function ProjectTimelineView({
   const [adding, setAdding] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [dayWidth, setDayWidth] = useState(16);
+  const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
 
   const today = ymd(new Date());
   const todayDate = toDate(today);
@@ -176,6 +176,36 @@ export default function ProjectTimelineView({
     if (days === 1) return t("timeline.overdue1");
     return t("timeline.overdueN").replace("{n}", String(days));
   }
+
+  function remainingLabel(task: Task): string {
+    if (task.is_done) return t("timeline.completed");
+    const late = overdueDays(task, today);
+    if (late > 0) return overdueLabel(late);
+    const due = taskDue(task);
+    if (!due) return t("board.noDueDate");
+    const left = diffDays(todayDate, toDate(due));
+    if (left <= 0) return t("projects.dueToday");
+    if (left === 1) return t("projects.dueIn1");
+    return t("projects.dueInN").replace("{n}", String(left));
+  }
+
+  function openHover(task: Task, event: React.MouseEvent<HTMLElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.min(Math.max(rect.left + Math.min(rect.width, 280) / 2, 180), window.innerWidth - 180);
+    setHover({ task, x, y: rect.top });
+  }
+
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (!node) return;
+    const hide = () => setHover(null);
+    node.addEventListener("scroll", hide);
+    window.addEventListener("scroll", hide, true);
+    return () => {
+      node.removeEventListener("scroll", hide);
+      window.removeEventListener("scroll", hide, true);
+    };
+  }, []);
 
   async function addTask() {
     const title = newTitle.trim();
@@ -306,65 +336,74 @@ export default function ProjectTimelineView({
                 const plannedStart = minIso(created, plannedEnd);
                 const plannedStop = maxIso(created, plannedEnd);
                 const offset = Math.max(diffDays(rangeStart, toDate(plannedStart)), 0);
-                const plannedSpan = Math.max(diffDays(toDate(plannedStart), toDate(plannedStop)) + 1, 1);
-                const colorBar = task.color || barColor(task.id);
-                const { plannedWidth, overdueWidth } = barSegmentWidths(plannedSpan, late, dayWidth);
+                const plannedSpan = inclusiveDays(plannedStart, plannedStop);
+                const filledSpan = elapsedDays(plannedStart, plannedStop, today, task.is_done);
+                const remainingSpan = Math.max(plannedSpan - filledSpan, 0);
+                const colorBar = task.is_done ? DONE_COLOR : task.color || barColor(task.id);
+                const filledWidth = filledSpan * dayWidth;
+                const remainingWidth = remainingSpan * dayWidth;
+                const overdueWidth = late * dayWidth;
+                const barWidth = Math.max(plannedSpan * dayWidth + overdueWidth - 4, 8);
                 const dateText = due
                   ? `${formatTaskDate(created, locale)} – ${formatTaskDate(due, locale)}`
                   : formatTaskDate(created, locale);
 
                 return (
-                  <div key={task.id} className="flex items-center border-b border-line/70" style={{ height: ROW_HEIGHT }}>
+                  <div
+                    key={task.id}
+                    className="flex items-center border-b border-line/70"
+                    style={{ height: ROW_HEIGHT }}
+                    onMouseEnter={(e) => openHover(task, e)}
+                    onMouseLeave={() => setHover((h) => (h?.task.id === task.id ? null : h))}
+                  >
                     <div
                       className="shrink-0 sticky start-0 z-[5] bg-surface px-3 flex items-center gap-2 border-e border-line"
                       style={{ width: LABEL_WIDTH, height: ROW_HEIGHT }}
                     >
                       <span
                         className="h-2 w-2 rounded-full shrink-0"
-                        style={{ backgroundColor: late > 0 ? OVERDUE_COLOR : task.is_done ? "#22C55E" : colorBar }}
+                        style={{ backgroundColor: late > 0 ? OVERDUE_COLOR : colorBar }}
                       />
-                      <span className="truncate text-[13px] text-ink" title={task.title}>
-                        {task.title}
-                      </span>
+                      <span className="truncate text-[13px] text-ink">{task.title}</span>
                     </div>
                     <div className="relative" style={{ width: gridWidth, height: ROW_HEIGHT }}>
                       <div
                         className="absolute top-2.5 h-7 flex items-stretch overflow-hidden shadow-sm"
                         style={{
-                          insetInlineStart: offset * dayWidth + 4,
-                          width: plannedWidth + overdueWidth,
+                          insetInlineStart: offset * dayWidth + 2,
+                          width: barWidth,
                           borderRadius: 9999,
-                          opacity: task.is_done ? 0.7 : 1,
+                          opacity: task.is_done ? 0.85 : 1,
                         }}
-                        title={late > 0 ? `${task.title} — ${overdueLabel(late)}` : task.title}
                       >
-                        <div
-                          className="flex min-w-0 items-center ps-3 pe-2 text-[11px] font-medium text-white"
-                          style={{ width: plannedWidth, backgroundColor: colorBar }}
-                        >
-                          <span className="truncate flex-1">{dateText}</span>
-                          {task.profiles && late === 0 && (
-                            <Avatar
-                              name={displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
-                              src={task.profiles.avatar_url}
-                              size="xs"
-                              className="ms-2 ring-2 ring-black/20 shrink-0"
-                            />
+                        <div className="relative h-full shrink-0" style={{ width: filledWidth, backgroundColor: colorBar }}>
+                          {filledWidth >= 72 && (
+                            <span className="absolute inset-0 flex items-center ps-2.5 pe-1 text-[10px] font-medium text-white truncate">
+                              {dateText}
+                            </span>
                           )}
                         </div>
+                        {remainingWidth > 0 && (
+                          <div
+                            className="relative h-full shrink-0 overflow-hidden"
+                            style={{ width: remainingWidth, backgroundColor: colorBar, opacity: 0.38 }}
+                          >
+                            <div className="timeline-load-track absolute inset-0" />
+                          </div>
+                        )}
                         {late > 0 && (
                           <div
-                            className="flex items-center justify-center px-1.5 text-[10px] font-semibold text-white truncate"
+                            className="timeline-load-track flex h-full shrink-0 items-center justify-center px-1 text-[10px] font-semibold text-white truncate"
                             style={{ width: overdueWidth, backgroundColor: OVERDUE_COLOR }}
                           >
-                            {overdueWidth >= 88 ? overdueLabel(late) : `+${late}`}
+                            {overdueWidth >= 72 ? overdueLabel(late) : `+${late}`}
                           </div>
                         )}
                       </div>
-                      {late > 0 && overdueWidth < 88 && (
+                      {late > 0 && overdueWidth < 72 && (
                         <span
                           className="absolute top-3 text-[10px] font-semibold whitespace-nowrap"
-                          style={{ insetInlineStart: offset * dayWidth + plannedWidth + overdueWidth + 8, color: OVERDUE_COLOR }}
+                          style={{ insetInlineStart: offset * dayWidth + barWidth + 8, color: OVERDUE_COLOR }}
                         >
                           {overdueLabel(late)}
                         </span>
@@ -500,6 +539,106 @@ export default function ProjectTimelineView({
           )}
         </div>
       </aside>
+
+      {hover && (
+        <TaskHoverCard
+          task={hover.task}
+          x={hover.x}
+          y={hover.y}
+          locale={locale}
+          today={today}
+          currentUserId={currentUserId}
+          remaining={remainingLabel(hover.task)}
+          t={t}
+        />
+      )}
     </div>
+  );
+}
+
+function TaskHoverCard({
+  task,
+  x,
+  y,
+  locale,
+  today,
+  currentUserId,
+  remaining,
+  t,
+}: {
+  task: Task;
+  x: number;
+  y: number;
+  locale: string;
+  today: string;
+  currentUserId: string;
+  remaining: string;
+  t: (key: string) => string;
+}) {
+  const created = taskCreated(task);
+  const due = taskDue(task);
+  const late = overdueDays(task, today);
+  const plannedEnd = due || (task.is_done ? dateKey(task.completed_at) || created : today);
+  const plannedStart = minIso(created, plannedEnd);
+  const plannedStop = maxIso(created, plannedEnd);
+  const planned = inclusiveDays(plannedStart, plannedStop);
+  const filled = elapsedDays(plannedStart, plannedStop, today, task.is_done);
+  const pct = Math.round((filled / planned) * 100);
+  const assignee = task.profiles
+    ? displayName(task.user_id, task.profiles, currentUserId, t("common.you"))
+    : t("timeline.unassigned");
+  const status = task.is_done
+    ? t("timeline.completed")
+    : late > 0
+      ? t("list.overdue")
+      : t("timeline.inProgress");
+  const top = y < 220 ? y + ROW_HEIGHT + 6 : Math.max(y - 12, 16);
+  const below = y < 220;
+
+  return createPortal(
+    <div
+      className={`pointer-events-none fixed z-[80] w-[280px] -translate-x-1/2 rounded-xl border border-line bg-surface p-3 shadow-lg fade-in ${below ? "" : "-translate-y-full"}`}
+      style={{ left: x, top }}
+      role="tooltip"
+    >
+      <p className="text-sm font-medium text-ink leading-snug">{task.title}</p>
+      <p className={`mt-1 text-[11px] font-medium ${late > 0 ? "text-red-500" : "text-inkSoft"}`}>{status}</p>
+      <dl className="mt-2.5 space-y-1.5 text-[12px]">
+        <div className="flex justify-between gap-3">
+          <dt className="text-inkFaint">{t("taskDetail.created")}</dt>
+          <dd className="text-ink">{formatTaskDate(created, locale)}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-inkFaint">{t("taskDetail.due")}</dt>
+          <dd className="text-ink">{due ? formatTaskDate(due, locale) : t("board.noDueDate")}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-inkFaint">{t("timeline.timeLeft")}</dt>
+          <dd className={late > 0 ? "text-red-500 font-medium" : "text-ink"}>{remaining}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-inkFaint">{t("list.col.assignee")}</dt>
+          <dd className="text-ink truncate max-w-[150px]">{assignee}</dd>
+        </div>
+      </dl>
+      <div className="mt-2.5">
+        <div className="mb-1 flex items-center justify-between text-[11px] text-inkFaint">
+          <span>{t("projects.progress")}</span>
+          <span>
+            {t("timeline.daysProgress").replace("{done}", String(filled)).replace("{total}", String(planned))} · {pct}%
+          </span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-paperDark">
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${Math.min(pct, 100)}%`,
+              backgroundColor: late > 0 ? OVERDUE_COLOR : task.is_done ? DONE_COLOR : "#6C5CE7",
+            }}
+          />
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }

@@ -1,17 +1,25 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase, Task, BoardColumn } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Modal from "./ui/Modal";
 import Button from "./ui/Button";
-import { dateKey } from "@/lib/taskShape";
+import { dateKey, formatTaskDate } from "@/lib/taskShape";
 
 const DAY_WIDTH = 34;
 const ROW_HEIGHT = 44;
+const OVERDUE_COLOR = "#EF4444";
 
 function toDate(iso: string): Date {
   return new Date(iso + "T00:00:00");
+}
+function ymd(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 function diffDays(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
@@ -20,6 +28,9 @@ function addDays(d: Date, n: number): Date {
   const copy = new Date(d);
   copy.setDate(copy.getDate() + n);
   return copy;
+}
+function inclusiveDays(startIso: string, endIso: string): number {
+  return Math.max(diffDays(toDate(startIso), toDate(endIso)) + 1, 1);
 }
 
 export default function TimelineView({
@@ -35,8 +46,10 @@ export default function TimelineView({
   const locale = lang === "ar" ? "ar-EG" : "en-US";
   const scrollRef = useRef<HTMLDivElement>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
+  const todayIso = ymd(new Date());
 
-  const datedTasks = tasks.filter((t2) => dateKey(t2.start_date) || dateKey(t2.due_date));
+  const datedTasks = tasks.filter((t2) => dateKey(t2.start_date) || dateKey(t2.due_date) || dateKey(t2.created_at));
 
   const { rangeStart, totalDays, months } = useMemo(() => {
     const today = new Date();
@@ -44,12 +57,14 @@ export default function TimelineView({
     let min = today;
     let max = addDays(today, 30);
     for (const task of datedTasks) {
-      const start = dateKey(task.start_date);
+      const created = dateKey(task.created_at);
+      const start = dateKey(task.start_date) || created;
       const due = dateKey(task.due_date);
       const s = start ? toDate(start) : due ? toDate(due) : null;
       const e = due ? toDate(due) : start ? toDate(start) : null;
       if (s && s < min) min = s;
       if (e && e > max) max = e;
+      if (due && due < todayIso && !task.is_done && today > max) max = today;
     }
     min = addDays(min, -4);
     max = addDays(max, 10);
@@ -67,7 +82,7 @@ export default function TimelineView({
     }
 
     return { rangeStart: min, totalDays: total, months: monthGroups };
-  }, [datedTasks, locale]);
+  }, [datedTasks, locale, todayIso]);
 
   const todayOffset = diffDays(rangeStart, new Date(new Date().toDateString()));
 
@@ -101,27 +116,69 @@ export default function TimelineView({
         </div>
         <div className="relative" style={{ width: gridWidth, minHeight: ROW_HEIGHT * Math.max(items.length, 1) }}>
           {items.map((task, i) => {
-            const startIso = dateKey(task.start_date) || dateKey(task.due_date);
-            const start = startIso ? toDate(startIso) : rangeStart;
+            const createdIso = dateKey(task.created_at) || dateKey(task.start_date) || todayIso;
             const dueIso = dateKey(task.due_date);
-            const end = dueIso ? toDate(dueIso) : start;
+            const plannedEnd = dueIso || (task.is_done ? dateKey(task.completed_at) || createdIso : todayIso);
+            const startIso = createdIso < plannedEnd ? createdIso : plannedEnd;
+            const stopIso = createdIso > plannedEnd ? createdIso : plannedEnd;
+            const start = toDate(startIso);
+            const late = !task.is_done && dueIso && dueIso < todayIso ? Math.max(diffDays(toDate(dueIso), toDate(todayIso)), 0) : 0;
             const offset = Math.max(diffDays(rangeStart, start), 0);
-            const span = Math.max(diffDays(start, end) + 1, 1);
+            const plannedSpan = inclusiveDays(startIso, stopIso);
+            const filledSpan =
+              task.is_done || todayIso >= stopIso
+                ? plannedSpan
+                : todayIso < startIso
+                  ? 0
+                  : inclusiveDays(startIso, todayIso);
+            const remainingSpan = Math.max(plannedSpan - filledSpan, 0);
+            const color = task.is_done ? "#22C55E" : task.color || column.color;
+            const barWidth = plannedSpan * DAY_WIDTH + late * DAY_WIDTH - 4;
+
             return (
               <button
                 key={task.id}
+                type="button"
                 onClick={() => setEditingTask(task)}
-                className="absolute rounded-md px-2 py-1.5 text-start text-[11px] font-medium text-white truncate hover:opacity-90 transition-opacity shadow-sm"
+                onMouseEnter={(e) => {
+                  const r = e.currentTarget.getBoundingClientRect();
+                  setHover({
+                    task,
+                    x: Math.min(Math.max(r.left + r.width / 2, 180), window.innerWidth - 180),
+                    y: r.top,
+                  });
+                }}
+                onMouseLeave={() => setHover((h) => (h?.task.id === task.id ? null : h))}
+                className="absolute flex overflow-hidden rounded-md text-start shadow-sm hover:brightness-110"
                 style={{
                   insetInlineStart: offset * DAY_WIDTH + 2,
-                  width: span * DAY_WIDTH - 4,
+                  width: Math.max(barWidth, 8),
+                  height: 32,
                   top: i * ROW_HEIGHT + 6,
-                  backgroundColor: task.color || column.color,
-                  opacity: task.is_done ? 0.55 : 1,
+                  opacity: task.is_done ? 0.85 : 1,
                 }}
-                title={task.title}
               >
-                {task.title}
+                <span className="relative h-full shrink-0" style={{ width: filledSpan * DAY_WIDTH, backgroundColor: color }}>
+                  {filledSpan * DAY_WIDTH >= 56 && (
+                    <span className="absolute inset-0 flex items-center px-2 text-[11px] font-medium text-white truncate">
+                      {task.title}
+                    </span>
+                  )}
+                </span>
+                {remainingSpan > 0 && (
+                  <span
+                    className="relative h-full shrink-0 overflow-hidden"
+                    style={{ width: remainingSpan * DAY_WIDTH, backgroundColor: color, opacity: 0.38 }}
+                  >
+                    <span className="timeline-load-track absolute inset-0" />
+                  </span>
+                )}
+                {late > 0 && (
+                  <span
+                    className="timeline-load-track h-full shrink-0"
+                    style={{ width: late * DAY_WIDTH, backgroundColor: OVERDUE_COLOR }}
+                  />
+                )}
               </button>
             );
           })}
@@ -160,6 +217,17 @@ export default function TimelineView({
           </div>
         </div>
       </div>
+
+      {hover && (
+        <TimelineTaskTip
+          task={hover.task}
+          x={hover.x}
+          y={hover.y}
+          locale={locale}
+          todayIso={todayIso}
+          t={t}
+        />
+      )}
 
       {editingTask && (
         <Modal onClose={() => setEditingTask(null)} maxWidth="max-w-xs">
@@ -214,5 +282,73 @@ function TimelineDateEditor({
         </Button>
       </div>
     </div>
+  );
+}
+
+function TimelineTaskTip({
+  task,
+  x,
+  y,
+  locale,
+  todayIso,
+  t,
+}: {
+  task: Task;
+  x: number;
+  y: number;
+  locale: string;
+  todayIso: string;
+  t: (key: string) => string;
+}) {
+  const created = dateKey(task.created_at) || dateKey(task.start_date) || todayIso;
+  const due = dateKey(task.due_date);
+  const late = !task.is_done && due && due < todayIso ? Math.max(diffDays(toDate(due), toDate(todayIso)), 0) : 0;
+  const left = due ? diffDays(toDate(todayIso), toDate(due)) : null;
+  const remaining = task.is_done
+    ? t("timeline.completed")
+    : late > 0
+      ? late === 1
+        ? t("timeline.overdue1")
+        : t("timeline.overdueN").replace("{n}", String(late))
+      : !due
+        ? t("board.noDueDate")
+        : left !== null && left <= 0
+          ? t("projects.dueToday")
+          : left === 1
+            ? t("projects.dueIn1")
+            : t("projects.dueInN").replace("{n}", String(left));
+  const plannedEnd = due && due > created ? due : due || todayIso;
+  const stop = plannedEnd < created ? created : plannedEnd;
+  const planned = inclusiveDays(created, stop);
+  const filled =
+    task.is_done || todayIso >= stop ? planned : todayIso < created ? 0 : inclusiveDays(created, todayIso);
+  const below = y < 220;
+
+  return createPortal(
+    <div
+      className={`pointer-events-none fixed z-[80] w-[260px] -translate-x-1/2 rounded-xl border border-line bg-surface p-3 shadow-lg fade-in ${below ? "" : "-translate-y-full"}`}
+      style={{ left: x, top: below ? y + 38 : Math.max(y - 12, 16) }}
+      role="tooltip"
+    >
+      <p className="text-sm font-medium text-ink">{task.title}</p>
+      <dl className="mt-2 space-y-1.5 text-[12px]">
+        <div className="flex justify-between gap-3">
+          <dt className="text-inkFaint">{t("taskDetail.created")}</dt>
+          <dd className="text-ink">{formatTaskDate(created, locale)}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-inkFaint">{t("taskDetail.due")}</dt>
+          <dd className="text-ink">{due ? formatTaskDate(due, locale) : t("board.noDueDate")}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-inkFaint">{t("timeline.timeLeft")}</dt>
+          <dd className={late > 0 ? "text-red-500 font-medium" : "text-ink"}>{remaining}</dd>
+        </div>
+      </dl>
+      <p className="mt-2 text-[11px] text-inkFaint">
+        {t("timeline.daysProgress").replace("{done}", String(Math.min(filled, planned))).replace("{total}", String(planned))}
+      </p>
+    </div>,
+    document.body
   );
 }
