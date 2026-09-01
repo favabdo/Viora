@@ -12,6 +12,8 @@ export const APP_NAV = [
 
 export type AppNavId = (typeof APP_NAV)[number];
 
+export const HOME_PATH = "/dashboard";
+
 export const WORKSPACE_VIEWS = ["board", "list", "calendar", "timeline", "files", "history", "settings"] as const;
 export type WorkspaceView = (typeof WORKSPACE_VIEWS)[number];
 
@@ -26,7 +28,7 @@ export function navIdFromPath(pathname: string): string {
   if (pathname.startsWith("/reports")) return "reports";
   if (pathname.startsWith("/rooms")) return "rooms";
   if (pathname.startsWith("/settings")) return "settings";
-  return "projects";
+  return "dashboard";
 }
 
 export function pathForNav(id: string) {

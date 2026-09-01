@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
+import { HOME_PATH } from "@/lib/appRoutes";
 
 export default function HomeAliasPage() {
-  redirect("/dashboard");
+  redirect(HOME_PATH);
 }

@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import { HOME_PATH } from "@/lib/appRoutes";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -15,7 +16,7 @@ const INVITE_KEY = "viora_invite_token";
 function nextDestination() {
   if (typeof window === "undefined") return "/";
   const token = localStorage.getItem(INVITE_KEY);
-  return token ? `/join/${token}` : "/projects";
+  return token ? `/join/${token}` : HOME_PATH;
 }
 
 function LoginPageInner() {
