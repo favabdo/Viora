@@ -404,7 +404,15 @@ export default function ProjectTimelineView({
                         className="h-2 w-2 rounded-full shrink-0"
                         style={{ backgroundColor: late > 0 ? OVERDUE_COLOR : colorBar }}
                       />
-                      <span className="truncate text-[13px] text-ink">{task.title}</span>
+                      <span className="truncate text-[13px] text-ink flex-1">{task.title}</span>
+                      {task.profiles ? (
+                        <Avatar
+                          name={displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
+                          src={task.profiles.avatar_url}
+                          size="xs"
+                          className="ring-1 ring-line"
+                        />
+                      ) : null}
                     </div>
                     <div className="relative" style={{ width: gridWidth, height: ROW_HEIGHT }}>
                       <div
@@ -434,8 +442,21 @@ export default function ProjectTimelineView({
                           </div>
                         )}
                         {barWidth >= 72 && (
-                          <span className="pointer-events-none absolute inset-0 flex items-center ps-3 pe-2 text-[11px] font-medium text-white truncate">
-                            {task.title}
+                          <span className="pointer-events-none absolute inset-0 flex items-center gap-1.5 ps-2.5 pe-2 text-[11px] font-medium text-white">
+                            {task.profiles && (
+                              <Avatar
+                                name={displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
+                                src={task.profiles.avatar_url}
+                                size="xs"
+                                className="h-4 w-4 text-[8px] ring-1 ring-white/40 border-white/20"
+                              />
+                            )}
+                            <span className="truncate">{task.title}</span>
+                            {task.profiles && barWidth >= 160 && (
+                              <span className="ms-auto truncate text-[10px] font-normal text-white/90 max-w-[38%]">
+                                {displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}
+                              </span>
+                            )}
                           </span>
                         )}
                       </div>

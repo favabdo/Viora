@@ -4,8 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Filter, MoreHorizontal, ChevronDown } from "lucide-react";
 import { supabase, Project, Task, BoardColumn } from "@/lib/supabase";
 import { dateKey, formatTaskDate, normalizeTask } from "@/lib/taskShape";
+import { layoutWeekLanes, spanCoversDay, taskBarColor } from "@/lib/calendarLayout";
+import { displayName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings } from "@/lib/useSettings";
+import Avatar from "./ui/Avatar";
 import DonutChart from "./ui/DonutChart";
 
 const PROJECT_COLORS = ["#6C5CE7", "#3B82F6", "#22C55E", "#F59E0B", "#EF4444", "#EC4899", "#14B8A6", "#EAB308"];
@@ -43,12 +46,14 @@ export default function ProjectCalendarView({
   projects,
   tasks: projectTasks,
   columns,
+  currentUserId,
   onTasksMutated,
 }: {
   project: Project;
   projects: Project[];
   tasks: Task[];
   columns: BoardColumn[];
+  currentUserId: string;
   onTasksMutated: (updater: (prev: Task[]) => Task[]) => void;
 }) {
   const { t, lang, dir } = useTranslation();
@@ -62,7 +67,6 @@ export default function ProjectCalendarView({
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [showCompleted, setShowCompleted] = useState(true);
   const [showFilters, setShowFilters] = useState(true);
-  const [expandedDay, setExpandedDay] = useState<string | null>(null);
 
   useEffect(() => {
     setProjectFilter(project.id);
@@ -118,17 +122,6 @@ export default function ProjectCalendarView({
 
   const datedTasks = visibleTasks.filter((task) => dateKey(task.due_date));
 
-  const tasksByDate = useMemo(() => {
-    const map = new Map<string, Task[]>();
-    for (const task of datedTasks) {
-      const key = dateKey(task.due_date);
-      if (!key) continue;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(task);
-    }
-    return map;
-  }, [datedTasks]);
-
   const days = useMemo(() => {
     const year = cursor.getFullYear();
     const month = cursor.getMonth();
@@ -142,6 +135,16 @@ export default function ProjectCalendarView({
       return day;
     });
   }, [cursor, weekStartsOnMonday]);
+
+  const weekRows = useMemo(() => {
+    const rows: { days: Date[]; items: ReturnType<typeof layoutWeekLanes>["items"]; laneCount: number }[] = [];
+    for (let i = 0; i < days.length; i += 7) {
+      const weekDays = days.slice(i, i + 7);
+      const laid = layoutWeekLanes(weekDays.map(ymd), visibleTasks);
+      rows.push({ days: weekDays, items: laid.items, laneCount: laid.laneCount });
+    }
+    return rows;
+  }, [days, visibleTasks]);
 
   const weekdayLabels = useMemo(() => {
     const base = new Date(2024, 0, weekStartsOnMonday ? 8 : 7);
@@ -175,15 +178,6 @@ export default function ProjectCalendarView({
     if (leftover > 0) items.push({ label: t("list.noStatus"), color: "#6b7280", count: leftover });
     return items;
   }, [visibleTasks, columns, project.id, t]);
-
-  async function toggleDone(task: Task) {
-    const next = !task.is_done;
-    setAllTasks((prev) => prev.map((item) => (item.id === task.id ? { ...item, is_done: next } : item)));
-    if (task.project_id === project.id) {
-      onTasksMutated((prev) => prev.map((item) => (item.id === task.id ? { ...item, is_done: next } : item)));
-    }
-    await supabase.from("tasks").update({ is_done: next }).eq("id", task.id);
-  }
 
   function dueTone(iso: string | null | undefined): string {
     if (!iso) return t("calendar.upcoming");
@@ -248,73 +242,94 @@ export default function ProjectCalendarView({
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7">
-            {days.map((day, i) => {
-              const key = ymd(day);
-              const inMonth = day.getMonth() === cursor.getMonth();
-              const isToday = key === todayKey;
-              const dayTasks = tasksByDate.get(key) || [];
-              const shown = dayTasks.slice(0, 3);
-              const extra = dayTasks.length - shown.length;
-              return (
-                <div
-                  key={i}
-                  className={`min-h-[112px] border-e border-b border-line p-1.5 ${
-                    isToday ? "ring-1 ring-inset ring-[#3B82F6]" : ""
-                  } ${inMonth ? "bg-surface" : "bg-paperDark/40"}`}
-                >
-                  <div className="flex justify-end mb-1">
-                    <span
-                      className={`text-[11px] w-5 h-5 flex items-center justify-center rounded-full ${
-                        isToday ? "bg-[#3B82F6] text-white" : inMonth ? "text-inkSoft" : "text-inkFaint"
-                      }`}
-                    >
-                      {day.getDate()}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {shown.map((task) => {
-                      const color = colorForProject(task.project_id);
-                      return (
-                        <button
-                          key={task.id}
-                          onClick={() => toggleDone(task)}
-                          title={task.title}
-                          className={`text-start text-[10px] leading-tight px-1.5 py-1 rounded-md truncate text-white ${
-                            task.is_done ? "opacity-50 line-through" : ""
-                          }`}
-                          style={{ backgroundColor: color }}
-                        >
-                          {task.title}
-                        </button>
-                      );
-                    })}
-                    {extra > 0 && (
-                      <button
-                        onClick={() => setExpandedDay(expandedDay === key ? null : key)}
-                        className="text-[10px] text-inkFaint px-1 text-start hover:text-ink"
+          <div>
+            {weekRows.map((week, wi) => (
+              <div
+                key={wi}
+                className="relative border-b border-line last:border-b-0"
+                style={{ minHeight: 28 + Math.max(week.laneCount, 1) * 22 }}
+              >
+                <div className="grid grid-cols-7">
+                  {week.days.map((day, di) => {
+                    const key = ymd(day);
+                    const inMonth = day.getMonth() === cursor.getMonth();
+                    const isToday = key === todayKey;
+                    return (
+                      <div
+                        key={di}
+                        className={`border-e border-line last:border-e-0 ${
+                          isToday ? "ring-1 ring-inset ring-[#3B82F6]" : ""
+                        } ${inMonth ? "bg-surface" : "bg-paperDark/40"}`}
+                        style={{ minHeight: 28 + Math.max(week.laneCount, 1) * 22 }}
                       >
-                        +{extra} {t("calendar.more")}
-                      </button>
-                    )}
-                    {expandedDay === key && extra > 0 && (
-                      <div className="flex flex-col gap-1">
-                        {dayTasks.slice(3).map((task) => (
-                          <button
-                            key={task.id}
-                            onClick={() => toggleDone(task)}
-                            className="text-start text-[10px] px-1.5 py-1 rounded-md truncate text-white"
-                            style={{ backgroundColor: colorForProject(task.project_id) }}
+                        <div className="flex justify-end p-1">
+                          <span
+                            className={`text-[11px] w-5 h-5 flex items-center justify-center rounded-full ${
+                              isToday ? "bg-[#3B82F6] text-white" : inMonth ? "text-inkSoft" : "text-inkFaint"
+                            }`}
                           >
-                            {task.title}
-                          </button>
-                        ))}
+                            {day.getDate()}
+                          </span>
+                        </div>
                       </div>
-                    )}
-                  </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+                <div
+                  className="pointer-events-none absolute inset-x-0 top-7 grid grid-cols-7"
+                  style={{
+                    gridAutoRows: 20,
+                    rowGap: 2,
+                    paddingBottom: 4,
+                  }}
+                >
+                  {week.items.map((item) => {
+                    const name = item.task.profiles
+                      ? displayName(item.task.user_id, item.task.profiles, currentUserId, t("common.you"))
+                      : t("timeline.unassigned");
+                    const color = taskBarColor(item.task);
+                    const startRound = item.continuesBefore ? "0" : "999px";
+                    const endRound = item.continuesAfter ? "0" : "999px";
+                    const wide = item.colEnd - item.colStart >= 1;
+                    return (
+                      <div
+                        key={item.task.id}
+                        className="pointer-events-auto flex min-w-0 items-center gap-1 overflow-hidden px-1.5 text-[10px] font-medium text-white"
+                        style={{
+                          gridColumn: `${item.colStart + 1} / ${item.colEnd + 2}`,
+                          gridRow: item.lane + 1,
+                          backgroundColor: color,
+                          height: 20,
+                          marginInlineStart: item.continuesBefore ? 0 : 3,
+                          marginInlineEnd: item.continuesAfter ? 0 : 3,
+                          borderStartStartRadius: startRound,
+                          borderEndStartRadius: startRound,
+                          borderStartEndRadius: endRound,
+                          borderEndEndRadius: endRound,
+                          opacity: item.task.is_done ? 0.55 : 1,
+                        }}
+                        title={`${item.task.title} · ${name}`}
+                      >
+                        {item.task.profiles && (
+                          <Avatar
+                            name={name}
+                            src={item.task.profiles.avatar_url}
+                            size="xs"
+                            className="h-4 w-4 text-[8px] ring-1 ring-white/40 border-white/20"
+                          />
+                        )}
+                        <span className="truncate">{item.task.title}</span>
+                        {wide && (
+                          <span className="ms-auto truncate text-[9px] font-normal text-white/90 max-w-[45%]">
+                            {name}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -346,7 +361,7 @@ export default function ProjectCalendarView({
               const key = ymd(day);
               const inMonth = day.getMonth() === cursor.getMonth();
               const isToday = key === todayKey;
-              const hasTasks = (tasksByDate.get(key) || []).length > 0;
+              const hasTasks = visibleTasks.some((task) => spanCoversDay(task, key));
               return (
                 <button
                   key={i}
@@ -437,6 +452,9 @@ export default function ProjectCalendarView({
                     <p className="text-xs text-ink truncate">{task.title}</p>
                     <p className="text-[11px] text-inkFaint">
                       {projectNameById.get(task.project_id) || project.name} · {dueTone(task.due_date)}
+                      {task.profiles
+                        ? ` · ${displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}`
+                        : ""}
                     </p>
                   </div>
                 </li>

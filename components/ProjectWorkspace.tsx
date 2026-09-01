@@ -467,6 +467,7 @@ export default function ProjectWorkspace({
           projects={projects}
           tasks={tasks}
           columns={columns}
+          currentUserId={currentUserId}
           onTasksMutated={setTasks}
         />
       )}
