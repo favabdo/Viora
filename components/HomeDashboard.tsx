@@ -181,6 +181,10 @@ export default function HomeDashboard() {
         icon: meta?.icon || "folder",
         imageUrl: meta?.imageUrl || null,
         imageScale: meta?.imageScale ?? 100,
+        imageScaleX: meta?.imageScaleX ?? meta?.imageScale ?? 100,
+        imageScaleY: meta?.imageScaleY ?? meta?.imageScale ?? 100,
+        imagePosX: meta?.imagePosX ?? 50,
+        imagePosY: meta?.imagePosY ?? 50,
       };
     });
   }, [projects, tasks]);
@@ -322,7 +326,17 @@ export default function HomeDashboard() {
                   <button key={row.project.id} type="button" onClick={() => router.push(projectPath(row.project.id))} className="w-full text-start">
                     <div className="flex items-center gap-2.5 mb-1.5">
                       <span className="h-7 w-7 rounded-lg overflow-hidden inline-flex items-center justify-center" style={{ backgroundColor: `${row.color}22`, color: row.color }}>
-                        <ProjectMark icon={row.icon} imageUrl={row.imageUrl} color={row.color} size={14} imageScale={row.imageScale} />
+                        <ProjectMark
+                          icon={row.icon}
+                          imageUrl={row.imageUrl}
+                          color={row.color}
+                          size={14}
+                          imageScale={row.imageScale}
+                          imageScaleX={row.imageScaleX}
+                          imageScaleY={row.imageScaleY}
+                          imagePosX={row.imagePosX}
+                          imagePosY={row.imagePosY}
+                        />
                       </span>
                       <span className="flex-1 text-sm text-ink truncate">{row.project.name}</span>
                       <span className="text-xs tabular-nums text-inkSoft">{row.pct}%</span>

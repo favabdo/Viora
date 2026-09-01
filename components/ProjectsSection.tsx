@@ -40,6 +40,10 @@ type ProjectCard = {
   icon: string;
   imageUrl?: string | null;
   imageScale?: number;
+  imageScaleX?: number;
+  imageScaleY?: number;
+  imagePosX?: number;
+  imagePosY?: number;
 };
 
 type Accent = {
@@ -104,6 +108,10 @@ export default function ProjectsSection({
   const [newColor, setNewColor] = useState(PROJECT_COLORS[0]);
   const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
   const [newImageScale, setNewImageScale] = useState(100);
+  const [newImageScaleX, setNewImageScaleX] = useState(100);
+  const [newImageScaleY, setNewImageScaleY] = useState(100);
+  const [newImagePosX, setNewImagePosX] = useState(50);
+  const [newImagePosY, setNewImagePosY] = useState(50);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -195,6 +203,10 @@ export default function ProjectsSection({
         icon: extra?.icon || "folder",
         imageUrl: extra?.imageUrl || null,
         imageScale: extra?.imageScale ?? 100,
+        imageScaleX: extra?.imageScaleX ?? extra?.imageScale ?? 100,
+        imageScaleY: extra?.imageScaleY ?? extra?.imageScale ?? 100,
+        imagePosX: extra?.imagePosX ?? 50,
+        imagePosY: extra?.imagePosY ?? 50,
       };
     });
 
@@ -209,6 +221,10 @@ export default function ProjectsSection({
     setNewColor(PROJECT_COLORS[0]);
     setNewImageUrl(null);
     setNewImageScale(100);
+    setNewImageScaleX(100);
+    setNewImageScaleY(100);
+    setNewImagePosX(50);
+    setNewImagePosY(50);
   }
 
   async function createProject() {
@@ -224,6 +240,10 @@ export default function ProjectsSection({
         color: newColor,
         imageUrl: newImageUrl,
         imageScale: newImageScale,
+        imageScaleX: newImageScaleX,
+        imageScaleY: newImageScaleY,
+        imagePosX: newImagePosX,
+        imagePosY: newImagePosY,
       });
       resetCreateForm();
       setShowCreate(false);
@@ -372,7 +392,16 @@ export default function ProjectsSection({
                 className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0"
                 style={{ backgroundColor: `${card.color}22`, color: card.color }}
               >
-                <ProjectIcon name={card.icon} imageUrl={card.imageUrl} color={card.color} imageScale={card.imageScale} />
+                <ProjectIcon
+                  name={card.icon}
+                  imageUrl={card.imageUrl}
+                  color={card.color}
+                  imageScale={card.imageScale}
+                  imageScaleX={card.imageScaleX}
+                  imageScaleY={card.imageScaleY}
+                  imagePosX={card.imagePosX}
+                  imagePosY={card.imagePosY}
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -434,11 +463,19 @@ export default function ProjectsSection({
               icon={newIcon}
               imageUrl={newImageUrl}
               imageScale={newImageScale}
+              imageScaleX={newImageScaleX}
+              imageScaleY={newImageScaleY}
+              imagePosX={newImagePosX}
+              imagePosY={newImagePosY}
               onChange={(next) => {
                 if (next.color) setNewColor(next.color);
                 if (next.icon) setNewIcon(next.icon);
                 if (next.imageUrl !== undefined) setNewImageUrl(next.imageUrl);
                 if (next.imageScale !== undefined) setNewImageScale(next.imageScale);
+                if (next.imageScaleX !== undefined) setNewImageScaleX(next.imageScaleX);
+                if (next.imageScaleY !== undefined) setNewImageScaleY(next.imageScaleY);
+                if (next.imagePosX !== undefined) setNewImagePosX(next.imagePosX);
+                if (next.imagePosY !== undefined) setNewImagePosY(next.imagePosY);
               }}
             />
           </div>
@@ -467,13 +504,33 @@ function ProjectIcon({
   imageUrl,
   color,
   imageScale,
+  imageScaleX,
+  imageScaleY,
+  imagePosX,
+  imagePosY,
 }: {
   name: string;
   imageUrl?: string | null;
   color?: string;
   imageScale?: number;
+  imageScaleX?: number;
+  imageScaleY?: number;
+  imagePosX?: number;
+  imagePosY?: number;
 }) {
-  return <ProjectMark icon={name} imageUrl={imageUrl} color={color} size={18} imageScale={imageScale} />;
+  return (
+    <ProjectMark
+      icon={name}
+      imageUrl={imageUrl}
+      color={color}
+      size={18}
+      imageScale={imageScale}
+      imageScaleX={imageScaleX}
+      imageScaleY={imageScaleY}
+      imagePosX={imagePosX}
+      imagePosY={imagePosY}
+    />
+  );
 }
 
 function StatusBadge({ status, t }: { status: ProjectStatus; t: (key: string) => string }) {
@@ -509,7 +566,16 @@ function ProjectCardView({
           className="h-10 w-10 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: `${card.color}22`, color: card.color }}
         >
-          <ProjectIcon name={card.icon} imageUrl={card.imageUrl} color={card.color} imageScale={card.imageScale} />
+          <ProjectIcon
+            name={card.icon}
+            imageUrl={card.imageUrl}
+            color={card.color}
+            imageScale={card.imageScale}
+            imageScaleX={card.imageScaleX}
+            imageScaleY={card.imageScaleY}
+            imagePosX={card.imagePosX}
+            imagePosY={card.imagePosY}
+          />
         </div>
         <StatusBadge status={card.status} t={t} />
       </div>

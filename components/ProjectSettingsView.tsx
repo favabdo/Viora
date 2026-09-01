@@ -80,6 +80,10 @@ type Draft = {
   icon: string;
   imageUrl: string | null;
   imageScale: number;
+  imageScaleX: number;
+  imageScaleY: number;
+  imagePosX: number;
+  imagePosY: number;
   color: string;
   visibility: "private" | "public";
   guestAccess: boolean;
@@ -106,6 +110,10 @@ function metaToDraft(project: Project, meta: ProjectMeta | undefined, columns: B
     icon: meta?.icon || "monitor",
     imageUrl: meta?.imageUrl || null,
     imageScale: meta?.imageScale ?? 100,
+    imageScaleX: meta?.imageScaleX ?? meta?.imageScale ?? 100,
+    imageScaleY: meta?.imageScaleY ?? meta?.imageScale ?? 100,
+    imagePosX: meta?.imagePosX ?? 50,
+    imagePosY: meta?.imagePosY ?? 50,
     color: meta?.color || defaultProjectColor(project.id),
     visibility: meta?.visibility || "private",
     guestAccess: meta?.guestAccess ?? false,
@@ -311,6 +319,10 @@ export default function ProjectSettingsView({
       icon: draft.icon,
       imageUrl: draft.imageUrl,
       imageScale: draft.imageScale,
+      imageScaleX: draft.imageScaleX,
+      imageScaleY: draft.imageScaleY,
+      imagePosX: draft.imagePosX,
+      imagePosY: draft.imagePosY,
       color: draft.color,
       key: draft.key.trim().toUpperCase() || defaultProjectKey(name),
       visibility: draft.visibility,
@@ -454,6 +466,10 @@ export default function ProjectSettingsView({
                     icon={draft.icon}
                     imageUrl={draft.imageUrl}
                     imageScale={draft.imageScale}
+                    imageScaleX={draft.imageScaleX}
+                    imageScaleY={draft.imageScaleY}
+                    imagePosX={draft.imagePosX}
+                    imagePosY={draft.imagePosY}
                     onChange={(next) => patch(next)}
                   />
                 </div>
