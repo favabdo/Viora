@@ -39,6 +39,7 @@ type ProjectCard = {
   color: string;
   icon: string;
   imageUrl?: string | null;
+  imageScale?: number;
 };
 
 type Accent = {
@@ -102,6 +103,7 @@ export default function ProjectsSection({
   const [newIcon, setNewIcon] = useState("folder");
   const [newColor, setNewColor] = useState(PROJECT_COLORS[0]);
   const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
+  const [newImageScale, setNewImageScale] = useState(100);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -192,6 +194,7 @@ export default function ProjectsSection({
         color,
         icon: extra?.icon || "folder",
         imageUrl: extra?.imageUrl || null,
+        imageScale: extra?.imageScale ?? 100,
       };
     });
 
@@ -205,6 +208,7 @@ export default function ProjectsSection({
     setNewIcon("folder");
     setNewColor(PROJECT_COLORS[0]);
     setNewImageUrl(null);
+    setNewImageScale(100);
   }
 
   async function createProject() {
@@ -219,6 +223,7 @@ export default function ProjectsSection({
         icon: newIcon,
         color: newColor,
         imageUrl: newImageUrl,
+        imageScale: newImageScale,
       });
       resetCreateForm();
       setShowCreate(false);
@@ -367,7 +372,7 @@ export default function ProjectsSection({
                 className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0"
                 style={{ backgroundColor: `${card.color}22`, color: card.color }}
               >
-                <ProjectIcon name={card.icon} imageUrl={card.imageUrl} color={card.color} />
+                <ProjectIcon name={card.icon} imageUrl={card.imageUrl} color={card.color} imageScale={card.imageScale} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -428,10 +433,12 @@ export default function ProjectsSection({
               color={newColor}
               icon={newIcon}
               imageUrl={newImageUrl}
+              imageScale={newImageScale}
               onChange={(next) => {
                 if (next.color) setNewColor(next.color);
                 if (next.icon) setNewIcon(next.icon);
                 if (next.imageUrl !== undefined) setNewImageUrl(next.imageUrl);
+                if (next.imageScale !== undefined) setNewImageScale(next.imageScale);
               }}
             />
           </div>
@@ -455,8 +462,18 @@ export default function ProjectsSection({
   );
 }
 
-function ProjectIcon({ name, imageUrl, color }: { name: string; imageUrl?: string | null; color?: string }) {
-  return <ProjectMark icon={name} imageUrl={imageUrl} color={color} size={18} />;
+function ProjectIcon({
+  name,
+  imageUrl,
+  color,
+  imageScale,
+}: {
+  name: string;
+  imageUrl?: string | null;
+  color?: string;
+  imageScale?: number;
+}) {
+  return <ProjectMark icon={name} imageUrl={imageUrl} color={color} size={18} imageScale={imageScale} />;
 }
 
 function StatusBadge({ status, t }: { status: ProjectStatus; t: (key: string) => string }) {
@@ -492,7 +509,7 @@ function ProjectCardView({
           className="h-10 w-10 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: `${card.color}22`, color: card.color }}
         >
-          <ProjectIcon name={card.icon} imageUrl={card.imageUrl} color={card.color} />
+          <ProjectIcon name={card.icon} imageUrl={card.imageUrl} color={card.color} imageScale={card.imageScale} />
         </div>
         <StatusBadge status={card.status} t={t} />
       </div>

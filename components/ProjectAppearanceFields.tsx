@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ImagePlus, Search, X } from "lucide-react";
+import { ChevronDown, ImagePlus, Minus, Plus, Search, X } from "lucide-react";
 import { getProjectLucideIcon, PROJECT_ICON_CATALOG } from "@/lib/projectIcons";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import ColorPicker from "./ColorPicker";
-import ProjectMark from "./ProjectMark";
+import ProjectMark, { clampImageScale } from "./ProjectMark";
 
 async function fileToImageDataUrl(file: File): Promise<string> {
   try {
     const bitmap = await createImageBitmap(file);
-    const size = 160;
+    const size = 240;
     const canvas = document.createElement("canvas");
     canvas.width = size;
     canvas.height = size;
@@ -36,12 +36,14 @@ export default function ProjectAppearanceFields({
   color,
   icon,
   imageUrl,
+  imageScale = 100,
   onChange,
 }: {
   color: string;
   icon: string;
   imageUrl?: string | null;
-  onChange: (next: { color?: string; icon?: string; imageUrl?: string | null }) => void;
+  imageScale?: number;
+  onChange: (next: { color?: string; icon?: string; imageUrl?: string | null; imageScale?: number }) => void;
 }) {
   const { t } = useTranslation();
   const [showIcons, setShowIcons] = useState(false);
@@ -79,7 +81,7 @@ export default function ProjectAppearanceFields({
             className="h-12 w-12 rounded-xl overflow-hidden flex items-center justify-center shrink-0"
             style={{ backgroundColor: `${color}22`, color }}
           >
-            <ProjectMark icon={icon} imageUrl={imageUrl} size={22} />
+            <ProjectMark icon={icon} imageUrl={imageUrl} size={22} imageScale={imageScale} />
           </div>
           <button
             type="button"
@@ -120,6 +122,41 @@ export default function ProjectAppearanceFields({
             }}
           />
         </div>
+        {imageUrl && (
+          <div className="mt-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-medium text-inkFaint">{t("projects.imageSize")}</label>
+              <span className="text-[11px] tabular-nums text-inkSoft">{clampImageScale(imageScale)}%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onChange({ imageScale: clampImageScale(imageScale - 10) })}
+                className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-line text-inkSoft hover:text-ink"
+                aria-label="-"
+              >
+                <Minus size={14} />
+              </button>
+              <input
+                type="range"
+                min={50}
+                max={160}
+                step={5}
+                value={clampImageScale(imageScale)}
+                onChange={(e) => onChange({ imageScale: Number(e.target.value) })}
+                className="flex-1 accent-[#6C5CE7]"
+              />
+              <button
+                type="button"
+                onClick={() => onChange({ imageScale: clampImageScale(imageScale + 10) })}
+                className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-line text-inkSoft hover:text-ink"
+                aria-label="+"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </div>
+        )}
         {showIcons && (
           <div className="mt-2 w-full rounded-xl border border-line bg-paperDark/60 p-2">
             <div className="relative mb-2">

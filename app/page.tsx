@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 const TAB_PATHS: Record<string, string> = {
   dashboard: "/dashboard",
+  home: "/dashboard",
   projects: "/projects",
   tasks: "/projects",
   board: "/projects",
@@ -26,5 +27,5 @@ export default function HomePage({
     const q = searchParams.task ? `?task=${encodeURIComponent(searchParams.task)}` : "";
     redirect(`/projects/${project}/${view}${q}`);
   }
-  redirect(TAB_PATHS[searchParams.tab || ""] || "/projects");
+  redirect(TAB_PATHS[searchParams.tab || ""] || "/dashboard");
 }

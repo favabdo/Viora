@@ -79,6 +79,7 @@ type Draft = {
   description: string;
   icon: string;
   imageUrl: string | null;
+  imageScale: number;
   color: string;
   visibility: "private" | "public";
   guestAccess: boolean;
@@ -104,6 +105,7 @@ function metaToDraft(project: Project, meta: ProjectMeta | undefined, columns: B
     description: meta?.description || "",
     icon: meta?.icon || "monitor",
     imageUrl: meta?.imageUrl || null,
+    imageScale: meta?.imageScale ?? 100,
     color: meta?.color || defaultProjectColor(project.id),
     visibility: meta?.visibility || "private",
     guestAccess: meta?.guestAccess ?? false,
@@ -308,6 +310,7 @@ export default function ProjectSettingsView({
       description: draft.description.trim(),
       icon: draft.icon,
       imageUrl: draft.imageUrl,
+      imageScale: draft.imageScale,
       color: draft.color,
       key: draft.key.trim().toUpperCase() || defaultProjectKey(name),
       visibility: draft.visibility,
@@ -450,6 +453,7 @@ export default function ProjectSettingsView({
                     color={draft.color}
                     icon={draft.icon}
                     imageUrl={draft.imageUrl}
+                    imageScale={draft.imageScale}
                     onChange={(next) => patch(next)}
                   />
                 </div>

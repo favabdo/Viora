@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import {
-  LayoutDashboard,
+  Home,
   FolderKanban,
   CalendarDays,
   Lightbulb,
@@ -33,7 +33,7 @@ export default function AppFrame({ children }: { children: ReactNode }) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const tabs: ShellTab[] = [
-    { id: "dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+    { id: "dashboard", label: t("nav.dashboard"), icon: Home },
     { id: "projects", label: t("nav.projects"), icon: FolderKanban },
     { id: "calendar", label: t("nav.calendar"), icon: CalendarDays },
     { id: "ideas", label: t("nav.ideas"), icon: Lightbulb },

@@ -16,7 +16,7 @@ export const WORKSPACE_VIEWS = ["board", "list", "calendar", "timeline", "files"
 export type WorkspaceView = (typeof WORKSPACE_VIEWS)[number];
 
 export function navIdFromPath(pathname: string): string {
-  if (pathname.startsWith("/dashboard")) return "dashboard";
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/home")) return "dashboard";
   if (pathname.startsWith("/projects")) return "projects";
   if (pathname.startsWith("/calendar")) return "calendar";
   if (pathname.startsWith("/ideas")) return "ideas";

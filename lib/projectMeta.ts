@@ -35,6 +35,7 @@ export type ProjectMeta = {
   category?: string;
   sourceIdeaId?: string;
   imageUrl?: string | null;
+  imageScale?: number;
 };
 
 export function defaultProjectColor(id: string): string {
