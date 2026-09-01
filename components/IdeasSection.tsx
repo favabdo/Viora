@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
-import { patchTaskExtras } from "@/lib/taskExtras";
+import { patchTaskExtras, type TaskAttachment } from "@/lib/taskExtras";
 import { copyRemoteFilesToTask } from "@/lib/taskAttachments";
 import { defaultProjectKey, writeProjectMeta } from "@/lib/projectMeta";
 import {
