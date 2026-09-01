@@ -795,6 +795,7 @@ const dict: Record<string, { en: string; ar: string }> = {
   "board.noDeadlines": { en: "No upcoming deadlines", ar: "لا توجد مواعيد قريبة" },
   "board.startDate": { en: "Start date", ar: "تاريخ البداية" },
   "board.dueDate": { en: "Due date", ar: "تاريخ التسليم" },
+  "board.dueAfterCreated": { en: "Due date must be after the task was created", ar: "يجب أن يكون موعد التسليم بعد تاريخ إنشاء المهمة" },
   "board.noTasksWithDates": { en: "No tasks with dates yet — set a start or due date to see them here", ar: "لا توجد مهام بتواريخ بعد - حدّد تاريخ بداية أو تسليم لتظهر هنا" },
   "board.menu.edit": { en: "Edit Task", ar: "تعديل المهمة" },
   "board.menu.assignTo": { en: "Assign To", ar: "إسناد إلى" },

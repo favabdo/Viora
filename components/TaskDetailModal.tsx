@@ -17,6 +17,7 @@ import {
 import { supabase, ActivityEntry, BoardColumn, Project, ProjectMember, Task, TASK_COLORS } from "@/lib/supabase";
 import { displayName, renderActivity } from "@/lib/displayName";
 import { patchTaskExtras, subtaskProgress, type TaskExtras, type TaskSubtask } from "@/lib/taskExtras";
+import { isDueAfterCreated, minDueDate } from "@/lib/taskShape";
 import { timeAgo } from "@/lib/timeAgo";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import ClickableAvatar from "./ClickableAvatar";
@@ -111,6 +112,7 @@ export default function TaskDetailModal({
 }) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<"activity" | "comments" | "history">("activity");
+  const [dueError, setDueError] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [entries, setEntries] = useState<ActivityEntry[]>([]);
   const [editingDescription, setEditingDescription] = useState(false);
@@ -131,6 +133,7 @@ export default function TaskDetailModal({
 
   useEffect(() => {
     setDescriptionDraft(extras.description || "");
+    setDueError(false);
   }, [extras.description, task.id]);
 
   useEffect(() => {
@@ -298,11 +301,21 @@ export default function TaskDetailModal({
                   <Calendar size={14} className={isOverdue(task.due_date, task.is_done) ? "text-[#EF4444]" : "text-inkSoft"} />
                   <input
                     type="date"
+                    min={minDueDate(task.created_at)}
                     value={task.due_date ? task.due_date.slice(0, 10) : ""}
-                    onChange={(e) => onSetDueDate(e.target.value || null)}
+                    onChange={(e) => {
+                      const next = e.target.value || null;
+                      if (next && !isDueAfterCreated(task.created_at, next)) {
+                        setDueError(true);
+                        return;
+                      }
+                      setDueError(false);
+                      onSetDueDate(next);
+                    }}
                     className="bg-transparent outline-none w-[9.75rem]"
                   />
                 </label>
+                {dueError && <p className="text-[11px] text-red-500 mt-1">{t("board.dueAfterCreated")}</p>}
               </div>
               <div>
                 <p className="text-[11px] text-inkFaint mb-1.5">{t("taskDetail.created")}</p>
@@ -364,6 +377,7 @@ export default function TaskDetailModal({
                         ))}
                       </select>
                       <input
+                        min={minDueDate(task.created_at)}
                         type="date"
                         value={item.due || ""}
                         onChange={(e) => updateSubtask(index, { due: e.target.value || null })}

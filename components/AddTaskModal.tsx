@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { BoardColumn, Project, ProjectMember, TASK_COLORS } from "@/lib/supabase";
 import { displayName } from "@/lib/displayName";
-import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { isDueAfterCreated, minDueDate } from "@/lib/taskShape";
 import Button from "./ui/Button";
 import Modal from "./ui/Modal";
 import { Input, Textarea } from "./ui/Input";
@@ -78,6 +78,8 @@ export default function AddTaskModal({
   const [color, setColor] = useState<string>(TASK_COLORS[2]?.value ?? "");
   const [assigneeId, setAssigneeId] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [dueError, setDueError] = useState(false);
+  const dueMin = minDueDate();
   const [tags, setTags] = useState("");
   const [estimate, setEstimate] = useState("");
   const [recurrence, setRecurrence] = useState("none");
@@ -100,6 +102,11 @@ export default function AddTaskModal({
   async function submit() {
     const trimmed = title.trim();
     if (!trimmed) return;
+    if (dueDate && !isDueAfterCreated(null, dueDate)) {
+      setDueError(true);
+      return;
+    }
+    setDueError(false);
     await onCreate({
       title: trimmed,
       projectId,
@@ -177,8 +184,12 @@ export default function AddTaskModal({
                 <Calendar size={13} />
                 <input
                   type="date"
+                  min={dueMin}
                   value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
+                  onChange={(e) => {
+                    setDueDate(e.target.value);
+                    setDueError(Boolean(e.target.value && !isDueAfterCreated(null, e.target.value)));
+                  }}
                   className="bg-transparent text-xs text-ink outline-none"
                 />
               </label>
@@ -269,7 +280,16 @@ export default function AddTaskModal({
                 <span className="mb-1.5 block text-xs text-inkSoft">{t("board.dueDate")}</span>
                 <div className="relative">
                   <Calendar size={14} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-inkFaint" />
-                  <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={`${selectClass} ps-9`} />
+                  <input
+                    type="date"
+                    min={dueMin}
+                    value={dueDate}
+                    onChange={(e) => {
+                      setDueDate(e.target.value);
+                      setDueError(Boolean(e.target.value && !isDueAfterCreated(null, e.target.value)));
+                    }}
+                    className={`${selectClass} ps-9`}
+                  />
                 </div>
               </label>
               <label className="block">
@@ -338,6 +358,10 @@ export default function AddTaskModal({
               </div>
             </div>
           </>
+        )}
+
+        {dueError && (
+          <p className="text-xs text-red-500">{t("board.dueAfterCreated")}</p>
         )}
 
         {selectedColumn && mode === "quick" && (

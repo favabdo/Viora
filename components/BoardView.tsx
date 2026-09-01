@@ -18,7 +18,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { Eye, Paperclip, Pin, Plus, X, Check, Palette, MessageCircle } from "lucide-react";
 import { supabase, Task, BoardColumn, Project, ProjectMember, TASK_COLORS } from "@/lib/supabase";
-import { normalizeTask } from "@/lib/taskShape";
+import { isDueAfterCreated, minDueDate, normalizeTask } from "@/lib/taskShape";
 import {
   copyTaskExtras,
   patchTaskExtras,
@@ -557,6 +557,7 @@ export default function BoardView({
   }
 
   async function setDueDate(task: Task, date: string | null) {
+    if (date && !isDueAfterCreated(task.created_at, date)) return;
     onTasksMutated((prev) => prev.map((t2) => (t2.id === task.id ? { ...t2, due_date: date } : t2)));
     await supabase.from("tasks").update({ due_date: date }).eq("id", task.id);
   }
@@ -568,6 +569,7 @@ export default function BoardView({
   }
 
   async function createTask(draft: NewTaskDraft) {
+    if (draft.dueDate && !isDueAfterCreated(null, draft.dueDate)) return;
     const targetProjectId = draft.projectId || projectId;
     const targetColumnId = targetProjectId === projectId ? draft.columnId : null;
     const list = targetColumnId ? tasksByColumn.get(targetColumnId) || [] : [];

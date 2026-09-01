@@ -36,6 +36,34 @@ export function formatTaskDate(value: unknown, locale: string): string {
   }
 }
 
+export function localDateKey(date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export function addDaysIso(iso: string, n: number): string {
+  const d = new Date(`${iso}T00:00:00`);
+  d.setDate(d.getDate() + n);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** أول يوم مسموح لتاريخ التسليم: اليوم التالي لتاريخ الإنشاء */
+export function minDueDate(createdAt?: unknown): string {
+  const created = dateKey(createdAt) || localDateKey();
+  return addDaysIso(created, 1);
+}
+
+export function isDueAfterCreated(createdAt: unknown, due: string | null | undefined): boolean {
+  if (!due) return true;
+  const created = dateKey(createdAt) || localDateKey();
+  return due > created;
+}
+
 export function normalizeProjectMember(row: ProjectMember | Record<string, unknown>): ProjectMember {
   const data = row as Record<string, unknown>;
   return {

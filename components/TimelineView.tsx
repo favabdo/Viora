@@ -6,7 +6,7 @@ import { supabase, Task, BoardColumn } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Modal from "./ui/Modal";
 import Button from "./ui/Button";
-import { dateKey, formatTaskDate } from "@/lib/taskShape";
+import { dateKey, formatTaskDate, isDueAfterCreated, minDueDate } from "@/lib/taskShape";
 
 const DAY_WIDTH = 34;
 const ROW_HEIGHT = 44;
@@ -93,6 +93,7 @@ export default function TimelineView({
   const uncategorized = datedTasks.filter((t2) => !t2.column_id || !columns.some((c) => c.id === t2.column_id));
 
   async function saveDates(task: Task, startDate: string | null, dueDate: string | null) {
+    if (dueDate && !isDueAfterCreated(task.created_at, dueDate)) return;
     onTasksMutated((prev) =>
       prev.map((t2) => (t2.id === task.id ? { ...t2, start_date: startDate, due_date: dueDate } : t2))
     );
@@ -252,6 +253,17 @@ function TimelineDateEditor({
 }) {
   const [start, setStart] = useState(dateKey(task.start_date) || "");
   const [due, setDue] = useState(dateKey(task.due_date) || "");
+  const [dueError, setDueError] = useState(false);
+  const dueMin = minDueDate(task.created_at);
+
+  function trySave() {
+    const nextDue = due || null;
+    if (nextDue && !isDueAfterCreated(task.created_at, nextDue)) {
+      setDueError(true);
+      return;
+    }
+    onSave(task, start || null, nextDue);
+  }
 
   return (
     <div className="space-y-3">
@@ -267,17 +279,22 @@ function TimelineDateEditor({
       <div>
         <label className="block text-xs font-medium text-inkSoft mb-1">{t("board.dueDate")}</label>
         <input
+          min={dueMin}
           type="date"
           value={due}
-          onChange={(e) => setDue(e.target.value)}
+          onChange={(e) => {
+            setDue(e.target.value);
+            setDueError(Boolean(e.target.value && !isDueAfterCreated(task.created_at, e.target.value)));
+          }}
           className="w-full bg-paperDark border-0 rounded-[1.75rem] px-3 py-2 text-sm text-ink outline-none focus:outline-none focus:ring-0"
         />
       </div>
+      {dueError && <p className="text-xs text-red-500">{t("board.dueAfterCreated")}</p>}
       <div className="flex gap-2 pt-1">
         <Button variant="secondary" fullWidth onClick={onCancel}>
           {t("common.cancel")}
         </Button>
-        <Button variant="primary" fullWidth onClick={() => onSave(task, start || null, due || null)}>
+        <Button variant="primary" fullWidth onClick={trySave}>
           {t("common.save")}
         </Button>
       </div>
