@@ -1,10 +1,9 @@
 "use client";
 
-import ComingSoon from "@/components/ComingSoon";
-import { GanttChart } from "lucide-react";
-import { useTranslation } from "@/lib/i18n/LanguageContext";
+import GlobalTimelineView from "@/components/GlobalTimelineView";
+import { useAppSession } from "@/components/AppSession";
 
 export default function TimelinePage() {
-  const { t } = useTranslation();
-  return <ComingSoon title={t("nav.timeline")} icon={GanttChart} />;
+  const { session } = useAppSession();
+  return <GlobalTimelineView currentUserId={session.user.id} />;
 }

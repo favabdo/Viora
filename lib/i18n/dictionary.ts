@@ -355,6 +355,7 @@ const dict: Record<string, { en: string; ar: string }> = {
   "timeline.timeLeft": { en: "Time left", ar: "المتبقي" },
   "timeline.daysProgress": { en: "{done} of {total} days", ar: "{done} من {total} أيام" },
   "timeline.unassigned": { en: "Unassigned", ar: "غير مسندة" },
+  "schedule.focusHint": { en: "Other projects stay visible but faded", ar: "المشاريع الأخرى تبقى ظاهرة لكن باهتة" },
 
   // ===== components/ActivityFeed.tsx =====
   "activity.recent": { en: "Recent activity", ar: "النشاط الأخير" },

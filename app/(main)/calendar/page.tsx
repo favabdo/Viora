@@ -1,10 +1,9 @@
 "use client";
 
-import ComingSoon from "@/components/ComingSoon";
-import { CalendarDays } from "lucide-react";
-import { useTranslation } from "@/lib/i18n/LanguageContext";
+import GlobalCalendarView from "@/components/GlobalCalendarView";
+import { useAppSession } from "@/components/AppSession";
 
 export default function CalendarPage() {
-  const { t } = useTranslation();
-  return <ComingSoon title={t("nav.calendar")} icon={CalendarDays} />;
+  const { session } = useAppSession();
+  return <GlobalCalendarView currentUserId={session.user.id} />;
 }
