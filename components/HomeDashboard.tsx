@@ -219,7 +219,6 @@ export default function HomeDashboard() {
 
   const dayEvents = tasks.filter((task) => task.due_date === pickedDay);
   const files = activity.filter((row) => row.action === "file_uploaded");
-  const rangeLabel = formatRange(keys[0], keys[keys.length - 1], locale);
   const Prev = dir === "rtl" ? ChevronRight : ChevronLeft;
   const Next = dir === "rtl" ? ChevronLeft : ChevronRight;
 
@@ -232,32 +231,30 @@ export default function HomeDashboard() {
   }
 
   return (
-    <div className={`grid gap-5 ${showWidgets ? "xl:grid-cols-[minmax(0,1fr)_20.5rem]" : ""}`}>
-      <div className="min-w-0 space-y-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold text-ink tracking-tight">{t("home.title")}</h1>
-            <p className="mt-1 text-sm font-medium text-ink">{t("home.welcome").replace("{name}", firstName)}</p>
+    <div className={`min-w-0 overflow-x-hidden grid gap-4 sm:gap-5 ${showWidgets ? "xl:grid-cols-[minmax(0,1fr)_20.5rem]" : ""}`}>
+      <div className="min-w-0 space-y-4 sm:space-y-5">
+        <div className="space-y-3">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-semibold text-ink tracking-tight">{t("home.title")}</h1>
+            <p className="mt-1 text-sm font-medium text-ink break-words">{t("home.welcome").replace("{name}", firstName)}</p>
             <p className="text-sm text-inkFaint">{t("home.subtitle")}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
             <select
               value={days}
               onChange={(e) => setDays(Number(e.target.value))}
-              className="h-9 rounded-xl border border-line bg-surface px-3 text-xs text-ink outline-none"
+              className="col-span-2 sm:col-auto h-9 w-full sm:w-auto min-w-0 rounded-xl border border-line bg-surface px-3 text-xs text-ink outline-none"
             >
-              <option value={7}>
-                {rangeLabel} · {t("home.last7")}
-              </option>
+              <option value={7}>{t("home.last7")}</option>
               <option value={14}>{t("home.last14")}</option>
               <option value={30}>{t("home.last30")}</option>
             </select>
-            <Button size="sm" onClick={() => setShowWidgets((v) => !v)}>
+            <Button size="sm" className="w-full sm:w-auto justify-center" onClick={() => setShowWidgets((v) => !v)}>
               <Sliders size={14} />
               {t("home.customize")}
             </Button>
-            <div className="relative">
-              <Button variant="primary" size="sm" onClick={() => setShowNew((v) => !v)}>
+            <div className="relative w-full sm:w-auto">
+              <Button variant="primary" size="sm" className="w-full sm:w-auto justify-center" onClick={() => setShowNew((v) => !v)}>
                 <Plus size={14} />
                 {t("home.new")}
                 <ChevronDown size={12} />
@@ -276,7 +273,7 @@ export default function HomeDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 xl:grid-cols-5 gap-2.5 sm:gap-3">
           <StatCard title={t("home.totalProjects")} value={projects.length} change={pctChange(projectsNow, projectsPrev)} color="#6C5CE7" Icon={FolderKanban} spark={sparkProjects} vs={t("home.vsPrev")} />
           <StatCard title={t("home.totalTasks")} value={tasks.length} change={pctChange(createdNow, createdPrev)} color="#3B82F6" Icon={CheckSquare} spark={sparkTasks} vs={t("home.vsPrev")} />
           <StatCard title={t("home.completedTasks")} value={completed} change={pctChange(doneNow, donePrev)} color="#22C55E" Icon={CheckCircle2} spark={sparkDone} vs={t("home.vsPrev")} />
@@ -289,7 +286,7 @@ export default function HomeDashboard() {
             {tasks.length === 0 ? (
               <p className="text-sm text-inkFaint">{t("board.noTasksYet")}</p>
             ) : (
-              <div className="flex items-center gap-5">
+              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 min-w-0">
                 <DonutChart
                   size={148}
                   strokeWidth={18}
@@ -297,7 +294,7 @@ export default function HomeDashboard() {
                   centerLabel={String(tasks.length)}
                   centerSubLabel={t("home.total")}
                 />
-                <ul className="flex-1 space-y-2.5">
+                <ul className="w-full min-w-0 space-y-2.5">
                   {overview.map((item) => (
                     <li key={item.id} className="flex items-center gap-2 text-sm">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
@@ -342,7 +339,7 @@ export default function HomeDashboard() {
             {tasks.length === 0 ? (
               <p className="text-sm text-inkFaint">{t("board.noTasksYet")}</p>
             ) : (
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center gap-4 min-w-0">
                 <DonutChart
                   size={132}
                   strokeWidth={16}
@@ -350,7 +347,7 @@ export default function HomeDashboard() {
                   centerLabel={String(tasks.length)}
                   centerSubLabel={t("home.total")}
                 />
-                <ul className="flex-1 space-y-2">
+                <ul className="w-full min-w-0 space-y-2">
                   {priorities.map((item) => (
                     <li key={item.id} className="flex items-center gap-2 text-sm">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
@@ -402,7 +399,7 @@ export default function HomeDashboard() {
       </div>
 
       {showWidgets && (
-        <aside className="space-y-4">
+        <aside className="min-w-0 space-y-4">
           <Panel title={t("home.myTasks")}>
             {myTasks.length === 0 ? (
               <p className="text-sm text-inkFaint">{t("home.noMyTasks")}</p>
@@ -442,7 +439,7 @@ export default function HomeDashboard() {
             }
           >
             <p className="text-xs text-inkFaint mb-2">{new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(cursor)}</p>
-            <div className="flex gap-1 mb-3">
+            <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-3 min-w-0">
               {weekDays.map((day) => {
                 const key = localYmd(day);
                 const active = key === pickedDay;
@@ -451,10 +448,10 @@ export default function HomeDashboard() {
                     key={key}
                     type="button"
                     onClick={() => setPickedDay(key)}
-                    className={`flex-1 rounded-lg py-1.5 text-center ${active ? "bg-[#6C5CE7] text-white" : "bg-paperDark text-inkSoft"}`}
+                    className={`min-w-0 rounded-lg py-1.5 px-0.5 text-center ${active ? "bg-[#6C5CE7] text-white" : "bg-paperDark text-inkSoft"}`}
                   >
-                    <span className="block text-[10px] opacity-80">{weekday(key, locale)}</span>
-                    <span className="block text-sm font-medium">{day.getDate()}</span>
+                    <span className="block text-[9px] sm:text-[10px] opacity-80 truncate">{weekday(key, locale)}</span>
+                    <span className="block text-xs sm:text-sm font-medium">{day.getDate()}</span>
                   </button>
                 );
               })}
@@ -514,9 +511,9 @@ export default function HomeDashboard() {
 
 function Panel({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
-    <section className="rounded-2xl border border-line bg-surface p-4">
-      <div className="flex items-center justify-between gap-2 mb-4">
-        <h2 className="text-sm font-semibold text-ink">{title}</h2>
+    <section className="min-w-0 rounded-2xl border border-line bg-surface p-3 sm:p-4 overflow-hidden">
+      <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
+        <h2 className="text-sm font-semibold text-ink truncate">{title}</h2>
         {action}
       </div>
       {children}
@@ -543,17 +540,19 @@ function StatCard({
 }) {
   const up = change >= 0;
   return (
-    <div className="rounded-2xl border border-line bg-surface p-3.5">
-      <div className="flex items-start justify-between gap-2">
-        <span className="h-8 w-8 rounded-full inline-flex items-center justify-center" style={{ backgroundColor: `${color}22`, color }}>
-          <Icon size={15} />
+    <div className="min-w-0 rounded-2xl border border-line bg-surface p-2.5 sm:p-3.5">
+      <div className="flex items-start justify-between gap-1">
+        <span className="h-7 w-7 sm:h-8 sm:w-8 rounded-full inline-flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}22`, color }}>
+          <Icon size={14} />
         </span>
-        <Sparkline values={spark} color={color} />
+        <span className="hidden sm:block">
+          <Sparkline values={spark} color={color} />
+        </span>
       </div>
-      <p className="mt-3 text-xs text-inkFaint">{title}</p>
-      <p className="text-2xl font-semibold text-ink tabular-nums leading-tight">{value}</p>
-      <p className={`mt-1 text-[11px] ${up ? "text-[#22C55E]" : "text-[#EF4444]"}`}>
-        {up ? "↑" : "↓"} {Math.abs(change)}% {vs}
+      <p className="mt-2 sm:mt-3 text-[11px] sm:text-xs text-inkFaint leading-tight line-clamp-2">{title}</p>
+      <p className="text-xl sm:text-2xl font-semibold text-ink tabular-nums leading-tight">{value}</p>
+      <p className={`mt-1 text-[10px] sm:text-[11px] leading-tight ${up ? "text-[#22C55E]" : "text-[#EF4444]"}`}>
+        {up ? "↑" : "↓"} {Math.abs(change)}% <span className="hidden sm:inline">{vs}</span>
       </p>
     </div>
   );
@@ -578,14 +577,14 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
 function BarChart({ values, labels, color }: { values: number[]; labels: string[]; color: string }) {
   const max = Math.max(...values, 1);
   return (
-    <div className="flex items-end gap-2 h-40">
+    <div className="flex items-end gap-1 sm:gap-2 h-36 sm:h-40 min-w-0 overflow-x-auto">
       {values.map((value, i) => (
-        <div key={labels[i] || i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+        <div key={labels[i] || i} className="flex-1 min-w-[1.35rem] flex flex-col items-center gap-1 h-full justify-end">
           <div
             className="w-full rounded-t-md"
             style={{ height: `${Math.max((value / max) * 100, value > 0 ? 6 : 2)}%`, backgroundColor: color, opacity: value ? 1 : 0.25 }}
           />
-          <span className="text-[10px] text-inkFaint">{labels[i]}</span>
+          <span className="text-[9px] sm:text-[10px] text-inkFaint truncate max-w-full">{labels[i]}</span>
         </div>
       ))}
     </div>
@@ -611,8 +610,8 @@ function AreaChart({
     });
   }
   return (
-    <div>
-      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-44">
+    <div className="min-w-0">
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-36 sm:h-44 max-w-full" preserveAspectRatio="xMidYMid meet">
         {series.map((s) => {
           const pts = points(s.values);
           const line = pts.map((p) => `${p.x},${p.y}`).join(" ");
@@ -625,17 +624,19 @@ function AreaChart({
           );
         })}
       </svg>
-      <div className="flex flex-wrap gap-3 mt-2">
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2">
         {series.map((s) => (
           <span key={s.label} className="inline-flex items-center gap-1.5 text-[11px] text-inkSoft">
-            <span className="h-1.5 w-3 rounded-full" style={{ backgroundColor: s.color }} />
+            <span className="h-1.5 w-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
             {s.label}
           </span>
         ))}
       </div>
-      <div className="flex justify-between mt-1 text-[10px] text-inkFaint">
+      <div className="flex justify-between mt-1 text-[10px] text-inkFaint gap-1 min-w-0">
         {labels.map((label, i) => (
-          <span key={`${label}-${i}`}>{label}</span>
+          <span key={`${label}-${i}`} className={i > 0 && i < labels.length - 1 && labels.length > 8 ? "hidden sm:inline truncate" : "truncate"}>
+            {label}
+          </span>
         ))}
       </div>
     </div>
@@ -644,10 +645,4 @@ function AreaChart({
 
 function weekday(iso: string, locale: string) {
   return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(new Date(`${iso}T00:00:00`));
-}
-
-function formatRange(from: string, to: string, locale: string) {
-  const a = new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(new Date(`${from}T00:00:00`));
-  const b = new Intl.DateTimeFormat(locale, { month: "short", day: "numeric", year: "numeric" }).format(new Date(`${to}T00:00:00`));
-  return `${a} – ${b}`;
 }

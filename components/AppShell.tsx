@@ -16,7 +16,7 @@ import {
   Plus,
   Crown,
   ChevronDown,
-  MoreHorizontal,
+  Menu,
 } from "lucide-react";
 import Avatar from "./ui/Avatar";
 import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
@@ -213,20 +213,17 @@ export default function AppShell({
       </aside>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="flex items-center gap-3 px-4 py-3 md:px-6 border-b border-line sticky top-0 bg-paper/90 backdrop-blur z-30">
+        <header className="flex items-center gap-2 px-3 py-3 md:gap-3 md:px-6 border-b border-line sticky top-0 bg-paper/90 backdrop-blur z-30">
           <button
             type="button"
             onClick={() => setShowMobileNav(true)}
-            className="md:hidden flex items-center gap-2 rounded-xl pe-2 py-1 hover:bg-surface"
+            className="md:hidden h-10 w-10 inline-flex items-center justify-center rounded-xl text-ink hover:bg-surface shrink-0"
             aria-label={t("shell.openMenu")}
             aria-expanded={showMobileNav}
           >
-            <MoreHorizontal size={20} strokeWidth={2} className="text-ink shrink-0" />
-            {Logo}
-            <span className="text-sm font-medium text-ink truncate max-w-[7.5rem]">
-              {userName || t("shell.myAccount")}
-            </span>
+            <Menu size={22} strokeWidth={2} />
           </button>
+          <div className="md:hidden min-w-0 flex-1">{Logo}</div>
 
           <div className="relative flex-1 max-w-xl mx-auto hidden md:block">
             <Search size={15} strokeWidth={1.75} className="absolute top-1/2 -translate-y-1/2 start-3.5 text-inkFaint" />
@@ -270,7 +267,7 @@ export default function AppShell({
           </div>
         </header>
 
-        <main className="flex-1 min-w-0 px-4 py-6 md:px-8 md:py-7 pb-8">
+        <main className="flex-1 min-w-0 overflow-x-hidden px-3 py-4 sm:px-4 md:px-8 md:py-7 pb-8">
           {showEnablePrompt && (
             <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5 mb-4 text-sm fade-in">
               <div className="flex items-center gap-2">

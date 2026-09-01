@@ -43,15 +43,15 @@ export default function DonutChart({
     });
 
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+    <div className="relative w-full max-w-[148px] mx-auto sm:mx-0 aspect-square shrink-0" style={{ maxWidth: size }}>
+      <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full -rotate-90">
         <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgb(var(--color-paperDark))" strokeWidth={strokeWidth} />
         {arcs}
       </svg>
       {(centerLabel || centerSubLabel) && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          {centerLabel && <span className="text-lg font-semibold text-ink">{centerLabel}</span>}
-          {centerSubLabel && <span className="text-2xs text-inkFaint">{centerSubLabel}</span>}
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-2 text-center">
+          {centerLabel && <span className="text-base sm:text-lg font-semibold text-ink leading-none">{centerLabel}</span>}
+          {centerSubLabel && <span className="text-[10px] sm:text-2xs text-inkFaint mt-0.5">{centerSubLabel}</span>}
         </div>
       )}
     </div>
