@@ -123,7 +123,6 @@ export default function CalendarView({
             <NextIcon size={14} strokeWidth={1.75} />
           </IconButton>
         </div>
-        </div>
       </div>
 
       <div className="grid grid-cols-7 gap-px bg-line rounded-lg overflow-hidden border border-line">
