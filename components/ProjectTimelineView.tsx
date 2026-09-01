@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Plus, Check, Minus, Filter, MoreHorizontal, ArrowDown } from "lucide-react";
+import { ChevronDown, Plus, Check, Minus, Filter, MoreHorizontal, ArrowDown, X } from "lucide-react";
 import { supabase, Project, Task } from "@/lib/supabase";
 import { dateKey, formatTaskDate, normalizeTask } from "@/lib/taskShape";
 import { displayName } from "@/lib/displayName";
@@ -13,9 +13,30 @@ import { Textarea } from "./ui/Input";
 
 const LABEL_WIDTH = 260;
 const ROW_HEIGHT = 48;
+const MIN_BAR_PX = 140;
 const BAR_COLORS = ["#6C5CE7", "#22C55E", "#3B82F6", "#C4A574", "#F59E0B", "#14B8A6", "#EC4899"];
 const OVERDUE_COLOR = "#EF4444";
 const DONE_COLOR = "#22C55E";
+
+function scaleBar(
+  plannedDays: number,
+  overdueDaysCount: number,
+  filledDays: number,
+  remainingDays: number,
+  dayWidth: number
+) {
+  const plannedPx = Math.max(plannedDays, 1) * dayWidth;
+  const overduePx = Math.max(overdueDaysCount, 0) * dayWidth;
+  const raw = plannedPx + overduePx;
+  const total = Math.max(MIN_BAR_PX, raw - 8);
+  const k = total / Math.max(raw, 1);
+  return {
+    filledWidth: Math.max(filledDays, 0) * dayWidth * k,
+    remainingWidth: Math.max(remainingDays, 0) * dayWidth * k,
+    overdueWidth: overduePx * k,
+    total,
+  };
+}
 
 function barColor(id: string): string {
   let hash = 0;
@@ -99,6 +120,7 @@ export default function ProjectTimelineView({
   const [newTitle, setNewTitle] = useState("");
   const [dayWidth, setDayWidth] = useState(16);
   const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const today = ymd(new Date());
   const todayDate = toDate(today);
@@ -189,10 +211,10 @@ export default function ProjectTimelineView({
     return t("projects.dueInN").replace("{n}", String(left));
   }
 
-  function openHover(task: Task, event: React.MouseEvent<HTMLElement>) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = Math.min(Math.max(rect.left + Math.min(rect.width, 280) / 2, 180), window.innerWidth - 180);
-    setHover({ task, x, y: rect.top });
+  const selectedTask = selectedId ? projectTasks.find((task) => task.id === selectedId) || null : null;
+
+  function moveHover(task: Task, event: React.MouseEvent<HTMLElement>) {
+    setHover({ task, x: event.clientX, y: event.clientY });
   }
 
   useEffect(() => {
@@ -260,7 +282,10 @@ export default function ProjectTimelineView({
             {t("timeline.months")}
             <ChevronDown size={12} />
           </button>
-          <button className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs text-inkSoft">
+          <button
+            onClick={() => setSelectedId(null)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs text-inkSoft"
+          >
             <Filter size={13} />
             {t("list.filter")}
           </button>
@@ -340,24 +365,39 @@ export default function ProjectTimelineView({
                 const filledSpan = elapsedDays(plannedStart, plannedStop, today, task.is_done);
                 const remainingSpan = Math.max(plannedSpan - filledSpan, 0);
                 const colorBar = task.is_done ? DONE_COLOR : task.color || barColor(task.id);
-                const filledWidth = filledSpan * dayWidth;
-                const remainingWidth = remainingSpan * dayWidth;
-                const overdueWidth = late * dayWidth;
-                const barWidth = Math.max(plannedSpan * dayWidth + overdueWidth - 4, 8);
-                const dateText = due
-                  ? `${formatTaskDate(created, locale)} – ${formatTaskDate(due, locale)}`
-                  : formatTaskDate(created, locale);
+                const { filledWidth, remainingWidth, overdueWidth, total: barWidth } = scaleBar(
+                  plannedSpan,
+                  late,
+                  filledSpan,
+                  remainingSpan,
+                  dayWidth
+                );
+                const isSelected = selectedId === task.id;
 
                 return (
                   <div
                     key={task.id}
-                    className="flex items-center border-b border-line/70"
+                    role="button"
+                    tabIndex={0}
+                    className={`flex items-center border-b cursor-pointer ${
+                      isSelected ? "border-line bg-[#6C5CE7]/[0.06]" : "border-line/70 hover:bg-paperDark/60"
+                    }`}
                     style={{ height: ROW_HEIGHT }}
-                    onMouseEnter={(e) => openHover(task, e)}
+                    onMouseEnter={(e) => moveHover(task, e)}
+                    onMouseMove={(e) => moveHover(task, e)}
                     onMouseLeave={() => setHover((h) => (h?.task.id === task.id ? null : h))}
+                    onClick={() => setSelectedId(task.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedId(task.id);
+                      }
+                    }}
                   >
                     <div
-                      className="shrink-0 sticky start-0 z-[5] bg-surface px-3 flex items-center gap-2 border-e border-line"
+                      className={`shrink-0 sticky start-0 z-[5] px-3 flex items-center gap-2 border-e border-line ${
+                        isSelected ? "bg-[#6C5CE7]/[0.06]" : "bg-surface"
+                      }`}
                       style={{ width: LABEL_WIDTH, height: ROW_HEIGHT }}
                     >
                       <span
@@ -376,13 +416,7 @@ export default function ProjectTimelineView({
                           opacity: task.is_done ? 0.85 : 1,
                         }}
                       >
-                        <div className="relative h-full shrink-0" style={{ width: filledWidth, backgroundColor: colorBar }}>
-                          {filledWidth >= 72 && (
-                            <span className="absolute inset-0 flex items-center ps-2.5 pe-1 text-[10px] font-medium text-white truncate">
-                              {dateText}
-                            </span>
-                          )}
-                        </div>
+                        <div className="relative h-full shrink-0" style={{ width: filledWidth, backgroundColor: colorBar }} />
                         {remainingWidth > 0 && (
                           <div
                             className="relative h-full shrink-0 overflow-hidden"
@@ -398,6 +432,11 @@ export default function ProjectTimelineView({
                           >
                             {overdueWidth >= 72 ? overdueLabel(late) : `+${late}`}
                           </div>
+                        )}
+                        {barWidth >= 72 && (
+                          <span className="pointer-events-none absolute inset-0 flex items-center ps-3 pe-2 text-[11px] font-medium text-white truncate">
+                            {task.title}
+                          </span>
                         )}
                       </div>
                       {late > 0 && overdueWidth < 72 && (
@@ -455,6 +494,19 @@ export default function ProjectTimelineView({
       </div>
 
       <aside className="w-full xl:w-[280px] shrink-0 space-y-4">
+        {selectedTask ? (
+          <TimelineTaskSidebar
+            task={selectedTask}
+            projectName={project.name}
+            locale={locale}
+            today={today}
+            currentUserId={currentUserId}
+            remaining={remainingLabel(selectedTask)}
+            t={t}
+            onClose={() => setSelectedId(null)}
+          />
+        ) : (
+          <>
         <div className="rounded-xl border border-line bg-surface p-3 space-y-2">
           <h3 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-1">{t("list.filter")}</h3>
           <select value={assigneeFilter} onChange={(e) => setAssigneeFilter(e.target.value)} className={selectClass}>
@@ -538,6 +590,8 @@ export default function ProjectTimelineView({
             </div>
           )}
         </div>
+          </>
+        )}
       </aside>
 
       {hover && (
@@ -592,13 +646,21 @@ function TaskHoverCard({
     : late > 0
       ? t("list.overdue")
       : t("timeline.inProgress");
-  const top = y < 220 ? y + ROW_HEIGHT + 6 : Math.max(y - 12, 16);
-  const below = y < 220;
+  const cardW = 280;
+  const cardH = 250;
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1200;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 800;
+  let left = x + 14;
+  let top = y + 16;
+  if (left + cardW + 8 > vw) left = x - cardW - 14;
+  if (top + cardH + 8 > vh) top = y - cardH - 8;
+  left = Math.max(8, left);
+  top = Math.max(8, top);
 
   return createPortal(
     <div
-      className={`pointer-events-none fixed z-[80] w-[280px] -translate-x-1/2 rounded-xl border border-line bg-surface p-3 shadow-lg fade-in ${below ? "" : "-translate-y-full"}`}
-      style={{ left: x, top }}
+      className="pointer-events-none fixed z-[80] w-[280px] rounded-xl border border-line bg-surface p-3 shadow-lg"
+      style={{ left, top }}
       role="tooltip"
     >
       <p className="text-sm font-medium text-ink leading-snug">{task.title}</p>
@@ -640,5 +702,117 @@ function TaskHoverCard({
       </div>
     </div>,
     document.body
+  );
+}
+
+function DetailRow({ label, value, danger }: { label: string; value: string; danger?: boolean }) {
+  return (
+    <div className="flex justify-between gap-3 text-[12px]">
+      <span className="text-inkFaint shrink-0">{label}</span>
+      <span className={`text-end ${danger ? "text-red-500 font-medium" : "text-ink"}`}>{value}</span>
+    </div>
+  );
+}
+
+function TimelineTaskSidebar({
+  task,
+  projectName,
+  locale,
+  today,
+  currentUserId,
+  remaining,
+  t,
+  onClose,
+}: {
+  task: Task;
+  projectName: string;
+  locale: string;
+  today: string;
+  currentUserId: string;
+  remaining: string;
+  t: (key: string) => string;
+  onClose: () => void;
+}) {
+  const created = taskCreated(task);
+  const due = taskDue(task);
+  const start = dateKey(task.start_date);
+  const completed = dateKey(task.completed_at);
+  const late = overdueDays(task, today);
+  const plannedEnd = due || (task.is_done ? completed || created : today);
+  const plannedStart = minIso(created, plannedEnd);
+  const plannedStop = maxIso(created, plannedEnd);
+  const planned = inclusiveDays(plannedStart, plannedStop);
+  const filled = elapsedDays(plannedStart, plannedStop, today, task.is_done);
+  const pct = Math.round((filled / planned) * 100);
+  const assignee = task.profiles
+    ? displayName(task.user_id, task.profiles, currentUserId, t("common.you"))
+    : t("timeline.unassigned");
+  const status = task.is_done
+    ? t("timeline.completed")
+    : late > 0
+      ? t("list.overdue")
+      : t("timeline.inProgress");
+  const priorityLabel =
+    task.color === "#ef4444"
+      ? t("list.priority.high")
+      : task.color === "#f97316"
+        ? t("list.priority.medium")
+        : task.color
+          ? t("list.priority.low")
+          : t("taskDetail.priority.none");
+
+  return (
+    <div className="rounded-xl border border-line bg-surface p-3 space-y-3">
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase">{t("taskDetail.details")}</h3>
+        <button
+          type="button"
+          onClick={onClose}
+          className="h-7 w-7 inline-flex items-center justify-center rounded-lg text-inkFaint hover:text-ink hover:bg-paperDark"
+          aria-label={t("common.close")}
+        >
+          <X size={14} />
+        </button>
+      </div>
+      <p className="text-sm font-medium text-ink leading-snug">{task.title}</p>
+      <p className={`text-[11px] font-medium ${late > 0 ? "text-red-500" : "text-inkSoft"}`}>{status}</p>
+      <div className="space-y-1.5">
+        <DetailRow label={t("taskDetail.project")} value={projectName} />
+        <DetailRow label={t("taskDetail.created")} value={formatTaskDate(created, locale)} />
+        {start && <DetailRow label={t("board.startDate")} value={formatTaskDate(start, locale)} />}
+        <DetailRow label={t("taskDetail.due")} value={due ? formatTaskDate(due, locale) : t("board.noDueDate")} />
+        {completed && <DetailRow label={t("timeline.completed")} value={formatTaskDate(completed, locale)} />}
+        <DetailRow label={t("timeline.timeLeft")} value={remaining} danger={late > 0} />
+        <DetailRow label={t("list.col.assignee")} value={assignee} />
+        <DetailRow label={t("taskDetail.priority")} value={priorityLabel} />
+      </div>
+      <div>
+        <div className="mb-1 flex items-center justify-between text-[11px] text-inkFaint">
+          <span>{t("projects.progress")}</span>
+          <span>
+            {t("timeline.daysProgress").replace("{done}", String(filled)).replace("{total}", String(planned))} · {pct}%
+          </span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-paperDark">
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${Math.min(pct, 100)}%`,
+              backgroundColor: late > 0 ? OVERDUE_COLOR : task.is_done ? DONE_COLOR : "#6C5CE7",
+            }}
+          />
+        </div>
+      </div>
+      {task.profiles && (
+        <div className="flex items-center gap-2 pt-1">
+          <Avatar
+            name={assignee}
+            src={task.profiles.avatar_url}
+            size="sm"
+          />
+          <span className="text-xs text-ink truncate">{assignee}</span>
+        </div>
+      )}
+    </div>
   );
 }
