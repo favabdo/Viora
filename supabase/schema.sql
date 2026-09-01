@@ -974,3 +974,7 @@ alter table activity_log
 alter table link_activity_log
   add column if not exists action text,
   add column if not exists action_params jsonb;
+
+-- ============================================================
+-- 23) الأفكار: جداول مستقلة عن المشاريع (انظر supabase/ideas-migration.sql)
+-- ============================================================

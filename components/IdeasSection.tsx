@@ -31,15 +31,17 @@ import { supabase, Project } from "@/lib/supabase";
 import { patchTaskExtras, type TaskAttachment } from "@/lib/taskExtras";
 import { defaultProjectKey, writeProjectMeta } from "@/lib/projectMeta";
 import {
-  addIdeaFiles,
   addIdeaNote,
   createIdea,
   deleteIdea,
   formatBytes,
+  ideaFilesToTaskAttachments,
   IDEA_CATEGORIES,
   IDEA_COLORS,
-  patchIdea,
-  readIdeas,
+  loadIdeas,
+  migrateLocalIdeas,
+  updateIdea,
+  uploadIdeaAttachments,
   type Idea,
   type IdeaPriority,
   type IdeaStatus,
@@ -146,6 +148,7 @@ export default function IdeasSection({
 }) {
   const { t, lang } = useTranslation();
   const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [scope, setScope] = useState<Scope>("all");
   const [query, setQuery] = useState("");
@@ -177,7 +180,16 @@ export default function IdeasSection({
   const detailFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setIdeas(readIdeas());
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      await migrateLocalIdeas(currentUserId);
+      const list = await loadIdeas();
+      if (!cancelled) {
+        setIdeas(list);
+        setLoading(false);
+      }
+    })();
     supabase
       .from("projects")
       .select("*")
@@ -185,7 +197,10 @@ export default function IdeasSection({
       .then(({ data }) => {
         if (data) setProjects(data as Project[]);
       });
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUserId]);
 
   useEffect(() => {
     if (openCreateSignal && openCreateSignal > 0) openCreate();
@@ -240,8 +255,8 @@ export default function IdeasSection({
   };
   const liveTotal = Math.max(stats.all, 1);
 
-  function refresh() {
-    setIdeas(readIdeas());
+  async function refresh() {
+    setIdeas(await loadIdeas());
   }
 
   function openCreate() {
@@ -275,26 +290,30 @@ export default function IdeasSection({
     setMenuId(null);
   }
 
-  function saveForm() {
+  async function saveForm() {
     const parsedTags = tags.split(/[,،]/).map((item) => item.trim()).filter(Boolean);
     if (!title.trim()) return;
     if (editing) {
-      patchIdea(editing.id, {
-        title: title.trim(),
-        description: description.trim(),
-        icon,
-        color,
-        category,
-        tags: parsedTags,
-        status,
-        priority,
-        projectId: linkedProject || null,
-        attachments: formFiles,
-        progress: status === "implemented" ? 100 : status === "in_progress" ? Math.max(editing.progress, 40) : editing.progress,
-        activity: [{ id: crypto.randomUUID(), message: "updated", createdAt: new Date().toISOString() }, ...editing.activity].slice(0, 40),
-      });
+      await updateIdea(
+        editing.id,
+        {
+          title: title.trim(),
+          description: description.trim(),
+          icon,
+          color,
+          category,
+          tags: parsedTags,
+          status,
+          priority,
+          projectId: linkedProject || null,
+          progress: status === "implemented" ? 100 : status === "in_progress" ? Math.max(editing.progress, 40) : editing.progress,
+        },
+        "updated"
+      );
+      const fresh = formFiles.filter((file) => file.dataUrl?.startsWith("data:"));
+      if (fresh.length) await uploadIdeaAttachments(editing.id, currentUserId, fresh);
     } else {
-      const idea = createIdea({
+      const idea = await createIdea({
         userId: currentUserId,
         title,
         description,
@@ -307,10 +326,10 @@ export default function IdeasSection({
         projectId: linkedProject || null,
         attachments: formFiles,
       });
-      setSelectedId(idea.id);
+      if (idea) setSelectedId(idea.id);
     }
     setShowForm(false);
-    refresh();
+    await refresh();
   }
 
   async function convert(idea: Idea) {
@@ -352,11 +371,12 @@ export default function IdeasSection({
       .select()
       .single();
     if (task) {
+      const copiedFiles = await ideaFilesToTaskAttachments(idea.attachments);
       patchTaskExtras(task.id, {
         description: idea.description,
         tags: idea.tags.join(", "),
         category: idea.category,
-        attachments: idea.attachments,
+        attachments: copiedFiles,
         subtasks: idea.notes.map((note) => ({ text: note.message, done: false })),
       });
       for (const note of idea.notes) {
@@ -371,15 +391,18 @@ export default function IdeasSection({
         });
       }
     }
-    patchIdea(idea.id, {
-      convertedProjectId: project.id,
-      projectId: project.id,
-      status: "implemented",
-      progress: 100,
-      activity: [{ id: crypto.randomUUID(), message: "converted", createdAt: new Date().toISOString() }, ...idea.activity],
-    });
+    await updateIdea(
+      idea.id,
+      {
+        convertedProjectId: project.id,
+        projectId: project.id,
+        status: "implemented",
+        progress: 100,
+      },
+      "converted"
+    );
     setConverting(false);
-    refresh();
+    await refresh();
     onOpenProject(project.id);
   }
 
@@ -412,6 +435,12 @@ export default function IdeasSection({
 
   return (
     <div className="fade-in">
+      {loading && (
+        <div className="space-y-4 mb-6">
+          <div className="h-10 w-48 rounded-lg skeleton" />
+          <div className="h-24 rounded-xl border border-line skeleton" />
+        </div>
+      )}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div className="flex items-start gap-3">
           <div className="h-11 w-11 rounded-xl bg-[#6C5CE7]/15 text-[#6C5CE7] flex items-center justify-center">
@@ -603,9 +632,9 @@ export default function IdeasSection({
                                 <button className="w-full text-start rounded-lg px-3 py-2 text-sm hover:bg-paperDark" onClick={() => convert(idea)}>{t("ideas.convert")}</button>
                                 <button
                                   className="w-full text-start rounded-lg px-3 py-2 text-sm hover:bg-paperDark"
-                                  onClick={() => {
-                                    patchIdea(idea.id, { status: idea.status === "archived" ? "planned" : "archived" });
-                                    refresh();
+                                  onClick={async () => {
+                                    await updateIdea(idea.id, { status: idea.status === "archived" ? "planned" : "archived" });
+                                    await refresh();
                                     setMenuId(null);
                                   }}
                                 >
@@ -613,10 +642,10 @@ export default function IdeasSection({
                                 </button>
                                 <button
                                   className="w-full text-start rounded-lg px-3 py-2 text-sm text-[#EF4444] hover:bg-paperDark"
-                                  onClick={() => {
-                                    deleteIdea(idea.id);
+                                  onClick={async () => {
+                                    await deleteIdea(idea.id, idea.attachments);
                                     if (selectedId === idea.id) setSelectedId(null);
-                                    refresh();
+                                    await refresh();
                                     setMenuId(null);
                                   }}
                                 >
@@ -681,9 +710,9 @@ export default function IdeasSection({
                 <div className="flex items-start gap-2">
                   <h2 className="font-semibold text-ink leading-snug flex-1">{selected.title}</h2>
                   <button
-                    onClick={() => {
-                      patchIdea(selected.id, { favorite: !selected.favorite });
-                      refresh();
+                    onClick={async () => {
+                      await updateIdea(selected.id, { favorite: !selected.favorite });
+                      await refresh();
                     }}
                     className={selected.favorite ? "text-amber" : "text-inkFaint hover:text-amber"}
                   >
@@ -693,13 +722,13 @@ export default function IdeasSection({
                 <div className="mt-2">
                   <select
                     value={selected.status}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const next = e.target.value as IdeaStatus;
-                      patchIdea(selected.id, {
+                      await updateIdea(selected.id, {
                         status: next,
-                        progress: next === "implemented" ? 100 : next === "archived" ? selected.progress : selected.progress,
+                        progress: next === "implemented" ? 100 : selected.progress,
                       });
-                      refresh();
+                      await refresh();
                     }}
                     className={`!rounded-lg border-0 px-2 py-1 text-xs ${statusTone(selected.status)}`}
                   >
@@ -834,9 +863,9 @@ export default function IdeasSection({
                   {selected.notes.length === 0 && <p className="text-sm text-inkFaint">{t("ideas.noNotes")}</p>}
                   {selected.notes.map((note) => (
                     <li key={note.id} className="flex items-start gap-2">
-                      <ClickableAvatar userId={note.userId} name={note.authorName} size="xs" />
+                      <ClickableAvatar userId={note.userId} name={note.authorName || currentUserName} src={note.avatarUrl} size="xs" />
                       <div>
-                        <p className="text-xs text-ink">{note.authorName} <span className="text-inkFaint">{timeAgo(note.createdAt, t)}</span></p>
+                        <p className="text-xs text-ink">{note.authorName || currentUserName} <span className="text-inkFaint">{timeAgo(note.createdAt, t)}</span></p>
                         <p className="text-sm text-inkSoft mt-0.5">{note.message}</p>
                       </div>
                     </li>
@@ -846,10 +875,10 @@ export default function IdeasSection({
                 <Button
                   className="mt-2"
                   disabled={!noteDraft.trim()}
-                  onClick={() => {
-                    addIdeaNote(selected, currentUserId, currentUserName || t("common.you"), noteDraft);
+                  onClick={async () => {
+                    await addIdeaNote(selected.id, currentUserId, noteDraft);
                     setNoteDraft("");
-                    refresh();
+                    await refresh();
                   }}
                 >
                   {t("ideas.addNote")}
@@ -895,8 +924,8 @@ export default function IdeasSection({
                   onChange={async (e) => {
                     const { files } = await filesFromList(e.target.files);
                     if (files.length) {
-                      addIdeaFiles(selected, files);
-                      refresh();
+                      await uploadIdeaAttachments(selected.id, currentUserId, files);
+                      await refresh();
                     }
                     e.target.value = "";
                   }}
@@ -911,9 +940,9 @@ export default function IdeasSection({
             <div className="mt-5 pt-4 border-t border-line flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  patchIdea(selected.id, { status: selected.status === "archived" ? "planned" : "archived" });
-                  refresh();
+                onClick={async () => {
+                  await updateIdea(selected.id, { status: selected.status === "archived" ? "planned" : "archived" });
+                  await refresh();
                 }}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm text-inkSoft hover:text-ink"
               >
