@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { BoardColumn, Project, ProjectMember, TASK_COLORS } from "@/lib/supabase";
 import { displayName } from "@/lib/displayName";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { isDueAfterCreated, minDueDate } from "@/lib/taskShape";
 import Button from "./ui/Button";
 import Modal from "./ui/Modal";
