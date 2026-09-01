@@ -65,7 +65,7 @@ export default function ProjectCalendarView({
   const [projectFilter, setProjectFilter] = useState(project.id);
   const [assigneeFilter, setAssigneeFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
-  const [showCompleted, setShowCompleted] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
 
   useEffect(() => {

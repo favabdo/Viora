@@ -27,19 +27,25 @@ export default function CalendarView({
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  const openTasks = useMemo(
+    () => (showCompleted ? tasks : tasks.filter((task) => !task.is_done)),
+    [tasks, showCompleted]
+  );
 
   const tasksByDate = useMemo(() => {
     const map = new Map<string, Task[]>();
-    for (const task of tasks) {
+    for (const task of openTasks) {
       const key = dateKey(task.due_date);
       if (!key) continue;
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(task);
     }
     return map;
-  }, [tasks]);
+  }, [openTasks]);
 
-  const undatedTasks = tasks.filter((t2) => !dateKey(t2.due_date));
+  const undatedTasks = openTasks.filter((t2) => !dateKey(t2.due_date));
 
   const days = useMemo(() => {
     const year = cursor.getFullYear();
@@ -77,9 +83,21 @@ export default function CalendarView({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between gap-3 mb-4">
         <h3 className="font-display text-base font-medium text-ink">{monthLabel}</h3>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-3">
+          <label className="inline-flex items-center gap-2 text-xs text-inkSoft">
+            <span>{t("calendar.showCompleted")}</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={showCompleted}
+              onClick={() => setShowCompleted((v) => !v)}
+              className={`relative h-5 w-9 rounded-full ${showCompleted ? "bg-[#6C5CE7]" : "bg-lineStrong"}`}
+            >
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${showCompleted ? "start-4" : "start-0.5"}`} />
+            </button>
+          </label>
           <IconButton
             size="sm"
             aria-label={t("board.prevMonth")}
@@ -104,6 +122,7 @@ export default function CalendarView({
           >
             <NextIcon size={14} strokeWidth={1.75} />
           </IconButton>
+        </div>
         </div>
       </div>
 

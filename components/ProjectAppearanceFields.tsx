@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ImagePlus, Pipette, Search, X } from "lucide-react";
-import { COLOR_PALETTE, COLOR_PRESETS, getProjectLucideIcon, PROJECT_ICON_CATALOG } from "@/lib/projectIcons";
+import { ChevronDown, ImagePlus, Search, X } from "lucide-react";
+import { getProjectLucideIcon, PROJECT_ICON_CATALOG } from "@/lib/projectIcons";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import ColorPicker from "./ColorPicker";
 import ProjectMark from "./ProjectMark";
 
 async function fileToImageDataUrl(file: File): Promise<string> {
@@ -43,23 +44,15 @@ export default function ProjectAppearanceFields({
   onChange: (next: { color?: string; icon?: string; imageUrl?: string | null }) => void;
 }) {
   const { t } = useTranslation();
-  const [showPalette, setShowPalette] = useState(false);
   const [showIcons, setShowIcons] = useState(false);
   const [iconQuery, setIconQuery] = useState("");
-  const [hex, setHex] = useState(color);
-  const paletteRef = useRef<HTMLDivElement>(null);
   const iconsRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const Icon = getProjectLucideIcon(icon);
 
   useEffect(() => {
-    setHex(color);
-  }, [color]);
-
-  useEffect(() => {
     function onDoc(e: MouseEvent) {
       const target = e.target as Node;
-      if (paletteRef.current && !paletteRef.current.contains(target)) setShowPalette(false);
       if (iconsRef.current && !iconsRef.current.contains(target)) setShowIcons(false);
     }
     document.addEventListener("mousedown", onDoc);
@@ -69,16 +62,6 @@ export default function ProjectAppearanceFields({
   const filteredIcons = iconQuery.trim()
     ? PROJECT_ICON_CATALOG.filter((item) => item.id.includes(iconQuery.trim().toLowerCase()))
     : PROJECT_ICON_CATALOG;
-
-  function applyHex(value: string) {
-    const next = value.startsWith("#") ? value : `#${value}`;
-    if (/^#[0-9A-Fa-f]{6}$/.test(next)) {
-      onChange({ color: next.toUpperCase() });
-      setHex(next.toUpperCase());
-    } else {
-      setHex(value);
-    }
-  }
 
   async function onFile(file?: File) {
     if (!file || !file.type.startsWith("image/")) return;
@@ -102,7 +85,6 @@ export default function ProjectAppearanceFields({
             type="button"
             onClick={() => {
               setShowIcons((v) => !v);
-              setShowPalette(false);
             }}
             className="h-10 inline-flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3 text-sm text-inkSoft hover:text-ink"
           >
@@ -173,64 +155,9 @@ export default function ProjectAppearanceFields({
         )}
       </div>
 
-      <div ref={paletteRef}>
+      <div>
         <label className="block text-xs font-medium text-inkFaint mb-2">{t("projects.colorLabel")}</label>
-        <div className="flex flex-wrap items-center gap-2">
-          {COLOR_PRESETS.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => onChange({ color: item })}
-              className={`h-7 w-7 rounded-full ${color.toLowerCase() === item.toLowerCase() ? "ring-2 ring-[#60A5FA] ring-offset-2 ring-offset-surface" : ""}`}
-              style={{ backgroundColor: item }}
-              aria-label={item}
-            />
-          ))}
-          <button
-            type="button"
-            onClick={() => {
-              setShowPalette((v) => !v);
-              setShowIcons(false);
-            }}
-            className="h-7 w-7 rounded-full border border-line inline-flex items-center justify-center overflow-hidden"
-            style={{
-              background: `conic-gradient(#EF4444, #EAB308, #22C55E, #3B82F6, #A855F7, #EF4444)`,
-            }}
-            aria-label={t("projects.colorPalette")}
-          >
-            <span className="h-4 w-4 rounded-full bg-surface inline-flex items-center justify-center">
-              <Pipette size={10} className="text-inkSoft" />
-            </span>
-          </button>
-        </div>
-        {showPalette && (
-          <div className="mt-2 w-full rounded-xl border border-line bg-paperDark/60 p-3">
-            <p className="text-[11px] text-inkFaint mb-2">{t("projects.colorPalette")}</p>
-            <input
-              type="color"
-              value={/^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#6C5CE7"}
-              onChange={(e) => onChange({ color: e.target.value.toUpperCase() })}
-              className="w-full h-12 rounded-lg border-0 bg-transparent cursor-pointer p-0"
-            />
-            <input
-              value={hex}
-              onChange={(e) => applyHex(e.target.value)}
-              className="mt-2 w-full rounded-lg border-0 bg-surface px-2 py-1.5 text-xs text-ink outline-none font-mono"
-              maxLength={7}
-            />
-            <div className="mt-2 grid grid-cols-8 gap-1.5">
-              {COLOR_PALETTE.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => onChange({ color: item })}
-                  className="h-6 w-6 rounded-md"
-                  style={{ backgroundColor: item }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+        <ColorPicker value={/^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#6C5CE7"} onChange={(next) => onChange({ color: next })} />
       </div>
     </div>
   );

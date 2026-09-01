@@ -35,7 +35,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
   const [cursor, setCursor] = useState(() => startOfMonth(new Date()));
   const [focusProject, setFocusProject] = useState("all");
   const [assigneeFilter, setAssigneeFilter] = useState("all");
-  const [showCompleted, setShowCompleted] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const projectNameById = useMemo(() => {
     const map = new Map<string, string>();

@@ -81,7 +81,7 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
   const scrollRef = useRef<HTMLDivElement>(null);
   const [focusProject, setFocusProject] = useState("all");
   const [assigneeFilter, setAssigneeFilter] = useState("all");
-  const [showCompleted, setShowCompleted] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(false);
   const [dayWidth, setDayWidth] = useState(16);
   const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);

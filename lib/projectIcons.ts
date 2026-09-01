@@ -196,34 +196,3 @@ export const PROJECT_ICON_CATALOG: { id: string; icon: LucideIcon }[] = [
 export function getProjectLucideIcon(id: string): LucideIcon {
   return PROJECT_ICON_CATALOG.find((item) => item.id === id)?.icon || FolderKanban;
 }
-
-export const COLOR_PRESETS = [
-  "#6C5CE7",
-  "#3B82F6",
-  "#0EA5E9",
-  "#14B8A6",
-  "#22C55E",
-  "#84CC16",
-  "#EAB308",
-  "#F59E0B",
-  "#F97316",
-  "#EF4444",
-  "#EC4899",
-  "#D946EF",
-  "#A855F7",
-  "#6366F1",
-  "#64748B",
-  "#0F172A",
-];
-
-export const COLOR_PALETTE = [
-  "#FFF1F2", "#FFE4E6", "#FECDD3", "#FB7185", "#E11D48", "#9F1239",
-  "#FFF7ED", "#FFEDD5", "#FDBA74", "#FB923C", "#EA580C", "#9A3412",
-  "#FEFCE8", "#FEF08A", "#FACC15", "#EAB308", "#A16207", "#713F12",
-  "#F0FDF4", "#BBF7D0", "#4ADE80", "#22C55E", "#15803D", "#14532D",
-  "#ECFEFF", "#A5F3FC", "#22D3EE", "#06B6D4", "#0E7490", "#164E63",
-  "#EFF6FF", "#BFDBFE", "#60A5FA", "#3B82F6", "#1D4ED8", "#1E3A8A",
-  "#F5F3FF", "#DDD6FE", "#A78BFA", "#8B5CF6", "#6D28D9", "#4C1D95",
-  "#FDF2F8", "#FBCFE8", "#F472B6", "#EC4899", "#BE185D", "#831843",
-  "#F8FAFC", "#E2E8F0", "#94A3B8", "#64748B", "#334155", "#0F172A",
-];

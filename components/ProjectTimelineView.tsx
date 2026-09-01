@@ -115,7 +115,7 @@ export default function ProjectTimelineView({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [assigneeFilter, setAssigneeFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
-  const [showCompleted, setShowCompleted] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(false);
   const [adding, setAdding] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [dayWidth, setDayWidth] = useState(16);

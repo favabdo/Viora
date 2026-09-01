@@ -47,9 +47,16 @@ export default function TimelineView({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
   const todayIso = ymd(new Date());
 
-  const datedTasks = tasks.filter((t2) => dateKey(t2.start_date) || dateKey(t2.due_date) || dateKey(t2.created_at));
+  const datedTasks = tasks.filter((t2) => {
+    if (!dateKey(t2.start_date) && !dateKey(t2.due_date) && !dateKey(t2.created_at)) return false;
+    if (showCompleted) return true;
+    if (t2.is_done) return false;
+    const column = columns.find((col) => col.id === t2.column_id);
+    return !column?.is_done_column;
+  });
 
   const { rangeStart, totalDays, months } = useMemo(() => {
     const today = new Date();
@@ -102,7 +109,12 @@ export default function TimelineView({
   }
 
   if (datedTasks.length === 0) {
-    return <p className="text-sm text-inkFaint text-center py-10">{t("board.noTasksWithDates")}</p>;
+    return (
+      <div>
+        <CompletedToggle showCompleted={showCompleted} onToggle={() => setShowCompleted((v) => !v)} t={t} />
+        <p className="text-sm text-inkFaint text-center py-10">{t("board.noTasksWithDates")}</p>
+      </div>
+    );
   }
 
   const gridWidth = totalDays * DAY_WIDTH;
@@ -190,6 +202,7 @@ export default function TimelineView({
 
   return (
     <div>
+      <CompletedToggle showCompleted={showCompleted} onToggle={() => setShowCompleted((v) => !v)} t={t} />
       <div ref={scrollRef} className="overflow-x-auto border border-line rounded-lg thin-scroll">
         <div style={{ width: 160 + gridWidth }}>
           <div className="flex border-b border-line bg-paperDark">
@@ -236,6 +249,33 @@ export default function TimelineView({
           <TimelineDateEditor task={editingTask} onSave={saveDates} onCancel={() => setEditingTask(null)} t={t} />
         </Modal>
       )}
+    </div>
+  );
+}
+
+function CompletedToggle({
+  showCompleted,
+  onToggle,
+  t,
+}: {
+  showCompleted: boolean;
+  onToggle: () => void;
+  t: (key: string) => string;
+}) {
+  return (
+    <div className="flex justify-end mb-3">
+      <label className="inline-flex items-center gap-2 text-xs text-inkSoft">
+        <span>{t("calendar.showCompleted")}</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={showCompleted}
+          onClick={onToggle}
+          className={`relative h-5 w-9 rounded-full ${showCompleted ? "bg-[#6C5CE7]" : "bg-lineStrong"}`}
+        >
+          <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${showCompleted ? "start-4" : "start-0.5"}`} />
+        </button>
+      </label>
     </div>
   );
 }
