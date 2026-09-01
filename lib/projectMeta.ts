@@ -31,6 +31,9 @@ export type ProjectMeta = {
   allowAttachments?: boolean;
   allowComments?: boolean;
   archived?: boolean;
+  tags?: string[];
+  category?: string;
+  sourceIdeaId?: string;
 };
 
 export function defaultProjectColor(id: string): string {

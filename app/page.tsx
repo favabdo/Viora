@@ -6,7 +6,6 @@ import type { Session } from "@supabase/supabase-js";
 import {
   LayoutDashboard,
   FolderKanban,
-  LayoutGrid,
   CalendarDays,
   Lightbulb,
   GanttChart,
@@ -20,6 +19,7 @@ import LinksSection from "@/components/LinksSection";
 import RoomsSection from "@/components/RoomsSection";
 import ProjectsSection from "@/components/ProjectsSection";
 import ProjectWorkspace from "@/components/ProjectWorkspace";
+import IdeasSection from "@/components/IdeasSection";
 import ComingSoon from "@/components/ComingSoon";
 import PendingInvites from "@/components/PendingInvites";
 import ProfileCardProvider from "@/components/ProfileCardContext";
@@ -30,7 +30,6 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 type Tab =
   | "dashboard"
   | "projects"
-  | "board"
   | "calendar"
   | "ideas"
   | "timeline"
@@ -47,7 +46,6 @@ function HomeInner() {
   const TABS: ShellTab[] = [
     { id: "dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
     { id: "projects", label: t("nav.projects"), icon: FolderKanban },
-    { id: "board", label: t("nav.board"), icon: LayoutGrid },
     { id: "calendar", label: t("nav.calendar"), icon: CalendarDays },
     { id: "ideas", label: t("nav.ideas"), icon: Lightbulb },
     { id: "timeline", label: t("nav.timeline"), icon: GanttChart },
@@ -59,7 +57,9 @@ function HomeInner() {
   ];
   const requestedTab = searchParams.get("tab");
   const requestedProject = searchParams.get("project");
-  const initialTab = (requestedTab === "tasks" ? "projects" : requestedTab) as Tab || "projects";
+  const mappedTab = requestedTab === "tasks" || requestedTab === "board" ? "projects" : requestedTab;
+  const initialTab = (mappedTab as Tab) || "projects";
+  const [openIdeaSignal, setOpenIdeaSignal] = useState(0);
   const [tab, setTab] = useState<Tab>(requestedProject ? "projects" : initialTab);
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
@@ -132,6 +132,10 @@ function HomeInner() {
         }}
         onRoomsTabActivated={(hasPending) => setRoomsInitialFilter(hasPending ? "pending" : "open")}
         onNew={() => {
+          if (tab === "ideas") {
+            setOpenIdeaSignal((n) => n + 1);
+            return;
+          }
           if (openProjectId) setOpenProjectId(null);
           if (tab === "projects" || tab === "dashboard") setOpenCreateSignal((n) => n + 1);
           else setTab("projects");
@@ -159,9 +163,16 @@ function HomeInner() {
             onBack={() => setOpenProjectId(null)}
           />
         )}
-        {tab === "board" && <ComingSoon title={t("nav.board")} icon={LayoutGrid} />}
         {tab === "calendar" && <ComingSoon title={t("nav.calendar")} icon={CalendarDays} />}
-        {tab === "ideas" && <ComingSoon title={t("nav.ideas")} icon={Lightbulb} />}
+        {tab === "ideas" && (
+          <IdeasSection
+            currentUserId={session.user.id}
+            currentUserName={currentUserName}
+            currentUserAvatar={currentUserAvatar}
+            openCreateSignal={openIdeaSignal}
+            onOpenProject={openProject}
+          />
+        )}
         {tab === "timeline" && <ComingSoon title={t("nav.timeline")} icon={GanttChart} />}
         {tab === "files" && <ComingSoon title={t("nav.files")} icon={FileText} />}
         {tab === "links" && (
