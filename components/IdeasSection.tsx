@@ -213,7 +213,7 @@ export default function IdeasSection({
       if (scope === "mine" && idea.userId !== currentUserId) return false;
       if (scope === "favorites" && !idea.favorite) return false;
       if (scope === "archived") return idea.status === "archived";
-      if (scope !== "archived" && idea.status === "archived") return false;
+      if (idea.status === "archived") return false;
       return true;
     });
   }, [ideas, scope, currentUserId]);
