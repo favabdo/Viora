@@ -17,11 +17,13 @@ import {
   Palette,
   BarChart3,
   Smartphone,
+  Monitor,
   Briefcase,
   MoreHorizontal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
+import { getProjectMeta, PROJECT_COLORS, writeProjectMeta } from "@/lib/projectMeta";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
@@ -64,6 +66,7 @@ const ACCENTS: Accent[] = [
 ];
 
 const PROJECT_ICONS: { id: string; icon: LucideIcon }[] = [
+  { id: "monitor", icon: Monitor },
   { id: "folder", icon: FolderKanban },
   { id: "chat", icon: MessageCircle },
   { id: "globe", icon: Globe },
@@ -73,27 +76,6 @@ const PROJECT_ICONS: { id: string; icon: LucideIcon }[] = [
   { id: "phone", icon: Smartphone },
   { id: "briefcase", icon: Briefcase },
 ];
-
-const PROJECT_COLORS = ["#6C5CE7", "#3B82F6", "#14B8A6", "#F59E0B", "#EC4899", "#A855F7", "#EAB308", "#6B7280"];
-
-const META_KEY = "viora-project-meta";
-
-type ProjectMeta = { description: string; icon: string; color: string };
-
-function readProjectMeta(): Record<string, ProjectMeta> {
-  try {
-    const raw = localStorage.getItem(META_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, ProjectMeta>) : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeProjectMeta(id: string, meta: ProjectMeta) {
-  const all = readProjectMeta();
-  all[id] = meta;
-  localStorage.setItem(META_KEY, JSON.stringify(all));
-}
 
 function hashIndex(id: string, size: number): number {
   let hash = 0;
@@ -164,7 +146,6 @@ export default function ProjectsSection({
 
     const list = projectRows as Project[];
     setProjects(list);
-    const meta = readProjectMeta();
     const ids = list.map((p) => p.id);
 
     if (ids.length === 0) {
@@ -199,8 +180,9 @@ export default function ProjectsSection({
         .map((task) => task.due_date as string)
         .sort()[0];
 
-      let status: ProjectStatus = "active";
-      if (projectTasks.length > 0 && done === projectTasks.length) status = "completed";
+      const extra = getProjectMeta(project.id);
+      let status: ProjectStatus = extra?.archived ? "archived" : "active";
+      if (status !== "archived" && projectTasks.length > 0 && done === projectTasks.length) status = "completed";
 
       let dueLabel: string | null = null;
       if (status === "completed") {
@@ -214,8 +196,7 @@ export default function ProjectsSection({
         else dueLabel = t("projects.overdueN").replace("{n}", String(Math.abs(days)));
       }
 
-      const extra = meta[project.id];
-        const color = extra?.color || defaultColor(project.id);
+      const color = extra?.color || defaultColor(project.id);
       return {
         id: project.id,
         name: project.name,

@@ -31,8 +31,8 @@ import TeamPanel from "./TeamPanel";
 import ClickableAvatar from "./ClickableAvatar";
 import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
-import { Input } from "./ui/Input";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
+import ProjectSettingsView from "./ProjectSettingsView";
 
 type WorkspaceView = "board" | "list" | "calendar" | "timeline" | "files" | "history" | "settings";
 
@@ -79,8 +79,6 @@ export default function ProjectWorkspace({
   const [showMore, setShowMore] = useState(false);
   const [favorited, setFavorited] = useState(false);
   const [deleteTask, setDeleteTask] = useState<Task | null>(null);
-  const [nameDraft, setNameDraft] = useState("");
-  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
     setFavorited(readFavorites().includes(projectId));
@@ -113,7 +111,6 @@ export default function ProjectWorkspace({
 
       if (projectRes.data) {
         setProject(projectRes.data as Project);
-        setNameDraft((projectRes.data as Project).name);
       }
       if (projectsRes.data) setProjects(projectsRes.data as Project[]);
 
@@ -224,15 +221,6 @@ export default function ProjectWorkspace({
     setDeleteTask(null);
   }
 
-  async function saveProjectName() {
-    const name = nameDraft.trim();
-    if (!name || !project || name === project.name) return;
-    setSavingName(true);
-    const { error } = await supabase.from("projects").update({ name }).eq("id", project.id);
-    if (!error) setProject({ ...project, name });
-    setSavingName(false);
-  }
-
   const views: { id: WorkspaceView; label: string; icon: typeof LayoutGrid }[] = [
     { id: "board", label: t("workspace.board"), icon: LayoutGrid },
     { id: "list", label: t("workspace.list"), icon: List },
@@ -268,6 +256,39 @@ export default function ProjectWorkspace({
           </Button>
         }
       />
+    );
+  }
+
+  if (view === "settings") {
+    return (
+      <>
+        <ProjectSettingsView
+          project={project}
+          members={acceptedMembers}
+          tasks={tasks}
+          columns={columns}
+          currentUserId={currentUserId}
+          currentUserEmail={currentUserEmail}
+          onBack={() => setView("board")}
+          onViewProject={() => setView("board")}
+          onOpenHistory={() => setView("history")}
+          onOpenMembers={() => setShowTeam(true)}
+          onProjectUpdated={setProject}
+          onDeleted={onBack}
+        />
+        {showTeam && (
+          <TeamPanel
+            projectId={project.id}
+            projectName={project.name}
+            currentUserId={currentUserId}
+            ownerId={project.user_id}
+            onClose={() => {
+              setShowTeam(false);
+              void reloadMembers();
+            }}
+          />
+        )}
+      </>
     );
   }
 
@@ -457,18 +478,6 @@ export default function ProjectWorkspace({
         />
       )}
       {view === "files" && <ComingSoon title={t("workspace.files")} icon={FileText} />}
-      {view === "settings" && (
-        <div className="max-w-lg rounded-xl border border-line bg-surface p-5">
-          <h2 className="text-sm font-semibold text-ink mb-3">{t("workspace.projectSettings")}</h2>
-          <label className="block text-xs text-inkSoft mb-1.5">{t("projects.namePlaceholder")}</label>
-          <div className="flex gap-2">
-            <Input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
-            <Button variant="primary" loading={savingName} onClick={saveProjectName}>
-              {t("common.save")}
-            </Button>
-          </div>
-        </div>
-      )}
 
       {showTeam && (
         <TeamPanel
