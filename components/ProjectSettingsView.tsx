@@ -74,6 +74,17 @@ type SettingsTab =
   | "automation"
   | "advanced";
 
+const SETTINGS_TABS: SettingsTab[] = [
+  "general",
+  "members",
+  "roles",
+  "notifications",
+  "integrations",
+  "fields",
+  "automation",
+  "advanced",
+];
+
 type Draft = {
   name: string;
   key: string;
@@ -187,6 +198,8 @@ export default function ProjectSettingsView({
   onOpenMembers,
   onProjectUpdated,
   onDeleted,
+  settingsTab,
+  onSettingsTabChange,
 }: {
   project: Project;
   members: ProjectMember[];
@@ -200,9 +213,19 @@ export default function ProjectSettingsView({
   onOpenMembers: () => void;
   onProjectUpdated: (project: Project) => void;
   onDeleted: () => void;
+  settingsTab?: string | null;
+  onSettingsTabChange?: (tab: string) => void;
 }) {
   const { t, lang } = useTranslation();
-  const [tab, setTab] = useState<SettingsTab>("general");
+  const [tab, setTab] = useState<SettingsTab>(
+    settingsTab && SETTINGS_TABS.includes(settingsTab as SettingsTab) ? (settingsTab as SettingsTab) : "general"
+  );
+
+  useEffect(() => {
+    if (settingsTab && SETTINGS_TABS.includes(settingsTab as SettingsTab)) {
+      setTab(settingsTab as SettingsTab);
+    }
+  }, [settingsTab]);
   const [ownerProfile, setOwnerProfile] = useState<Profile | null>(null);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [saving, setSaving] = useState(false);
@@ -376,7 +399,10 @@ export default function ProjectSettingsView({
           return (
             <button
               key={item.id}
-              onClick={() => setTab(item.id)}
+              onClick={() => {
+                if (onSettingsTabChange) onSettingsTabChange(item.id);
+                else setTab(item.id);
+              }}
               className={`relative shrink-0 px-3 py-2.5 text-sm font-medium transition-colors ${
                 active ? "text-ink" : "text-inkFaint hover:text-inkSoft"
               }`}

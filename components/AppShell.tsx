@@ -99,7 +99,10 @@ export default function AppShell({
       router.push("/settings");
       return;
     }
-    if (id === "rooms") onRoomsTabActivated?.(pendingCount > 0);
+    if (id === "rooms") {
+      router.push(pendingCount > 0 ? "/rooms?filter=pending" : "/rooms");
+      return;
+    }
     onTabChange(id);
   }
 

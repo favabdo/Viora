@@ -383,7 +383,7 @@ export default function ProfilePage() {
     <main className="min-h-screen px-5 py-6 md:px-10 md:py-8 bg-paper">
       <div className="max-w-lg mx-auto">
         <header className="mb-7 flex items-center gap-3">
-          <IconButton aria-label={t("profile.back")} onClick={() => router.push("/")}>
+          <IconButton aria-label={t("profile.back")} onClick={() => router.push("/projects")}>
             <ArrowRight size={16} strokeWidth={1.75} />
           </IconButton>
           <h1 className="font-display text-xl font-medium">{t("profile.title")}</h1>

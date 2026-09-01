@@ -102,9 +102,11 @@ type RoomsFilter = "open" | "all" | "pending";
 export default function RoomsSection({
   currentUserId,
   initialFilter,
+  onFilterChange,
 }: {
   currentUserId: string;
   initialFilter?: RoomsFilter;
+  onFilterChange?: (filter: RoomsFilter) => void;
 }) {
   const { t, lang } = useTranslation();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
@@ -123,6 +125,10 @@ export default function RoomsSection({
 
   const [nilechatLink, setNilechatLink] = useState<{ agentId: number; agentName: string } | null>(null);
   const [filter, setFilter] = useState<RoomsFilter>(initialFilter || "open");
+
+  useEffect(() => {
+    if (initialFilter) setFilter(initialFilter);
+  }, [initialFilter]);
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [dismissingId, setDismissingId] = useState<number | null>(null);
 
@@ -551,7 +557,10 @@ export default function RoomsSection({
         ).map(([key, label, count]) => (
           <button
             key={key}
-            onClick={() => setFilter(key)}
+            onClick={() => {
+              setFilter(key);
+              onFilterChange?.(key);
+            }}
             className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
               filter === key ? "bg-tealSoft text-tealDark" : "text-inkSoft hover:text-ink"
             }`}

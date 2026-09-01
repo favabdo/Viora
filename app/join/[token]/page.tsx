@@ -72,7 +72,7 @@ export default function JoinPage() {
     }
     localStorage.removeItem(INVITE_KEY);
     setStatus("done");
-    setTimeout(() => router.replace("/?tab=projects"), 900);
+    setTimeout(() => router.replace("/projects"), 900);
   }
 
   function goToLogin() {
@@ -140,7 +140,7 @@ export default function JoinPage() {
           {status === "error" && (
             <div className="text-center">
               <StatusScreen kind="error" title={t("join.problemTitle")} message={errorMsg} />
-              <button onClick={() => router.replace("/")} className="text-teal text-sm hover:underline mt-5">
+              <button onClick={() => router.replace("/projects")} className="text-teal text-sm hover:underline mt-5">
                 {t("join.backHome")}
               </button>
             </div>

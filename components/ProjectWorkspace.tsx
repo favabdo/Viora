@@ -33,8 +33,9 @@ import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
 import ProjectSettingsView from "./ProjectSettingsView";
+import type { WorkspaceView } from "@/lib/appRoutes";
 
-type WorkspaceView = "board" | "list" | "calendar" | "timeline" | "files" | "history" | "settings";
+export type { WorkspaceView };
 
 const DEFAULT_COLUMNS = [
   { name: "Backlog", color: "#6C5CE7", position: 0, is_done_column: false },
@@ -57,14 +58,22 @@ function readFavorites(): string[] {
 
 export default function ProjectWorkspace({
   projectId,
+  view,
+  settingsTab,
   currentUserId,
   currentUserEmail,
   onBack,
+  onViewChange,
+  onSettingsTabChange,
 }: {
   projectId: string;
+  view: WorkspaceView;
+  settingsTab?: string | null;
   currentUserId: string;
   currentUserEmail: string;
   onBack: () => void;
+  onViewChange: (view: WorkspaceView) => void;
+  onSettingsTabChange?: (tab: string) => void;
 }) {
   const { t } = useTranslation();
   const [project, setProject] = useState<Project | null>(null);
@@ -73,7 +82,6 @@ export default function ProjectWorkspace({
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
-  const [view, setView] = useState<WorkspaceView>("board");
   const [loading, setLoading] = useState(true);
   const [showTeam, setShowTeam] = useState(false);
   const [showMore, setShowMore] = useState(false);
@@ -82,7 +90,6 @@ export default function ProjectWorkspace({
 
   useEffect(() => {
     setFavorited(readFavorites().includes(projectId));
-    setView("board");
   }, [projectId]);
 
   useEffect(() => {
@@ -269,12 +276,14 @@ export default function ProjectWorkspace({
           columns={columns}
           currentUserId={currentUserId}
           currentUserEmail={currentUserEmail}
-          onBack={() => setView("board")}
-          onViewProject={() => setView("board")}
-          onOpenHistory={() => setView("history")}
+          onBack={() => onViewChange("board")}
+          onViewProject={() => onViewChange("board")}
+          onOpenHistory={() => onViewChange("history")}
           onOpenMembers={() => setShowTeam(true)}
           onProjectUpdated={setProject}
           onDeleted={onBack}
+          settingsTab={settingsTab}
+          onSettingsTabChange={onSettingsTabChange}
         />
         {showTeam && (
           <TeamPanel
@@ -359,7 +368,7 @@ export default function ProjectWorkspace({
                     className="w-full rounded-lg px-3 py-2 text-sm text-ink hover:bg-paperDark"
                     onClick={() => {
                       setShowMore(false);
-                      setView("settings");
+                      onViewChange("settings");
                     }}
                   >
                     {t("workspace.projectSettings")}
@@ -396,7 +405,7 @@ export default function ProjectWorkspace({
             return (
               <button
                 key={id}
-                onClick={() => setView(id)}
+                onClick={() => onViewChange(id)}
                 className={`relative shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors ${
                   active ? "text-ink" : "text-inkFaint hover:text-inkSoft"
                 }`}

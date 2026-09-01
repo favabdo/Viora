@@ -683,7 +683,7 @@ export default function BoardView({
   }
 
   async function copyTaskLink(task: Task) {
-    const url = `${window.location.origin}/?tab=projects&project=${projectId}&task=${task.id}`;
+    const url = `${window.location.origin}/projects/${projectId}/board?task=${task.id}`;
     try {
       await navigator.clipboard.writeText(url);
       showToast(t("board.menu.linkCopied"));

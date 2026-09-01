@@ -138,12 +138,16 @@ export default function IdeasSection({
   currentUserName,
   currentUserAvatar,
   openCreateSignal,
+  selectedIdeaId,
+  onSelectIdea,
   onOpenProject,
 }: {
   currentUserId: string;
   currentUserName: string;
   currentUserAvatar?: string | null;
   openCreateSignal?: number;
+  selectedIdeaId?: string | null;
+  onSelectIdea?: (id: string | null) => void;
   onOpenProject: (projectId: string) => void;
 }) {
   const { t, lang } = useTranslation();
@@ -159,7 +163,13 @@ export default function IdeasSection({
   const [tagFilter, setTagFilter] = useState("");
   const [sort, setSort] = useState<SortKey>("latest");
   const [page, setPage] = useState(1);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
+  const selectedId = onSelectIdea ? selectedIdeaId ?? null : internalSelectedId;
+
+  function selectIdea(id: string | null) {
+    if (onSelectIdea) onSelectIdea(id);
+    else setInternalSelectedId(id);
+  }
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Idea | null>(null);
@@ -326,7 +336,7 @@ export default function IdeasSection({
         projectId: linkedProject || null,
         attachments: formFiles,
       });
-      if (idea) setSelectedId(idea.id);
+      if (idea) selectIdea(idea.id);
     }
     setShowForm(false);
     await refresh();
@@ -601,7 +611,7 @@ export default function IdeasSection({
                     key={idea.id}
                     type="button"
                     onClick={() => {
-                      setSelectedId(idea.id);
+                      selectIdea(idea.id);
                       setDetailTab("overview");
                     }}
                     className={`w-full text-start rounded-xl border bg-surface p-4 transition-colors ${
@@ -644,7 +654,7 @@ export default function IdeasSection({
                                   className="w-full text-start rounded-lg px-3 py-2 text-sm text-[#EF4444] hover:bg-paperDark"
                                   onClick={async () => {
                                     await deleteIdea(idea.id, idea.attachments);
-                                    if (selectedId === idea.id) setSelectedId(null);
+                                    if (selectedId === idea.id) selectIdea(null);
                                     await refresh();
                                     setMenuId(null);
                                   }}
@@ -738,7 +748,7 @@ export default function IdeasSection({
                   </select>
                 </div>
               </div>
-              <button onClick={() => setSelectedId(null)} className="text-inkFaint hover:text-ink">
+              <button onClick={() => selectIdea(null)} className="text-inkFaint hover:text-ink">
                 <X size={16} />
               </button>
             </div>

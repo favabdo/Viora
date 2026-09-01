@@ -25,7 +25,7 @@ async function notifyAndMarkSent(
   try {
     const title = item.isNewTask ? "مهمة جديدة بانتظار الموافقة" : "طلب تعديل بانتظار الموافقة";
     const body = `${item.requestedByName ? `${item.requestedByName} — ` : ""}${item.taskText}`;
-    await sendPushToAllSubscribers(title, body, "/?tab=rooms");
+    await sendPushToAllSubscribers(title, body, "/rooms");
     await supabase.from("rooms_notified_pending").upsert({ task_id: taskId });
   } catch (err) {
     // فشل إرسال الإشعار ميفشلش الطلب الأساسي (إنشاء التاسك/طلب التعديل)

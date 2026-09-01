@@ -15,7 +15,7 @@ const INVITE_KEY = "viora_invite_token";
 function nextDestination() {
   if (typeof window === "undefined") return "/";
   const token = localStorage.getItem(INVITE_KEY);
-  return token ? `/join/${token}` : "/";
+  return token ? `/join/${token}` : "/projects";
 }
 
 function LoginPageInner() {

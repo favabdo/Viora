@@ -69,7 +69,7 @@ export async function GET(request: Request) {
       .map((item) => `${item.isNewTask ? "مهمة جديدة" : "طلب تعديل"}${item.requestedByName ? ` — ${item.requestedByName}` : ""}: ${item.taskText}`)
       .join(" | ");
 
-    await sendPushToAllSubscribers(title, body, "/?tab=rooms");
+    await sendPushToAllSubscribers(title, body, "/rooms");
 
     await supabase.from("rooms_notified_pending").insert(newItems.map((item) => ({ task_id: item.id })));
 
