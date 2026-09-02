@@ -27,7 +27,7 @@ import ProjectListView from "./ProjectListView";
 import ProjectCalendarView from "./ProjectCalendarView";
 import ProjectTimelineView from "./ProjectTimelineView";
 import ProjectHistoryView from "./ProjectHistoryView";
-import ComingSoon from "./ComingSoon";
+import FilesSection from "./FilesSection";
 import BoardAnalytics from "./BoardAnalytics";
 import TeamPanel from "./TeamPanel";
 import ClickableAvatar from "./ClickableAvatar";
@@ -482,7 +482,14 @@ export default function ProjectWorkspace({
           currentUserId={currentUserId}
         />
       )}
-      {view === "files" && <ComingSoon title={t("workspace.files")} icon={FileText} />}
+      {view === "files" && (
+        <FilesSection
+          currentUserId={currentUserId}
+          lockedProjectId={project.id}
+          projects={projects}
+          tasks={tasks}
+        />
+      )}
 
       {showTeam && (
         <TeamPanel

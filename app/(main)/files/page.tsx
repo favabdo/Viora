@@ -1,10 +1,9 @@
 "use client";
 
-import ComingSoon from "@/components/ComingSoon";
-import { FileText } from "lucide-react";
-import { useTranslation } from "@/lib/i18n/LanguageContext";
+import FilesSection from "@/components/FilesSection";
+import { useAppSession } from "@/components/AppSession";
 
 export default function FilesPage() {
-  const { t } = useTranslation();
-  return <ComingSoon title={t("nav.files")} icon={FileText} />;
+  const { session } = useAppSession();
+  return <FilesSection currentUserId={session.user.id} />;
 }

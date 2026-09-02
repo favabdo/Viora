@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Calendar,
   CheckSquare,
@@ -17,6 +17,8 @@ import { BoardColumn, Project, ProjectMember, TASK_COLORS } from "@/lib/supabase
 import { displayName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { isDueAfterCreated, minDueDate } from "@/lib/taskShape";
+import { filesToAttachments } from "@/lib/libraryFiles";
+import type { TaskAttachment } from "@/lib/taskExtras";
 import Button from "./ui/Button";
 import Modal from "./ui/Modal";
 import { Input, Textarea } from "./ui/Input";
@@ -36,6 +38,7 @@ export type NewTaskDraft = {
     recurrence: string;
     subtasks: string[];
   };
+  attachments: TaskAttachment[];
 };
 
 const selectClass =
@@ -53,10 +56,14 @@ export default function AddTaskModal({
   defaultProjectId,
   defaultColumnId,
   creating,
+  allowEmptyProject = false,
+  hideCreateAnother = false,
+  heading,
   onClose,
   onExpand,
   onCollapse,
   onCreate,
+  onProjectChange,
 }: {
   mode: "quick" | "full";
   columns: BoardColumn[];
@@ -66,10 +73,14 @@ export default function AddTaskModal({
   defaultProjectId: string;
   defaultColumnId: string | null;
   creating: boolean;
+  allowEmptyProject?: boolean;
+  hideCreateAnother?: boolean;
+  heading?: string;
   onClose: () => void;
   onExpand: () => void;
   onCollapse: () => void;
   onCreate: (draft: NewTaskDraft) => Promise<void>;
+  onProjectChange?: (projectId: string) => void;
 }) {
   const { t } = useTranslation();
   const [title, setTitle] = useState("");
@@ -87,17 +98,24 @@ export default function AddTaskModal({
   const [subtasks, setSubtasks] = useState<string[]>([]);
   const [subtaskDraft, setSubtaskDraft] = useState("");
   const [createAnother, setCreateAnother] = useState(false);
+  const [attachments, setAttachments] = useState<TaskAttachment[]>([]);
+  const [fileBusy, setFileBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setProjectId(defaultProjectId);
+  }, [defaultProjectId]);
 
   useEffect(() => {
     setColumnId(defaultColumnId ?? columns[0]?.id ?? "");
-    setProjectId(defaultProjectId);
-  }, [defaultColumnId, defaultProjectId, columns]);
+  }, [defaultColumnId, columns]);
 
   function resetTitleOnly() {
     setTitle("");
     setDescription("");
     setSubtasks([]);
     setSubtaskDraft("");
+    setAttachments([]);
   }
 
   async function submit() {
@@ -117,6 +135,7 @@ export default function AddTaskModal({
       assigneeId,
       createAnother,
       extras: { description, tags, estimate, recurrence, subtasks },
+      attachments,
     });
     if (createAnother) resetTitleOnly();
   }
@@ -128,12 +147,20 @@ export default function AddTaskModal({
     setSubtaskDraft("");
   }
 
+  async function onPickFiles(list: FileList | null) {
+    if (!list?.length) return;
+    setFileBusy(true);
+    const { attachments: next } = await filesToAttachments(Array.from(list));
+    setAttachments((prev) => [...prev, ...next]);
+    setFileBusy(false);
+  }
+
   const selectedColumn = columns.find((c) => c.id === columnId);
 
   return (
     <Modal
       onClose={onClose}
-      title={t("board.addTaskTitle")}
+      title={heading || t("board.addTaskTitle")}
       titleAlign="center"
       maxWidth={mode === "full" ? "max-w-2xl" : "max-w-md"}
     >
@@ -230,7 +257,15 @@ export default function AddTaskModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <label className="block">
                 <span className="mb-1.5 block text-xs text-inkSoft">{t("board.fieldProject")}</span>
-                <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className={selectClass}>
+                <select
+                  value={projectId}
+                  onChange={(e) => {
+                    setProjectId(e.target.value);
+                    onProjectChange?.(e.target.value);
+                  }}
+                  className={selectClass}
+                >
+                  {allowEmptyProject && <option value="">{t("backlog.pickProject")}</option>}
                   {projects.map((project) => (
                     <option key={project.id} value={project.id}>
                       {project.name}
@@ -323,11 +358,38 @@ export default function AddTaskModal({
                 <span className="mb-1.5 block text-xs text-inkSoft">{t("board.fieldAttachments")}</span>
                 <button
                   type="button"
+                  onClick={() => fileInputRef.current?.click()}
                   className="h-[42px] w-full inline-flex items-center justify-center gap-1.5 rounded-[1.75rem] border border-dashed border-line text-xs text-inkSoft hover:border-[#8C3AED] hover:text-ink"
                 >
                   <Paperclip size={14} />
-                  {t("board.addFile")}
+                  {fileBusy ? t("common.loading") : t("board.addFile")}
                 </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    void onPickFiles(e.target.files);
+                    e.currentTarget.value = "";
+                  }}
+                />
+                {attachments.length > 0 && (
+                  <ul className="mt-1.5 space-y-1">
+                    {attachments.map((file) => (
+                      <li key={file.id} className="flex items-center justify-between gap-2 text-[11px] text-inkSoft">
+                        <span className="truncate">{file.name}</span>
+                        <button
+                          type="button"
+                          className="text-inkFaint hover:text-clay"
+                          onClick={() => setAttachments((prev) => prev.filter((item) => item.id !== file.id))}
+                        >
+                          {t("common.delete")}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
 
@@ -369,8 +431,8 @@ export default function AddTaskModal({
           <p className="sr-only">{selectedColumn.name}</p>
         )}
 
-        <div className={`flex items-center ${mode === "full" ? "justify-between" : "justify-end"} gap-2 pt-1`}>
-          {mode === "full" && (
+        <div className={`flex items-center ${mode === "full" && !hideCreateAnother ? "justify-between" : "justify-end"} gap-2 pt-1`}>
+          {mode === "full" && !hideCreateAnother && (
             <label className="inline-flex items-center gap-2 text-xs text-inkSoft">
               <input
                 type="checkbox"

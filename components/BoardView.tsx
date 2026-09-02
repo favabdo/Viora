@@ -31,6 +31,7 @@ import {
   type TaskExtras,
 } from "@/lib/taskExtras";
 import {
+  copyRemoteFilesToTask,
   copyTaskAttachments,
   deleteTaskAttachment,
   listProjectTaskAttachments,
@@ -653,6 +654,9 @@ export default function BoardView({
     const created = normalizeTask(data);
     if (member?.profiles && !created.profiles) created.profiles = member.profiles;
     writeTaskMeta(created.id, draft.extras);
+    if (draft.attachments.length) {
+      await copyRemoteFilesToTask(created.id, targetProjectId, currentUserId, draft.attachments);
+    }
     bumpExtras();
     if (created.project_id === projectId) {
       onTasksMutated((prev) => [...prev, created]);
