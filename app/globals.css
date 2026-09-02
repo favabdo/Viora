@@ -464,3 +464,51 @@ html:not(.dark) .upgrade-stage .bg-black\/25 {
     0 0 16px rgba(139, 92, 246, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
+
+.login-scene {
+  background-color: #07080f;
+  background-image:
+    radial-gradient(ellipse 70% 55% at 18% 108%, rgba(124, 58, 237, 0.55), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 88% 8%, rgba(56, 189, 248, 0.12), transparent 55%),
+    radial-gradient(ellipse 45% 38% at 8% 18%, rgba(139, 92, 246, 0.18), transparent 50%);
+}
+
+html:not(.dark) .login-scene {
+  background-color: #f4f1ff;
+  background-image:
+    radial-gradient(ellipse 70% 55% at 18% 108%, rgba(124, 58, 237, 0.22), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 88% 8%, rgba(56, 189, 248, 0.12), transparent 55%),
+    radial-gradient(ellipse 45% 38% at 8% 18%, rgba(139, 92, 246, 0.16), transparent 50%);
+}
+
+.login-card {
+  background: linear-gradient(180deg, rgba(28, 30, 48, 0.72) 0%, rgba(16, 18, 32, 0.82) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 28px 80px -28px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(22px);
+}
+
+html:not(.dark) .login-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(252, 250, 255, 0.86) 100%);
+  border: 1px solid rgba(124, 92, 255, 0.16);
+  box-shadow: 0 24px 60px -28px rgba(76, 29, 149, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.login-field {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 10, 18, 0.55);
+  color: inherit;
+  outline: none;
+}
+
+.login-field:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.22);
+}
+
+html:not(.dark) .login-field {
+  border-color: rgb(var(--color-line));
+  background: rgb(var(--color-surfaceSunken));
+}
