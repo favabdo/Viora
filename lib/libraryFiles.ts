@@ -30,7 +30,10 @@ export type LibraryFile = {
   source: "library" | "task";
 };
 
-type FileMeta = { description?: string };
+type FileMeta = { description?: string; favorite?: boolean; trash?: boolean };
+
+export const FOLDER_MIME = "application/x-viora-folder";
+export const STORAGE_CAP_BYTES = 30 * 1024 * 1024 * 1024;
 
 function safeName(name: string) {
   return name.replace(/[^\w.\-]+/g, "_").slice(0, 80);
@@ -95,6 +98,37 @@ export function libraryPreviewFile(file: LibraryFile): TaskAttachment {
   return asAttachment(file);
 }
 
+export function isFolder(file: LibraryFile) {
+  return file.type === FOLDER_MIME;
+}
+
+export function getFileMeta(id: string): FileMeta {
+  return loadMeta()[id] || {};
+}
+
+export function patchFileMeta(id: string, patch: FileMeta) {
+  const all = loadMeta();
+  all[id] = { ...all[id], ...patch };
+  saveMeta(all);
+}
+
+export function createFolder(userId: string, name: string, projectId?: string | null): LibraryFile {
+  const item: LibraryFile = {
+    id: crypto.randomUUID(),
+    userId,
+    name: name.trim() || "Untitled folder",
+    size: 0,
+    type: FOLDER_MIME,
+    description: "",
+    projectId: projectId || null,
+    taskId: null,
+    createdAt: new Date().toISOString(),
+    source: "library",
+  };
+  saveLocal([item, ...loadLocal()]);
+  return item;
+}
+
 async function projectIdsForUser(userId: string): Promise<string[]> {
   const [owned, member] = await Promise.all([
     supabase.from("projects").select("id").eq("user_id", userId),
@@ -121,8 +155,11 @@ export async function listLibraryFiles(userId: string, projectId?: string | null
     seen.add(file.id);
     if (file.storagePath) seen.add(file.storagePath);
     if (taskKey) seen.add(taskKey);
-    const extra = meta[file.id]?.description;
-    items.push(extra != null && extra !== "" ? { ...file, description: extra } : file);
+    const extra = meta[file.id];
+    items.push({
+      ...file,
+      description: extra?.description != null && extra.description !== "" ? extra.description : file.description,
+    });
   };
 
   const remote = await supabase
