@@ -512,3 +512,19 @@ html:not(.dark) .login-field {
   border-color: rgb(var(--color-line));
   background: rgb(var(--color-surfaceSunken));
 }
+
+.login-mask {
+  position: absolute;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: none;
+}
+
+html.dark .login-mask {
+  background: rgba(12, 14, 22, 0.42);
+}
+
+html:not(.dark) .login-mask {
+  background: rgba(244, 241, 255, 0.48);
+}

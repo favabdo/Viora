@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { Eye, EyeOff, Lock, Mail, Moon, Shield, Sun } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { HOME_PATH } from "@/lib/appRoutes";
@@ -21,17 +22,25 @@ function nextDestination() {
   return token ? `/join/${token}` : HOME_PATH;
 }
 
-function VioraMark({ size = 28 }: { size?: number }) {
+function BrandLogo({ compact = false }: { compact?: boolean }) {
+  const { lang } = useTranslation();
+  const mark = <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />;
+  if (compact) return mark;
+  const word = <span className="viora-wordmark text-xl">iora</span>;
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden>
-      <path d="M4 5.5h7.4L16 18.2 20.6 5.5H28L18.2 27h-4.4L4 5.5Z" fill="url(#viora-v)" />
-      <defs>
-        <linearGradient id="viora-v" x1="4" y1="5" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#A78BFA" />
-          <stop offset="1" stopColor="#7C3AED" />
-        </linearGradient>
-      </defs>
-    </svg>
+    <div className="flex items-center gap-1">
+      {lang === "ar" ? (
+        <>
+          {word}
+          {mark}
+        </>
+      ) : (
+        <>
+          {mark}
+          {word}
+        </>
+      )}
+    </div>
   );
 }
 
@@ -57,48 +66,33 @@ function MicrosoftMark() {
   );
 }
 
-function DashboardPreview({ t }: { t: (key: string) => string }) {
+function DashboardPreview({ theme }: { theme: Theme }) {
+  const src = theme === "light" ? "/login-preview-light.png" : "/login-preview-dark.png";
+  const masks = [
+    { left: "0.8%", top: "88%", width: "13.5%", height: "10.5%" },
+    { left: "15.5%", top: "8.5%", width: "36%", height: "7%" },
+    { left: "15.5%", top: "66%", width: "27%", height: "20%" },
+    { left: "43%", top: "78%", width: "13%", height: "10%" },
+    { left: "72.5%", top: "7.5%", width: "26.5%", height: "30%" },
+    { left: "72.5%", top: "46%", width: "26.5%", height: "14%" },
+  ];
   return (
-    <div className="login-preview relative mt-10 w-[min(100%,560px)] origin-bottom-left scale-[0.92] sm:scale-100">
+    <div className="login-preview relative mt-10 w-[min(100%,640px)] origin-bottom-left">
       <div
-        className="rounded-2xl border border-white/10 bg-[#12141f] shadow-[0_40px_80px_-28px_rgba(0,0,0,0.65)] overflow-hidden"
-        style={{ transform: "perspective(1400px) rotateY(-18deg) rotateX(8deg) rotateZ(-2deg)" }}
+        className="relative overflow-hidden rounded-2xl border border-line shadow-[0_40px_80px_-28px_rgba(0,0,0,0.55)]"
+        style={{ transform: "perspective(1400px) rotateY(-16deg) rotateX(7deg) rotateZ(-1.5deg)" }}
       >
-        <div className="flex min-h-[280px]">
-          <aside className="w-[132px] shrink-0 border-e border-white/8 bg-[#0c0e16] p-3">
-            <div className="mb-4 flex items-center gap-1.5 px-1">
-              <VioraMark size={16} />
-              <span className="text-[10px] font-bold tracking-[0.18em] text-white">VIORA</span>
-            </div>
-            {[t("login.mock.dashboard"), t("login.mock.projects"), t("login.mock.tasks")].map((label, i) => (
-              <div
-                key={label}
-                className={`mb-1 rounded-lg px-2 py-1.5 text-[10px] ${i === 0 ? "bg-[#7C3AED]/25 text-white" : "text-white/45"}`}
-              >
-                {label}
-              </div>
-            ))}
-          </aside>
-          <div className="flex-1 p-4">
-            <div className="mb-4 h-7 w-40 rounded-lg bg-white/5" />
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
-                <p className="mb-3 text-[10px] text-white/50">{t("login.mock.progress")}</p>
-                <div className="mx-auto h-24 w-24 rounded-full border-[10px] border-[#7C3AED] border-l-white/10 border-b-white/10" />
-                <p className="mt-2 text-center text-[10px] text-white/60">{t("login.mock.done")} 72%</p>
-              </div>
-              <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
-                <p className="mb-3 text-[10px] text-white/50">{t("login.mock.activity")}</p>
-                <div className="space-y-2">
-                  <div className="h-2 w-full rounded bg-white/10" />
-                  <div className="h-2 w-4/5 rounded bg-white/10" />
-                  <div className="h-2 w-3/5 rounded bg-white/10" />
-                  <div className="h-2 w-2/3 rounded bg-[#7C3AED]/40" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Image
+          src={src}
+          alt=""
+          width={1600}
+          height={1000}
+          className="h-auto w-full"
+          priority
+        />
+        {masks.map((box, i) => (
+          <span key={i} className="login-mask" style={box} />
+        ))}
       </div>
     </div>
   );
@@ -272,9 +266,8 @@ function LoginPageInner() {
   return (
     <main className="login-scene relative min-h-screen overflow-hidden">
       <div className="relative mx-auto flex min-h-screen max-w-[1440px] flex-col px-5 sm:px-8 lg:px-12">
-        <header className="flex items-center gap-2.5 pt-7">
-          <VioraMark size={26} />
-          <span className="text-[15px] font-extrabold tracking-[0.22em] text-ink">VIORA</span>
+        <header className="flex items-center pt-7">
+          <BrandLogo />
         </header>
 
         <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(380px,460px)] lg:gap-16">
@@ -287,7 +280,7 @@ function LoginPageInner() {
               <span className="text-[#8B5CF6]">Viora</span> {t("login.heroTitleAfter")}
             </h1>
             <p className="mt-4 max-w-md text-base leading-relaxed text-inkSoft">{t("login.heroSubtitle")}</p>
-            <DashboardPreview t={t} />
+            <DashboardPreview theme={theme} />
           </section>
 
           <section className="mx-auto w-full max-w-[420px] lg:mx-0 lg:justify-self-end">
@@ -324,8 +317,8 @@ function LoginPageInner() {
               </div>
 
               <div className="mb-6 text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-black/20">
-                  <VioraMark size={26} />
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-line bg-paperDark/40">
+                  <BrandLogo compact />
                 </div>
                 <h2 className="text-[22px] font-semibold text-ink">
                   {mode === "signin"
