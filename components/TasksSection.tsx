@@ -640,7 +640,12 @@ export default function TasksSection({
                 onInvitePeople={() => setShowTeam(true)}
               />
             ) : viewMode === "calendar" ? (
-              <CalendarView tasks={tasks} onTasksMutated={setTasks} />
+              <CalendarView
+                tasks={tasks}
+                onTasksMutated={setTasks}
+                currentUserId={currentUserId}
+                projectName={activeProject.name}
+              />
             ) : viewMode === "timeline" ? (
               <TimelineView tasks={tasks} columns={columns} onTasksMutated={setTasks} />
             ) : loadingTasks ? (

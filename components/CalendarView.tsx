@@ -1,12 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { supabase, Task } from "@/lib/supabase";
+import { Task } from "@/lib/supabase";
 import IconButton from "./ui/IconButton";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings } from "@/lib/useSettings";
 import { dateKey } from "@/lib/taskShape";
+import { TaskDetailsPanel, TaskHoverCard } from "./TaskInspect";
 
 function ymd(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -15,9 +16,13 @@ function ymd(date: Date): string {
 export default function CalendarView({
   tasks,
   onTasksMutated,
+  currentUserId,
+  projectName = "",
 }: {
   tasks: Task[];
   onTasksMutated: (updater: (prev: Task[]) => Task[]) => void;
+  currentUserId: string;
+  projectName?: string;
 }) {
   const { t, lang, dir } = useTranslation();
   const { settings } = useSettings();
@@ -28,6 +33,8 @@ export default function CalendarView({
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [showCompleted, setShowCompleted] = useState(false);
+  const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const openTasks = useMemo(
     () => (showCompleted ? tasks : tasks.filter((task) => !task.is_done)),
@@ -72,17 +79,14 @@ export default function CalendarView({
   }, [locale, weekStartsOnMonday]);
 
   const todayKey = ymd(new Date());
-
-  async function toggleDone(task: Task) {
-    onTasksMutated((prev) => prev.map((t2) => (t2.id === task.id ? { ...t2, is_done: !t2.is_done } : t2)));
-    await supabase.from("tasks").update({ is_done: !task.is_done }).eq("id", task.id);
-  }
+  const selectedTask = selectedId ? openTasks.find((task) => task.id === selectedId) || null : null;
 
   const PrevIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
   const NextIcon = dir === "rtl" ? ChevronLeft : ChevronRight;
 
   return (
-    <div>
+    <div className="flex flex-col xl:flex-row gap-5 items-start">
+    <div className="flex-1 min-w-0 w-full">
       <div className="flex items-center justify-between gap-3 mb-4">
         <h3 className="font-display text-base font-medium text-ink">{monthLabel}</h3>
         <div className="flex items-center gap-3">
@@ -149,12 +153,14 @@ export default function CalendarView({
                 {dayTasks.slice(0, 3).map((task) => (
                   <button
                     key={task.id}
-                    onClick={() => toggleDone(task)}
-                    className={`text-start text-[10px] leading-tight px-1 py-0.5 rounded truncate transition-opacity ${
+                    type="button"
+                    onMouseMove={(e) => setHover({ task, x: e.clientX, y: e.clientY })}
+                    onMouseLeave={() => setHover((h) => (h?.task.id === task.id ? null : h))}
+                    onClick={() => setSelectedId(task.id)}
+                    className={`text-start text-[10px] leading-tight px-1 py-0.5 rounded truncate ${
                       task.is_done ? "opacity-50 line-through" : ""
                     }`}
                     style={{ backgroundColor: (task.color || "#6b7280") + "22", color: task.color || "rgb(var(--color-inkSoft))" }}
-                    title={task.title}
                   >
                     {task.title}
                   </button>
@@ -184,6 +190,30 @@ export default function CalendarView({
             ))}
           </div>
         </div>
+      )}
+      </div>
+      {selectedTask && (
+        <aside className="w-full xl:w-72 shrink-0">
+          <TaskDetailsPanel
+            task={selectedTask}
+            projectName={projectName}
+            locale={locale}
+            currentUserId={currentUserId}
+            t={t}
+            onClose={() => setSelectedId(null)}
+          />
+        </aside>
+      )}
+      {hover && (
+        <TaskHoverCard
+          task={hover.task}
+          x={hover.x}
+          y={hover.y}
+          locale={locale}
+          currentUserId={currentUserId}
+          t={t}
+          projectName={projectName}
+        />
       )}
     </div>
   );

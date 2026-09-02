@@ -10,6 +10,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings } from "@/lib/useSettings";
 import Avatar from "./ui/Avatar";
 import DonutChart from "./ui/DonutChart";
+import { TaskDetailsPanel, TaskHoverCard } from "./TaskInspect";
 
 const PROJECT_COLORS = ["#6C5CE7", "#3B82F6", "#22C55E", "#F59E0B", "#EF4444", "#EC4899", "#14B8A6", "#EAB308"];
 
@@ -67,6 +68,8 @@ export default function ProjectCalendarView({
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [showCompleted, setShowCompleted] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
+  const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     setProjectFilter(project.id);
@@ -188,6 +191,7 @@ export default function ProjectCalendarView({
     return formatTaskDate(iso, locale);
   }
 
+  const selectedTask = selectedId ? visibleTasks.find((task) => task.id === selectedId) || null : null;
   const PrevIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
   const NextIcon = dir === "rtl" ? ChevronLeft : ChevronRight;
 
@@ -292,9 +296,10 @@ export default function ProjectCalendarView({
                     const endRound = item.continuesAfter ? "0" : "999px";
                     const wide = item.colEnd - item.colStart >= 1;
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={item.task.id}
-                        className="pointer-events-auto flex min-w-0 items-center gap-1 overflow-hidden px-1.5 text-[10px] font-medium text-white"
+                        className="pointer-events-auto flex min-w-0 items-center gap-1 overflow-hidden px-1.5 text-[10px] font-medium text-white text-start cursor-pointer"
                         style={{
                           gridColumn: `${item.colStart + 1} / ${item.colEnd + 2}`,
                           gridRow: item.lane + 1,
@@ -308,7 +313,9 @@ export default function ProjectCalendarView({
                           borderEndEndRadius: endRound,
                           opacity: item.task.is_done ? 0.55 : 1,
                         }}
-                        title={`${item.task.title} · ${name}`}
+                        onMouseMove={(e) => setHover({ task: item.task, x: e.clientX, y: e.clientY })}
+                        onMouseLeave={() => setHover((h) => (h?.task.id === item.task.id ? null : h))}
+                        onClick={() => setSelectedId(item.task.id)}
                       >
                         {item.task.profiles && (
                           <Avatar
@@ -324,7 +331,7 @@ export default function ProjectCalendarView({
                             {name}
                           </span>
                         )}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -335,6 +342,17 @@ export default function ProjectCalendarView({
       </div>
 
       <aside className={`w-full xl:w-72 shrink-0 space-y-4 ${showFilters ? "" : "hidden xl:block"}`}>
+        {selectedTask ? (
+          <TaskDetailsPanel
+            task={selectedTask}
+            projectName={projectNameById.get(selectedTask.project_id) || project.name}
+            locale={locale}
+            currentUserId={currentUserId}
+            t={t}
+            onClose={() => setSelectedId(null)}
+          />
+        ) : (
+        <>
         <div className="rounded-xl border border-line bg-surface p-3">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-ink capitalize">
@@ -484,7 +502,20 @@ export default function ProjectCalendarView({
             ))}
           </ul>
         </div>
+        </>
+        )}
       </aside>
+      {hover && (
+        <TaskHoverCard
+          task={hover.task}
+          x={hover.x}
+          y={hover.y}
+          locale={locale}
+          currentUserId={currentUserId}
+          t={t}
+          projectName={projectNameById.get(hover.task.project_id) || project.name}
+        />
+      )}
     </div>
   );
 }

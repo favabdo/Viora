@@ -13,6 +13,7 @@ import { useSettings } from "@/lib/useSettings";
 import Avatar from "./ui/Avatar";
 import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
+import { TaskDetailsPanel, TaskHoverCard } from "./TaskInspect";
 
 const DIM = 0.22;
 
@@ -36,6 +37,8 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
   const [focusProject, setFocusProject] = useState("all");
   const [assigneeFilter, setAssigneeFilter] = useState("all");
   const [showCompleted, setShowCompleted] = useState(false);
+  const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const projectNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -108,6 +111,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
   const PrevIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
   const NextIcon = dir === "rtl" ? ChevronLeft : ChevronRight;
   const selectClass = "w-full rounded-[1.75rem] border-0 bg-surfaceSunken px-4 py-2 text-xs text-ink outline-none focus:outline-none focus:ring-0";
+  const selectedTask = selectedId ? visibleTasks.find((task) => task.id === selectedId) || null : null;
 
   function dimmed(task: Task) {
     return focusProject !== "all" && task.project_id !== focusProject;
@@ -203,9 +207,10 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
                     const wide = item.colEnd - item.colStart >= 1;
                     const projectName = projectNameById.get(item.task.project_id) || "";
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={item.task.id}
-                        className="pointer-events-auto flex min-w-0 items-center gap-1 overflow-hidden px-1.5 text-[10px] font-medium text-white"
+                        className="pointer-events-auto flex min-w-0 items-center gap-1 overflow-hidden px-1.5 text-[10px] font-medium text-white text-start cursor-pointer"
                         style={{
                           gridColumn: `${item.colStart + 1} / ${item.colEnd + 2}`,
                           gridRow: item.lane + 1,
@@ -220,7 +225,9 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
                           borderEndEndRadius: endRound,
                           opacity: faded ? DIM : item.task.is_done ? 0.55 : 1,
                         }}
-                        title={`${projectName} · ${item.task.title} · ${name}`}
+                        onMouseMove={(e) => setHover({ task: item.task, x: e.clientX, y: e.clientY })}
+                        onMouseLeave={() => setHover((h) => (h?.task.id === item.task.id ? null : h))}
+                        onClick={() => setSelectedId(item.task.id)}
                       >
                         {item.task.profiles && (
                           <Avatar name={name} src={item.task.profiles.avatar_url} size="xs" className="h-4 w-4 text-[8px] ring-1 ring-white/40 border-white/20" />
@@ -231,7 +238,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
                             {name}
                           </span>
                         )}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -242,6 +249,17 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
       </div>
 
       <aside className="w-full xl:w-72 shrink-0 space-y-4">
+        {selectedTask ? (
+          <TaskDetailsPanel
+            task={selectedTask}
+            projectName={projectNameById.get(selectedTask.project_id) || ""}
+            locale={locale}
+            currentUserId={currentUserId}
+            t={t}
+            onClose={() => setSelectedId(null)}
+          />
+        ) : (
+        <>
         <div className="rounded-xl border border-line bg-surface p-3">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-ink capitalize">
@@ -358,7 +376,20 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
             </ul>
           )}
         </div>
+        </>
+        )}
       </aside>
+      {hover && (
+        <TaskHoverCard
+          task={hover.task}
+          x={hover.x}
+          y={hover.y}
+          locale={locale}
+          currentUserId={currentUserId}
+          t={t}
+          projectName={projectNameById.get(hover.task.project_id) || ""}
+        />
+      )}
     </div>
   );
 }
