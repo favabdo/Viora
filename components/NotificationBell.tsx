@@ -49,7 +49,8 @@ export default function NotificationBell({ userId }: { userId: string }) {
   function labelFor(item: InboxItem) {
     if (item.kind === "login") return t("inbox.login");
     if (item.kind === "idea") {
-      const action = item.action ? t(`ideas.activity.${item.action}`) : t("inbox.ideaEvent");
+      const key = item.action ? `ideas.activity.${item.action}` : "";
+      const action = key && t(key) !== key ? t(key) : t("inbox.ideaEvent");
       return item.ideaTitle ? `${action} · ${item.ideaTitle}` : action;
     }
     const rendered = renderActivity(

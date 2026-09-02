@@ -20,6 +20,8 @@ import { supabase, Project, Task, BoardColumn, ProjectMember } from "@/lib/supab
 import { normalizeProjectMember, normalizeTask } from "@/lib/taskShape";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { displayName } from "@/lib/displayName";
+import { deleteOwnedTask } from "@/lib/deletes";
+import { isFavoriteProject, toggleFavoriteProject } from "@/lib/projectFavorites";
 import BoardView from "./BoardView";
 import ProjectListView from "./ProjectListView";
 import ProjectCalendarView from "./ProjectCalendarView";
@@ -44,17 +46,6 @@ const DEFAULT_COLUMNS = [
   { name: "Review", color: "#EC4899", position: 3, is_done_column: false },
   { name: "Done", color: "#22C55E", position: 4, is_done_column: true },
 ];
-
-const FAVORITES_KEY = "viora-favorite-projects";
-
-function readFavorites(): string[] {
-  try {
-    const raw = localStorage.getItem(FAVORITES_KEY);
-    return raw ? (JSON.parse(raw) as string[]) : [];
-  } catch {
-    return [];
-  }
-}
 
 export default function ProjectWorkspace({
   projectId,
@@ -89,7 +80,7 @@ export default function ProjectWorkspace({
   const [deleteTask, setDeleteTask] = useState<Task | null>(null);
 
   useEffect(() => {
-    setFavorited(readFavorites().includes(projectId));
+    setFavorited(isFavoriteProject(projectId));
   }, [projectId]);
 
   useEffect(() => {
@@ -215,16 +206,16 @@ export default function ProjectWorkspace({
   }
 
   function toggleFavorite() {
-    const next = readFavorites();
-    const exists = next.includes(projectId);
-    const updated = exists ? next.filter((id) => id !== projectId) : [...next, projectId];
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(updated));
-    setFavorited(!exists);
+    setFavorited(toggleFavoriteProject(projectId));
   }
 
   async function performDeleteTask(task: Task) {
+    const message = await deleteOwnedTask(task.id);
+    if (message) {
+      alert(message);
+      return;
+    }
     setTasks((prev) => prev.filter((item) => item.id !== task.id));
-    await supabase.from("tasks").delete().eq("id", task.id);
     setDeleteTask(null);
   }
 
@@ -455,9 +446,13 @@ export default function ProjectWorkspace({
           projects={projects}
           tasks={tasks}
           columns={columns}
+          members={acceptedMembers}
           currentUserId={currentUserId}
           commentCounts={commentCounts}
           onTasksMutated={setTasks}
+          onCommentCountChange={(taskId, delta) => {
+            setCommentCounts((prev) => ({ ...prev, [taskId]: Math.max(0, (prev[taskId] ?? 0) + delta) }));
+          }}
         />
       )}
 

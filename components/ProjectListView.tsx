@@ -12,14 +12,16 @@ import {
   FolderKanban,
   Check,
 } from "lucide-react";
-import { supabase, Project, Task, BoardColumn, TASK_COLORS } from "@/lib/supabase";
+import { supabase, Project, ProjectMember, Task, BoardColumn, TASK_COLORS } from "@/lib/supabase";
 import { displayName } from "@/lib/displayName";
-import { formatTaskDate, normalizeTask } from "@/lib/taskShape";
+import { formatTaskDate, isDueAfterCreated, normalizeTask } from "@/lib/taskShape";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import ClickableAvatar from "./ClickableAvatar";
 import ClickableName from "./ClickableName";
 import DonutChart from "./ui/DonutChart";
 import { Input, Textarea } from "./ui/Input";
+import TaskDetailModal from "./TaskDetailModal";
+import { readTaskExtras } from "@/lib/taskExtras";
 
 type GroupBy = "status" | "none";
 type SortBy = "position" | "due" | "priority" | "title";
@@ -49,17 +51,21 @@ export default function ProjectListView({
   projects,
   tasks,
   columns,
+  members = [],
   currentUserId,
   commentCounts,
   onTasksMutated,
+  onCommentCountChange,
 }: {
   project: Project;
   projects: Project[];
   tasks: Task[];
   columns: BoardColumn[];
+  members?: ProjectMember[];
   currentUserId: string;
   commentCounts: Record<string, number>;
   onTasksMutated: (updater: (prev: Task[]) => Task[]) => void;
+  onCommentCountChange?: (taskId: string, delta: number) => void;
 }) {
   const { t, lang } = useTranslation();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
@@ -73,6 +79,8 @@ export default function ProjectListView({
   const [addingFor, setAddingFor] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [countsByProject, setCountsByProject] = useState<Record<string, number>>({});
+  const [detailTask, setDetailTask] = useState<Task | null>(null);
+  const [extrasTick, setExtrasTick] = useState(0);
 
   useEffect(() => {
     if (projects.length === 0) return;
@@ -144,6 +152,27 @@ export default function ProjectListView({
     }
   }
 
+  async function setColor(task: Task, color: string | null) {
+    onTasksMutated((prev) => prev.map((row) => (row.id === task.id ? { ...row, color } : row)));
+    await supabase.from("tasks").update({ color }).eq("id", task.id);
+  }
+
+  async function setDueDate(task: Task, date: string | null) {
+    if (date && !isDueAfterCreated(task.created_at, date)) return;
+    onTasksMutated((prev) => prev.map((row) => (row.id === task.id ? { ...row, due_date: date } : row)));
+    await supabase.from("tasks").update({ due_date: date }).eq("id", task.id);
+  }
+
+  async function assignTask(task: Task, userId: string | null) {
+    const member = userId ? members.find((item) => item.user_id === userId) : null;
+    onTasksMutated((prev) =>
+      prev.map((item) =>
+        item.id === task.id ? { ...item, user_id: userId || "", profiles: member?.profiles || null } : item
+      )
+    );
+    await supabase.from("tasks").update({ user_id: userId }).eq("id", task.id);
+  }
+
   const statusLegend = [
     ...columns.map((column) => ({
       label: column.name,
@@ -154,6 +183,7 @@ export default function ProjectListView({
   ];
 
   return (
+    <>
     <div className="flex flex-col xl:flex-row gap-5 items-start">
       <div className="flex-1 min-w-0 w-full">
         <div className="flex items-center justify-between gap-3 mb-3">
@@ -305,6 +335,7 @@ export default function ProjectListView({
                         commentCount={commentCounts[task.id] ?? 0}
                         locale={locale}
                         t={t}
+                        onOpen={() => setDetailTask(task)}
                       />
                     ))}
                     {addingFor === group.id ? (
@@ -410,6 +441,26 @@ export default function ProjectListView({
         </div>
       </aside>
     </div>
+    {detailTask && (
+      <TaskDetailModal
+        key={`${detailTask.id}-${extrasTick}`}
+        task={tasks.find((item) => item.id === detailTask.id) || detailTask}
+        extras={readTaskExtras(detailTask.id)}
+        project={project}
+        column={columns.find((item) => item.id === (tasks.find((row) => row.id === detailTask.id)?.column_id || detailTask.column_id)) || null}
+        members={members}
+        currentUserId={currentUserId}
+        commentCount={commentCounts[detailTask.id] ?? 0}
+        onClose={() => setDetailTask(null)}
+        onExtrasChange={() => setExtrasTick((n) => n + 1)}
+        onCommentCountChange={onCommentCountChange || (() => undefined)}
+        onAttach={() => undefined}
+        onSetColor={(color) => void setColor(tasks.find((item) => item.id === detailTask.id) || detailTask, color)}
+        onSetDueDate={(date) => void setDueDate(tasks.find((item) => item.id === detailTask.id) || detailTask, date)}
+        onAssign={(userId) => void assignTask(tasks.find((item) => item.id === detailTask.id) || detailTask, userId)}
+      />
+    )}
+    </>
   );
 }
 
@@ -422,6 +473,7 @@ function TaskRow({
   commentCount,
   locale,
   t,
+  onOpen,
 }: {
   task: Task;
   columnName: string;
@@ -431,6 +483,7 @@ function TaskRow({
   commentCount: number;
   locale: string;
   t: (key: string) => string;
+  onOpen: () => void;
 }) {
   const priority = priorityOf(task);
   const priorityClass =
@@ -446,7 +499,18 @@ function TaskRow({
   const overdue = isOverdue(task);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_110px_90px_130px_100px_120px_90px] gap-2 items-center px-4 py-2.5 border-t border-line/80 hover:bg-paperDark/30">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_110px_90px_130px_100px_120px_90px] gap-2 items-center px-4 py-2.5 border-t border-line/80 hover:bg-paperDark/30 cursor-pointer"
+    >
       <div className="flex items-center gap-2 min-w-0">
         <span
           className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${

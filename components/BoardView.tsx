@@ -16,9 +16,11 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import { useSearchParams } from "next/navigation";
 import { Eye, Paperclip, Pin, Plus, X, Check, Palette, MessageCircle } from "lucide-react";
 import { supabase, Task, BoardColumn, Project, ProjectMember, TASK_COLORS } from "@/lib/supabase";
 import { isDueAfterCreated, minDueDate, normalizeTask } from "@/lib/taskShape";
+import { ensureTodoColumn } from "@/lib/boardColumns";
 import {
   copyTaskExtras,
   patchTaskExtras,
@@ -432,9 +434,12 @@ export default function BoardView({
 }) {
   const { t, lang } = useTranslation();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const searchParams = useSearchParams();
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
+  const [newColumnColor, setNewColumnColor] = useState(COLUMN_PALETTE[0]);
+  const [newColumnOrder, setNewColumnOrder] = useState(0);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
   const [addTaskMode, setAddTaskMode] = useState<"quick" | "full">("quick");
   const [addTaskColumnId, setAddTaskColumnId] = useState<string | null>(null);
@@ -456,6 +461,13 @@ export default function BoardView({
   useEffect(() => {
     setExtrasReady(true);
   }, []);
+
+  useEffect(() => {
+    const taskId = searchParams.get("task");
+    if (!taskId) return;
+    const found = tasks.find((item) => item.id === taskId);
+    if (found) setDetailTask(found);
+  }, [searchParams, tasks]);
 
   async function refreshRemoteAttachments() {
     const map = await listProjectTaskAttachments(projectId);
@@ -614,7 +626,11 @@ export default function BoardView({
   async function createTask(draft: NewTaskDraft) {
     if (draft.dueDate && !isDueAfterCreated(null, draft.dueDate)) return;
     const targetProjectId = draft.projectId || projectId;
-    const targetColumnId = targetProjectId === projectId ? draft.columnId : null;
+    let targetColumnId = targetProjectId === projectId ? draft.columnId : null;
+    if (!targetColumnId) {
+      const todo = await ensureTodoColumn(targetProjectId);
+      targetColumnId = todo?.id ?? null;
+    }
     const list = targetColumnId ? tasksByColumn.get(targetColumnId) || [] : [];
     const position = list.length > 0 ? list[list.length - 1].position + 1000 : 1000;
     const member = members.find((item) => item.user_id === draft.assigneeId);
@@ -647,18 +663,23 @@ export default function BoardView({
   async function addColumn() {
     const name = newColumnName.trim();
     if (!name) return;
-    const color = COLUMN_PALETTE[columns.length % COLUMN_PALETTE.length];
-    const position = columns.length > 0 ? columns[columns.length - 1].position + 1 : 0;
+    const sorted = [...columns].sort((a, b) => a.position - b.position);
+    const insertIndex = Math.min(Math.max(newColumnOrder, 0), sorted.length);
     const { data, error } = await supabase
       .from("board_columns")
-      .insert({ project_id: projectId, name, color, position })
+      .insert({ project_id: projectId, name, color: newColumnColor, position: insertIndex })
       .select()
       .single();
-    if (!error && data) {
-      onColumnsMutated((prev) => [...prev, data as BoardColumn]);
-      setNewColumnName("");
-      setShowAddColumn(false);
-    }
+    if (error || !data) return;
+    const next = [...sorted];
+    next.splice(insertIndex, 0, data as BoardColumn);
+    const reindexed = next.map((col, i) => ({ ...col, position: i }));
+    await Promise.all(
+      reindexed.map((col) => supabase.from("board_columns").update({ position: col.position }).eq("id", col.id))
+    );
+    onColumnsMutated(() => reindexed);
+    setNewColumnName("");
+    setShowAddColumn(false);
   }
 
   async function renameColumn(column: BoardColumn, name: string) {
@@ -843,22 +864,73 @@ export default function BoardView({
 
         <div className="w-[280px] h-full shrink-0 rounded-xl border border-dashed border-line bg-paperDark/60 p-3">
           {showAddColumn ? (
-            <div className="flex items-center gap-1">
+            <div className="space-y-2.5">
               <Input
                 autoFocus
                 value={newColumnName}
                 onChange={(e) => setNewColumnName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addColumn()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void addColumn();
+                  if (e.key === "Escape") setShowAddColumn(false);
+                }}
                 placeholder={t("board.newColumnPlaceholder")}
                 className="text-sm py-1.5"
               />
-              <IconButton size="sm" tone="active" aria-label={t("board.addColumn")} onClick={addColumn}>
-                <Check size={13} strokeWidth={2} />
-              </IconButton>
+              <div>
+                <p className="text-[11px] text-inkFaint mb-1.5">{t("board.columnColor")}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {COLUMN_PALETTE.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setNewColumnColor(color)}
+                      className={`h-5 w-5 rounded-full border ${newColumnColor === color ? "ring-2 ring-offset-1 ring-[#6C5CE7] border-transparent" : "border-line"}`}
+                      style={{ backgroundColor: color }}
+                      aria-label={color}
+                    />
+                  ))}
+                </div>
+              </div>
+              <label className="block">
+                <span className="text-[11px] text-inkFaint">{t("board.columnOrder")}</span>
+                <select
+                  value={newColumnOrder}
+                  onChange={(e) => setNewColumnOrder(Number(e.target.value))}
+                  className="mt-1 w-full rounded-lg border-0 bg-surfaceSunken px-2 py-1.5 text-xs text-ink outline-none"
+                >
+                  {Array.from({ length: columns.length + 1 }, (_, i) => {
+                    const sorted = [...columns].sort((a, b) => a.position - b.position);
+                    const label =
+                      i === 0
+                        ? t("board.columnOrderFirst")
+                        : i === columns.length
+                          ? t("board.columnOrderLast")
+                          : t("board.columnOrderAfter").replace("{name}", sorted[i - 1]?.name || "");
+                    return (
+                      <option key={i} value={i}>
+                        {label}
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
+              <div className="flex items-center gap-1">
+                <IconButton size="sm" tone="active" aria-label={t("board.addColumn")} onClick={() => void addColumn()}>
+                  <Check size={13} strokeWidth={2} />
+                </IconButton>
+                <IconButton size="sm" aria-label={t("common.close")} onClick={() => setShowAddColumn(false)}>
+                  <X size={13} strokeWidth={2} />
+                </IconButton>
+              </div>
             </div>
           ) : (
             <button
-              onClick={() => setShowAddColumn(true)}
+              onClick={() => {
+                setNewColumnName("");
+                setNewColumnColor(COLUMN_PALETTE[columns.length % COLUMN_PALETTE.length]);
+                setNewColumnOrder(columns.length);
+                setShowAddColumn(true);
+              }}
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-inkFaint hover:text-[#8C3AED] hover:bg-paperDark rounded-lg transition-colors w-full"
             >
               <Plus size={14} strokeWidth={2} />

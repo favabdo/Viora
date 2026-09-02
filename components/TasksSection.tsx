@@ -24,6 +24,7 @@ import ClickableName from "./ClickableName";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { formatTaskDate, normalizeTask } from "@/lib/taskShape";
+import { deleteOwnedProject, deleteOwnedTask } from "@/lib/deletes";
 
 /** بيرتب المهام: غير المنجزة فوق (حسب position)، والمنجزة تنزل تحت تلقائيًا */
 function sortTasks(list: Task[]): Task[] {
@@ -223,15 +224,15 @@ export default function TasksSection({
   }
 
   async function performDeleteProject(id: string) {
-    const { error } = await supabase.rpc("delete_project", { p_project_id: id });
-    if (!error) {
+    const message = await deleteOwnedProject(id);
+    if (!message) {
       const remaining = projects.filter((p) => p.id !== id);
       setProjects(remaining);
       if (activeProjectId === id) {
         setActiveProjectId(remaining.length > 0 ? remaining[0].id : null);
       }
     } else {
-      alert(error.message || t("tasks.err.deleteProject"));
+      alert(message || t("tasks.err.deleteProject"));
     }
   }
 
@@ -427,8 +428,12 @@ export default function TasksSection({
   }
 
   async function performDeleteTask(id: string) {
+    const message = await deleteOwnedTask(id);
+    if (message) {
+      alert(message || t("tasks.err.deleteTask"));
+      return;
+    }
     setTasks((prev) => prev.filter((t) => t.id !== id));
-    await supabase.from("tasks").delete().eq("id", id);
   }
 
   const activeProject = projects.find((p) => p.id === activeProjectId);

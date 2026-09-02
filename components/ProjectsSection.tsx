@@ -11,9 +11,11 @@ import {
   Search,
   FolderKanban,
   Plus,
+  Star,
 } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
 import { getProjectMeta, PROJECT_COLORS, writeProjectMeta } from "@/lib/projectMeta";
+import { isFavoriteProject } from "@/lib/projectFavorites";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
@@ -23,7 +25,7 @@ import ProjectAppearanceFields from "./ProjectAppearanceFields";
 import ProjectMark from "./ProjectMark";
 
 type ProjectStatus = "active" | "completed" | "archived" | "on_hold";
-type StatusFilter = "all" | "active" | "completed" | "archived";
+type StatusFilter = "all" | "active" | "completed" | "archived" | "favorites";
 type ViewMode = "grid" | "list";
 
 type ProjectCard = {
@@ -44,6 +46,7 @@ type ProjectCard = {
   imageScaleY?: number;
   imagePosX?: number;
   imagePosY?: number;
+  favorite: boolean;
 };
 
 type Accent = {
@@ -207,6 +210,7 @@ export default function ProjectsSection({
         imageScaleY: extra?.imageScaleY ?? extra?.imageScale ?? 100,
         imagePosX: extra?.imagePosX ?? 50,
         imagePosY: extra?.imagePosY ?? 50,
+        favorite: isFavoriteProject(project.id),
       };
     });
 
@@ -257,22 +261,30 @@ export default function ProjectsSection({
       active: cards.filter((c) => c.status === "active").length,
       completed: cards.filter((c) => c.status === "completed").length,
       archived: cards.filter((c) => c.status === "archived").length,
+      favorites: cards.filter((c) => c.favorite).length,
     };
   }, [cards]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return cards.filter((card) => {
-      if (filter !== "all" && card.status !== filter) return false;
-      if (q && !card.name.toLowerCase().includes(q)) return false;
-      return true;
-    });
+    return cards
+      .filter((card) => {
+        if (filter === "favorites") {
+          if (!card.favorite) return false;
+        } else if (filter !== "all" && card.status !== filter) {
+          return false;
+        }
+        if (q && !card.name.toLowerCase().includes(q)) return false;
+        return true;
+      })
+      .sort((a, b) => Number(b.favorite) - Number(a.favorite));
   }, [cards, filter, query]);
 
   const filters: { id: StatusFilter; label: string; count: number }[] = [
     { id: "all", label: t("projects.filter.all"), count: counts.all },
     { id: "active", label: t("projects.filter.active"), count: counts.active },
     { id: "completed", label: t("projects.filter.completed"), count: counts.completed },
+    { id: "favorites", label: t("projects.filter.favorites"), count: counts.favorites },
     { id: "archived", label: t("projects.filter.archived"), count: counts.archived },
   ];
 
@@ -405,7 +417,10 @@ export default function ProjectsSection({
         </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium text-ink truncate">{card.name}</p>
+                  <p className="font-medium text-ink truncate inline-flex items-center gap-1.5 min-w-0">
+                    {card.favorite && <Star size={13} className="text-amber shrink-0" fill="currentColor" />}
+                    <span className="truncate">{card.name}</span>
+                  </p>
                   <StatusBadge status={card.status} t={t} />
                 </div>
                 <p className="text-xs text-inkFaint mt-0.5 truncate">{card.description}</p>
@@ -579,7 +594,10 @@ function ProjectCardView({
         </div>
         <StatusBadge status={card.status} t={t} />
       </div>
-      <h3 className="font-semibold text-ink leading-snug">{card.name}</h3>
+      <h3 className="font-semibold text-ink leading-snug inline-flex items-center gap-1.5">
+        {card.favorite && <Star size={14} className="text-amber shrink-0" fill="currentColor" />}
+        {card.name}
+      </h3>
       <p className="mt-1 text-xs text-inkSoft line-clamp-2 min-h-[32px]">{card.description}</p>
       <div className="mt-4">
         <div className="flex items-center justify-between mb-1.5">

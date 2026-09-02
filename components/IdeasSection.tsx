@@ -30,6 +30,7 @@ import type { LucideIcon } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
 import { patchTaskExtras, type TaskAttachment } from "@/lib/taskExtras";
 import { copyRemoteFilesToTask } from "@/lib/taskAttachments";
+import { findTodoColumn } from "@/lib/boardColumns";
 import { defaultProjectKey, writeProjectMeta } from "@/lib/projectMeta";
 import {
   addIdeaNote,
@@ -131,6 +132,12 @@ async function filesFromList(list: FileList | null): Promise<{ files: TaskAttach
     });
   }
   return { files, skipped };
+}
+
+function ideaActivityLabel(action: string, t: (key: string) => string) {
+  const key = `ideas.activity.${action}`;
+  const label = t(key);
+  return label !== key ? label : t("inbox.ideaEvent");
 }
 
 export default function IdeasSection({
@@ -367,7 +374,7 @@ export default function IdeasSection({
       .insert(DEFAULT_COLUMNS.map((col) => ({ ...col, project_id: project.id })))
       .select();
     const columns = (cols || []) as { id: string; name: string; is_done_column: boolean }[];
-    const startCol = columns.find((col) => col.name === "To Do") || columns.find((col) => !col.is_done_column) || columns[0];
+    const startCol = findTodoColumn(columns) || columns[0];
     const { data: task } = await supabase
       .from("tasks")
       .insert({
@@ -899,7 +906,7 @@ export default function IdeasSection({
               <ul className="space-y-2.5">
                 {selected.activity.map((item) => (
                   <li key={item.id} className="flex items-center justify-between gap-2 text-sm">
-                    <span className="text-inkSoft">{t(`ideas.activity.${item.message}`)}</span>
+                    <span className="text-inkSoft">{ideaActivityLabel(item.message, t)}</span>
                     <span className="text-[11px] text-inkFaint whitespace-nowrap">{timeAgo(item.createdAt, t)}</span>
                   </li>
                 ))}

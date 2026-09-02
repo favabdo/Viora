@@ -221,12 +221,14 @@ begin
 
     return new;
   elsif tg_op = 'DELETE' then
-    perform public.write_activity_log(
-      old.project_id, null, v_actor, v_name,
-      v_name || ' حذف مهمة: ' || old.title,
-      'task_deleted',
-      jsonb_build_object('title', old.title)
-    );
+    if exists (select 1 from projects where id = old.project_id) then
+      perform public.write_activity_log(
+        old.project_id, null, v_actor, v_name,
+        v_name || ' حذف مهمة: ' || old.title,
+        'task_deleted',
+        jsonb_build_object('title', old.title)
+      );
+    end if;
     return old;
   end if;
   return null;

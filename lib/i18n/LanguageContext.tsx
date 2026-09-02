@@ -7,12 +7,23 @@ export type Lang = "en" | "ar";
 
 const STORAGE_KEY = "viora-lang";
 
+type TranslateVars = Record<string, string | number | boolean | null | undefined>;
+
+function fillVars(text: string, vars?: TranslateVars) {
+  if (!vars) return text;
+  let out = text;
+  for (const [key, value] of Object.entries(vars)) {
+    out = out.replaceAll(`{${key}}`, String(value ?? ""));
+  }
+  return out;
+}
+
 type LanguageContextValue = {
   lang: Lang;
   dir: "ltr" | "rtl";
   setLang: (lang: Lang) => void;
   toggleLang: () => void;
-  t: (key: string) => string;
+  t: (key: string, vars?: TranslateVars) => string;
 };
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -46,14 +57,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const toggleLang = useCallback(() => setLangState((prev) => (prev === "en" ? "ar" : "en")), []);
 
   const t = useCallback(
-    (key: string) => {
+    (key: string, vars?: TranslateVars) => {
       const entry = dict[key];
       if (!entry) {
         // eslint-disable-next-line no-console
         console.warn(`[i18n] missing translation key: ${key}`);
-        return key;
+        return fillVars(key, vars);
       }
-      return entry[lang];
+      return fillVars(entry[lang], vars);
     },
     [lang]
   );

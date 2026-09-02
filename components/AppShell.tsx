@@ -9,7 +9,6 @@ import {
   UserRound,
   Moon,
   Sun,
-  Search,
   Settings,
   Crown,
   ChevronDown,
@@ -23,6 +22,7 @@ import { useRoomsPendingPoll } from "@/lib/useRoomsPendingPoll";
 import { supabase } from "@/lib/supabase";
 import VioraAIAssistant from "./VioraAIAssistant";
 import NotificationBell from "./NotificationBell";
+import GlobalSearch from "./GlobalSearch";
 
 export type ShellTab = {
   id: string;
@@ -212,18 +212,8 @@ export default function AppShell({
           >
             <Menu size={22} strokeWidth={2} />
           </button>
-          <div className="md:hidden min-w-0 flex-1">{Logo}</div>
-
-          <div className="relative flex-1 max-w-xl mx-auto hidden md:block">
-            <Search size={15} strokeWidth={1.75} className="absolute top-1/2 -translate-y-1/2 start-3.5 text-inkFaint" />
-            <input
-              type="text"
-              placeholder={t("shell.search")}
-              className="w-full bg-surfaceSunken border-0 rounded-[1.75rem] ps-10 pe-14 py-2.5 text-sm text-ink placeholder:text-inkFaint outline-none focus:outline-none focus:ring-0"
-            />
-            <span className="absolute top-1/2 -translate-y-1/2 end-3 text-[11px] text-inkFaint border border-line rounded-md px-1.5 py-0.5">
-              ⌘ K
-            </span>
+          <div className="min-w-0 flex-1 max-w-xl mx-auto">
+            <GlobalSearch userId={currentUserId} />
           </div>
 
           <div className="flex items-center gap-2 ms-auto">

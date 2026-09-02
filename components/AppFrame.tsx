@@ -15,6 +15,7 @@ import {
   Settings,
   DoorClosed,
   Sparkles,
+  ListTodo,
 } from "lucide-react";
 import AppShell, { ShellTab } from "@/components/AppShell";
 import PendingInvites from "@/components/PendingInvites";
@@ -37,6 +38,7 @@ export default function AppFrame({ children }: { children: ReactNode }) {
   const tabs: ShellTab[] = [
     { id: "dashboard", label: t("nav.dashboard"), icon: Home },
     { id: "projects", label: t("nav.projects"), icon: FolderKanban },
+    { id: "backlog", label: t("nav.backlog"), icon: ListTodo },
     { id: "calendar", label: t("nav.calendar"), icon: CalendarDays },
     { id: "ideas", label: t("nav.ideas"), icon: Lightbulb },
     { id: "timeline", label: t("nav.timeline"), icon: GanttChart },

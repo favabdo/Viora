@@ -42,6 +42,7 @@ import {
 import { displayName, renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { deleteOwnedProject } from "@/lib/deletes";
 import ClickableAvatar from "./ClickableAvatar";
 import ClickableName from "./ClickableName";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
@@ -373,10 +374,10 @@ export default function ProjectSettingsView({
   }
 
   async function performDelete() {
-    const { error } = await supabase.rpc("delete_project", { p_project_id: project.id });
+    const message = await deleteOwnedProject(project.id);
     setShowDelete(false);
-    if (!error) onDeleted();
-    else alert(error.message || t("tasks.err.deleteProject"));
+    if (!message) onDeleted();
+    else alert(message || t("tasks.err.deleteProject"));
   }
 
   return (
