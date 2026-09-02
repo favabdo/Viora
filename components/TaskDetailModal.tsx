@@ -136,7 +136,7 @@ function AttachmentPreview({ file, onClose }: { file: TaskAttachment; onClose: (
           <iframe src={url} title={file.name} className="w-full h-full min-h-[70vh] rounded-lg bg-white" />
         )}
         {url && kind === "text" && (
-          <pre className="h-full overflow-auto rounded-lg bg-[#0b0d14] text-white/90 text-xs p-4 whitespace-pre-wrap">
+          <pre className="h-full overflow-auto rounded-lg bg-paperDark text-ink text-xs p-4 whitespace-pre-wrap">
             {text ?? "…"}
           </pre>
         )}
@@ -542,7 +542,7 @@ export default function TaskDetailModal({
                         key={tag}
                         type="button"
                         onClick={() => removeChip("tags", tag)}
-                        className="rounded-md px-2 py-1 text-xs bg-[#3B82F6]/15 text-[#60A5FA]"
+                        className="rounded-md px-2 py-1 text-xs bg-[#3B82F6]/15 text-[#2563EB] dark:text-[#60A5FA]"
                       >
                         {tag} ×
                       </button>
@@ -565,7 +565,7 @@ export default function TaskDetailModal({
                         key={label}
                         type="button"
                         onClick={() => removeChip("labels", label)}
-                        className="rounded-md px-2 py-1 text-xs bg-[#6C5CE7]/20 text-[#A78BFA]"
+                        className="rounded-md px-2 py-1 text-xs bg-[#6C5CE7]/20 text-[#5B21B6] dark:text-[#A78BFA]"
                       >
                         {label} ×
                       </button>
@@ -661,7 +661,7 @@ export default function TaskDetailModal({
             </section>
           </div>
 
-          <aside className="border-t lg:border-t-0 lg:border-s border-line flex flex-col min-h-0 bg-[#12141c]/40">
+          <aside className="border-t lg:border-t-0 lg:border-s border-line flex flex-col min-h-0 bg-paperDark/60">
             <div className="flex items-center gap-3 px-4 pt-4 border-b border-line">
               {(
                 [
@@ -719,7 +719,13 @@ export default function TaskDetailModal({
                 />
               )}
               {tab === "history" && (
-                <ItemHistory table="activity_log" column="task_id" id={task.id} currentUserId={currentUserId} />
+                <ItemHistory
+                  table="activity_log"
+                  column="task_id"
+                  id={task.id}
+                  currentUserId={currentUserId}
+                  alwaysOpen
+                />
               )}
             </div>
           </aside>

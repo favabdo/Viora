@@ -243,7 +243,7 @@ export default function AppShell({
           <button
             type="button"
             onClick={() => setShowMobileNav(true)}
-            className="md:hidden fixed z-30 top-3 start-3 h-10 w-10 inline-flex items-center justify-center rounded-xl bg-white/5 text-white border border-white/10 backdrop-blur"
+            className="md:hidden fixed z-30 top-3 start-3 h-10 w-10 inline-flex items-center justify-center rounded-xl bg-surface text-ink border border-line shadow-sm backdrop-blur dark:bg-white/5 dark:text-white dark:border-white/10"
             aria-label={t("shell.openMenu")}
             aria-expanded={showMobileNav}
           >
@@ -331,7 +331,7 @@ function SidebarPanel({
         </button>
       </div>
 
-      <nav className="flex-1 flex flex-col gap-0.5 px-3 overflow-y-auto thin-scroll" role="tablist">
+      <nav className="flex-1 flex flex-col gap-0.5 px-3 pt-3 overflow-y-auto thin-scroll" role="tablist">
         {tabs.map(({ id, label, icon: Icon }) => {
           const active = activeTab === id;
           const showBadge = id === "rooms" && notifCount > 0;

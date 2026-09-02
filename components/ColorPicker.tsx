@@ -165,7 +165,7 @@ export default function ColorPicker({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-[#2b2b2b]">
+    <div className="overflow-hidden rounded-xl border border-line bg-surface">
       <div
         ref={planeRef}
         className="relative h-44 w-full cursor-crosshair touch-none"
@@ -188,13 +188,13 @@ export default function ColorPicker({
           <button
             type="button"
             onClick={() => void eyedrop()}
-            className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-white/80 hover:bg-white/10"
+            className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-inkSoft hover:bg-paperDark"
             aria-label="Eyedropper"
           >
             <Pipette size={16} />
           </button>
         ) : null}
-        <span className="h-8 w-8 rounded-full border border-white/15 shrink-0" style={{ backgroundColor: hex }} />
+        <span className="h-8 w-8 rounded-full border border-line shrink-0" style={{ backgroundColor: hex }} />
         <div
           ref={hueRef}
           className="relative h-3 flex-1 cursor-pointer touch-none rounded-full"
@@ -216,20 +216,20 @@ export default function ColorPicker({
         {mode === "rgb" ? (
           (["r", "g", "b"] as const).map((key) => (
             <label key={key} className="flex-1">
-              <span className="mb-1 block text-[10px] uppercase tracking-wide text-white/50">{key}</span>
+              <span className="mb-1 block text-[10px] uppercase tracking-wide text-inkFaint">{key}</span>
               <input
                 type="number"
                 min={0}
                 max={255}
                 value={rgb[key]}
                 onChange={(e) => setChannel(key, e.target.value)}
-                className="w-full rounded-md border-0 bg-[#1f1f1f] px-2 py-1.5 text-center text-xs text-white outline-none"
+                className="w-full rounded-md border-0 bg-surfaceSunken px-2 py-1.5 text-center text-xs text-ink outline-none"
               />
             </label>
           ))
         ) : (
           <label className="flex-1">
-            <span className="mb-1 block text-[10px] uppercase tracking-wide text-white/50">hex</span>
+            <span className="mb-1 block text-[10px] uppercase tracking-wide text-inkFaint">hex</span>
             <input
               value={hexDraft}
               maxLength={7}
@@ -242,14 +242,14 @@ export default function ColorPicker({
                   emit({ h: nextHsv.s === 0 ? hsv.h : nextHsv.h, s: nextHsv.s, v: nextHsv.v });
                 }
               }}
-              className="w-full rounded-md border-0 bg-[#1f1f1f] px-2 py-1.5 text-center text-xs font-mono text-white outline-none"
+              className="w-full rounded-md border-0 bg-surfaceSunken px-2 py-1.5 text-center text-xs font-mono text-ink outline-none"
             />
           </label>
         )}
         <button
           type="button"
           onClick={() => setMode((m) => (m === "rgb" ? "hex" : "rgb"))}
-          className="mb-0.5 h-8 w-8 inline-flex items-center justify-center rounded-md text-white/70 hover:bg-white/10"
+          className="mb-0.5 h-8 w-8 inline-flex items-center justify-center rounded-md text-inkSoft hover:bg-paperDark"
           aria-label="Switch RGB / HEX"
         >
           <span className="inline-flex flex-col leading-none">

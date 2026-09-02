@@ -278,7 +278,7 @@ function LoginPageInner() {
               </p>
             )}
             {info && (
-              <p className="text-sm text-[#4ADE80] bg-[#22C55E]/10 rounded-lg px-3 py-2">
+              <p className="text-sm text-[#15803D] dark:text-[#4ADE80] bg-[#22C55E]/10 rounded-lg px-3 py-2">
                 {info}
               </p>
             )}

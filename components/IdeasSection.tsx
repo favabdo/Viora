@@ -88,22 +88,22 @@ function IdeaIcon({ id, size = 18 }: { id: string; size?: number }) {
 }
 
 function statusTone(status: IdeaStatus) {
-  if (status === "in_progress") return "bg-[#3B82F6]/15 text-[#60A5FA]";
-  if (status === "planned") return "bg-[#F59E0B]/15 text-[#FBBF24]";
-  if (status === "implemented") return "bg-[#22C55E]/15 text-[#4ADE80]";
+  if (status === "in_progress") return "bg-[#3B82F6]/15 text-[#2563EB] dark:text-[#60A5FA]";
+  if (status === "planned") return "bg-[#F59E0B]/15 text-[#B45309] dark:text-[#FBBF24]";
+  if (status === "implemented") return "bg-[#22C55E]/15 text-[#15803D] dark:text-[#4ADE80]";
   return "bg-paperDark text-inkSoft";
 }
 
 function priorityTone(priority: IdeaPriority) {
-  if (priority === "high") return "bg-[#EF4444]/15 text-[#F87171]";
-  if (priority === "medium") return "bg-[#F59E0B]/15 text-[#FBBF24]";
-  return "bg-[#22C55E]/15 text-[#4ADE80]";
+  if (priority === "high") return "bg-[#EF4444]/15 text-[#DC2626] dark:text-[#F87171]";
+  if (priority === "medium") return "bg-[#F59E0B]/15 text-[#B45309] dark:text-[#FBBF24]";
+  return "bg-[#22C55E]/15 text-[#15803D] dark:text-[#4ADE80]";
 }
 
 function categoryTone(category: string) {
-  if (category === "AI") return "bg-[#6C5CE7]/15 text-[#A78BFA]";
-  if (category === "Mobile") return "bg-[#3B82F6]/15 text-[#60A5FA]";
-  if (category === "Design") return "bg-[#EC4899]/15 text-[#F472B6]";
+  if (category === "AI") return "bg-[#6C5CE7]/15 text-[#5B21B6] dark:text-[#A78BFA]";
+  if (category === "Mobile") return "bg-[#3B82F6]/15 text-[#2563EB] dark:text-[#60A5FA]";
+  if (category === "Design") return "bg-[#EC4899]/15 text-[#BE185D] dark:text-[#F472B6]";
   return "bg-paperDark text-inkSoft";
 }
 
@@ -852,7 +852,7 @@ export default function IdeasSection({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-xs font-semibold text-inkFaint uppercase">{t("ideas.detail.notes")}</h4>
-                      <button className="text-[11px] text-[#A78BFA]" onClick={() => setDetailTab("notes")}>{t("ideas.viewAll")}</button>
+                      <button className="text-[11px] text-[#6C5CE7] dark:text-[#A78BFA]" onClick={() => setDetailTab("notes")}>{t("ideas.viewAll")}</button>
                     </div>
                     <div className="flex items-start gap-2">
                       <ClickableAvatar userId={selected.notes[selected.notes.length - 1].userId} name={selected.notes[selected.notes.length - 1].authorName} size="xs" />

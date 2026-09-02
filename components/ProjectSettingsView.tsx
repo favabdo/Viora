@@ -678,7 +678,7 @@ export default function ProjectSettingsView({
           <Card>
             <div className="flex items-center justify-between gap-2 mb-4">
               <h3 className="text-sm font-semibold text-ink">{t("projectSettings.activity")}</h3>
-              <button type="button" onClick={onOpenHistory} className="text-xs text-[#A78BFA] hover:text-[#C4B5FD]">
+              <button type="button" onClick={onOpenHistory} className="text-xs text-[#6C5CE7] hover:text-[#5B21B6] dark:text-[#A78BFA] dark:hover:text-[#C4B5FD]">
                 {t("projectSettings.viewHistory")}
               </button>
             </div>
@@ -705,7 +705,7 @@ export default function ProjectSettingsView({
                               {label}
                             </ClickableName>
                           )}
-                          <span className="text-[#A78BFA]">{rest}</span>
+                          <span className="text-[#6C5CE7] dark:text-[#A78BFA]">{rest}</span>
                         </p>
                         <p className="text-[11px] text-inkFaint mt-0.5">{timeAgo(entry.created_at, t)}</p>
                       </div>

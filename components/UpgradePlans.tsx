@@ -72,7 +72,7 @@ export default function UpgradePlans() {
             >
               {t("upgrade.billing.yearly")}
             </button>
-            <span className="me-1 rounded-full bg-[#22c55e]/15 px-2.5 py-0.5 text-[10px] font-semibold text-[#4ade80] shadow-[0_0_12px_rgba(74,222,128,0.25)]">
+            <span className="me-1 rounded-full bg-[#22c55e]/15 px-2.5 py-0.5 text-[10px] font-semibold text-[#15803D] dark:text-[#4ade80] shadow-[0_0_12px_rgba(74,222,128,0.25)]">
               {t("upgrade.billing.save")}
             </span>
           </div>
@@ -140,7 +140,7 @@ export default function UpgradePlans() {
 
           <aside className="upgrade-card rounded-2xl p-4 flex flex-col min-h-[440px]">
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles size={16} className="text-[#c4b5fd] drop-shadow-[0_0_8px_rgba(196,181,253,0.8)]" />
+              <Sparkles size={16} className="text-[#6C5CE7] dark:text-[#c4b5fd] drop-shadow-[0_0_8px_rgba(196,181,253,0.8)]" />
               <h2 className="text-sm font-semibold text-ink">{t("upgrade.meet.title")}</h2>
             </div>
             <p className="text-[11px] text-inkFaint mb-4">{t("upgrade.meet.subtitle")}</p>
@@ -175,8 +175,8 @@ export default function UpgradePlans() {
                 <tr className="text-inkFaint">
                   <th className="text-start font-medium px-5 py-3 w-[34%]">{t("upgrade.compare.feature")}</th>
                   <th className="text-start font-medium px-4 py-3">{t("upgrade.free.name")}</th>
-                  <th className="text-start font-medium px-4 py-3 text-[#c4b5fd]">{t("upgrade.pro.name")}</th>
-                  <th className="text-start font-medium px-4 py-3 text-[#5eead4]">{t("upgrade.team.name")}</th>
+                  <th className="text-start font-medium px-4 py-3 text-[#6C5CE7] dark:text-[#c4b5fd]">{t("upgrade.pro.name")}</th>
+                  <th className="text-start font-medium px-4 py-3 text-[#0F766E] dark:text-[#5eead4]">{t("upgrade.team.name")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -236,7 +236,7 @@ function PlanCard({
     ctaStyle === "primary"
       ? "text-white bg-gradient-to-r from-[#8b5cf6] via-[#7c5cff] to-[#4f46e5] shadow-[0_10px_28px_-6px_rgba(124,92,255,0.95)]"
       : ctaStyle === "teal"
-        ? "border border-[#2dd4bf]/70 text-[#5eead4] shadow-[0_0_18px_rgba(45,212,191,0.18)] hover:bg-[#2dd4bf]/10"
+        ? "border border-[#0F766E]/50 text-[#0F766E] dark:border-[#2dd4bf]/70 dark:text-[#5eead4] shadow-[0_0_18px_rgba(45,212,191,0.18)] hover:bg-[#2dd4bf]/10"
         : "border border-line text-ink hover:bg-paperDark";
 
   return (
@@ -295,7 +295,7 @@ function PlanCard({
           <ul className="space-y-1.5">
             {aiItems.map((item) => (
               <li key={item} className="flex items-start gap-2 text-[12px] text-inkSoft">
-                <Sparkles size={12} className={`mt-0.5 shrink-0 ${accent === "teal" ? "text-[#5eead4]" : "text-[#c4b5fd]"}`} />
+                <Sparkles size={12} className={`mt-0.5 shrink-0 ${accent === "teal" ? "text-[#0F766E] dark:text-[#5eead4]" : "text-[#6C5CE7] dark:text-[#c4b5fd]"}`} />
                 {item}
               </li>
             ))}
@@ -318,10 +318,10 @@ function MeetRow({
   tone: "violet" | "blue" | "fuchsia" | "cyan";
 }) {
   const tones = {
-    violet: "bg-[#7c5cff]/20 text-[#c4b5fd] shadow-[0_0_12px_rgba(124,92,255,0.25)]",
-    blue: "bg-[#3b82f6]/20 text-[#93c5fd] shadow-[0_0_12px_rgba(59,130,246,0.25)]",
-    fuchsia: "bg-[#d946ef]/18 text-[#e879f9] shadow-[0_0_12px_rgba(217,70,239,0.22)]",
-    cyan: "bg-[#22d3ee]/16 text-[#67e8f9] shadow-[0_0_12px_rgba(34,211,238,0.22)]",
+    violet: "bg-[#7c5cff]/20 text-[#5B21B6] dark:text-[#c4b5fd] shadow-[0_0_12px_rgba(124,92,255,0.25)]",
+    blue: "bg-[#3b82f6]/20 text-[#1D4ED8] dark:text-[#93c5fd] shadow-[0_0_12px_rgba(59,130,246,0.25)]",
+    fuchsia: "bg-[#d946ef]/18 text-[#A21CAF] dark:text-[#e879f9] shadow-[0_0_12px_rgba(217,70,239,0.22)]",
+    cyan: "bg-[#22d3ee]/16 text-[#0E7490] dark:text-[#67e8f9] shadow-[0_0_12px_rgba(34,211,238,0.22)]",
   };
   return (
     <div className="flex gap-2.5 rounded-xl border border-line bg-paperDark/40 px-2.5 py-2">

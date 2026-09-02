@@ -192,7 +192,7 @@ function TaskCard({
           })()}
 
         {extras.category && (
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#6C5CE7]/15 text-[#A78BFA]">
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#6C5CE7]/15 text-[#5B21B6] dark:text-[#A78BFA]">
             {t(`taskDetail.category.${extras.category}`)}
           </span>
         )}
@@ -202,7 +202,7 @@ function TaskCard({
           .filter(Boolean)
           .slice(0, 3)
           .map((tag) => (
-            <span key={tag} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#3B82F6]/15 text-[#60A5FA]">
+            <span key={tag} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#3B82F6]/15 text-[#2563EB] dark:text-[#60A5FA]">
               {tag}
             </span>
           ))}
