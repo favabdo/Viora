@@ -530,30 +530,29 @@ html:not(.dark) .login-mask {
 }
 
 .login-preview {
-  transform-origin: 0% 58%;
-  cursor: zoom-in;
-  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: 8% 70%;
+  cursor: default;
+  transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .login-preview-frame {
   transform: perspective(1400px) rotateY(-16deg) rotateX(7deg) rotateZ(-1.5deg);
   transform-origin: 50% 50%;
   box-shadow: 0 40px 80px -28px rgba(0, 0, 0, 0.55);
-  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.55s ease;
+  transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.9s ease;
 }
 
 .login-preview:hover {
-  z-index: 20;
-  transform: scale(1.38) translateY(-3%);
+  transform: scale(1.08);
 }
 
 .login-preview:hover .login-preview-frame {
-  transform: perspective(1400px) rotateY(-1deg) rotateX(0deg) rotateZ(0deg);
-  box-shadow: 0 48px 90px -24px rgba(124, 58, 237, 0.38), 0 24px 60px -20px rgba(0, 0, 0, 0.45);
+  transform: perspective(1400px) rotateY(-8deg) rotateX(3deg) rotateZ(-0.6deg);
+  box-shadow: 0 44px 70px -28px rgba(124, 58, 237, 0.22), 0 20px 40px -24px rgba(0, 0, 0, 0.35);
 }
 
 @media (min-width: 1280px) {
   .login-preview:hover {
-    transform: scale(1.52) translate(2%, -4%);
+    transform: scale(1.11);
   }
 }
