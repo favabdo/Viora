@@ -11,7 +11,7 @@ import {
   type BacklogItem,
 } from "@/lib/backlog";
 import { ensureTodoColumn } from "@/lib/boardColumns";
-import { writeTaskMeta } from "@/lib/taskExtras";
+import { patchTaskExtras } from "@/lib/taskExtras";
 import { projectPath } from "@/lib/appRoutes";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Button from "./ui/Button";
@@ -80,7 +80,7 @@ export default function BacklogSection({
       .single();
     setSending(null);
     if (error || !data) return;
-    if (item.description) writeTaskMeta(data.id, { description: item.description });
+    if (item.description) patchTaskExtras(data.id, { description: item.description });
     deleteBacklogItem(item.id);
     refresh();
     onOpenProject(target);
