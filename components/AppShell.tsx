@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useRef, useState, type RefObject } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   LucideIcon,
   LogOut,
@@ -58,6 +58,8 @@ export default function AppShell({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isUpgrade = pathname.startsWith("/upgrade");
   const { t, lang } = useTranslation();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
@@ -203,7 +205,7 @@ export default function AppShell({
   };
 
   return (
-    <div className="min-h-screen md:flex bg-paper">
+    <div className={`min-h-screen md:flex ${isUpgrade ? "bg-[#0a0b14]" : "bg-paper"}`}>
       <button
         type="button"
         aria-hidden={!showMobileNav}
@@ -222,7 +224,8 @@ export default function AppShell({
         <SidebarPanel {...sidebarProps} onCloseMobile={() => setShowMobileNav(false)} />
       </aside>
 
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className={`flex-1 min-w-0 flex flex-col ${isUpgrade ? "bg-[#0a0b14]" : ""}`}>
+        {!isUpgrade && (
         <header className="flex items-center gap-2 px-3 py-3 md:gap-3 md:px-6 border-b border-line sticky top-0 bg-paper/90 backdrop-blur z-30">
           <button
             type="button"
@@ -276,9 +279,22 @@ export default function AppShell({
             </button>
           </div>
         </header>
+        )}
 
-        <main className="flex-1 min-w-0 overflow-x-hidden px-3 py-4 sm:px-4 md:px-8 md:py-7 pb-24">
-          {showEnablePrompt && (
+        {isUpgrade && (
+          <button
+            type="button"
+            onClick={() => setShowMobileNav(true)}
+            className="md:hidden fixed z-30 top-3 start-3 h-10 w-10 inline-flex items-center justify-center rounded-xl bg-white/5 text-white border border-white/10 backdrop-blur"
+            aria-label={t("shell.openMenu")}
+            aria-expanded={showMobileNav}
+          >
+            <Menu size={22} strokeWidth={2} />
+          </button>
+        )}
+
+        <main className={`flex-1 min-w-0 ${isUpgrade ? "overflow-visible px-0 py-0 pb-24" : "overflow-x-hidden px-3 py-4 sm:px-4 md:px-8 md:py-7 pb-24"}`}>
+          {showEnablePrompt && !isUpgrade && (
             <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5 mb-4 text-sm fade-in">
               <div className="flex items-center gap-2">
                 <Bell size={14} strokeWidth={1.75} className="text-[#6C5CE7] shrink-0" />
