@@ -77,11 +77,8 @@ function DashboardPreview({ theme }: { theme: Theme }) {
     { left: "72.5%", top: "46%", width: "26.5%", height: "14%" },
   ];
   return (
-    <div className="login-preview relative mt-10 w-[min(100%,640px)] origin-bottom-left">
-      <div
-        className="relative overflow-hidden rounded-2xl border border-line shadow-[0_40px_80px_-28px_rgba(0,0,0,0.55)]"
-        style={{ transform: "perspective(1400px) rotateY(-16deg) rotateX(7deg) rotateZ(-1.5deg)" }}
-      >
+    <div className="login-preview relative mt-10 w-[min(100%,640px)]">
+      <div className="login-preview-frame relative overflow-hidden rounded-2xl border border-line">
         <Image
           src={src}
           alt=""
@@ -264,14 +261,14 @@ function LoginPageInner() {
     "login-field h-12 ps-11 pe-4 text-sm text-ink placeholder:text-inkFaint";
 
   return (
-    <main className="login-scene relative min-h-screen overflow-hidden">
+    <main className="login-scene relative min-h-screen overflow-x-hidden">
       <div className="relative mx-auto flex min-h-screen max-w-[1440px] flex-col px-5 sm:px-8 lg:px-12">
         <header className="flex items-center pt-7">
           <BrandLogo />
         </header>
 
         <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(380px,460px)] lg:gap-16">
-          <section className="hidden min-w-0 lg:block">
+          <section className="hidden min-w-0 lg:block relative z-10">
             <span className="inline-flex rounded-full bg-[#7C3AED]/20 px-3 py-1 text-xs font-medium text-ink">
               {t("login.heroBadge")}
             </span>
@@ -283,7 +280,7 @@ function LoginPageInner() {
             <DashboardPreview theme={theme} />
           </section>
 
-          <section className="mx-auto w-full max-w-[420px] lg:mx-0 lg:justify-self-end">
+          <section className="relative z-30 mx-auto w-full max-w-[420px] lg:mx-0 lg:justify-self-end">
             <div className="login-card rounded-[28px] p-6 sm:p-8">
               <div className="mb-6 flex items-center justify-between gap-2">
                 <div className="inline-flex rounded-xl border border-line bg-paperDark/40 p-0.5" role="group" aria-label={t("login.language")}>
