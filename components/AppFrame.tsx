@@ -97,13 +97,6 @@ export default function AppFrame({ children }: { children: ReactNode }) {
           tabs={tabs}
           activeTab={navIdFromPath(pathname)}
           onTabChange={(id) => router.push(pathForNav(id))}
-          onNew={() => {
-            if (pathname.startsWith("/ideas")) {
-              router.push("/ideas?new=1");
-              return;
-            }
-            router.push("/projects?new=1");
-          }}
           userName={userName}
           userUsername={userUsername}
           avatarUrl={avatarUrl}

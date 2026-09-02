@@ -379,18 +379,29 @@ button.rounded-2xl.border.bg-surface:hover {
     inset 0 1px 0 rgb(255 255 255 / 0.12);
 }
 
-html:not(.dark) .upgrade-stage .text-white {
+html:not(.dark) .upgrade-stage [class*="text-white"] {
   color: rgb(var(--color-ink)) !important;
 }
-html:not(.dark) .upgrade-stage button.text-white,
-html:not(.dark) .upgrade-stage [class*="bg-gradient"] {
-  color: #fff !important;
+html:not(.dark) .upgrade-stage [class*="text-white/"] {
+  color: rgb(var(--color-inkSoft)) !important;
 }
-html:not(.dark) .upgrade-stage .border-white\/10 {
+html:not(.dark) .upgrade-stage .text-transparent {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+}
+html:not(.dark) .upgrade-stage button[class*="bg-gradient"],
+html:not(.dark) .upgrade-stage button[class*="bg-[#7C5CFF]"],
+html:not(.dark) .upgrade-stage [class*="from-[#8b5cf6]"][class*="text-white"] {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+}
+html:not(.dark) .upgrade-stage .border-white\/10,
+html:not(.dark) .upgrade-stage .border-white\/8,
+html:not(.dark) .upgrade-stage .border-white\/25 {
   border-color: rgb(var(--color-line));
 }
 html:not(.dark) .upgrade-stage .bg-black\/25 {
-  background-color: rgb(var(--color-surface) / 0.75);
+  background-color: rgb(var(--color-surface) / 0.82);
 }
 
 .dark .upgrade-stage {

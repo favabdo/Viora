@@ -29,6 +29,7 @@ const dict: Record<string, { en: string; ar: string }> = {
   "shell.upgradeBenefit2": { en: "Get more storage", ar: "سعة تخزين أكبر" },
   "shell.upgradeBenefit3": { en: "Unlimited projects", ar: "مشاريع بلا حد" },
   "shell.upgradeNow": { en: "View Plans", ar: "عرض الخطط" },
+  "shell.dismissUpgrade": { en: "Hide upgrade tips", ar: "إخفاء نصائح الترقية" },
   "ai.fabLabel": { en: "Viora AI", ar: "Viora AI" },
   "ai.panelTitle": { en: "Viora AI", ar: "Viora AI" },
   "ai.panelSubtitle": { en: "Smart assistant", ar: "المساعد الذكي" },
@@ -801,7 +802,11 @@ const dict: Record<string, { en: string; ar: string }> = {
   "notif.enablePrompt": { en: "Enable browser notifications for new Rooms requests?", ar: "هل ترغب في تفعيل تنبيهات المتصفح للطلبات الجديدة في الغرف؟" },
   "notif.enable": { en: "Enable", ar: "تفعيل" },
   "notif.dismiss": { en: "Not now", ar: "ليس الآن" },
-  "notif.pendingRequests": { en: "Pending requests", ar: "طلبات معلّقة" },
+  "inbox.title": { en: "Notifications", ar: "الإشعارات" },
+  "inbox.empty": { en: "No notifications yet", ar: "لا توجد إشعارات بعد" },
+  "inbox.loading": { en: "Loading…", ar: "جارٍ التحميل…" },
+  "inbox.login": { en: "Signed in to Viora", ar: "تم تسجيل الدخول إلى فيورا" },
+  "inbox.ideaEvent": { en: "Idea activity", ar: "نشاط على فكرة" },
 
   // ===== فلترة المعلّق + زرار الاعتماد (RoomsSection) =====
   "rooms.filter.open": { en: "Open", ar: "المفتوحة" },
@@ -1178,6 +1183,9 @@ const dict: Record<string, { en: string; ar: string }> = {
   "ideas.activity.note": { en: "Added a note", ar: "أُضيفت ملاحظة" },
   "ideas.activity.file": { en: "Attached a file", ar: "أُرفق ملف" },
   "ideas.activity.converted": { en: "Converted to a project", ar: "حُوّلت إلى مشروع" },
+  "ideas.activity.status": { en: "Idea status changed", ar: "تغيّرت حالة الفكرة" },
+  "ideas.activity.favorite": { en: "Idea favorite updated", ar: "تحديث المفضلة للفكرة" },
+  "ideas.activity.priority": { en: "Idea priority changed", ar: "تغيّرت أولوية الفكرة" },
 
   // ===== components/UpgradePlans.tsx =====
   "upgrade.titleBefore": { en: "Choose the plan that", ar: "اختر الخطة التي" },

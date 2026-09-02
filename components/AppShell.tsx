@@ -9,22 +9,20 @@ import {
   UserRound,
   Moon,
   Sun,
-  Bell,
-  X,
   Search,
   Settings,
-  Plus,
   Crown,
   ChevronDown,
   Menu,
+  X,
 } from "lucide-react";
 import Avatar from "./ui/Avatar";
 import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useRoomsPendingPoll } from "@/lib/useRoomsPendingPoll";
-import { usePushSubscription } from "@/lib/usePushSubscription";
 import { supabase } from "@/lib/supabase";
 import VioraAIAssistant from "./VioraAIAssistant";
+import NotificationBell from "./NotificationBell";
 
 export type ShellTab = {
   id: string;
@@ -36,8 +34,6 @@ export default function AppShell({
   tabs,
   activeTab,
   onTabChange,
-  onRoomsTabActivated,
-  onNew,
   userName,
   userUsername,
   avatarUrl,
@@ -48,8 +44,6 @@ export default function AppShell({
   tabs: ShellTab[];
   activeTab: string;
   onTabChange: (id: string) => void;
-  onRoomsTabActivated?: (hasPending: boolean) => void;
-  onNew?: () => void;
   userName: string;
   userUsername?: string;
   avatarUrl?: string | null;
@@ -67,9 +61,6 @@ export default function AppShell({
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const [isNilechatLinked, setIsNilechatLinked] = useState(false);
   const { pendingCount } = useRoomsPendingPoll(isNilechatLinked);
-  const { supported: pushSupported, subscribed: pushSubscribed, subscribing, subscribe } = usePushSubscription();
-  const [showEnablePrompt, setShowEnablePrompt] = useState(false);
-  const notifCount = isNilechatLinked ? pendingCount : 0;
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -80,21 +71,6 @@ export default function AppShell({
       .maybeSingle()
       .then(({ data }) => setIsNilechatLinked(Boolean(data)));
   }, [currentUserId]);
-
-  useEffect(() => {
-    if (!isNilechatLinked || !pushSupported || pushSubscribed) return;
-    const dismissed = typeof window !== "undefined" && localStorage.getItem("viora-push-prompt-dismissed") === "1";
-    if (!dismissed) setShowEnablePrompt(true);
-  }, [isNilechatLinked, pushSupported, pushSubscribed]);
-
-  function dismissEnablePrompt() {
-    setShowEnablePrompt(false);
-    try {
-      localStorage.setItem("viora-push-prompt-dismissed", "1");
-    } catch {
-      // تجاهل
-    }
-  }
 
   function handleTabClick(id: string) {
     setShowMobileNav(false);
@@ -185,7 +161,7 @@ export default function AppShell({
     logo: Logo,
     tabs,
     activeTab,
-    notifCount,
+    notifCount: pendingCount,
     userName,
     userUsername,
     avatarUrl,
@@ -251,25 +227,7 @@ export default function AppShell({
           </div>
 
           <div className="flex items-center gap-2 ms-auto">
-            <button
-              onClick={onNew}
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#8b5cf6] to-[#6C5CE7] hover:shadow-[0_8px_22px_-6px_rgba(124,92,255,0.9)] text-white text-sm font-semibold px-3.5 py-2 transition-all"
-            >
-              <Plus size={15} strokeWidth={2.25} />
-              {t("shell.new")}
-            </button>
-            <button
-              aria-label={t("notif.pendingRequests")}
-              onClick={() => handleTabClick("projects")}
-              className="relative h-9 w-9 inline-flex items-center justify-center rounded-xl text-inkSoft hover:text-ink hover:bg-surface"
-            >
-              <Bell size={17} strokeWidth={1.75} />
-              {notifCount > 0 && (
-                <span className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#6C5CE7] px-1 text-[9px] font-semibold text-white">
-                  {notifCount}
-                </span>
-              )}
-            </button>
+            <NotificationBell userId={currentUserId} />
             <button
               aria-label={theme === "dark" ? t("shell.enableLight") : t("shell.enableDark")}
               onClick={toggleTheme}
@@ -294,29 +252,6 @@ export default function AppShell({
         )}
 
         <main className={`flex-1 min-w-0 ${isUpgrade ? "overflow-visible px-0 py-0 pb-24" : "overflow-x-hidden px-3 py-4 sm:px-4 md:px-8 md:py-7 pb-24"}`}>
-          {showEnablePrompt && !isUpgrade && (
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5 mb-4 text-sm fade-in">
-              <div className="flex items-center gap-2">
-                <Bell size={14} strokeWidth={1.75} className="text-[#6C5CE7] shrink-0" />
-                <span className="text-ink">{t("notif.enablePrompt")}</span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={async () => {
-                    await subscribe();
-                    setShowEnablePrompt(false);
-                  }}
-                  disabled={subscribing}
-                  className="text-[#6C5CE7] hover:text-[#5b4bd6] font-medium text-xs disabled:opacity-50"
-                >
-                  {t("notif.enable")}
-                </button>
-                <button onClick={dismissEnablePrompt} className="text-inkFaint hover:text-ink">
-                  <X size={14} strokeWidth={1.75} />
-                </button>
-              </div>
-            </div>
-          )}
           {children}
         </main>
       </div>
@@ -363,6 +298,25 @@ function SidebarPanel({
   onSignOut: () => void;
   onCloseMobile: () => void;
 }) {
+  const [showUpgradePromo, setShowUpgradePromo] = useState(true);
+
+  useEffect(() => {
+    try {
+      setShowUpgradePromo(localStorage.getItem("viora-upgrade-promo") !== "hidden");
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  function dismissUpgradePromo() {
+    setShowUpgradePromo(false);
+    try {
+      localStorage.setItem("viora-upgrade-promo", "hidden");
+    } catch {
+      // ignore
+    }
+  }
+
   return (
     <>
       <div className="flex items-center justify-between gap-2 px-5 pt-5 pb-6">
@@ -410,28 +364,38 @@ function SidebarPanel({
         })}
       </nav>
 
-      <div className="px-3 pb-3 mt-4">
-        <div className="rounded-xl border border-line bg-paperDark/70 px-3.5 py-3.5">
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="h-7 w-7 rounded-lg bg-[#6C5CE7]/18 text-[#6C5CE7] flex items-center justify-center">
-              <Crown size={14} strokeWidth={1.75} />
+      {showUpgradePromo && (
+        <div className="px-3 pb-3 mt-4">
+          <div className="relative rounded-xl border border-line bg-paperDark/70 px-3.5 py-3.5">
+            <button
+              type="button"
+              onClick={dismissUpgradePromo}
+              className="absolute top-2 end-2 h-7 w-7 inline-flex items-center justify-center rounded-lg text-inkFaint hover:text-ink hover:bg-surface"
+              aria-label={t("shell.dismissUpgrade")}
+            >
+              <X size={14} strokeWidth={1.75} />
+            </button>
+            <div className="flex items-center gap-2 mb-1.5 pe-7">
+              <div className="h-7 w-7 rounded-lg bg-[#6C5CE7]/18 text-[#6C5CE7] flex items-center justify-center">
+                <Crown size={14} strokeWidth={1.75} />
+              </div>
+              <p className="text-sm font-semibold text-ink">{t("shell.upgradeTitle")}</p>
             </div>
-            <p className="text-sm font-semibold text-ink">{t("shell.upgradeTitle")}</p>
+            <ul className="mb-3 space-y-1 text-[11px] leading-relaxed text-inkSoft">
+              <li>{t("shell.upgradeBenefit1")}</li>
+              <li>{t("shell.upgradeBenefit2")}</li>
+              <li>{t("shell.upgradeBenefit3")}</li>
+            </ul>
+            <button
+              type="button"
+              onClick={onUpgrade}
+              className="w-full rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#6C5CE7] hover:shadow-[0_8px_20px_-8px_rgba(124,92,255,0.9)] text-white text-xs font-semibold py-2 transition-all"
+            >
+              {t("shell.upgradeNow")}
+            </button>
           </div>
-          <ul className="mb-3 space-y-1 text-[11px] leading-relaxed text-inkSoft">
-            <li>{t("shell.upgradeBenefit1")}</li>
-            <li>{t("shell.upgradeBenefit2")}</li>
-            <li>{t("shell.upgradeBenefit3")}</li>
-          </ul>
-          <button
-            type="button"
-            onClick={onUpgrade}
-            className="w-full rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#6C5CE7] hover:shadow-[0_8px_20px_-8px_rgba(124,92,255,0.9)] text-white text-xs font-semibold py-2 transition-all"
-          >
-            {t("shell.upgradeNow")}
-          </button>
         </div>
-      </div>
+      )}
 
       <div className="relative px-3 pb-4" ref={accountMenuRef}>
         <button

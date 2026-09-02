@@ -262,7 +262,10 @@ export async function updateIdea(
   if (Object.keys(row).length) {
     await supabase.from("ideas").update(row).eq("id", id);
   }
-  if (activity) await logIdeaActivity(id, activity);
+  const event =
+    activity ||
+    (patch.status != null ? "status" : patch.favorite != null ? "favorite" : patch.priority != null ? "priority" : undefined);
+  if (event) await logIdeaActivity(id, event);
 }
 
 export async function deleteIdea(id: string, attachments: IdeaFile[]) {
