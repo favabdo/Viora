@@ -28,11 +28,13 @@ export function navIdFromPath(pathname: string): string {
   if (pathname.startsWith("/reports")) return "reports";
   if (pathname.startsWith("/rooms")) return "rooms";
   if (pathname.startsWith("/settings")) return "settings";
+  if (pathname.startsWith("/upgrade")) return "upgrade";
   return "dashboard";
 }
 
 export function pathForNav(id: string) {
   if (id === "settings") return "/settings";
+  if (id === "upgrade") return "/upgrade";
   return `/${id}`;
 }
 

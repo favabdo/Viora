@@ -24,6 +24,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useRoomsPendingPoll } from "@/lib/useRoomsPendingPoll";
 import { usePushSubscription } from "@/lib/usePushSubscription";
 import { supabase } from "@/lib/supabase";
+import VioraAIAssistant from "./VioraAIAssistant";
 
 export type ShellTab = {
   id: string;
@@ -97,6 +98,10 @@ export default function AppShell({
     setShowMobileNav(false);
     if (id === "settings") {
       router.push("/settings");
+      return;
+    }
+    if (id === "upgrade") {
+      router.push("/upgrade");
       return;
     }
     if (id === "rooms") {
@@ -186,6 +191,10 @@ export default function AppShell({
     accountMenuRef,
     t,
     onTabClick: handleTabClick,
+    onUpgrade: () => {
+      setShowMobileNav(false);
+      router.push("/upgrade");
+    },
     onToggleAccount: () => setShowAccountMenu((v) => !v),
     onProfile: goToProfile,
     onSettings: goToSettings,
@@ -268,7 +277,7 @@ export default function AppShell({
           </div>
         </header>
 
-        <main className="flex-1 min-w-0 overflow-x-hidden px-3 py-4 sm:px-4 md:px-8 md:py-7 pb-8">
+        <main className="flex-1 min-w-0 overflow-x-hidden px-3 py-4 sm:px-4 md:px-8 md:py-7 pb-24">
           {showEnablePrompt && (
             <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5 mb-4 text-sm fade-in">
               <div className="flex items-center gap-2">
@@ -296,6 +305,7 @@ export default function AppShell({
         </main>
       </div>
 
+      <VioraAIAssistant />
     </div>
   );
 }
@@ -312,6 +322,7 @@ function SidebarPanel({
   accountMenuRef,
   t,
   onTabClick,
+  onUpgrade,
   onToggleAccount,
   onProfile,
   onSettings,
@@ -329,6 +340,7 @@ function SidebarPanel({
   accountMenuRef: RefObject<HTMLDivElement>;
   t: (key: string) => string;
   onTabClick: (id: string) => void;
+  onUpgrade: () => void;
   onToggleAccount: () => void;
   onProfile: () => void;
   onSettings: () => void;
@@ -360,11 +372,17 @@ function SidebarPanel({
               aria-selected={active}
               onClick={() => onTabClick(id)}
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
-                active ? "bg-[#6C5CE7]/16 text-ink" : "text-inkSoft hover:bg-paperDark hover:text-ink"
+                active && id === "upgrade"
+                  ? "bg-[#6C5CE7] text-white"
+                  : active
+                    ? "bg-[#6C5CE7]/16 text-ink"
+                    : "text-inkSoft hover:bg-paperDark hover:text-ink"
               }`}
             >
-              {active && <span className="absolute start-0 inset-y-1.5 w-[3px] rounded-full bg-[#6C5CE7]" />}
-              <Icon size={16} strokeWidth={1.75} className={active ? "text-[#6C5CE7]" : ""} />
+              {active && id !== "upgrade" && (
+                <span className="absolute start-0 inset-y-1.5 w-[3px] rounded-full bg-[#6C5CE7]" />
+              )}
+              <Icon size={16} strokeWidth={1.75} className={active && id !== "upgrade" ? "text-[#6C5CE7]" : ""} />
               {label}
               {showBadge && (
                 <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#6C5CE7] px-1 text-2xs font-semibold text-white">
@@ -384,8 +402,16 @@ function SidebarPanel({
             </div>
             <p className="text-sm font-semibold text-ink">{t("shell.upgradeTitle")}</p>
           </div>
-          <p className="text-[11px] leading-relaxed text-inkSoft mb-3">{t("shell.upgradeHint")}</p>
-          <button className="w-full rounded-lg bg-[#6C5CE7] hover:bg-[#5b4bd6] text-white text-xs font-semibold py-2 transition-colors">
+          <ul className="mb-3 space-y-1 text-[11px] leading-relaxed text-inkSoft">
+            <li>{t("shell.upgradeBenefit1")}</li>
+            <li>{t("shell.upgradeBenefit2")}</li>
+            <li>{t("shell.upgradeBenefit3")}</li>
+          </ul>
+          <button
+            type="button"
+            onClick={onUpgrade}
+            className="w-full rounded-lg bg-[#6C5CE7] hover:bg-[#5b4bd6] text-white text-xs font-semibold py-2 transition-colors"
+          >
             {t("shell.upgradeNow")}
           </button>
         </div>

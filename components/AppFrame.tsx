@@ -14,6 +14,7 @@ import {
   BarChart3,
   Settings,
   DoorClosed,
+  Sparkles,
 } from "lucide-react";
 import AppShell, { ShellTab } from "@/components/AppShell";
 import PendingInvites from "@/components/PendingInvites";
@@ -43,6 +44,7 @@ export default function AppFrame({ children }: { children: ReactNode }) {
     { id: "links", label: t("nav.links"), icon: Link2 },
     { id: "reports", label: t("nav.reports"), icon: BarChart3 },
     { id: "rooms", label: t("nav.rooms"), icon: DoorClosed },
+    { id: "upgrade", label: t("nav.upgrade"), icon: Sparkles },
     { id: "settings", label: t("nav.settings"), icon: Settings },
   ];
 
