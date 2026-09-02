@@ -134,7 +134,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-paper">
+    <main className="min-h-screen">
       <div className="max-w-5xl mx-auto px-5 py-6 md:px-8 md:py-8">
         <div className="flex items-center gap-3 mb-1">
           <IconButton aria-label={t("profile.back")} onClick={() => router.push(HOME_PATH)}>

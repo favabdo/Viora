@@ -41,10 +41,11 @@ const config: Config = {
         xl: "16px",
       },
       boxShadow: {
-        xs: "0 1px 2px -1px rgba(25,26,29,0.08)",
-        raised: "0 2px 6px -2px rgba(25,26,29,0.10)",
-        panel: "0 8px 24px -8px rgba(25,26,29,0.16), 0 1px 3px -1px rgba(25,26,29,0.08)",
-        modal: "0 24px 48px -16px rgba(25,26,29,0.32), 0 2px 8px -2px rgba(25,26,29,0.12)",
+        xs: "0 1px 2px -1px rgb(var(--color-teal) / 0.12)",
+        raised: "0 4px 14px -6px rgb(var(--color-teal) / 0.22)",
+        panel: "var(--glass-shadow)",
+        modal: "0 28px 56px -18px rgb(var(--color-teal) / 0.35), 0 8px 24px -8px rgba(15, 10, 30, 0.28)",
+        glow: "var(--hover-glow)",
       },
       spacing: {
         4.5: "1.125rem",

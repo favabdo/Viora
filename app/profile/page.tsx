@@ -381,7 +381,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen px-5 py-6 md:px-10 md:py-8 bg-paper">
+    <main className="min-h-screen px-5 py-6 md:px-10 md:py-8">
       <div className="max-w-lg mx-auto">
         <header className="mb-7 flex items-center gap-3">
           <IconButton aria-label={t("profile.back")} onClick={() => router.push(HOME_PATH)}>

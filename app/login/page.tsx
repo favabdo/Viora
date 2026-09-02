@@ -152,7 +152,7 @@ function LoginPageInner() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-5 py-10 bg-paper">
+    <main className="min-h-screen flex items-center justify-center px-5 py-10">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center gap-1.5 mb-8">
           <div className="flex justify-center items-center gap-2">

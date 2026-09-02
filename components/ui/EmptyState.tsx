@@ -14,7 +14,7 @@ export default function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center text-center py-14 px-4">
-      <div className="mb-3.5 flex h-10 w-10 items-center justify-center rounded-full bg-paperDark text-inkFaint">
+      <div className="mb-3.5 flex h-10 w-10 items-center justify-center rounded-full bg-tealSoft text-teal shadow-[0_0_16px_rgba(124,92,255,0.2)]">
         <Icon size={17} strokeWidth={1.75} />
       </div>
       <p className="text-sm text-inkSoft font-medium">{title}</p>

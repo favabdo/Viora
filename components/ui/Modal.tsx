@@ -27,7 +27,7 @@ export default function Modal({
       onClick={onClose}
     >
       <div
-        className={`w-full ${maxWidth} rounded-xl border border-line bg-surface shadow-modal p-6 max-h-[85vh] overflow-y-auto thin-scroll`}
+        className={`w-full ${maxWidth} rounded-xl border border-line bg-surface shadow-modal p-6 max-h-[85vh] overflow-y-auto thin-scroll viora-glass`}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (

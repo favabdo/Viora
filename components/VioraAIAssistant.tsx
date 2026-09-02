@@ -20,7 +20,7 @@ export default function VioraAIAssistant() {
   return (
     <div className="fixed z-[60] bottom-5 end-4 sm:end-6 flex flex-col items-end gap-3 pointer-events-none">
       {open && (
-        <div className="pointer-events-auto w-[min(92vw,380px)] h-[min(70vh,520px)] rounded-2xl border border-line bg-surface shadow-modal flex flex-col overflow-hidden fade-in">
+        <div className="pointer-events-auto w-[min(92vw,380px)] h-[min(70vh,520px)] rounded-2xl border border-line bg-surface shadow-modal flex flex-col overflow-hidden fade-in viora-glass">
           <div className="flex items-center gap-3 px-4 py-3 border-b border-line bg-gradient-to-r from-[#6C5CE7]/20 to-transparent">
             <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#8b7cff] to-[#6C5CE7] text-white flex items-center justify-center shadow-[0_0_16px_rgba(108,92,231,0.45)]">
               <Sparkles size={16} />

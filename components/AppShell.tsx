@@ -205,7 +205,7 @@ export default function AppShell({
   };
 
   return (
-    <div className={`min-h-screen md:flex ${isUpgrade ? "bg-[#0a0b14]" : "bg-paper"}`}>
+    <div className="min-h-screen md:flex bg-transparent">
       <button
         type="button"
         aria-hidden={!showMobileNav}
@@ -216,7 +216,7 @@ export default function AppShell({
         }`}
       />
       <aside
-        className={`flex w-[min(82vw,248px)] shrink-0 flex-col bg-surface border-e border-line
+        className={`flex w-[min(82vw,248px)] shrink-0 flex-col bg-surface/80 backdrop-blur-xl border-e border-line
           max-md:fixed max-md:inset-y-0 max-md:start-0 max-md:z-50 max-md:shadow-modal max-md:transition-transform max-md:duration-300
           md:sticky md:top-0 md:h-screen md:w-[248px]
           ${showMobileNav ? "max-md:translate-x-0" : "max-md:ltr:-translate-x-full max-md:rtl:translate-x-full"}`}
@@ -224,9 +224,9 @@ export default function AppShell({
         <SidebarPanel {...sidebarProps} onCloseMobile={() => setShowMobileNav(false)} />
       </aside>
 
-      <div className={`flex-1 min-w-0 flex flex-col ${isUpgrade ? "bg-[#0a0b14]" : ""}`}>
+      <div className="flex-1 min-w-0 flex flex-col">
         {!isUpgrade && (
-        <header className="flex items-center gap-2 px-3 py-3 md:gap-3 md:px-6 border-b border-line sticky top-0 bg-paper/90 backdrop-blur z-30">
+        <header className="flex items-center gap-2 px-3 py-3 md:gap-3 md:px-6 border-b border-line sticky top-0 bg-paper/70 backdrop-blur-xl z-30">
           <button
             type="button"
             onClick={() => setShowMobileNav(true)}
@@ -253,7 +253,7 @@ export default function AppShell({
           <div className="flex items-center gap-2 ms-auto">
             <button
               onClick={onNew}
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-[#6C5CE7] hover:bg-[#5b4bd6] text-white text-sm font-semibold px-3.5 py-2 transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#8b5cf6] to-[#6C5CE7] hover:shadow-[0_8px_22px_-6px_rgba(124,92,255,0.9)] text-white text-sm font-semibold px-3.5 py-2 transition-all"
             >
               <Plus size={15} strokeWidth={2.25} />
               {t("shell.new")}
@@ -387,12 +387,12 @@ function SidebarPanel({
               role="tab"
               aria-selected={active}
               onClick={() => onTabClick(id)}
-              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 ${
                 active && id === "upgrade"
-                  ? "bg-[#6C5CE7] text-white"
+                  ? "bg-gradient-to-r from-[#8b5cf6] to-[#6C5CE7] text-white shadow-[0_8px_20px_-8px_rgba(124,92,255,0.9)]"
                   : active
-                    ? "bg-[#6C5CE7]/16 text-ink"
-                    : "text-inkSoft hover:bg-paperDark hover:text-ink"
+                    ? "bg-teal/16 text-ink shadow-[0_0_16px_rgba(124,92,255,0.18)]"
+                    : "text-inkSoft hover:bg-tealSoft hover:text-ink hover:shadow-[0_0_16px_rgba(124,92,255,0.16)]"
               }`}
             >
               {active && id !== "upgrade" && (
@@ -426,7 +426,7 @@ function SidebarPanel({
           <button
             type="button"
             onClick={onUpgrade}
-            className="w-full rounded-lg bg-[#6C5CE7] hover:bg-[#5b4bd6] text-white text-xs font-semibold py-2 transition-colors"
+            className="w-full rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#6C5CE7] hover:shadow-[0_8px_20px_-8px_rgba(124,92,255,0.9)] text-white text-xs font-semibold py-2 transition-all"
           >
             {t("shell.upgradeNow")}
           </button>

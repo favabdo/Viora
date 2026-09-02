@@ -386,7 +386,7 @@ export default function ProjectsSection({
             <button
               key={card.id}
               onClick={() => onOpenProject?.(card.id)}
-              className="w-full flex items-center gap-4 px-4 py-3.5 text-start hover:bg-paperDark/60 transition-colors"
+              className="w-full flex items-center gap-4 px-4 py-3.5 text-start hover:bg-tealSoft transition-all"
             >
         <div
           className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0"
@@ -559,7 +559,7 @@ function ProjectCardView({
   return (
     <button
       onClick={onClick}
-      className="text-start rounded-xl border border-line bg-surface p-4 hover:border-lineStrong hover:bg-surface/80 transition-colors"
+      className="text-start rounded-xl border border-line bg-surface p-4 viora-lift"
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div

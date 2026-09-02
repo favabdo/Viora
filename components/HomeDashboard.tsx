@@ -604,7 +604,7 @@ export default function HomeDashboard() {
 
 function Panel({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
-    <section className="min-w-0 rounded-2xl border border-line bg-surface p-3 sm:p-4 overflow-hidden">
+    <section className="min-w-0 rounded-2xl border border-line bg-surface p-3 sm:p-4 overflow-hidden viora-glass">
       <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
         <h2 className="text-sm font-semibold text-ink truncate">{title}</h2>
         {action}
@@ -633,7 +633,7 @@ function StatCard({
 }) {
   const up = change >= 0;
   return (
-    <div className="min-w-0 rounded-2xl border border-line bg-surface p-2.5 sm:p-3.5">
+    <div className="min-w-0 rounded-2xl border border-line bg-surface p-2.5 sm:p-3.5 viora-lift">
       <div className="flex items-start justify-between gap-1">
         <span className="h-7 w-7 sm:h-8 sm:w-8 rounded-full inline-flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}22`, color }}>
           <Icon size={14} />

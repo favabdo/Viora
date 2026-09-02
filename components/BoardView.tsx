@@ -135,7 +135,7 @@ function TaskCard({
         e.stopPropagation();
         onContextMenu(task, e.clientX, e.clientY);
       }}
-      className="group bg-surfaceSunken border border-line rounded-lg p-3 hover:border-lineStrong transition-colors cursor-pointer touch-none"
+      className="group viora-task bg-surfaceSunken border border-line rounded-lg p-3 hover:border-teal/50 transition-all duration-200 cursor-pointer touch-none"
     >
       <div className="flex items-start gap-1.5">
         {editing ? (

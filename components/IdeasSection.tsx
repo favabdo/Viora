@@ -613,8 +613,8 @@ export default function IdeasSection({
                       selectIdea(idea.id);
                       setDetailTab("overview");
                     }}
-                    className={`w-full text-start rounded-xl border bg-surface p-4 transition-colors ${
-                      active ? "border-[#6C5CE7] ring-1 ring-[#6C5CE7]/40" : "border-line hover:border-lineStrong"
+                    className={`w-full text-start rounded-xl border bg-surface p-4 viora-lift ${
+                      active ? "border-[#6C5CE7] ring-1 ring-[#6C5CE7]/40 shadow-glow" : "border-line"
                     }`}
                   >
                     <div className="flex items-start gap-3">

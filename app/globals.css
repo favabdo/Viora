@@ -6,39 +6,54 @@
   --font-fraunces: "Fraunces", serif;
   --font-mono: "IBM Plex Mono", monospace;
 
-  --color-paper: 250 248 244;
-  --color-paperDark: 241 237 227;
+  /* فاتح: نفس روح البنفسجي والإضاءة، على خلفية ضبابية فاتحة — مش بيج قديم */
+  --color-paper: 244 241 255;
+  --color-paperDark: 234 228 252;
   --color-surface: 255 255 255;
-  --color-surfaceSunken: 246 243 236;
-  --color-ink: 25 26 29;
-  --color-inkSoft: 88 91 96;
-  --color-inkFaint: 149 151 143;
-  --color-line: 230 225 212;
-  --color-lineStrong: 211 204 184;
-  --color-teal: 14 110 98;
-  --color-tealDark: 10 79 71;
-  --color-tealSoft: 227 239 235;
-  --color-sage: 95 138 82;
-  --color-sageSoft: 234 241 228;
-  --color-clay: 175 78 46;
-  --color-claySoft: 246 229 220;
-  --color-amber: 180 128 31;
-  --color-amberSoft: 246 234 211;
+  --color-surfaceSunken: 247 244 255;
+  --color-ink: 28 22 54;
+  --color-inkSoft: 90 82 122;
+  --color-inkFaint: 142 134 172;
+  --color-line: 220 212 245;
+  --color-lineStrong: 196 184 232;
+  --color-teal: 124 92 255;
+  --color-tealDark: 99 70 230;
+  --color-tealSoft: 236 230 255;
+  --color-sage: 5 150 105;
+  --color-sageSoft: 220 252 231;
+  --color-clay: 220 38 38;
+  --color-claySoft: 254 226 226;
+  --color-amber: 217 119 6;
+  --color-amberSoft: 254 243 199;
+
+  --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(252, 250, 255, 0.78) 100%);
+  --glass-border: rgba(124, 92, 255, 0.16);
+  --glass-shadow: 0 14px 36px -22px rgba(76, 29, 149, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --hover-glow: 0 16px 40px -12px rgba(124, 92, 255, 0.38), 0 0 0 1px rgba(124, 92, 255, 0.32), 0 0 28px rgba(139, 92, 246, 0.16);
+  --atmosphere:
+    radial-gradient(ellipse 80% 55% at 50% -8%, rgba(139, 92, 246, 0.22), transparent 58%),
+    radial-gradient(ellipse 45% 40% at 100% 0%, rgba(56, 189, 248, 0.14), transparent 52%),
+    radial-gradient(ellipse 40% 38% at 0% 18%, rgba(167, 139, 250, 0.16), transparent 50%);
+  --atmosphere-strong:
+    radial-gradient(ellipse 55% 70% at 50% -10%, rgba(139, 92, 246, 0.28), transparent 62%),
+    radial-gradient(ellipse 42% 55% at 68% 38%, rgba(56, 189, 248, 0.12), transparent 68%),
+    radial-gradient(ellipse 38% 50% at 22% 48%, rgba(124, 92, 255, 0.12), transparent 70%);
+  --grain-opacity: 0.08;
+  --pro-orb: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.28) 0%, rgba(99, 102, 241, 0.1) 42%, transparent 70%);
 }
 
 .dark {
-  /* هوية Viora الجديدة: كحلي غامق + بنفسجي، مطابقة للتصميم المرجعي */
-  --color-paper: 11 12 20;
-  --color-paperDark: 16 17 28;
-  --color-surface: 21 22 33;
+  --color-paper: 10 11 20;
+  --color-paperDark: 16 17 30;
+  --color-surface: 22 24 40;
   --color-surfaceSunken: 14 15 26;
   --color-ink: 237 238 245;
   --color-inkSoft: 168 171 190;
   --color-inkFaint: 108 111 133;
-  --color-line: 36 38 56;
-  --color-lineStrong: 52 55 80;
-  --color-teal: 108 92 231;
-  --color-tealDark: 91 75 214;
+  --color-line: 42 44 68;
+  --color-lineStrong: 62 64 96;
+  --color-teal: 124 92 255;
+  --color-tealDark: 108 75 230;
   --color-tealSoft: 33 27 61;
   --color-sage: 34 197 94;
   --color-sageSoft: 16 36 26;
@@ -46,15 +61,48 @@
   --color-claySoft: 45 20 22;
   --color-amber: 234 179 8;
   --color-amberSoft: 42 34 10;
+
+  --glass-bg: linear-gradient(180deg, rgba(32, 34, 56, 0.72) 0%, rgba(14, 16, 30, 0.82) 100%);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --hover-glow: 0 0 0 1px rgba(167, 139, 250, 0.5), 0 16px 40px -10px rgba(139, 92, 246, 0.5), 0 0 48px rgba(124, 92, 255, 0.22);
+  --atmosphere:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(139, 92, 246, 0.32), transparent 60%),
+    radial-gradient(ellipse 40% 40% at 100% 0%, rgba(56, 189, 248, 0.12), transparent 55%),
+    radial-gradient(ellipse 35% 35% at 0% 20%, rgba(99, 102, 241, 0.16), transparent 50%);
+  --atmosphere-strong:
+    radial-gradient(ellipse 55% 70% at 50% -10%, rgba(139, 92, 246, 0.38), transparent 62%),
+    radial-gradient(ellipse 42% 55% at 68% 38%, rgba(56, 189, 248, 0.16), transparent 68%),
+    radial-gradient(ellipse 38% 50% at 22% 48%, rgba(99, 102, 241, 0.18), transparent 70%),
+    radial-gradient(ellipse 30% 40% at 82% 18%, rgba(45, 212, 191, 0.1), transparent 70%);
+  --grain-opacity: 0.2;
+  --pro-orb: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.55) 0%, rgba(99, 102, 241, 0.18) 42%, transparent 70%);
 }
 
 html, body {
   background-color: rgb(var(--color-paper));
+  background-image: var(--atmosphere);
+  background-attachment: fixed;
   color-scheme: light;
 }
 
-.dark html, html.dark, .dark body {
+html.dark, html.dark body {
   color-scheme: dark;
+}
+
+body {
+  isolation: isolate;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
 }
 
 ::selection {
@@ -105,11 +153,13 @@ button, a {
 
 .task-check:hover {
   border-color: rgb(var(--color-teal));
+  box-shadow: 0 0 12px rgb(var(--color-teal) / 0.35);
 }
 
 .task-check:checked {
   background: rgb(var(--color-teal));
   border-color: rgb(var(--color-teal));
+  box-shadow: 0 0 14px rgb(var(--color-teal) / 0.45);
 }
 
 .task-check:checked::after {
@@ -215,13 +265,49 @@ button, a {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ===== Upgrade page — إضاءة وزجاج وتوهج مطابق للتصميم المرجعي ===== */
+/* زجاج + إضاءة على الكروت الموجودة في كل الصفحات */
+.viora-glass,
+.rounded-xl.border.border-line.bg-surface,
+.rounded-2xl.border.border-line.bg-surface,
+.rounded-lg.border.border-line.bg-surface {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow);
+}
+
+.viora-lift,
+button.rounded-xl.border.bg-surface,
+button.rounded-2xl.border.bg-surface {
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.viora-lift:hover,
+button.rounded-xl.border.bg-surface:hover,
+button.rounded-2xl.border.bg-surface:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--hover-glow);
+  border-color: rgb(var(--color-teal) / 0.55) !important;
+}
+
+.viora-task {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.viora-task:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--hover-glow);
+  border-color: rgb(var(--color-teal) / 0.45) !important;
+}
+
+/* ===== Upgrade + باقي الصفحات — نفس الإضاءة حسب الوضع ===== */
 .upgrade-stage {
   position: relative;
   isolation: isolate;
   overflow: visible;
   min-height: 100%;
-  background: #0a0b14;
+  background: transparent;
 }
 
 .upgrade-stage::before {
@@ -231,11 +317,7 @@ button, a {
   height: 640px;
   pointer-events: none;
   z-index: 0;
-  background:
-    radial-gradient(ellipse 55% 70% at 50% -10%, rgba(139, 92, 246, 0.38), transparent 62%),
-    radial-gradient(ellipse 42% 55% at 68% 38%, rgba(56, 189, 248, 0.16), transparent 68%),
-    radial-gradient(ellipse 38% 50% at 22% 48%, rgba(99, 102, 241, 0.18), transparent 70%),
-    radial-gradient(ellipse 30% 40% at 82% 18%, rgba(45, 212, 191, 0.1), transparent 70%);
+  background: var(--atmosphere-strong);
 }
 
 .upgrade-stage::after {
@@ -244,7 +326,7 @@ button, a {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.22;
+  opacity: var(--grain-opacity);
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
 }
@@ -255,48 +337,44 @@ button, a {
 }
 
 .upgrade-card {
-  background: linear-gradient(180deg, rgba(32, 34, 56, 0.62) 0%, rgba(14, 16, 30, 0.78) 100%);
+  background: var(--glass-bg);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 18px 40px -24px rgba(0, 0, 0, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 .upgrade-card-pro {
-  border: 1.5px solid rgba(167, 139, 250, 0.95);
-  background: linear-gradient(180deg, rgba(48, 36, 92, 0.55) 0%, rgba(18, 16, 38, 0.82) 100%);
+  border: 1.5px solid rgb(var(--color-teal) / 0.85);
+  background: var(--glass-bg);
   box-shadow:
-    0 0 0 1px rgba(139, 92, 246, 0.35),
-    0 0 28px 2px rgba(139, 92, 246, 0.45),
-    0 0 70px 10px rgba(108, 92, 231, 0.28),
-    0 24px 50px -16px rgba(76, 29, 149, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 0 40px rgba(139, 92, 246, 0.08);
+    0 0 0 1px rgb(var(--color-teal) / 0.28),
+    0 0 28px 2px rgb(var(--color-teal) / 0.32),
+    0 0 70px 10px rgb(var(--color-teal) / 0.16),
+    var(--glass-shadow);
 }
 
 .upgrade-ai-box {
-  border: 1px solid rgba(139, 92, 246, 0.38);
-  background: rgba(88, 70, 180, 0.12);
-  box-shadow: inset 0 0 24px rgba(139, 92, 246, 0.08);
+  border: 1px solid rgb(var(--color-teal) / 0.38);
+  background: rgb(var(--color-teal) / 0.08);
+  box-shadow: inset 0 0 24px rgb(var(--color-teal) / 0.06);
 }
 
 .upgrade-ai-box-teal {
-  border: 1px solid rgba(45, 212, 191, 0.42);
-  background: rgba(13, 80, 72, 0.18);
-  box-shadow: inset 0 0 24px rgba(45, 212, 191, 0.08);
+  border: 1px solid rgba(20, 184, 166, 0.42);
+  background: rgba(13, 148, 136, 0.08);
+  box-shadow: inset 0 0 24px rgba(20, 184, 166, 0.08);
 }
 
 .upgrade-pill {
-  border: 1px solid rgba(167, 139, 250, 0.28);
-  background: rgba(20, 18, 40, 0.55);
-  box-shadow: 0 0 16px rgba(139, 92, 246, 0.08);
+  border: 1px solid rgb(var(--color-teal) / 0.22);
+  background: rgb(var(--color-surface) / 0.55);
+  box-shadow: 0 0 16px rgb(var(--color-teal) / 0.08);
 }
 
 .upgrade-icon {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(180deg, rgb(var(--color-teal) / 0.16), rgb(var(--color-teal) / 0.06));
   box-shadow:
-    0 0 16px rgba(139, 92, 246, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 0 16px rgb(var(--color-teal) / 0.18),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
 }
