@@ -507,12 +507,32 @@ export default function ProjectsSection({
         </div>
       ) : (
         <div className="rounded-xl border border-line bg-surface divide-y divide-line overflow-hidden">
-          {visible.map((card) => (
-            <button
-              key={card.id}
-              onClick={() => onOpenProject?.(card.id)}
-              className="w-full flex items-center gap-4 px-4 py-3.5 text-start hover:bg-tealSoft transition-all"
-            >
+          {visible.map((card) => {
+              // Find the full project data to get user_id and is_archived
+              const fullProject = projects.find(p => p.id === card.id);
+              return (
+                <button
+                  key={card.id}
+                  onClick={() => onOpenProject?.(card.id)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (fullProject) {
+                      setContextMenuProject(fullProject);
+                    } else {
+                      // Fallback if project not found
+                      setContextMenuProject({
+                        id: card.id,
+                        user_id: card.id, // This is not ideal but better than nothing
+                        name: card.name,
+                        created_at: new Date().toISOString(),
+                        is_favorite: card.favorite,
+                        is_archived: card.is_archived || false
+                      });
+                    }
+                    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+                  }}
+                  className="w-full flex items-center gap-4 px-4 py-3.5 text-start hover:bg-tealSoft transition-all"
+                >
         <div
           className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0"
           style={card.imageUrl ? undefined : { backgroundColor: `${card.color}22`, color: card.color }}
