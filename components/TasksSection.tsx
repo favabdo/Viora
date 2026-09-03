@@ -106,6 +106,16 @@ export default function TasksSection({
     return () => window.removeEventListener("pointerdown", handleClickOutside);
   }, [colorPickerTaskId]);
 
+  // إغلاق القائمة المنبثقة عند النقر خارجها
+  useEffect(() => {
+    if (!contextMenuProject) return;
+    function handleClickOutside() {
+      setContextMenuProject(null);
+    }
+    window.addEventListener("pointerdown", handleClickOutside);
+    return () => window.removeEventListener("pointerdown", handleClickOutside);
+  }, [contextMenuProject]);
+
   // لايف: أي تعديل على المهام من أي عضو تاني في المشروع يظهر عندك على طول
   useEffect(() => {
     if (!activeProjectId) return;
@@ -953,7 +963,7 @@ export default function TasksSection({
                 className="flex w-full items-center gap-3 px-4 py-2 text-left text-ink hover:bg-paperDark hover:text-inkSoft transition-colors"
               >
                 <span className="flex-1">{t("projects.favorite")}</span>
-                {contextMenuProject.is_favorite ? (
+                {!!contextMenuProject.is_favorite ? (
                   <Check size={14} strokeWidth={1.5} className="shrink-0 text-teal" />
                 ) : (
                   <Plus size={14} strokeWidth={1.5} className="shrink-0 text-inkFaint" />
@@ -969,7 +979,7 @@ export default function TasksSection({
                 className="flex w-full items-center gap-3 px-4 py-2 text-left text-ink hover:bg-paperDark hover:text-inkSoft transition-colors"
               >
                 <span className="flex-1">{t("projects.archive")}</span>
-                {contextMenuProject.is_archived ? (
+                {!!contextMenuProject.is_archived ? (
                   <Check size={14} strokeWidth={1.5} className="shrink-0 text-teal" />
                 ) : (
                   <FolderPlus size={14} strokeWidth={1.5} className="shrink-0 text-inkFaint" />

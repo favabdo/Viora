@@ -36,6 +36,8 @@ export type Project = {
   user_id: string;
   name: string;
   created_at: string;
+  is_favorite?: boolean;
+  is_archived?: boolean;
 };
 
 export type Task = {
