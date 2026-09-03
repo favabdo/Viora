@@ -109,11 +109,13 @@ export default function TasksSection({
   // إغلاق القائمة المنبثقة عند النقر خارجها
   useEffect(() => {
     if (!contextMenuProject) return;
-    function handleClickOutside() {
+    function handleClickOutside(e: MouseEvent) {
+      // Don't close on right-clicks (button === 2) as they might be trying to open the menu
+      if (e.button === 2) return;
       setContextMenuProject(null);
     }
-    window.addEventListener("pointerdown", handleClickOutside);
-    return () => window.removeEventListener("pointerdown", handleClickOutside);
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => window.removeEventListener("mousedown", handleClickOutside);
   }, [contextMenuProject]);
 
   // لايف: أي تعديل على المهام من أي عضو تاني في المشروع يظهر عندك على طول
