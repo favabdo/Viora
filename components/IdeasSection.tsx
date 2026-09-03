@@ -360,7 +360,7 @@ export default function IdeasSection({
       setConverting(false);
       return;
     }
-    writeProjectMeta(project.id, {
+    await writeProjectMeta(project.id, {
       description: idea.description,
       icon: idea.icon === "sparkles" ? "folder" : idea.icon,
       color: idea.color,

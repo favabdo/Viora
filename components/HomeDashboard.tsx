@@ -18,7 +18,7 @@ import {
 import { supabase, ActivityEntry, BoardColumn, Project, Task, TaskComment } from "@/lib/supabase";
 import { normalizeTask } from "@/lib/taskShape";
 import { colorForProject } from "@/lib/projectColor";
-import { getProjectMeta } from "@/lib/projectMeta";
+import { getProjectMeta, hydrateProjectMetas, useProjectMetaTick } from "@/lib/projectMeta";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useAppSession } from "./AppSession";
 import { displayName, renderActivity } from "@/lib/displayName";
@@ -79,6 +79,7 @@ export default function HomeDashboard() {
   const [showNew, setShowNew] = useState(false);
   const [cursor, setCursor] = useState(() => startOfDay(new Date()));
   const [pickedDay, setPickedDay] = useState(today);
+  const metaTick = useProjectMetaTick();
 
   useEffect(() => {
     let cancelled = false;
@@ -96,6 +97,8 @@ export default function HomeDashboard() {
         return;
       }
       const ids = list.map((p) => p.id);
+      await hydrateProjectMetas(ids);
+      if (cancelled) return;
       const [taskRes, colRes, actRes, commentRes] = await Promise.all([
         supabase.from("tasks").select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)").in("project_id", ids),
         supabase.from("board_columns").select("*").in("project_id", ids),
@@ -222,7 +225,7 @@ export default function HomeDashboard() {
         imagePosY: meta?.imagePosY ?? 50,
       };
     });
-  }, [scopedProjects, scopedTasks]);
+  }, [scopedProjects, scopedTasks, metaTick]);
 
   const workload = useMemo(() => {
     const map = new Map<string, { id: string; name: string; avatar: string | null; open: number }>();

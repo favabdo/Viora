@@ -34,6 +34,7 @@ import {
   defaultProjectColor,
   defaultProjectKey,
   getProjectMeta,
+  hydrateProjectMetas,
   writeProjectMeta,
   type ProjectDefaultView,
   type ProjectMeta,
@@ -238,9 +239,17 @@ export default function ProjectSettingsView({
   const [committed, setCommitted] = useState<Draft>(saved);
 
   useEffect(() => {
-    const next = metaToDraft(project, getProjectMeta(project.id), columns);
-    setDraft(next);
-    setCommitted(next);
+    let cancelled = false;
+    (async () => {
+      await hydrateProjectMetas([project.id]);
+      if (cancelled) return;
+      const next = metaToDraft(project, getProjectMeta(project.id), columns);
+      setDraft(next);
+      setCommitted(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [project.id, project.name, columns]);
 
   useEffect(() => {
@@ -315,7 +324,7 @@ export default function ProjectSettingsView({
       const { error } = await supabase.from("projects").update({ name }).eq("id", project.id);
       if (!error) onProjectUpdated({ ...project, name });
     }
-    writeProjectMeta(project.id, {
+    await writeProjectMeta(project.id, {
       description: draft.description.trim(),
       icon: draft.icon,
       imageUrl: draft.imageUrl,
@@ -348,7 +357,7 @@ export default function ProjectSettingsView({
     const next = !draft.archived;
     patch({ archived: next });
     setCommitted((prev) => ({ ...prev, archived: next }));
-    writeProjectMeta(project.id, { archived: next });
+    void writeProjectMeta(project.id, { archived: next });
   }
 
   function exportProject() {

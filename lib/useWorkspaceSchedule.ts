@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase, Project, Task } from "@/lib/supabase";
+import { hydrateProjectMetas } from "@/lib/projectMeta";
 import { normalizeTask } from "@/lib/taskShape";
 
 export function useWorkspaceSchedule() {
@@ -22,6 +23,8 @@ export function useWorkspaceSchedule() {
       }
       const list = projectRows as Project[];
       setProjects(list);
+      await hydrateProjectMetas(list.map((p) => p.id));
+      if (cancelled) return;
       if (list.length === 0) {
         setTasks([]);
         setLoading(false);

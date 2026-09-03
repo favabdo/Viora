@@ -22,6 +22,7 @@ import PendingInvites from "@/components/PendingInvites";
 import ProfileCardProvider from "@/components/ProfileCardContext";
 import { AppSessionProvider } from "@/components/AppSession";
 import { supabase } from "@/lib/supabase";
+import { hydrateAllProjectMetas } from "@/lib/projectMeta";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { navIdFromPath, pathForNav } from "@/lib/appRoutes";
 
@@ -82,6 +83,7 @@ export default function AppFrame({ children }: { children: ReactNode }) {
           setAvatarUrl(data.avatar_url || null);
         }
       });
+    void hydrateAllProjectMetas();
   }, [session]);
 
   if (checking || !session) {

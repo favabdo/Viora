@@ -31,8 +31,8 @@ export default function DonutChart({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={s.color}
           strokeWidth={strokeWidth}
+          style={{ stroke: s.color }}
           strokeDasharray={`${dash} ${circumference - dash}`}
           strokeDashoffset={-offset}
           strokeLinecap="butt"

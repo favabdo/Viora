@@ -14,7 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
-import { getProjectMeta, PROJECT_COLORS, writeProjectMeta } from "@/lib/projectMeta";
+import { getProjectMeta, hydrateProjectMetas, PROJECT_COLORS, writeProjectMeta } from "@/lib/projectMeta";
 import { isFavoriteProject } from "@/lib/projectFavorites";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Button from "./ui/Button";
@@ -149,6 +149,8 @@ export default function ProjectsSection({
       return;
     }
 
+    await hydrateProjectMetas(ids);
+
     const [tasksRes, membersRes] = await Promise.all([
       supabase.from("tasks").select("id, project_id, is_done, due_date").in("project_id", ids),
       supabase.from("project_members").select("project_id, status").in("project_id", ids),
@@ -238,7 +240,7 @@ export default function ProjectsSection({
     const { data, error } = await supabase.from("projects").insert({ name }).select().single();
     setCreating(false);
     if (!error && data) {
-      writeProjectMeta(String((data as Project).id), {
+      await writeProjectMeta(String((data as Project).id), {
         description: newDescription.trim(),
         icon: newIcon,
         color: newColor,

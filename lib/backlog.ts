@@ -1,5 +1,18 @@
 import type { TaskAttachment } from "./taskExtras";
 
+export const BACKLOG_STAGES = ["ideas", "refinement", "ready", "archived"] as const;
+export type BacklogStage = (typeof BACKLOG_STAGES)[number];
+
+export const BACKLOG_PRIORITIES = ["low", "medium", "high"] as const;
+export type BacklogPriority = (typeof BACKLOG_PRIORITIES)[number];
+
+export const BACKLOG_TYPES = ["feature", "enhancement", "integration", "development", "bug"] as const;
+export type BacklogType = (typeof BACKLOG_TYPES)[number];
+
+function oneOf<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
+  return allowed.includes(value as T) ? (value as T) : fallback;
+}
+
 export type BacklogItem = {
   id: string;
   userId: string;
@@ -15,6 +28,9 @@ export type BacklogItem = {
   recurrence: string;
   subtasks: string[];
   attachments: TaskAttachment[];
+  stage: BacklogStage;
+  priority: BacklogPriority;
+  type: BacklogType;
   createdAt: string;
 };
 
@@ -36,6 +52,9 @@ function normalizeItem(raw: Partial<BacklogItem> & { id: string; userId: string;
     recurrence: raw.recurrence || "none",
     subtasks: Array.isArray(raw.subtasks) ? raw.subtasks : [],
     attachments: Array.isArray(raw.attachments) ? raw.attachments : [],
+    stage: oneOf(raw.stage, BACKLOG_STAGES, "ideas"),
+    priority: oneOf(raw.priority, BACKLOG_PRIORITIES, "medium"),
+    type: oneOf(raw.type, BACKLOG_TYPES, "feature"),
     createdAt: raw.createdAt,
   };
 }

@@ -22,6 +22,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { displayName } from "@/lib/displayName";
 import { deleteOwnedTask } from "@/lib/deletes";
 import { isFavoriteProject, toggleFavoriteProject } from "@/lib/projectFavorites";
+import { hydrateProjectMetas } from "@/lib/projectMeta";
 import BoardView from "./BoardView";
 import ProjectListView from "./ProjectListView";
 import ProjectCalendarView from "./ProjectCalendarView";
@@ -111,6 +112,11 @@ export default function ProjectWorkspace({
         setProject(projectRes.data as Project);
       }
       if (projectsRes.data) setProjects(projectsRes.data as Project[]);
+      await hydrateProjectMetas([
+        projectId,
+        ...((projectsRes.data as Project[] | null) || []).map((item) => item.id),
+      ]);
+      if (cancelled) return;
 
       let cols = (!columnsRes.error && columnsRes.data ? columnsRes.data : []) as BoardColumn[];
       if (cols.length === 0) {
