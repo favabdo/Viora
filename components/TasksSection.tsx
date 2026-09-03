@@ -451,6 +451,78 @@ export default function TasksSection({
   const activeProject = projects.find((p) => p.id === activeProjectId);
   const doneCount = tasks.filter((t) => t.is_done).length;
 
+// Context menu functions
+async function toggleFavorite(project: Project) {
+  // Toggle favorite status - assuming we add is_favorite column to projects table
+  const { error } = await supabase
+    .from("projects")
+    .update({ is_favorite: !project.is_favorite })
+    .eq("id", project.id);
+
+  if (error) {
+    console.error("Error toggling favorite:", error);
+    alert(t("projects.err.toggleFavorite"));
+  } else {
+    // Update local state
+    setProjects(prev =>
+      prev.map(p =>
+        p.id === project.id
+          ? { ...p, is_favorite: !p.is_favorite }
+          : p
+      )
+    );
+  }
+}
+
+async function toggleArchive(project: Project) {
+  // Toggle archive status - assuming we add is_archived column to projects table
+  const { error } = await supabase
+    .from("projects")
+    .update({ is_archived: !project.is_archived })
+    .eq("id", project.id);
+
+  if (error) {
+    console.error("Error toggling archive:", error);
+    alert(t("projects.err.toggleArchive"));
+  } else {
+    // Update local state
+    setProjects(prev =>
+      prev.map(p =>
+        p.id === project.id
+          ? { ...p, is_archived: !p.is_archived }
+          : p
+      )
+    );
+
+    // If archiving the active project, switch to another project if available
+    if (activeProjectId === project.id && !project.is_archived) {
+      const otherProjects = projects.filter(p => p.id !== project.id && !p.is_archived);
+      setActiveProjectId(otherProjects.length > 0 ? otherProjects[0].id : null);
+    }
+  }
+}
+
+async function duplicateProject(project: Project) {
+  // Create a duplicate of the project
+  const { data, error } = await supabase
+    .from("projects")
+    .insert({
+      name: `${project.name} (نسخة)`,
+      user_id: project.user_id
+    })
+    .select()
+    .single();
+
+  if (!error && data) {
+    setProjects(prev => [...prev, data as Project]);
+    // Optionally switch to the new project
+    setActiveProjectId(data.id);
+  } else {
+    console.error("Error duplicating project:", error);
+    alert(t("projects.err.duplicate"));
+  }
+}
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-[212px_1fr] gap-8">
       {/* قائمة المشاريع */}
