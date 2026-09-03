@@ -79,6 +79,41 @@
   --pro-orb: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.55) 0%, rgba(99, 102, 241, 0.18) 42%, transparent 70%);
 }
 
+/* موبايل: تظبيط ألوان الوضع الليلي للمقاسات الصغيرة */
+@media (max-width: 640px) {
+  /* background-attachment: fixed بيتجاهل وبيتلخبط على متصفحات الموبايل — فبنعطلّه */
+  html, body {
+    background-attachment: scroll;
+  }
+
+  .dark {
+    /* أسطح أفتح درجة عشان التباين يبان أحسن على الشاشات الصغيرة */
+    --color-paper: 13 14 24;
+    --color-paperDark: 19 20 34;
+    --color-surface: 26 28 44;
+    --color-surfaceSunken: 16 17 29;
+
+    --color-line: 48 50 74;
+    --color-lineStrong: 68 70 102;
+
+    /* توهج أخف على الموبايل لأنه بيبان مبالغ فيه في المساحة الصغيرة */
+    --hover-glow: 0 0 0 1px rgba(167, 139, 250, 0.4), 0 10px 26px -10px rgba(139, 92, 246, 0.4), 0 0 30px rgba(124, 92, 255, 0.16);
+
+    /* خلفية جوية معدّلة لنسب الشاشة الطولية */
+    --atmosphere:
+      radial-gradient(ellipse 90% 38% at 50% -6%, rgba(139, 92, 246, 0.26), transparent 62%),
+      radial-gradient(ellipse 60% 30% at 100% 0%, rgba(56, 189, 248, 0.1), transparent 58%),
+      radial-gradient(ellipse 55% 26% at 0% 14%, rgba(99, 102, 241, 0.13), transparent 55%);
+    --atmosphere-strong:
+      radial-gradient(ellipse 70% 50% at 50% -6%, rgba(139, 92, 246, 0.32), transparent 64%),
+      radial-gradient(ellipse 55% 40% at 70% 30%, rgba(56, 189, 248, 0.12), transparent 66%),
+      radial-gradient(ellipse 50% 35% at 20% 42%, rgba(99, 102, 241, 0.14), transparent 66%);
+
+    /* الحبيبات أقل وضوحاً على الموبايل عشان المشهد ميبقاش مشوش */
+    --grain-opacity: 0.12;
+  }
+}
+
 html, body {
   background-color: rgb(var(--color-paper));
   background-image: var(--atmosphere);
