@@ -5,7 +5,9 @@ export const translations = {
   en: {
     // Projects section
     "projects.favorite": "Add to Favorites",
+    "projects.unfavorite": "Remove from Favorites",
     "projects.archive": "Archive Project",
+    "projects.unarchive": "Unarchive Project",
     "projects.edit": "Edit Project",
     "projects.duplicate": "Duplicate Project",
     "projects.delete": "Delete Project",
@@ -17,7 +19,9 @@ export const translations = {
   ar: {
     // Projects section
     "projects.favorite": "إضافة للمفضلة",
+    "projects.unfavorite": "إزالة من المفضلة",
     "projects.archive": "أرشفة المشروع",
+    "projects.unarchive": "إلغاء أرشفة المشروع",
     "projects.edit": "تعديل المشروع",
     "projects.duplicate": "تكرار المشروع",
     "projects.delete": "حذف المشروع",

@@ -12,6 +12,8 @@ import {
   FolderKanban,
   Plus,
   Star,
+  Trash2,
+  LogOut,
 } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
 import { getProjectMeta, hydrateProjectMetas, PROJECT_COLORS, writeProjectMeta } from "@/lib/projectMeta";
@@ -116,6 +118,8 @@ export default function ProjectsSection({
   const [newImagePosX, setNewImagePosX] = useState(50);
   const [newImagePosY, setNewImagePosY] = useState(50);
   const [creating, setCreating] = useState(false);
+  const [contextMenuProject, setContextMenuProject] = useState<Project | null>(null);
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (openCreateSignal && openCreateSignal > 0) setShowCreate(true);
@@ -124,6 +128,85 @@ export default function ProjectsSection({
   useEffect(() => {
     load();
   }, [currentUserId]);
+
+  // Context menu state and handlers
+  useEffect(() => {
+    if (!contextMenuProject) return;
+    function handleClickOutside(e: MouseEvent) {
+      // Don't close on right-clicks (button === 2) as they might be trying to open the menu
+      if (e.button === 2) return;
+      setContextMenuProject(null);
+    }
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => window.removeEventListener("mousedown", handleClickOutside);
+  }, [contextMenuProject]);
+
+  async function toggleFavorite(project: Project) {
+    const { error } = await supabase
+      .from("projects")
+      .update({ is_favorite: !project.is_favorite })
+      .eq("id", project.id);
+
+    if (error) {
+      console.error("Error toggling favorite:", error);
+      // TODO: Show toast notification
+    } else {
+      await load();
+    }
+    setContextMenuProject(null);
+  }
+
+  async function toggleArchive(project: Project) {
+    const { error } = await supabase
+      .from("projects")
+      .update({ is_archived: !project.is_archived })
+      .eq("id", project.id);
+
+    if (error) {
+      console.error("Error toggling archive:", error);
+      // TODO: Show toast notification
+    } else {
+      await load();
+    }
+    setContextMenuProject(null);
+  }
+
+  async function duplicateProject(project: Project) {
+    // First get the project meta
+    const meta = getProjectMeta(project.id);
+    const { data, error } = await supabase
+      .from("projects")
+      .insert({
+        name: `${project.name} (Copy)`,
+        user_id: project.user_id,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error duplicating project:", error);
+      // TODO: Show toast notification
+      setContextMenuProject(null);
+      return;
+    }
+
+    if (data) {
+      // Copy the project meta
+      await writeProjectMeta(String(data.id), {
+        description: meta?.description || "",
+        icon: meta?.icon || "folder",
+        color: meta?.color || PROJECT_COLORS[0],
+        imageUrl: meta?.imageUrl || null,
+        imageScale: meta?.imageScale ?? 100,
+        imageScaleX: meta?.imageScaleX ?? meta?.imageScale ?? 100,
+        imageScaleY: meta?.imageScaleY ?? meta?.imageScale ?? 100,
+        imagePosX: meta?.imagePosX ?? 50,
+        imagePosY: meta?.imagePosY ?? 50,
+      });
+      await load();
+    }
+    setContextMenuProject(null);
+  }
 
   async function load() {
     setLoading(true);
@@ -511,6 +594,82 @@ export default function ProjectsSection({
             </Button>
           </div>
         </Modal>
+      )}
+
+      {/* Context Menu */}
+      {contextMenuProject && (
+        <div
+          className="absolute z-50"
+          style={{ left: contextMenuPosition?.x, top: contextMenuPosition?.y }}
+        >
+          <div className="rounded-xl border border-line bg-surface p-1 shadow-lg viora-lift">
+            <div className="space-y-1">
+              <button
+                onClick={() => {
+                  toggleFavorite(contextMenuProject);
+                  setContextMenuProject(null);
+                }}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg"
+              >
+                <Star size={14} className="text-amber shrink-0" />
+                <span>{t((contextMenuProject as Project).is_favorite ? "projects.unfavorite" : "projects.favorite")}</span>
+              </button>
+              <button
+                onClick={() => {
+                  toggleArchive(contextMenuProject);
+                  setContextMenuProject(null);
+                }}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg"
+              >
+                <FolderKanban size={14} className="shrink-0" />
+                <span>{t((contextMenuProject as Project).is_archived ? "projects.unarchive" : "projects.archive")}</span>
+              </button>
+              <button
+                onClick={() => {
+                  // Edit functionality would go here
+                  // For now, just close the menu
+                  setContextMenuProject(null);
+                }}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg"
+              >
+                <Users size={14} className="shrink-0" />
+                <span>{t("projects.edit")}</span>
+              </button>
+              <button
+                onClick={() => {
+                  duplicateProject(contextMenuProject);
+                  setContextMenuProject(null);
+                }}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg"
+              >
+                <List size={14} className="shrink-0" />
+                <span>{t("projects.duplicate")}</span>
+              </button>
+              <button
+                onClick={() => {
+                  // Delete functionality would go here
+                  // For now, just close the menu
+                  setContextMenuProject(null);
+                }}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg text-[red]"
+              >
+                <Trash2 size={14} className="shrink-0" />
+                <span>{t("projects.delete")}</span>
+              </button>
+              <button
+                onClick={() => {
+                  // Leave functionality would go here
+                  // For now, just close the menu
+                  setContextMenuProject(null);
+                }}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg"
+              >
+                <LogOut size={14} className="shrink-0" />
+                <span>{t("projects.leave")}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
