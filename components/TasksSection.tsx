@@ -18,7 +18,7 @@ import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 import ProgressBar from "./ui/ProgressBar";
 import Modal from "./ui/Modal";
-import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut, GripVertical, Palette, LayoutGrid, CalendarDays, GanttChart } from "lucide-react";
+import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut, GripVertical, Palette, LayoutGrid, CalendarDays, GanttChart, Copy } from "lucide-react";
 import { displayName } from "@/lib/displayName";
 import ClickableName from "./ClickableName";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
@@ -43,6 +43,8 @@ export default function TasksSection({
   currentUserEmail: string;
   initialProjectId?: string | null;
 }) {
+  const [contextMenuProject, setContextMenuProject] = useState<Project | null>(null);
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const { t, lang } = useTranslation();
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
@@ -481,9 +483,17 @@ export default function TasksSection({
           {projects.map((p) => {
             const active = activeProjectId === p.id;
             return (
-              <li key={p.id} className="group flex items-center">
+              <li
+                key={p.id}
+                className="group flex items-center"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setContextMenuProject(p);
+                  setContextMenuPosition({ x: e.clientX, y: e.clientY });
+                }}
+                onClick={() => setActiveProjectId(p.id)}
+              >
                 <button
-                  onClick={() => setActiveProjectId(p.id)}
                   className={`flex-1 flex items-center gap-1.5 min-w-0 text-start px-2.5 py-1.5 rounded-md text-sm transition-colors ${
                     active ? "bg-teal text-white font-medium" : "hover:bg-paperDark text-ink"
                   }`}
@@ -925,6 +935,101 @@ export default function TasksSection({
             </Button>
           </div>
         </Modal>
+      )}
+
+      {/* Project Context Menu */}
+      {contextMenuProject && (
+        <div className="fixed z-50 pointer-events-none">
+          <div
+            className={`absolute left-[${contextMenuPosition?.x}px] top-[${contextMenuPosition?.y}px] transform pointer-events-all bg-paper shadow-lg rounded-md border border-line z-50 w-56`}
+          >
+            <div className="space-y-1 py-2">
+              {/* Favorite */}
+              <button
+                onClick={() => {
+                  toggleFavorite(contextMenuProject);
+                  setContextMenuProject(null);
+                }}
+                className="flex w-full items-center gap-3 px-4 py-2 text-left text-ink hover:bg-paperDark hover:text-inkSoft transition-colors"
+              >
+                <span className="flex-1">{t("projects.favorite")}</span>
+                {contextMenuProject.is_favorite ? (
+                  <Check size={14} strokeWidth={1.5} className="shrink-0 text-teal" />
+                ) : (
+                  <Plus size={14} strokeWidth={1.5} className="shrink-0 text-inkFaint" />
+                )}
+              </button>
+
+              {/* Archive */}
+              <button
+                onClick={() => {
+                  toggleArchive(contextMenuProject);
+                  setContextMenuProject(null);
+                }}
+                className="flex w-full items-center gap-3 px-4 py-2 text-left text-ink hover:bg-paperDark hover:text-inkSoft transition-colors"
+              >
+                <span className="flex-1">{t("projects.archive")}</span>
+                {contextMenuProject.is_archived ? (
+                  <Check size={14} strokeWidth={1.5} className="shrink-0 text-teal" />
+                ) : (
+                  <FolderPlus size={14} strokeWidth={1.5} className="shrink-0 text-inkFaint" />
+                )}
+              </button>
+
+              {/* Edit */}
+              <button
+                onClick={() => {
+                  startEditProjectName(contextMenuProject);
+                  setContextMenuProject(null);
+                }}
+                className="flex w-full items-center gap-3 px-4 py-2 text-left text-ink hover:bg-paperDark hover:text-inkSoft transition-colors"
+              >
+                <span className="flex-1">{t("projects.edit")}</span>
+                <Pencil size={14} strokeWidth={1.5} className="shrink-0" />
+              </button>
+
+              {/* Duplicate */}
+              <button
+                onClick={() => {
+                  duplicateProject(contextMenuProject);
+                  setContextMenuProject(null);
+                }}
+                className="flex w-full items-center gap-3 px-4 py-2 text-left text-ink hover:bg-paperDark hover:text-inkSoft transition-colors"
+              >
+                <span className="flex-1">{t("projects.duplicate")}</span>
+                <Copy size={14} strokeWidth={1.5} className="shrink-0" />
+              </button>
+
+              {/* Delete */}
+              {contextMenuProject.user_id === currentUserId && (
+                <button
+                  onClick={() => {
+                    requestDeleteProject(contextMenuProject);
+                    setContextMenuProject(null);
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-left text-ink hover:bg-paperDark hover:text-inkSoft transition-colors"
+                >
+                  <span className="flex-1">{t("projects.delete")}</span>
+                  <X size={14} strokeWidth={1.5} className="shrink-0 text-clay" />
+                </button>
+              )}
+
+              {/* Leave */}
+              {contextMenuProject.user_id !== currentUserId && (
+                <button
+                  onClick={() => {
+                    requestLeaveProject(contextMenuProject);
+                    setContextMenuProject(null);
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-left text-ink hover:bg-paperDark hover:text-inkSoft transition-colors"
+                >
+                  <span className="flex-1">{t("projects.leave")}</span>
+                  <LogOut size={14} strokeWidth={1.5} className="shrink-0 text-clay" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
