@@ -673,7 +673,8 @@ export default function ProjectsSection({
                 {card.taskCount} {t("projects.tasks")}
               </span>
             </button>
-          ))}
+          );
+        })}
         </div>
       )}
 
