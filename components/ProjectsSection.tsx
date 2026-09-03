@@ -207,18 +207,10 @@ export default function ProjectsSection({
   }
 
   async function toggleArchive(project: Project) {
-    const newVal = !project.is_archived;
-    const { error } = await supabase
-      .from("projects")
-      .update({ is_archived: newVal })
-      .eq("id", project.id);
-
-    if (error) {
-      console.error("Error toggling archive:", error);
-      alert(t("projects.err.toggleArchive"));
-    } else {
-      await load();
-    }
+    const meta = getProjectMeta(project.id);
+    const newVal = !(meta?.archived || project.is_archived);
+    await writeProjectMeta(project.id, { archived: newVal });
+    await load();
     setContextMenuProject(null);
   }
 
@@ -633,22 +625,16 @@ export default function ProjectsSection({
                   onClick={() => onOpenProject?.(card.id)}
                   onContextMenu={(e) => {
                     e.preventDefault();
-                    setContextMenuProject(fullProject ?? {
-                      id: card.id,
-                      user_id: currentUserId,
-                      name: card.name,
-                      created_at: new Date().toISOString(),
+                    setContextMenuProject({
+                      ...(fullProject ?? { id: card.id, user_id: currentUserId, name: card.name, created_at: new Date().toISOString() }),
                       is_favorite: card.favorite,
                       is_archived: card.is_archived || false,
                     });
                     setContextMenuPosition({ x: e.clientX, y: e.clientY });
                   }}
                   onLongPress={(x, y) => {
-                    setContextMenuProject(fullProject ?? {
-                      id: card.id,
-                      user_id: currentUserId,
-                      name: card.name,
-                      created_at: new Date().toISOString(),
+                    setContextMenuProject({
+                      ...(fullProject ?? { id: card.id, user_id: currentUserId, name: card.name, created_at: new Date().toISOString() }),
                       is_favorite: card.favorite,
                       is_archived: card.is_archived || false,
                     });
@@ -670,11 +656,8 @@ export default function ProjectsSection({
                   t={t}
                   onClick={() => onOpenProject?.(card.id)}
                   onOpenMenu={(x, y) => {
-                    setContextMenuProject(fullProject ?? {
-                      id: card.id,
-                      user_id: currentUserId,
-                      name: card.name,
-                      created_at: new Date().toISOString(),
+                    setContextMenuProject({
+                      ...(fullProject ?? { id: card.id, user_id: currentUserId, name: card.name, created_at: new Date().toISOString() }),
                       is_favorite: card.favorite,
                       is_archived: card.is_archived || false,
                     });
@@ -763,6 +746,7 @@ export default function ProjectsSection({
         <div
           className="fixed z-[9999]"
           style={{ left: contextMenuPosition.x, top: contextMenuPosition.y }}
+          onMouseDown={(e) => e.stopPropagation()}
         >
           <div className="rounded-xl border border-line bg-surface p-1 shadow-xl viora-lift min-w-[180px]">
             <div className="space-y-0.5">
