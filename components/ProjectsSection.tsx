@@ -49,6 +49,7 @@ type ProjectCard = {
   imagePosX?: number;
   imagePosY?: number;
   favorite: boolean;
+  is_archived: boolean;
 };
 
 type Accent = {
@@ -296,6 +297,7 @@ export default function ProjectsSection({
         imagePosX: extra?.imagePosX ?? 50,
         imagePosY: extra?.imagePosY ?? 50,
         favorite: isFavoriteProject(project.id),
+        is_archived: project.is_archived || false,
       };
     });
 
@@ -473,9 +475,35 @@ export default function ProjectsSection({
         </div>
       ) : view === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          {visible.map((card) => (
-            <ProjectCardView key={card.id} card={card} t={t} onClick={() => onOpenProject?.(card.id)} />
-          ))}
+          {visible.map((card) => {
+              // Find the full project data to get user_id and is_archived
+              const fullProject = projects.find(p => p.id === card.id);
+              return (
+                <ProjectCardView
+                  key={card.id}
+                  card={card}
+                  t={t}
+                  onClick={() => onOpenProject?.(card.id)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (fullProject) {
+                      setContextMenuProject(fullProject);
+                    } else {
+                      // Fallback if project not found
+                      setContextMenuProject({
+                        id: card.id,
+                        user_id: card.id, // This is not ideal but better than nothing
+                        name: card.name,
+                        created_at: new Date().toISOString(),
+                        is_favorite: card.favorite,
+                        is_archived: card.is_archived || false
+                      });
+                    }
+                    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+                  }}
+                />
+              );
+            })}
         </div>
       ) : (
         <div className="rounded-xl border border-line bg-surface divide-y divide-line overflow-hidden">
@@ -727,10 +755,12 @@ function ProjectCardView({
   card,
   t,
   onClick,
+  onContextMenu,
 }: {
   card: ProjectCard;
   t: (key: string) => string;
   onClick: () => void;
+  onContextMenu?: (e: React.MouseEvent, card: ProjectCard) => void;
 }) {
   return (
     <button
