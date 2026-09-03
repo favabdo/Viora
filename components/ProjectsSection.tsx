@@ -14,6 +14,8 @@ import {
   Star,
   Trash2,
   LogOut,
+  Pencil,
+  Copy,
 } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
 import { getProjectMeta, hydrateProjectMetas, PROJECT_COLORS, writeProjectMeta } from "@/lib/projectMeta";
@@ -122,6 +124,29 @@ export default function ProjectsSection({
   const [contextMenuProject, setContextMenuProject] = useState<Project | null>(null);
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
 
+  // Edit modal state
+  const [showEdit, setShowEdit] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editIcon, setEditIcon] = useState("folder");
+  const [editColor, setEditColor] = useState(PROJECT_COLORS[0]);
+  const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
+  const [editImageScale, setEditImageScale] = useState(100);
+  const [editImageScaleX, setEditImageScaleX] = useState(100);
+  const [editImageScaleY, setEditImageScaleY] = useState(100);
+  const [editImagePosX, setEditImagePosX] = useState(50);
+  const [editImagePosY, setEditImagePosY] = useState(50);
+  const [editing, setEditing] = useState(false);
+
+  // Confirm modals
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingProject, setDeletingProject] = useState<Project | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [leavingProject, setLeavingProject] = useState<Project | null>(null);
+  const [leaving, setLeaving] = useState(false);
+
   useEffect(() => {
     if (openCreateSignal && openCreateSignal > 0) setShowCreate(true);
   }, [openCreateSignal]);
@@ -138,8 +163,10 @@ export default function ProjectsSection({
       if (e.button === 2) return;
       setContextMenuProject(null);
     }
-    window.addEventListener("mousedown", handleClickOutside);
-    return () => window.removeEventListener("mousedown", handleClickOutside);
+    if (typeof window !== 'undefined') {
+      window.addEventListener("mousedown", handleClickOutside);
+      return () => window.removeEventListener("mousedown", handleClickOutside);
+    }
   }, [contextMenuProject]);
 
   async function toggleFavorite(project: Project) {
@@ -207,6 +234,94 @@ export default function ProjectsSection({
       await load();
     }
     setContextMenuProject(null);
+  }
+
+  function openEditModal(project: Project) {
+    const meta = getProjectMeta(project.id);
+    setEditingProject(project);
+    setEditName(project.name);
+    setEditDescription(meta?.description || "");
+    setEditIcon(meta?.icon || "folder");
+    setEditColor(meta?.color || PROJECT_COLORS[0]);
+    setEditImageUrl(meta?.imageUrl || null);
+    setEditImageScale(meta?.imageScale ?? 100);
+    setEditImageScaleX(meta?.imageScaleX ?? meta?.imageScale ?? 100);
+    setEditImageScaleY(meta?.imageScaleY ?? meta?.imageScale ?? 100);
+    setEditImagePosX(meta?.imagePosX ?? 50);
+    setEditImagePosY(meta?.imagePosY ?? 50);
+    setShowEdit(true);
+    setContextMenuProject(null);
+  }
+
+  async function saveEdit() {
+    if (!editingProject) return;
+    const name = editName.trim();
+    if (!name) return;
+    setEditing(true);
+    const { error } = await supabase
+      .from("projects")
+      .update({ name })
+      .eq("id", editingProject.id);
+    if (!error) {
+      await writeProjectMeta(String(editingProject.id), {
+        description: editDescription.trim(),
+        icon: editIcon,
+        color: editColor,
+        imageUrl: editImageUrl,
+        imageScale: editImageScale,
+        imageScaleX: editImageScaleX,
+        imageScaleY: editImageScaleY,
+        imagePosX: editImagePosX,
+        imagePosY: editImagePosY,
+      });
+      setShowEdit(false);
+      setEditingProject(null);
+      await load();
+    }
+    setEditing(false);
+  }
+
+  function openDeleteConfirm(project: Project) {
+    setDeletingProject(project);
+    setShowDeleteConfirm(true);
+    setContextMenuProject(null);
+  }
+
+  async function confirmDelete() {
+    if (!deletingProject) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("projects")
+      .delete()
+      .eq("id", deletingProject.id);
+    if (!error) {
+      setShowDeleteConfirm(false);
+      setDeletingProject(null);
+      await load();
+    }
+    setDeleting(false);
+  }
+
+  function openLeaveConfirm(project: Project) {
+    setLeavingProject(project);
+    setShowLeaveConfirm(true);
+    setContextMenuProject(null);
+  }
+
+  async function confirmLeave() {
+    if (!leavingProject) return;
+    setLeaving(true);
+    const { error } = await supabase
+      .from("project_members")
+      .delete()
+      .eq("project_id", leavingProject.id)
+      .eq("user_id", currentUserId);
+    if (!error) {
+      setShowLeaveConfirm(false);
+      setLeavingProject(null);
+      await load();
+    }
+    setLeaving(false);
   }
 
   async function load() {
@@ -486,24 +601,19 @@ export default function ProjectsSection({
                   onClick={() => onOpenProject?.(card.id)}
                   onContextMenu={(e) => {
                     e.preventDefault();
-                    if (fullProject) {
-                      setContextMenuProject(fullProject);
-                    } else {
-                      // Fallback if project not found
-                      setContextMenuProject({
-                        id: card.id,
-                        user_id: card.id, // This is not ideal but better than nothing
-                        name: card.name,
-                        created_at: new Date().toISOString(),
-                        is_favorite: card.favorite,
-                        is_archived: card.is_archived || false
-                      });
-                    }
+                    setContextMenuProject(fullProject ?? {
+                      id: card.id,
+                      user_id: currentUserId,
+                      name: card.name,
+                      created_at: new Date().toISOString(),
+                      is_favorite: card.favorite,
+                      is_archived: card.is_archived || false,
+                    });
                     setContextMenuPosition({ x: e.clientX, y: e.clientY });
                   }}
                 />
               );
-            })}
+          })}
         </div>
       ) : (
         <div className="rounded-xl border border-line bg-surface divide-y divide-line overflow-hidden">
@@ -516,19 +626,14 @@ export default function ProjectsSection({
                   onClick={() => onOpenProject?.(card.id)}
                   onContextMenu={(e) => {
                     e.preventDefault();
-                    if (fullProject) {
-                      setContextMenuProject(fullProject);
-                    } else {
-                      // Fallback if project not found
-                      setContextMenuProject({
-                        id: card.id,
-                        user_id: card.id, // This is not ideal but better than nothing
-                        name: card.name,
-                        created_at: new Date().toISOString(),
-                        is_favorite: card.favorite,
-                        is_archived: card.is_archived || false
-                      });
-                    }
+                    setContextMenuProject(fullProject ?? {
+                      id: card.id,
+                      user_id: currentUserId,
+                      name: card.name,
+                      created_at: new Date().toISOString(),
+                      is_favorite: card.favorite,
+                      is_archived: card.is_archived || false,
+                    });
                     setContextMenuPosition({ x: e.clientX, y: e.clientY });
                   }}
                   className="w-full flex items-center gap-4 px-4 py-3.5 text-start hover:bg-tealSoft transition-all"
@@ -645,79 +750,162 @@ export default function ProjectsSection({
       )}
 
       {/* Context Menu */}
-      {contextMenuProject && (
+      {contextMenuProject && contextMenuPosition && (
         <div
-          className="absolute z-50"
-          style={{ left: contextMenuPosition?.x, top: contextMenuPosition?.y }}
+          className="fixed z-[9999]"
+          style={{ left: contextMenuPosition.x, top: contextMenuPosition.y }}
         >
-          <div className="rounded-xl border border-line bg-surface p-1 shadow-lg viora-lift">
-            <div className="space-y-1">
+          <div className="rounded-xl border border-line bg-surface p-1 shadow-xl viora-lift min-w-[180px]">
+            <div className="space-y-0.5">
               <button
-                onClick={() => {
-                  toggleFavorite(contextMenuProject);
-                  setContextMenuProject(null);
-                }}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg"
+                onClick={() => toggleFavorite(contextMenuProject)}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg text-sm transition-colors"
               >
                 <Star size={14} className="text-amber shrink-0" />
-                <span>{t((contextMenuProject as Project).is_favorite ? "projects.unfavorite" : "projects.favorite")}</span>
+                <span>{contextMenuProject.is_favorite ? t("projects.unfavorite") : t("projects.favorite")}</span>
               </button>
               <button
-                onClick={() => {
-                  toggleArchive(contextMenuProject);
-                  setContextMenuProject(null);
-                }}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg"
+                onClick={() => toggleArchive(contextMenuProject)}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg text-sm transition-colors"
               >
                 <FolderKanban size={14} className="shrink-0" />
-                <span>{t((contextMenuProject as Project).is_archived ? "projects.unarchive" : "projects.archive")}</span>
+                <span>{contextMenuProject.is_archived ? t("projects.unarchive") : t("projects.archive")}</span>
               </button>
               <button
-                onClick={() => {
-                  // Edit functionality would go here
-                  // For now, just close the menu
-                  setContextMenuProject(null);
-                }}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg"
+                onClick={() => openEditModal(contextMenuProject)}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg text-sm transition-colors"
               >
-                <Users size={14} className="shrink-0" />
+                <Pencil size={14} className="shrink-0" />
                 <span>{t("projects.edit")}</span>
               </button>
               <button
-                onClick={() => {
-                  duplicateProject(contextMenuProject);
-                  setContextMenuProject(null);
-                }}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg"
+                onClick={() => duplicateProject(contextMenuProject)}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg text-sm transition-colors"
               >
-                <List size={14} className="shrink-0" />
+                <Copy size={14} className="shrink-0" />
                 <span>{t("projects.duplicate")}</span>
               </button>
+              <div className="my-1 border-t border-line" />
               <button
-                onClick={() => {
-                  // Delete functionality would go here
-                  // For now, just close the menu
-                  setContextMenuProject(null);
-                }}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg text-[red]"
-              >
-                <Trash2 size={14} className="shrink-0" />
-                <span>{t("projects.delete")}</span>
-              </button>
-              <button
-                onClick={() => {
-                  // Leave functionality would go here
-                  // For now, just close the menu
-                  setContextMenuProject(null);
-                }}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg"
+                onClick={() => openLeaveConfirm(contextMenuProject)}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-inkSoft hover:text-ink hover:bg-tealSoft rounded-lg text-sm transition-colors"
               >
                 <LogOut size={14} className="shrink-0" />
                 <span>{t("projects.leave")}</span>
               </button>
+              <button
+                onClick={() => openDeleteConfirm(contextMenuProject)}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg text-sm transition-colors"
+              >
+                <Trash2 size={14} className="shrink-0" />
+                <span>{t("projects.delete")}</span>
+              </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit Project Modal */}
+      {showEdit && editingProject && (
+        <Modal
+          onClose={() => { setShowEdit(false); setEditingProject(null); }}
+          title={t("projects.edit")}
+          titleAlign="center"
+          maxWidth="max-w-lg"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-inkFaint mb-1.5">{t("projects.nameLabel")}</label>
+              <Textarea
+                autoFocus
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder={t("projects.namePlaceholder")}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); saveEdit(); } }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-inkFaint mb-1.5">{t("projects.descLabel")}</label>
+              <Textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder={t("projects.descPlaceholder")}
+              />
+            </div>
+            <ProjectAppearanceFields
+              color={editColor}
+              icon={editIcon}
+              imageUrl={editImageUrl}
+              imageScale={editImageScale}
+              imageScaleX={editImageScaleX}
+              imageScaleY={editImageScaleY}
+              imagePosX={editImagePosX}
+              imagePosY={editImagePosY}
+              onChange={(next) => {
+                if (next.color) setEditColor(next.color);
+                if (next.icon) setEditIcon(next.icon);
+                if (next.imageUrl !== undefined) setEditImageUrl(next.imageUrl);
+                if (next.imageScale !== undefined) setEditImageScale(next.imageScale);
+                if (next.imageScaleX !== undefined) setEditImageScaleX(next.imageScaleX);
+                if (next.imageScaleY !== undefined) setEditImageScaleY(next.imageScaleY);
+                if (next.imagePosX !== undefined) setEditImagePosX(next.imagePosX);
+                if (next.imagePosY !== undefined) setEditImagePosY(next.imagePosY);
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3 mt-6">
+            <Button variant="ghost" onClick={() => { setShowEdit(false); setEditingProject(null); }}>
+              {t("common.cancel")}
+            </Button>
+            <Button variant="primary" loading={editing} onClick={saveEdit}>
+              {t("common.save")}
+            </Button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Delete Confirm Modal */}
+      {showDeleteConfirm && deletingProject && (
+        <Modal
+          onClose={() => { setShowDeleteConfirm(false); setDeletingProject(null); }}
+          title={t("projects.delete")}
+          titleAlign="center"
+          maxWidth="max-w-sm"
+        >
+          <p className="text-sm text-inkSoft text-center">
+            {t("projects.deleteConfirm").replace("{name}", deletingProject.name)}
+          </p>
+          <div className="flex items-center justify-between gap-3 mt-6">
+            <Button variant="ghost" onClick={() => { setShowDeleteConfirm(false); setDeletingProject(null); }}>
+              {t("common.cancel")}
+            </Button>
+            <Button variant="danger" loading={deleting} onClick={confirmDelete}>
+              {t("projects.delete")}
+            </Button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Leave Confirm Modal */}
+      {showLeaveConfirm && leavingProject && (
+        <Modal
+          onClose={() => { setShowLeaveConfirm(false); setLeavingProject(null); }}
+          title={t("projects.leave")}
+          titleAlign="center"
+          maxWidth="max-w-sm"
+        >
+          <p className="text-sm text-inkSoft text-center">
+            {t("projects.leaveConfirm").replace("{name}", leavingProject.name)}
+          </p>
+          <div className="flex items-center justify-between gap-3 mt-6">
+            <Button variant="ghost" onClick={() => { setShowLeaveConfirm(false); setLeavingProject(null); }}>
+              {t("common.cancel")}
+            </Button>
+            <Button variant="danger" loading={leaving} onClick={confirmLeave}>
+              {t("projects.leave")}
+            </Button>
+          </div>
+        </Modal>
       )}
     </div>
   );
@@ -780,11 +968,12 @@ function ProjectCardView({
   card: ProjectCard;
   t: (key: string) => string;
   onClick: () => void;
-  onContextMenu?: (e: React.MouseEvent, card: ProjectCard) => void;
+  onContextMenu?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
     <button
       onClick={onClick}
+      onContextMenu={onContextMenu}
       className="text-start rounded-xl border border-line bg-surface p-4 viora-lift"
     >
       <div className="flex items-start justify-between gap-3 mb-3">
