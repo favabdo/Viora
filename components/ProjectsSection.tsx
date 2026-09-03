@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CheckSquare,
   Users,
@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
 import { getProjectMeta, hydrateProjectMetas, PROJECT_COLORS, writeProjectMeta } from "@/lib/projectMeta";
-import { isFavoriteProject } from "@/lib/projectFavorites";
+import { isFavoriteProject, toggleFavoriteProject } from "@/lib/projectFavorites";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
@@ -91,6 +91,36 @@ function daysFromNow(iso: string): number {
   today.setHours(0, 0, 0, 0);
   due.setHours(0, 0, 0, 0);
   return Math.round((due.getTime() - today.getTime()) / 86400000);
+}
+
+/** Hook for long-press — fires `onLongPress(x, y)` after `delay`ms on touch */
+function useLongPress(onLongPress: (x: number, y: number) => void, delay = 500) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const movedRef = useRef(false);
+
+  const start = useCallback(
+    (e: React.TouchEvent) => {
+      movedRef.current = false;
+      const touch = e.touches[0];
+      const x = touch.clientX;
+      const y = touch.clientY;
+      timerRef.current = setTimeout(() => {
+        if (!movedRef.current) onLongPress(x, y);
+      }, delay);
+    },
+    [onLongPress, delay]
+  );
+
+  const cancel = useCallback(() => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+  }, []);
+
+  const move = useCallback(() => {
+    movedRef.current = true;
+    cancel();
+  }, [cancel]);
+
+  return { onTouchStart: start, onTouchEnd: cancel, onTouchMove: move };
 }
 
 export default function ProjectsSection({
@@ -170,29 +200,22 @@ export default function ProjectsSection({
   }, [contextMenuProject]);
 
   async function toggleFavorite(project: Project) {
-    const { error } = await supabase
-      .from("projects")
-      .update({ is_favorite: !project.is_favorite })
-      .eq("id", project.id);
-
-    if (error) {
-      console.error("Error toggling favorite:", error);
-      // TODO: Show toast notification
-    } else {
-      await load();
-    }
+    // Favorites are stored in localStorage (projectFavorites.ts)
+    toggleFavoriteProject(project.id);
+    await load();
     setContextMenuProject(null);
   }
 
   async function toggleArchive(project: Project) {
+    const newVal = !project.is_archived;
     const { error } = await supabase
       .from("projects")
-      .update({ is_archived: !project.is_archived })
+      .update({ is_archived: newVal })
       .eq("id", project.id);
 
     if (error) {
       console.error("Error toggling archive:", error);
-      // TODO: Show toast notification
+      alert(t("projects.err.toggleArchive"));
     } else {
       await load();
     }
@@ -262,7 +285,10 @@ export default function ProjectsSection({
       .from("projects")
       .update({ name })
       .eq("id", editingProject.id);
-    if (!error) {
+    if (error) {
+      console.error("Error saving edit:", error);
+      alert(t("projects.err.edit"));
+    } else {
       await writeProjectMeta(String(editingProject.id), {
         description: editDescription.trim(),
         icon: editIcon,
@@ -294,7 +320,10 @@ export default function ProjectsSection({
       .from("projects")
       .delete()
       .eq("id", deletingProject.id);
-    if (!error) {
+    if (error) {
+      console.error("Error deleting project:", error);
+      alert(t("projects.err.delete"));
+    } else {
       setShowDeleteConfirm(false);
       setDeletingProject(null);
       await load();
@@ -316,7 +345,10 @@ export default function ProjectsSection({
       .delete()
       .eq("project_id", leavingProject.id)
       .eq("user_id", currentUserId);
-    if (!error) {
+    if (error) {
+      console.error("Error leaving project:", error);
+      alert(t("projects.err.leave"));
+    } else {
       setShowLeaveConfirm(false);
       setLeavingProject(null);
       await load();
@@ -377,7 +409,7 @@ export default function ProjectsSection({
         .sort()[0];
 
       const extra = getProjectMeta(project.id);
-      let status: ProjectStatus = extra?.archived ? "archived" : "active";
+      let status: ProjectStatus = (project.is_archived || extra?.archived) ? "archived" : "active";
       if (status !== "archived" && projectTasks.length > 0 && done === projectTasks.length) status = "completed";
 
       let dueLabel: string | null = null;
@@ -611,6 +643,17 @@ export default function ProjectsSection({
                     });
                     setContextMenuPosition({ x: e.clientX, y: e.clientY });
                   }}
+                  onLongPress={(x, y) => {
+                    setContextMenuProject(fullProject ?? {
+                      id: card.id,
+                      user_id: currentUserId,
+                      name: card.name,
+                      created_at: new Date().toISOString(),
+                      is_favorite: card.favorite,
+                      is_archived: card.is_archived || false,
+                    });
+                    setContextMenuPosition({ x, y });
+                  }}
                 />
               );
           })}
@@ -621,11 +664,12 @@ export default function ProjectsSection({
               // Find the full project data to get user_id and is_archived
               const fullProject = projects.find(p => p.id === card.id);
               return (
-                <button
+                <ListCardRow
                   key={card.id}
+                  card={card}
+                  t={t}
                   onClick={() => onOpenProject?.(card.id)}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
+                  onOpenMenu={(x, y) => {
                     setContextMenuProject(fullProject ?? {
                       id: card.id,
                       user_id: currentUserId,
@@ -634,47 +678,11 @@ export default function ProjectsSection({
                       is_favorite: card.favorite,
                       is_archived: card.is_archived || false,
                     });
-                    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+                    setContextMenuPosition({ x, y });
                   }}
-                  className="w-full flex items-center gap-4 px-4 py-3.5 text-start hover:bg-tealSoft transition-all"
-                >
-        <div
-          className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0"
-          style={card.imageUrl ? undefined : { backgroundColor: `${card.color}22`, color: card.color }}
-        >
-          <ProjectIcon
-            name={card.icon}
-            imageUrl={card.imageUrl}
-            color={card.color}
-            imageScale={card.imageScale}
-            imageScaleX={card.imageScaleX}
-            imageScaleY={card.imageScaleY}
-            imagePosX={card.imagePosX}
-            imagePosY={card.imagePosY}
-          />
-        </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium text-ink truncate inline-flex items-center gap-1.5 min-w-0">
-                    {card.favorite && <Star size={13} className="text-amber shrink-0" fill="currentColor" />}
-                    <span className="truncate">{card.name}</span>
-                  </p>
-                  <StatusBadge status={card.status} t={t} />
-                </div>
-                <p className="text-xs text-inkFaint mt-0.5 truncate">{card.description}</p>
-              </div>
-              <div className="hidden sm:flex items-center gap-3 w-36 shrink-0">
-                <div className="h-1.5 flex-1 rounded-full bg-paperDark overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${card.progress}%`, backgroundColor: card.color }} />
-                </div>
-                <span className="text-xs text-inkSoft tabular-nums w-8">{card.progress}%</span>
-              </div>
-              <span className="hidden md:block text-xs text-inkFaint w-20 shrink-0">
-                {card.taskCount} {t("projects.tasks")}
-              </span>
-            </button>
-          );
-        })}
+                />
+              );
+          })}
         </div>
       )}
 
@@ -960,21 +968,82 @@ function StatusBadge({ status, t }: { status: ProjectStatus; t: (key: string) =>
   );
 }
 
+function ListCardRow({
+  card,
+  t,
+  onClick,
+  onOpenMenu,
+}: {
+  card: ProjectCard;
+  t: (key: string) => string;
+  onClick: () => void;
+  onOpenMenu: (x: number, y: number) => void;
+}) {
+  const longPress = useLongPress(onOpenMenu);
+  return (
+    <button
+      onClick={onClick}
+      onContextMenu={(e) => { e.preventDefault(); onOpenMenu(e.clientX, e.clientY); }}
+      {...longPress}
+      className="w-full flex items-center gap-4 px-4 py-3.5 text-start hover:bg-tealSoft transition-all"
+    >
+      <div
+        className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0"
+        style={card.imageUrl ? undefined : { backgroundColor: `${card.color}22`, color: card.color }}
+      >
+        <ProjectIcon
+          name={card.icon}
+          imageUrl={card.imageUrl}
+          color={card.color}
+          imageScale={card.imageScale}
+          imageScaleX={card.imageScaleX}
+          imageScaleY={card.imageScaleY}
+          imagePosX={card.imagePosX}
+          imagePosY={card.imagePosY}
+        />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="font-medium text-ink truncate inline-flex items-center gap-1.5 min-w-0">
+            {card.favorite && <Star size={13} className="text-amber shrink-0" fill="currentColor" />}
+            <span className="truncate">{card.name}</span>
+          </p>
+          <StatusBadge status={card.status} t={t} />
+        </div>
+        <p className="text-xs text-inkFaint mt-0.5 truncate">{card.description}</p>
+      </div>
+      <div className="hidden sm:flex items-center gap-3 w-36 shrink-0">
+        <div className="h-1.5 flex-1 rounded-full bg-paperDark overflow-hidden">
+          <div className="h-full rounded-full" style={{ width: `${card.progress}%`, backgroundColor: card.color }} />
+        </div>
+        <span className="text-xs text-inkSoft tabular-nums w-8">{card.progress}%</span>
+      </div>
+      <span className="hidden md:block text-xs text-inkFaint w-20 shrink-0">
+        {card.taskCount} {t("projects.tasks")}
+      </span>
+    </button>
+  );
+}
+
 function ProjectCardView({
   card,
   t,
   onClick,
   onContextMenu,
+  onLongPress,
 }: {
   card: ProjectCard;
   t: (key: string) => string;
   onClick: () => void;
   onContextMenu?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onLongPress?: (x: number, y: number) => void;
 }) {
+  const longPress = useLongPress(onLongPress ?? (() => {}));
   return (
     <button
       onClick={onClick}
       onContextMenu={onContextMenu}
+      {...longPress}
       className="text-start rounded-xl border border-line bg-surface p-4 viora-lift"
     >
       <div className="flex items-start justify-between gap-3 mb-3">
