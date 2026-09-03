@@ -53,7 +53,6 @@ import AddTaskModal, { type NewTaskDraft } from "./AddTaskModal";
 import Badge from "./ui/Badge";
 import Button from "./ui/Button";
 import DonutChart from "./ui/DonutChart";
-import EmptyState from "./ui/EmptyState";
 import IconButton from "./ui/IconButton";
 import { fieldClass } from "./ui/Input";
 import ProjectMark from "./ProjectMark";
@@ -804,12 +803,7 @@ export default function BacklogSection({
         </div>
       )}
 
-      {total === 0 ? (
-        <div className="mt-5 rounded-xl border border-line bg-surface">
-          <EmptyState icon={ListTodo} title={t("backlog.empty")} hint={t("backlog.emptyHint")} />
-        </div>
-      ) : (
-        <div className="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0">
             <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
@@ -964,7 +958,6 @@ export default function BacklogSection({
             </Panel>
           </aside>
         </div>
-      )}
 
       {open && (
         <AddTaskModal
