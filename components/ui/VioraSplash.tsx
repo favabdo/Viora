@@ -11,35 +11,36 @@ import { AnimatePresence, motion } from "framer-motion";
  */
 
 // إبقاء حالة التحميل ظاهرة مدة أدنى عشان تسلسل الرسم يبان (ظهور المحتوى عند 1.2s)
+// المؤقت يبدأ مع تركيب المكوّن ومش بيتلغى لما التحميل يخلص بسرعة
 export function useMinLoading(loading: boolean, ms = 1200) {
-  const [minElapsed, setMinElapsed] = useState(!loading);
+  const [minElapsed, setMinElapsed] = useState(false);
 
   useEffect(() => {
-    if (!loading) return;
-    setMinElapsed(false);
     const t = setTimeout(() => setMinElapsed(true), ms);
     return () => clearTimeout(t);
-  }, [loading, ms]);
+  }, [ms]);
 
   return loading || !minElapsed;
 }
 
+// الهندسة مستخرجة من public/logo-icon.png بكسل-بكسل (Convex Hull لكل لون)
+// النقاط مدفوعة 5px ناحية المركز عشان تعويض نمو الـ stroke (width 10) — فالحد النهائي يطابق الأصل
 const SHAPES = [
-  // الشكل الأزرق — ضلع الشمال
+  // الشكل الأزرق — ذراع الشمال، نهايته السفلى مقطوعة بزاوية مايلة
   {
-    points: "16,66 150,66 236,386 102,386",
+    points: "15,76 144,72 272,268 200,384",
     fill: "url(#vioraBlue)",
     from: { x: -150, opacity: 0 },
   },
-  // الشكل البنفسجي — ضلع اليمين
+  // الشكل البنفسجي — رأسه بارز ناحية الشمال الغربي
   {
-    points: "324,66 490,66 426,238 260,238",
+    points: "336,72 495,74 399,243 302,244 266,176",
     fill: "url(#vioraPurple)",
     from: { x: 150, opacity: 0 },
   },
-  // المثلث السماوي
+  // المثلث السماوي — قمة مايلة ورِجل يمنى شبه رأسية
   {
-    points: "288,294 374,442 204,442",
+    points: "296,304 386,430 221,438",
     fill: "url(#vioraCyan)",
     from: { y: 150, opacity: 0 },
   },
@@ -47,20 +48,20 @@ const SHAPES = [
 
 function GradientDefs() {
   return (
-    <defs>
-      <linearGradient id="vioraBlue" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#6366F1" />
-        <stop offset="100%" stopColor="#4338CA" />
-      </linearGradient>
-      <linearGradient id="vioraPurple" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#A855F7" />
-        <stop offset="100%" stopColor="#8B2FD6" />
-      </linearGradient>
-      <linearGradient id="vioraCyan" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#7DEBFA" />
-        <stop offset="100%" stopColor="#0CB8E6" />
-      </linearGradient>
-    </defs>
+          <defs>
+            <linearGradient id="vioraBlue" x1="0" y1="0" x2="0.6" y2="1">
+              <stop offset="0%" stopColor="#585AFF" />
+              <stop offset="100%" stopColor="#484AF0" />
+            </linearGradient>
+            <linearGradient id="vioraPurple" x1="0" y1="0" x2="0.6" y2="1">
+              <stop offset="0%" stopColor="#9C42FF" />
+              <stop offset="100%" stopColor="#8E34F2" />
+            </linearGradient>
+            <linearGradient id="vioraCyan" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#2BDCFF" />
+              <stop offset="100%" stopColor="#1FD0F2" />
+            </linearGradient>
+          </defs>
   );
 }
 
@@ -98,7 +99,7 @@ export function VioraLogoMark({
               points={s.points}
               fill={s.fill}
               stroke={s.fill}
-              strokeWidth={12}
+              strokeWidth={10}
               strokeLinejoin="round"
               initial={s.from}
               animate={{ x: 0, y: 0, opacity: 1 }}
