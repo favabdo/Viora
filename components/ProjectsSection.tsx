@@ -21,7 +21,7 @@ import { supabase, Project } from "@/lib/supabase";
 import { getProjectMeta, hydrateProjectMetas, PROJECT_COLORS, writeProjectMeta } from "@/lib/projectMeta";
 import { isFavoriteProject, toggleFavoriteProject } from "@/lib/projectFavorites";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { checkProjectLimit } from "@/lib/planLimits";
+import { checkProjectLimit, isPlanLimitError } from "@/lib/planLimits";
 import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
 import Modal from "./ui/Modal";

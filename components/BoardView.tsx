@@ -40,6 +40,7 @@ import {
 } from "@/lib/taskAttachments";
 import { displayName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { checkTaskLimit } from "@/lib/planLimits";
 import ClickableAvatar from "./ClickableAvatar";
 import IconButton from "./ui/IconButton";
 import { Input, Textarea } from "./ui/Input";
@@ -627,6 +628,10 @@ export default function BoardView({
   async function createTask(draft: NewTaskDraft) {
     if (draft.dueDate && !isDueAfterCreated(null, draft.dueDate)) return;
     const targetProjectId = draft.projectId || projectId;
+    if (!(await checkTaskLimit(targetProjectId))) {
+      alert(t("plans.limitTasks"));
+      return;
+    }
     let targetColumnId = targetProjectId === projectId ? draft.columnId : null;
     if (!targetColumnId) {
       const todo = await ensureTodoColumn(targetProjectId);

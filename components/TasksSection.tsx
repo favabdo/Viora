@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { supabase, Project, Task, BoardColumn, TASK_COLORS } from "@/lib/supabase";
+import { checkTaskLimit } from "@/lib/planLimits";
 import { useSettings } from "@/lib/useSettings";
 import BoardView from "./BoardView";
 import CalendarView from "./CalendarView";
@@ -311,6 +312,10 @@ export default function TasksSection({
   async function addTask() {
     const title = newTaskTitle.trim();
     if (!title || !activeProjectId) return;
+    if (!(await checkTaskLimit(activeProjectId))) {
+      alert(t("plans.limitTasks"));
+      return;
+    }
     // المهمة الجديدة تتحط فوق كل المهام غير المنجزة تلقائيًا
     const position = tasks.length > 0 ? Math.min(...tasks.map((t) => t.position ?? 0)) - 1000 : 1000;
     // نحطها في أول عمود مش "منجز" افتراضيًا (لو فيه أعمدة أصلاً) عشان تظهر صح في البورد كمان
