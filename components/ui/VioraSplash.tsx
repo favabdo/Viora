@@ -1,27 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 /*
- * سبلاش شعار Viora — بيظهر في أي مكان فيه تحميل:
- * الأجزاء بتتجمّع بتوقيتات مختلفة (أزرق 0s، بنفسجي 0.15s، مثلث 0.3s، توهج 0.6s)
- * وبعدين خط سماوي بيعدي على الحواف + نبضة تكبير 5% — زي سبلاش Apple وLinear.
- * الخروج بـ fade لما التحميل يخلص (لازم يكون جوه <AnimatePresence>).
+ * سبلاش شعار Viora — بيظهر بس خلال فترة التحميل الفعلية (شبكة وحشة / بيانات بتتجيب)
+ * وأول ما المحتوى يجهز بيختفي فوراً بـ fade — من غير أي مدة أدنى إجبارية.
+ * لازم يكون جوه <AnimatePresence> عشان الـ fade-out يشتغل.
  */
-
-// إبقاء حالة التحميل ظاهرة مدة أدنى عشان تسلسل الرسم يبان (ظهور المحتوى عند 1.2s)
-// المؤقت يبدأ مع تركيب المكوّن ومش بيتلغى لما التحميل يخلص بسرعة
-export function useMinLoading(loading: boolean, ms = 1200) {
-  const [minElapsed, setMinElapsed] = useState(false);
-
-  useEffect(() => {
-    const t = setTimeout(() => setMinElapsed(true), ms);
-    return () => clearTimeout(t);
-  }, [ms]);
-
-  return loading || !minElapsed;
-}
 
 // الهندسة مستخرجة من public/logo-icon.png بكسل-بكسل (Convex Hull لكل لون)
 // النقاط مدفوعة 5px ناحية المركز عشان تعويض نمو الـ stroke (width 10) — فالحد النهائي يطابق الأصل
@@ -133,7 +118,7 @@ export default function VioraSplash({ label }: { label?: string }) {
     <motion.div
       className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-6 bg-paper"
       initial={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.45, ease: "easeInOut" } }}
+      exit={{ opacity: 0, transition: { duration: 0.35, ease: "easeInOut" } }}
     >
       <VioraLogoMark />
 

@@ -7,7 +7,7 @@ import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, Profile } from "@/lib/supabase";
 import Avatar from "@/components/ui/Avatar";
-import VioraSplash, { useMinLoading } from "@/components/ui/VioraSplash";
+import VioraSplash from "@/components/ui/VioraSplash";
 import IconButton from "@/components/ui/IconButton";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -127,12 +127,10 @@ export default function SettingsPage() {
       .then(({ data }) => setProfile(data as Profile));
   }, [session]);
 
-  const showSplash = useMinLoading(checking || !session);
-
   return (
     <>
       <AnimatePresence>
-        {showSplash && <VioraSplash key="splash" />}
+        {(checking || !session) && <VioraSplash key="splash" />}
       </AnimatePresence>
       {session && (
         <main className="min-h-screen">

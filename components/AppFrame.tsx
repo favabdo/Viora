@@ -19,7 +19,7 @@ import {
   ListTodo,
 } from "lucide-react";
 import AppShell, { ShellTab } from "@/components/AppShell";
-import VioraSplash, { useMinLoading } from "@/components/ui/VioraSplash";
+import VioraSplash from "@/components/ui/VioraSplash";
 import PendingInvites from "@/components/PendingInvites";
 import ProfileCardProvider from "@/components/ProfileCardContext";
 import { AppSessionProvider } from "@/components/AppSession";
@@ -88,12 +88,10 @@ export default function AppFrame({ children }: { children: ReactNode }) {
     void hydrateAllProjectMetas();
   }, [session]);
 
-  const showSplash = useMinLoading(checking || !session);
-
   return (
     <>
       <AnimatePresence>
-        {showSplash && <VioraSplash key="splash" />}
+        {(checking || !session) && <VioraSplash key="splash" />}
       </AnimatePresence>
       {session && (
         <ProfileCardProvider currentUserId={session.user.id}>

@@ -11,7 +11,7 @@ import Avatar from "@/components/ui/Avatar";
 import { Input, Textarea } from "@/components/ui/Input";
 import { ArrowRight, Camera } from "lucide-react";
 import VLogoLoader from "@/components/ui/VLogoLoader";
-import VioraSplash, { useMinLoading } from "@/components/ui/VioraSplash";
+import VioraSplash from "@/components/ui/VioraSplash";
 import AvatarCropModal from "@/components/AvatarCropModal";
 import ConfirmPasswordModal from "@/components/ConfirmPasswordModal";
 import { HOME_PATH } from "@/lib/appRoutes";
@@ -375,12 +375,12 @@ export default function ProfilePage() {
     router.replace("/login");
   }
 
-  const showSplash = useMinLoading(checking || !session || loadingProfile || !profile);
-
   return (
     <>
       <AnimatePresence>
-        {showSplash && <VioraSplash key="splash" />}
+        {(checking || !session || loadingProfile || !profile) && (
+          <VioraSplash key="splash" />
+        )}
       </AnimatePresence>
       {session && profile && (
         <main className="min-h-screen px-5 py-6 md:px-10 md:py-8">

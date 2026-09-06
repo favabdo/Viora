@@ -26,7 +26,7 @@ import { displayName, renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import { projectPath } from "@/lib/appRoutes";
 import DonutChart from "./ui/DonutChart";
-import VioraSplash, { useMinLoading } from "./ui/VioraSplash";
+import VioraSplash from "./ui/VioraSplash";
 import Button from "./ui/Button";
 import ClickableAvatar from "./ClickableAvatar";
 import ClickableName from "./ClickableName";
@@ -276,12 +276,10 @@ export default function HomeDashboard() {
   const Prev = dir === "rtl" ? ChevronRight : ChevronLeft;
   const Next = dir === "rtl" ? ChevronLeft : ChevronRight;
 
-  const showSplash = useMinLoading(loading);
-
   return (
     <>
       <AnimatePresence>
-        {showSplash && <VioraSplash key="splash" />}
+        {loading && <VioraSplash key="splash" />}
       </AnimatePresence>
       {!loading && (
         <div className={`min-w-0 overflow-x-hidden grid gap-4 sm:gap-5 ${showWidgets ? "xl:grid-cols-[minmax(0,1fr)_20.5rem]" : ""}`}>
