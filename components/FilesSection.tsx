@@ -33,6 +33,7 @@ import {
   type LibraryFile,
 } from "@/lib/libraryFiles";
 import { fileKind, previewUrl } from "@/lib/taskAttachments";
+import { checkStorageUpload } from "@/lib/planLimits";
 import { projectPath } from "@/lib/appRoutes";
 import { timeAgo } from "@/lib/timeAgo";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -252,22 +253,27 @@ export default function FilesSection({
   const usedPct = Math.min(100, Math.round((totalSize / STORAGE_CAP_BYTES) * 100));
 
   async function submitAdd() {
-    const { error: uploadError } = await import("@/lib/planLimits");
-    let canUpload = true;
-    if (pendingFiles.length > 0) {
-      try {
-        for (const f of pendingFiles) {
-          if (!(await import("@/lib/planLimits").then(m => m.checkStorageUpload(f.size)))) {
-            canUpload = false;
-            break;
-          }
-        }
-      } catch (_) { canUpload = false; }
-    }
-    if (!canUpload) { setSaving(false); alert(t("plans.limitStorage")); return; }
-    // proceed upload
+    if (pendingFiles.length === 0) return;
     if (scope === "project" && !addProjectId) return;
     if (scope === "task" && (!addProjectId || !addTaskId)) return;
+
+    // حد تخزين الخطة المجانية قبل الرفع
+    let canUpload = true;
+    try {
+      for (const f of pendingFiles) {
+        if (!(await checkStorageUpload(f.size))) {
+          canUpload = false;
+          break;
+        }
+      }
+    } catch {
+      canUpload = false;
+    }
+    if (!canUpload) {
+      alert(t("plans.limitStorage"));
+      return;
+    }
+
     setSaving(true);
     await addLibraryFiles({
       userId: currentUserId,
