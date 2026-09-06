@@ -1507,6 +1507,33 @@ const dict: Record<string, { en: string; ar: string }> = {
     en: "Once launched, the Free plan will include 10 AI credits per month and basic writing help.",
     ar: "عند الإطلاق ستشمل الخطة المجانية 10 أرصدة ذكاء اصطناعي شهريًا ومساعدة كتابة أساسية.",
   },
+  "upgrade.limit.title": { en: "Free plan limit reached", ar: "وصلت لحد الخطة المجانية" },
+  "upgrade.limit.projects": {
+    en: "The Free plan includes up to 3 projects. Upgrade your plan to create more.",
+    ar: "الخطة المجانية تتيح حتى 3 مشاريع فقط. رقّ خطتك لإنشاء المزيد.",
+  },
+  "upgrade.limit.tasks": {
+    en: "The Free plan includes up to 100 tasks. Upgrade your plan to add more.",
+    ar: "الخطة المجانية تتيح حتى 100 مهمة فقط. رقّ خطتك لإضافة المزيد.",
+  },
+  "upgrade.limit.storage": {
+    en: "The Free plan includes 1 GB of storage. Upgrade your plan for more space.",
+    ar: "الخطة المجانية تتيح 1 جيجابايت تخزين فقط. رقّ خطتك لمساحة أكبر.",
+  },
+  "upgrade.limit.history": {
+    en: "The Free plan keeps 7 days of activity history. Upgrade for unlimited history.",
+    ar: "الخطة المجانية تحتفظ بسجل نشاط 7 أيام فقط. رقّ خطتك لسجل بلا حدود.",
+  },
+  "upgrade.limit.ai": {
+    en: "You've used all your AI credits this month. Upgrade for more credits.",
+    ar: "استهلكت كل أرصدة الذكاء الاصطناعي لهذا الشهر. رقّ خطتك للمزيد.",
+  },
+  "upgrade.limit.hint": {
+    en: "Upgrade to unlock this and more.",
+    ar: "رقّ للحصول على هذه الميزة والمزيد.",
+  },
+  "upgrade.limit.cta": { en: "Upgrade Plan", ar: "ترقية الخطة" },
+  "upgrade.limit.later": { en: "Maybe later", ar: "لاحقًا" },
 };
 
 export default dict;
