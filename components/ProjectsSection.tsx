@@ -199,43 +199,50 @@ export default function ProjectsSection({
     }
   }, [contextMenuProject]);
 
-  async function toggleFavorite(project: Project) {
-    // Favorites are stored in localStorage (projectFavorites.ts)
+  function toggleFavorite(project: Project) {
     toggleFavoriteProject(project.id);
-    await load();
+    const nowFav = isFavoriteProject(project.id);
+    setCards((prev) =>
+      prev.map((c) => (c.id === project.id ? { ...c, favorite: nowFav } : c))
+    );
     setContextMenuProject(null);
   }
 
   async function toggleArchive(project: Project) {
     const meta = getProjectMeta(project.id);
-    const newVal = !(meta?.archived || project.is_archived);
-    await writeProjectMeta(project.id, { archived: newVal });
-    await load();
+    const newArchived = !(meta?.archived || project.is_archived);
+    await writeProjectMeta(project.id, { archived: newArchived });
+    setCards((prev) =>
+      prev.map((c) => {
+        if (c.id !== project.id) return c;
+        const newStatus: ProjectStatus = newArchived
+          ? "archived"
+          : c.taskCount > 0 && c.progress === 100
+          ? "completed"
+          : "active";
+        return { ...c, status: newStatus, is_archived: newArchived };
+      })
+    );
     setContextMenuProject(null);
   }
 
   async function duplicateProject(project: Project) {
-    // First get the project meta
     const meta = getProjectMeta(project.id);
     const { data, error } = await supabase
       .from("projects")
-      .insert({
-        name: `${project.name} (Copy)`,
-        user_id: project.user_id,
-      })
+      .insert({ name: `${project.name} (Copy)`, user_id: project.user_id })
       .select()
       .single();
 
     if (error) {
       console.error("Error duplicating project:", error);
-      // TODO: Show toast notification
       setContextMenuProject(null);
       return;
     }
 
     if (data) {
-      // Copy the project meta
-      await writeProjectMeta(String(data.id), {
+      const newProject = data as Project;
+      const newMeta = {
         description: meta?.description || "",
         icon: meta?.icon || "folder",
         color: meta?.color || PROJECT_COLORS[0],
@@ -245,8 +252,31 @@ export default function ProjectsSection({
         imageScaleY: meta?.imageScaleY ?? meta?.imageScale ?? 100,
         imagePosX: meta?.imagePosX ?? 50,
         imagePosY: meta?.imagePosY ?? 50,
-      });
-      await load();
+      };
+      await writeProjectMeta(String(newProject.id), newMeta);
+      const newCard: ProjectCard = {
+        id: newProject.id,
+        name: newProject.name,
+        description: newMeta.description || t("projects.defaultDescription"),
+        status: "active",
+        progress: 0,
+        taskCount: 0,
+        memberCount: 1,
+        dueLabel: null,
+        accent: accentFor(newProject.id),
+        color: newMeta.color,
+        icon: newMeta.icon,
+        imageUrl: newMeta.imageUrl,
+        imageScale: newMeta.imageScale,
+        imageScaleX: newMeta.imageScaleX,
+        imageScaleY: newMeta.imageScaleY,
+        imagePosX: newMeta.imagePosX,
+        imagePosY: newMeta.imagePosY,
+        favorite: false,
+        is_archived: false,
+      };
+      setProjects((prev) => [newProject, ...prev]);
+      setCards((prev) => [newCard, ...prev]);
     }
     setContextMenuProject(null);
   }
@@ -281,8 +311,9 @@ export default function ProjectsSection({
       console.error("Error saving edit:", error);
       alert(t("projects.err.edit"));
     } else {
+      const desc = editDescription.trim();
       await writeProjectMeta(String(editingProject.id), {
-        description: editDescription.trim(),
+        description: desc,
         icon: editIcon,
         color: editColor,
         imageUrl: editImageUrl,
@@ -292,9 +323,30 @@ export default function ProjectsSection({
         imagePosX: editImagePosX,
         imagePosY: editImagePosY,
       });
+      setProjects((prev) =>
+        prev.map((p) => (p.id === editingProject.id ? { ...p, name } : p))
+      );
+      setCards((prev) =>
+        prev.map((c) =>
+          c.id !== editingProject.id
+            ? c
+            : {
+                ...c,
+                name,
+                description: desc || t("projects.defaultDescription"),
+                icon: editIcon,
+                color: editColor,
+                imageUrl: editImageUrl,
+                imageScale: editImageScale,
+                imageScaleX: editImageScaleX,
+                imageScaleY: editImageScaleY,
+                imagePosX: editImagePosX,
+                imagePosY: editImagePosY,
+              }
+        )
+      );
       setShowEdit(false);
       setEditingProject(null);
-      await load();
     }
     setEditing(false);
   }
@@ -316,9 +368,11 @@ export default function ProjectsSection({
       console.error("Error deleting project:", error);
       alert(t("projects.err.delete"));
     } else {
+      const id = deletingProject.id;
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+      setCards((prev) => prev.filter((c) => c.id !== id));
       setShowDeleteConfirm(false);
       setDeletingProject(null);
-      await load();
     }
     setDeleting(false);
   }
@@ -341,9 +395,11 @@ export default function ProjectsSection({
       console.error("Error leaving project:", error);
       alert(t("projects.err.leave"));
     } else {
+      const id = leavingProject.id;
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+      setCards((prev) => prev.filter((c) => c.id !== id));
       setShowLeaveConfirm(false);
       setLeavingProject(null);
-      await load();
     }
     setLeaving(false);
   }
@@ -464,7 +520,8 @@ export default function ProjectsSection({
     const { data, error } = await supabase.from("projects").insert({ name }).select().single();
     setCreating(false);
     if (!error && data) {
-      await writeProjectMeta(String((data as Project).id), {
+      const newProject = data as Project;
+      const meta = {
         description: newDescription.trim(),
         icon: newIcon,
         color: newColor,
@@ -474,10 +531,33 @@ export default function ProjectsSection({
         imageScaleY: newImageScaleY,
         imagePosX: newImagePosX,
         imagePosY: newImagePosY,
-      });
+      };
+      await writeProjectMeta(String(newProject.id), meta);
+      const newCard: ProjectCard = {
+        id: newProject.id,
+        name: newProject.name,
+        description: meta.description || t("projects.defaultDescription"),
+        status: "active",
+        progress: 0,
+        taskCount: 0,
+        memberCount: 1,
+        dueLabel: null,
+        accent: accentFor(newProject.id),
+        color: meta.color,
+        icon: meta.icon,
+        imageUrl: meta.imageUrl,
+        imageScale: meta.imageScale,
+        imageScaleX: meta.imageScaleX,
+        imageScaleY: meta.imageScaleY,
+        imagePosX: meta.imagePosX,
+        imagePosY: meta.imagePosY,
+        favorite: false,
+        is_archived: false,
+      };
+      setProjects((prev) => [newProject, ...prev]);
+      setCards((prev) => [newCard, ...prev]);
       resetCreateForm();
       setShowCreate(false);
-      await load();
     }
   }
 
