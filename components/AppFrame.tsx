@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence } from "framer-motion";
 import { ReactNode, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
@@ -18,7 +19,7 @@ import {
   ListTodo,
 } from "lucide-react";
 import AppShell, { ShellTab } from "@/components/AppShell";
-import VLogoLoader from "@/components/ui/VLogoLoader";
+import VioraSplash, { useMinLoading } from "@/components/ui/VioraSplash";
 import PendingInvites from "@/components/PendingInvites";
 import ProfileCardProvider from "@/components/ProfileCardContext";
 import { AppSessionProvider } from "@/components/AppSession";
@@ -87,34 +88,35 @@ export default function AppFrame({ children }: { children: ReactNode }) {
     void hydrateAllProjectMetas();
   }, [session]);
 
-  if (checking || !session) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <VLogoLoader size={28} />
-      </main>
-    );
-  }
+  const showSplash = useMinLoading(checking || !session);
 
   return (
-    <ProfileCardProvider currentUserId={session.user.id}>
-      <AppSessionProvider value={{ session, userName, avatarUrl }}>
-        <AppShell
-          tabs={tabs}
-          activeTab={navIdFromPath(pathname)}
-          onTabChange={(id) => router.push(pathForNav(id))}
-          userName={userName}
-          userUsername={userUsername}
-          avatarUrl={avatarUrl}
-          onSignOut={async () => {
-            await supabase.auth.signOut();
-            router.replace("/login");
-          }}
-          currentUserId={session.user.id}
-        >
-          <PendingInvites userId={session.user.id} />
-          {children}
-        </AppShell>
-      </AppSessionProvider>
-    </ProfileCardProvider>
+    <>
+      <AnimatePresence>
+        {showSplash && <VioraSplash key="splash" />}
+      </AnimatePresence>
+      {session && (
+        <ProfileCardProvider currentUserId={session.user.id}>
+          <AppSessionProvider value={{ session, userName, avatarUrl }}>
+            <AppShell
+              tabs={tabs}
+              activeTab={navIdFromPath(pathname)}
+              onTabChange={(id) => router.push(pathForNav(id))}
+              userName={userName}
+              userUsername={userUsername}
+              avatarUrl={avatarUrl}
+              onSignOut={async () => {
+                await supabase.auth.signOut();
+                router.replace("/login");
+              }}
+              currentUserId={session.user.id}
+            >
+              <PendingInvites userId={session.user.id} />
+              {children}
+            </AppShell>
+          </AppSessionProvider>
+        </ProfileCardProvider>
+      )}
+    </>
   );
 }

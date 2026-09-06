@@ -1,12 +1,13 @@
 "use client";
 
+import { AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, Profile } from "@/lib/supabase";
 import Avatar from "@/components/ui/Avatar";
-import VLogoLoader from "@/components/ui/VLogoLoader";
+import VioraSplash, { useMinLoading } from "@/components/ui/VioraSplash";
 import IconButton from "@/components/ui/IconButton";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -126,16 +127,15 @@ export default function SettingsPage() {
       .then(({ data }) => setProfile(data as Profile));
   }, [session]);
 
-  if (checking || !session) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <VLogoLoader size={28} />
-      </main>
-    );
-  }
+  const showSplash = useMinLoading(checking || !session);
 
   return (
-    <main className="min-h-screen">
+    <>
+      <AnimatePresence>
+        {showSplash && <VioraSplash key="splash" />}
+      </AnimatePresence>
+      {session && (
+        <main className="min-h-screen">
       <div className="max-w-5xl mx-auto px-5 py-6 md:px-8 md:py-8">
         <div className="flex items-center gap-3 mb-1">
           <IconButton aria-label={t("profile.back")} onClick={() => router.push(HOME_PATH)}>
@@ -323,6 +323,8 @@ export default function SettingsPage() {
           </Button>
         </Modal>
       )}
-    </main>
+        </main>
+      )}
+    </>
   );
 }

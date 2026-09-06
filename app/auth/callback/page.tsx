@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import VLogoLoader from "@/components/ui/VLogoLoader";
+import VioraSplash from "@/components/ui/VioraSplash";
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -26,12 +26,5 @@ export default function AuthCallback() {
     })();
   }, [router]);
 
-  return (
-    <main className="min-h-screen flex items-center justify-center">
-      <div className="flex items-center gap-2.5 text-inkSoft text-sm">
-        <VLogoLoader size={16} className="text-teal" />
-        {t("authCallback.confirming")}
-      </div>
-    </main>
-  );
+  return <VioraSplash label={t("authCallback.confirming")} />;
 }

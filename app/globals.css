@@ -601,3 +601,28 @@ html:not(.dark) .login-mask {
 @media (prefers-reduced-motion: reduce) {
   .v-logo-draw { animation: none; stroke-dashoffset: 0; opacity: 1; }
 }
+
+/* سبلاش شعار Viora — Shine + Pulse */
+@keyframes viora-shine {
+  0% { stroke-dashoffset: 110; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { stroke-dashoffset: -10; opacity: 0; }
+}
+.viora-shine {
+  opacity: 0;
+  animation: viora-shine 1.1s ease-in-out 1s infinite;
+}
+
+@keyframes viora-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(22, 217, 255, 0)); }
+  50% { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(22, 217, 255, 0.55)); }
+}
+.viora-logo-pulse {
+  animation: viora-pulse 2.2s ease-in-out 1.2s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viora-shine { animation: none; opacity: 0; }
+  .viora-logo-pulse { animation: none; }
+}

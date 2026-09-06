@@ -1,13 +1,13 @@
 import { Check, X } from "lucide-react";
 import { ReactNode } from "react";
-import VLogoLoader from "@/components/ui/VLogoLoader";
+import { VioraLogoMark } from "@/components/ui/VioraSplash";
 
 type Kind = "loading" | "success" | "error";
 
 const styles: Record<Kind, { wrap: string; icon: ReactNode }> = {
   loading: {
-    wrap: "bg-paperDark text-inkSoft",
-    icon: <VLogoLoader size={22} className="text-teal" />,
+    wrap: "",
+    icon: null,
   },
   success: {
     wrap: "bg-sageSoft text-[#3F6136]",
@@ -33,9 +33,15 @@ export default function StatusScreen({
   const s = styles[kind];
   return (
     <div className="text-center">
-      <div className={`mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full ${s.wrap}`}>
-        {s.icon}
-      </div>
+      {kind === "loading" ? (
+        <div className="mx-auto mb-4 w-fit">
+          <VioraLogoMark className="h-20 w-20" glowClass="-inset-6" />
+        </div>
+      ) : (
+        <div className={`mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full ${s.wrap}`}>
+          {s.icon}
+        </div>
+      )}
       <h1 className="font-display text-lg font-medium mb-1.5 text-ink">{title}</h1>
       {message && <p className="text-sm text-inkSoft leading-relaxed">{message}</p>}
       {children}

@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
@@ -10,6 +11,7 @@ import Avatar from "@/components/ui/Avatar";
 import { Input, Textarea } from "@/components/ui/Input";
 import { ArrowRight, Camera } from "lucide-react";
 import VLogoLoader from "@/components/ui/VLogoLoader";
+import VioraSplash, { useMinLoading } from "@/components/ui/VioraSplash";
 import AvatarCropModal from "@/components/AvatarCropModal";
 import ConfirmPasswordModal from "@/components/ConfirmPasswordModal";
 import { HOME_PATH } from "@/lib/appRoutes";
@@ -373,16 +375,15 @@ export default function ProfilePage() {
     router.replace("/login");
   }
 
-  if (checking || !session || loadingProfile || !profile) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <VLogoLoader size={28} />
-      </main>
-    );
-  }
+  const showSplash = useMinLoading(checking || !session || loadingProfile || !profile);
 
   return (
-    <main className="min-h-screen px-5 py-6 md:px-10 md:py-8">
+    <>
+      <AnimatePresence>
+        {showSplash && <VioraSplash key="splash" />}
+      </AnimatePresence>
+      {session && profile && (
+        <main className="min-h-screen px-5 py-6 md:px-10 md:py-8">
       <div className="max-w-lg mx-auto">
         <header className="mb-7 flex items-center gap-3">
           <IconButton aria-label={t("profile.back")} onClick={() => router.push(HOME_PATH)}>
@@ -661,6 +662,8 @@ export default function ProfilePage() {
           onConfirm={performDeleteAccount}
         />
       )}
-    </main>
+        </main>
+      )}
+    </>
   );
 }
