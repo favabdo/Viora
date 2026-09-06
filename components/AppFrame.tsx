@@ -18,6 +18,7 @@ import {
   ListTodo,
 } from "lucide-react";
 import AppShell, { ShellTab } from "@/components/AppShell";
+import VLogoLoader from "@/components/ui/VLogoLoader";
 import PendingInvites from "@/components/PendingInvites";
 import ProfileCardProvider from "@/components/ProfileCardContext";
 import { AppSessionProvider } from "@/components/AppSession";
@@ -89,7 +90,7 @@ export default function AppFrame({ children }: { children: ReactNode }) {
   if (checking || !session) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <div className="h-5 w-5 rounded-full border-2 border-line border-t-[#6C5CE7] animate-spin" />
+        <VLogoLoader size={28} />
       </main>
     );
   }

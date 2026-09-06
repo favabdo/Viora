@@ -1,7 +1,7 @@
 "use client";
 
 import { ButtonHTMLAttributes, forwardRef } from "react";
-import { Loader2 } from "lucide-react";
+import VLogoLoader from "@/components/ui/VLogoLoader";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md";
@@ -41,7 +41,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={`${base} ${variants[variant]} ${sizes[size]} ${fullWidth ? "w-full" : ""} ${className}`}
         {...props}
       >
-        {loading && <Loader2 className="animate-spin" size={size === "sm" ? 13 : 15} strokeWidth={2.5} />}
+        {loading && <VLogoLoader size={size === "sm" ? 13 : 15} />}
         {children}
       </button>
     );

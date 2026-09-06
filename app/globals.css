@@ -586,3 +586,18 @@ html:not(.dark) .login-mask {
     transform: scale(1.11);
   }
 }
+
+/* لودر شعار V — يُرسم من الشمال لليمين */
+@keyframes v-logo-draw {
+  0% { stroke-dashoffset: 100; opacity: 1; }
+  55% { stroke-dashoffset: 0; opacity: 1; }
+  80% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+.v-logo-draw {
+  stroke-dashoffset: 100;
+  animation: v-logo-draw 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .v-logo-draw { animation: none; stroke-dashoffset: 0; opacity: 1; }
+}

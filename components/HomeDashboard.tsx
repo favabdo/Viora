@@ -25,6 +25,7 @@ import { displayName, renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import { projectPath } from "@/lib/appRoutes";
 import DonutChart from "./ui/DonutChart";
+import VLogoLoader from "./ui/VLogoLoader";
 import Button from "./ui/Button";
 import ClickableAvatar from "./ClickableAvatar";
 import ClickableName from "./ClickableName";
@@ -277,7 +278,7 @@ export default function HomeDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-5 w-5 rounded-full border-2 border-line border-t-[#6C5CE7] animate-spin" />
+        <VLogoLoader size={28} />
       </div>
     );
   }

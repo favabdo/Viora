@@ -1,12 +1,13 @@
-import { Check, Loader2, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { ReactNode } from "react";
+import VLogoLoader from "@/components/ui/VLogoLoader";
 
 type Kind = "loading" | "success" | "error";
 
 const styles: Record<Kind, { wrap: string; icon: ReactNode }> = {
   loading: {
     wrap: "bg-paperDark text-inkSoft",
-    icon: <Loader2 size={20} strokeWidth={2.25} className="animate-spin" />,
+    icon: <VLogoLoader size={22} className="text-teal" />,
   },
   success: {
     wrap: "bg-sageSoft text-[#3F6136]",

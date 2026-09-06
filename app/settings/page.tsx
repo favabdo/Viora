@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, Profile } from "@/lib/supabase";
 import Avatar from "@/components/ui/Avatar";
+import VLogoLoader from "@/components/ui/VLogoLoader";
 import IconButton from "@/components/ui/IconButton";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -128,7 +129,7 @@ export default function SettingsPage() {
   if (checking || !session) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <span className="h-5 w-5 rounded-full border-2 border-line border-t-teal animate-spin" />
+        <VLogoLoader size={28} />
       </main>
     );
   }

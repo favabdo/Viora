@@ -8,7 +8,8 @@ import Button from "@/components/ui/Button";
 import IconButton from "@/components/ui/IconButton";
 import Avatar from "@/components/ui/Avatar";
 import { Input, Textarea } from "@/components/ui/Input";
-import { ArrowRight, Camera, Loader2 } from "lucide-react";
+import { ArrowRight, Camera } from "lucide-react";
+import VLogoLoader from "@/components/ui/VLogoLoader";
 import AvatarCropModal from "@/components/AvatarCropModal";
 import ConfirmPasswordModal from "@/components/ConfirmPasswordModal";
 import { HOME_PATH } from "@/lib/appRoutes";
@@ -375,7 +376,7 @@ export default function ProfilePage() {
   if (checking || !session || loadingProfile || !profile) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <div className="h-5 w-5 rounded-full border-2 border-line border-t-teal animate-spin" />
+        <VLogoLoader size={28} />
       </main>
     );
   }
@@ -401,7 +402,7 @@ export default function ProfilePage() {
               className="absolute -bottom-1 -left-1 h-8 w-8 rounded-full bg-teal text-white flex items-center justify-center border-2 border-paper hover:bg-tealDark transition-colors disabled:opacity-60"
             >
               {uploadingAvatar ? (
-                <Loader2 size={13} strokeWidth={2.5} className="animate-spin" />
+                <VLogoLoader size={13} />
               ) : (
                 <Camera size={13} strokeWidth={2} />
               )}

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Button from "./ui/Button";
+import VLogoLoader from "./ui/VLogoLoader";
 import { Input, Textarea, fieldClass } from "./ui/Input";
 import { SkeletonList } from "./ui/Skeleton";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -541,7 +542,7 @@ export default function RoomsSection({
             disabled={loadingTasks}
             className="flex items-center gap-1 text-xs text-inkSoft hover:text-teal transition-colors disabled:opacity-50"
           >
-            <RefreshCw size={13} strokeWidth={1.75} className={loadingTasks ? "animate-spin" : ""} />
+            {loadingTasks ? <VLogoLoader size={13} /> : <RefreshCw size={13} strokeWidth={1.75} />}
             {t("rooms.refresh")}
           </button>
         </div>
