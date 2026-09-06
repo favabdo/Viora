@@ -21,6 +21,7 @@ import { supabase, Project } from "@/lib/supabase";
 import { getProjectMeta, hydrateProjectMetas, PROJECT_COLORS, writeProjectMeta } from "@/lib/projectMeta";
 import { isFavoriteProject, toggleFavoriteProject } from "@/lib/projectFavorites";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { checkProjectLimit } from "@/lib/planLimits";
 import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
 import Modal from "./ui/Modal";
@@ -516,9 +517,15 @@ export default function ProjectsSection({
   async function createProject() {
     const name = newName.trim();
     if (!name) return;
+    // حد الخطة المجانية: 3 مشاريع
+    if (!(await checkProjectLimit())) {
+      alert(t("plans.limitProjects"));
+      return;
+    }
     setCreating(true);
     const { data, error } = await supabase.from("projects").insert({ name }).select().single();
     setCreating(false);
+    if (error && isPlanLimitError(error)) alert(t("plans.limitProjects"));
     if (!error && data) {
       const newProject = data as Project;
       const meta = {

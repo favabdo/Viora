@@ -1489,6 +1489,24 @@ const dict: Record<string, { en: string; ar: string }> = {
     en: "Billing isn’t connected yet — this page is the plan for upcoming Viora features.",
     ar: "الفوترة غير مربوطة بعد — هذه الصفحة مخطط لميزات فيورا القادمة.",
   },
+  "upgrade.comingSoon": { en: "Coming Soon", ar: "قريبًا" },
+  "plans.limitProjects": {
+    en: "Free plan includes up to 3 projects. Upgrade options are coming soon!",
+    ar: "الخطة المجانية تتيح حتى 3 مشاريع. خيارات الترقية قريبًا!",
+  },
+  "plans.limitTasks": {
+    en: "Free plan includes 100 tasks. Upgrade options are coming soon!",
+    ar: "الخطة المجانية تتيح 100 مهمة. خيارات الترقية قريبًا!",
+  },
+  "plans.limitStorage": {
+    en: "Free plan includes 1 GB of storage. Upgrade options are coming soon!",
+    ar: "الخطة المجانية تتيح 1 جيجابايت تخزين. خيارات الترقية قريبًا!",
+  },
+  "ai.comingSoon.title": { en: "Viora AI is coming soon", ar: "Viora AI قادم قريبًا" },
+  "ai.comingSoon.body": {
+    en: "Once launched, the Free plan will include 10 AI credits per month and basic writing help.",
+    ar: "عند الإطلاق ستشمل الخطة المجانية 10 أرصدة ذكاء اصطناعي شهريًا ومساعدة كتابة أساسية.",
+  },
 };
 
 export default dict;

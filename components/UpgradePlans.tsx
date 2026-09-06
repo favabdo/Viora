@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Check,
   Clock3,
@@ -21,15 +20,10 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
-type Billing = "monthly" | "yearly";
 type Accent = "violet" | "teal";
 
 export default function UpgradePlans() {
   const { t } = useTranslation();
-  const [billing, setBilling] = useState<Billing>("monthly");
-  const yearly = billing === "yearly";
-  const proPrice = yearly ? 7 : 9;
-  const teamPrice = yearly ? 15 : 19;
 
   const tags = [
     t("upgrade.tag.ai"),
@@ -52,32 +46,6 @@ export default function UpgradePlans() {
   return (
     <div className="upgrade-stage px-4 sm:px-6 md:px-10 pt-8 md:pt-12 pb-20">
       <div className="relative mx-auto max-w-[1280px]">
-        <div className="flex justify-end mb-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-line bg-surface/80 p-1 backdrop-blur-md">
-            <button
-              type="button"
-              onClick={() => setBilling("monthly")}
-              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
-                !yearly ? "bg-[#7C5CFF] text-white shadow-[0_0_18px_rgba(124,92,255,0.55)]" : "text-inkFaint hover:text-ink"
-              }`}
-            >
-              {t("upgrade.billing.monthly")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setBilling("yearly")}
-              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
-                yearly ? "bg-[#7C5CFF] text-white shadow-[0_0_18px_rgba(124,92,255,0.55)]" : "text-inkFaint hover:text-ink"
-              }`}
-            >
-              {t("upgrade.billing.yearly")}
-            </button>
-            <span className="me-1 rounded-full bg-[#22c55e]/15 px-2.5 py-0.5 text-[10px] font-semibold text-[#15803D] dark:text-[#4ade80] shadow-[0_0_12px_rgba(74,222,128,0.25)]">
-              {t("upgrade.billing.save")}
-            </span>
-          </div>
-        </div>
-
         <div className="text-center max-w-3xl mx-auto mb-10">
           <h1 className="text-[1.85rem] sm:text-[2.35rem] md:text-[2.75rem] font-semibold tracking-tight text-ink leading-[1.15]">
             {t("upgrade.titleBefore")}{" "}
@@ -110,15 +78,13 @@ export default function UpgradePlans() {
             aiItems={[t("upgrade.free.ai1"), t("upgrade.free.ai2")]}
           />
           <PlanCard
-            featured
             accent="violet"
-            badge={t("upgrade.pro.badge")}
             icon={<Crown size={18} strokeWidth={1.7} />}
             name={t("upgrade.pro.name")}
-            price={`$${proPrice}`}
+            price="$9"
             unit="/ month"
-            note={yearly ? t("upgrade.pro.priceNoteYearly") : t("upgrade.pro.priceNoteMonthly")}
-            cta={t("upgrade.pro.cta")}
+            comingSoon
+            cta={t("upgrade.comingSoon")}
             ctaStyle="primary"
             features={[t("upgrade.pro.f1"), t("upgrade.pro.f2"), t("upgrade.pro.f3"), t("upgrade.pro.f4"), t("upgrade.pro.f5")]}
             aiTitle={t("upgrade.pro.aiTitle")}
@@ -128,10 +94,10 @@ export default function UpgradePlans() {
             accent="teal"
             icon={<Users size={18} strokeWidth={1.7} />}
             name={t("upgrade.team.name")}
-            price={`$${teamPrice}`}
+            price="$19"
             unit="/ month"
-            note={t("upgrade.team.priceNote")}
-            cta={t("upgrade.team.cta")}
+            comingSoon
+            cta={t("upgrade.comingSoon")}
             ctaStyle="teal"
             features={[t("upgrade.team.f1"), t("upgrade.team.f2"), t("upgrade.team.f3"), t("upgrade.team.f4"), t("upgrade.team.f5")]}
             aiTitle={t("upgrade.team.aiTitle")}
@@ -215,6 +181,7 @@ function PlanCard({
   aiItems,
   featured,
   badge,
+  comingSoon,
   accent,
 }: {
   icon: React.ReactNode;
@@ -229,6 +196,7 @@ function PlanCard({
   aiItems: string[];
   featured?: boolean;
   badge?: string;
+  comingSoon?: boolean;
   accent: Accent;
 }) {
   const checkClass = accent === "teal" ? "text-[#2dd4bf]" : "text-[#a78bfa]";
@@ -262,6 +230,14 @@ function PlanCard({
             </span>
           </div>
         )}
+        {comingSoon && (
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#0F766E] to-[#0d9488] px-3 py-1 text-[10px] font-semibold text-white shadow-[0_8px_20px_rgba(13,148,136,0.6)]">
+              <Clock3 size={11} />
+              {cta}
+            </span>
+          </div>
+        )}
 
         <div className="flex items-start gap-3 mb-5 mt-1">
           <div className="upgrade-icon h-10 w-10 rounded-xl text-ink flex items-center justify-center shrink-0">
@@ -277,7 +253,13 @@ function PlanCard({
           </div>
         </div>
 
-        <button type="button" className={`w-full rounded-xl py-2.5 text-sm font-semibold transition-all ${ctaClass}`}>
+        <button
+          type="button"
+          disabled={comingSoon}
+          className={`w-full rounded-xl py-2.5 text-sm font-semibold transition-all ${ctaClass} ${
+            comingSoon ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+        >
           {cta}
         </button>
 

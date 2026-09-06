@@ -252,7 +252,20 @@ export default function FilesSection({
   const usedPct = Math.min(100, Math.round((totalSize / STORAGE_CAP_BYTES) * 100));
 
   async function submitAdd() {
-    if (pendingFiles.length === 0) return;
+    const { error: uploadError } = await import("@/lib/planLimits");
+    let canUpload = true;
+    if (pendingFiles.length > 0) {
+      try {
+        for (const f of pendingFiles) {
+          if (!(await import("@/lib/planLimits").then(m => m.checkStorageUpload(f.size)))) {
+            canUpload = false;
+            break;
+          }
+        }
+      } catch (_) { canUpload = false; }
+    }
+    if (!canUpload) { setSaving(false); alert(t("plans.limitStorage")); return; }
+    // proceed upload
     if (scope === "project" && !addProjectId) return;
     if (scope === "task" && (!addProjectId || !addTaskId)) return;
     setSaving(true);
