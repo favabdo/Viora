@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
+import { checkIdeaLimit } from "@/lib/planLimits";
+import UpgradeLimitModal from "./UpgradeLimitModal";
 import { patchTaskExtras, type TaskAttachment } from "@/lib/taskExtras";
 import { copyRemoteFilesToTask } from "@/lib/taskAttachments";
 import { findTodoColumn } from "@/lib/boardColumns";
@@ -180,6 +182,7 @@ export default function IdeasSection({
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Idea | null>(null);
+  const [limitOpen, setLimitOpen] = useState(false);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [converting, setConverting] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
@@ -310,6 +313,11 @@ export default function IdeasSection({
   async function saveForm() {
     const parsedTags = tags.split(/[,،]/).map((item) => item.trim()).filter(Boolean);
     if (!title.trim()) return;
+    // حد الخطة المجانية: 10 أفكار — الفحص عند الإنشاء فقط مش التعديل
+    if (!editing && !(await checkIdeaLimit())) {
+      setLimitOpen(true);
+      return;
+    }
     if (editing) {
       await updateIdea(
         editing.id,
@@ -1086,6 +1094,8 @@ export default function IdeasSection({
           </div>
         </Modal>
       )}
+
+      <UpgradeLimitModal kind="ideas" open={limitOpen} onClose={() => setLimitOpen(false)} />
     </div>
   );
 }

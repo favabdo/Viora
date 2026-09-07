@@ -40,7 +40,7 @@ import {
 } from "@/lib/taskAttachments";
 import { displayName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { checkTaskLimit } from "@/lib/planLimits";
+import { checkTaskLimit, checkStorageUpload } from "@/lib/planLimits";
 import UpgradeLimitModal from "./UpgradeLimitModal";
 import ClickableAvatar from "./ClickableAvatar";
 import IconButton from "./ui/IconButton";
@@ -630,7 +630,7 @@ export default function BoardView({
   async function createTask(draft: NewTaskDraft) {
     if (draft.dueDate && !isDueAfterCreated(null, draft.dueDate)) return;
     const targetProjectId = draft.projectId || projectId;
-    if (!(await checkTaskLimit(targetProjectId))) {
+    if (!(await checkTaskLimit())) {
       setLimitOpen(true);
       return;
     }
@@ -805,6 +805,22 @@ export default function BoardView({
   async function onAttachFiles(files: FileList | null) {
     const task = attachTaskRef.current;
     if (!task || !files || files.length === 0) return;
+    // حد التخزين قبل رفع المرفقات
+    let canUpload = true;
+    try {
+      for (const f of Array.from(files)) {
+        if (!(await checkStorageUpload(f.size))) {
+          canUpload = false;
+          break;
+        }
+      }
+    } catch {
+      canUpload = false;
+    }
+    if (!canUpload) {
+      setLimitOpen(true);
+      return;
+    }
     const { uploaded, skipped, error } = await uploadTaskFiles(task.id, projectId, currentUserId, Array.from(files));
     if (error) showToast(t("taskDetail.uploadFailed"));
     else if (skipped && uploaded.length === 0) showToast(t("board.menu.fileTooLarge"));

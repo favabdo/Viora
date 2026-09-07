@@ -1520,6 +1520,10 @@ const dict: Record<string, { en: string; ar: string }> = {
     en: "The Free plan includes 1 GB of storage. Upgrade your plan for more space.",
     ar: "الخطة المجانية تتيح 1 جيجابايت تخزين فقط. رقّ خطتك لمساحة أكبر.",
   },
+  "upgrade.limit.ideas": {
+    en: "The Free plan includes up to 10 ideas. Upgrade your plan to add more.",
+    ar: "الخطة المجانية تتيح حتى 10 أفكار فقط. رقّ خطتك لإضافة المزيد.",
+  },
   "upgrade.limit.history": {
     en: "The Free plan keeps 7 days of activity history. Upgrade for unlimited history.",
     ar: "الخطة المجانية تحتفظ بسجل نشاط 7 أيام فقط. رقّ خطتك لسجل بلا حدود.",
@@ -1534,6 +1538,14 @@ const dict: Record<string, { en: string; ar: string }> = {
   },
   "upgrade.limit.cta": { en: "Upgrade Plan", ar: "ترقية الخطة" },
   "upgrade.limit.later": { en: "Maybe later", ar: "لاحقًا" },
+  "plan.name.free": { en: "Free Plan", ar: "الخطة المجانية" },
+  "plan.name.pro": { en: "Pro Plan", ar: "خطة Pro" },
+  "plan.name.team": { en: "Team Plan", ar: "خطة Team" },
+  "plan.usage.title": { en: "Plan usage", ar: "استهلاك خطتك" },
+  "plan.usage.projects": { en: "Projects", ar: "المشاريع" },
+  "plan.usage.tasks": { en: "Tasks", ar: "المهام" },
+  "plan.usage.ideas": { en: "Ideas", ar: "الأفكار" },
+  "plan.usage.upgrade": { en: "Upgrade", ar: "ترقية" },
 };
 
 export default dict;

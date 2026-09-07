@@ -28,12 +28,12 @@ import {
   libraryPreviewFile,
   listLibraryFiles,
   patchFileMeta,
-  STORAGE_CAP_BYTES,
   updateLibraryFile,
   type LibraryFile,
 } from "@/lib/libraryFiles";
 import { fileKind, previewUrl } from "@/lib/taskAttachments";
 import { checkStorageUpload } from "@/lib/planLimits";
+import { limitsFor, usePlan } from "@/lib/planUsage";
 import UpgradeLimitModal from "./UpgradeLimitModal";
 import { projectPath } from "@/lib/appRoutes";
 import { timeAgo } from "@/lib/timeAgo";
@@ -116,6 +116,9 @@ export default function FilesSection({
   const [folderName, setFolderName] = useState("");
   const [saving, setSaving] = useState(false);
   const [limitOpen, setLimitOpen] = useState(false);
+  // سعة التخزين حسب خطة المستخدم (المجانية = 1GB)
+  const plan = usePlan();
+  const storageCap = limitsFor(plan).storageBytes;
   const [scope, setScope] = useState<Scope>(lockedProjectId ? "project" : "free");
   const [addProjectId, setAddProjectId] = useState(lockedProjectId || "");
   const [addTaskId, setAddTaskId] = useState("");
@@ -252,7 +255,9 @@ export default function FilesSection({
     video: visible.filter(({ file }) => kindOf(file) === "video").reduce((s, r) => s + r.file.size, 0),
   };
   const others = Math.max(0, totalSize - buckets.image - buckets.doc - buckets.video);
-  const usedPct = Math.min(100, Math.round((totalSize / STORAGE_CAP_BYTES) * 100));
+  const usedPct = storageCap
+    ? Math.min(100, Math.round((totalSize / storageCap) * 100))
+    : 0;
 
   async function submitAdd() {
     if (pendingFiles.length === 0) return;
@@ -743,7 +748,7 @@ export default function FilesSection({
                   <div className="h-full rounded-full bg-[#7C3AED]" style={{ width: `${usedPct}%` }} />
                 </div>
                 <p className="mt-1.5 text-[11px] text-inkFaint">
-                  {t("files.usedOf").replace("{pct}", String(usedPct)).replace("{cap}", "30 GB")}
+                  {t("files.usedOf").replace("{pct}", String(usedPct)).replace("{cap}", storageCap ? formatFileBytes(storageCap) : "∞")}
                 </p>
               </div>
 

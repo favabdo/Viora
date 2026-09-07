@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Crown, FolderKanban, ListTodo, HardDrive, Sparkles } from "lucide-react";
+import { Crown, FolderKanban, ListTodo, HardDrive, Lightbulb, Sparkles } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -11,7 +11,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
  * أي حد (مشاريع / مهام / تخزين) ويوجهه لصفحة الترقية /upgrade
  */
 
-export type LimitKind = "projects" | "tasks" | "storage" | "history" | "ai";
+export type LimitKind = "projects" | "tasks" | "ideas" | "storage" | "history" | "ai";
 
 const LIMIT_STYLE: Record<
   LimitKind,
@@ -24,6 +24,10 @@ const LIMIT_STYLE: Record<
   tasks: {
     icon: ListTodo,
     iconClass: "bg-[#6366f1]/15 text-[#4f46e5]",
+  },
+  ideas: {
+    icon: Lightbulb,
+    iconClass: "bg-[#f59e0b]/15 text-[#d97706]",
   },
   storage: {
     icon: HardDrive,

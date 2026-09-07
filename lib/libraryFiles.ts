@@ -33,7 +33,7 @@ export type LibraryFile = {
 type FileMeta = { description?: string; favorite?: boolean; trash?: boolean };
 
 export const FOLDER_MIME = "application/x-viora-folder";
-export const STORAGE_CAP_BYTES = 30 * 1024 * 1024 * 1024;
+// حد التخزين بقى حسب خطة المستخدم — الشغل كله في lib/planUsage.ts
 
 function safeName(name: string) {
   return name.replace(/[^\w.\-]+/g, "_").slice(0, 80);

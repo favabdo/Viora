@@ -314,7 +314,7 @@ export default function TasksSection({
   async function addTask() {
     const title = newTaskTitle.trim();
     if (!title || !activeProjectId) return;
-    if (!(await checkTaskLimit(activeProjectId))) {
+    if (!(await checkTaskLimit())) {
       setLimitOpen(true);
       return;
     }

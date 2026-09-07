@@ -1,37 +1,65 @@
 import { supabase } from "@/lib/supabase";
+import {
+  countUserProjects,
+  countTotalTasks,
+  countUserIdeas,
+  getUsedStorageBytes,
+  getMyPlan,
+  limitsFor,
+} from "@/lib/planUsage";
 
 /*
- * حدود الخطة المجانية — الفحص بيتم قبل الإنشاء/الرفع لعرض رسالة واضحة،
- * وفوقيه شبكة أمان (triggers) في القاعدة نفسها.
- * لو الـ migration لسه متطبقتش على القاعدة، الفحص بيفشل بأمان ومبيحرمش المستخدم.
+ * فحوصات حدود الخطة قبل الإنشاء/الرفع — العد هنا شامل:
+ * مهام المشاريع + مهام الباك لوج (localStorage).
+ * وفوقيه شبكة أمان (triggers) في القاعدة نفسها للمشاريع والمهام.
+ * لو الفحص فشل لأي سبب بيرجع "مسموح" عشان مايحرمش المستخدم.
  */
 
-export const FREE_LIMITS = {
-  projects: 3,
-  tasks: 100,
-  storageBytes: 1073741824, // 1 GB
-};
-
-function isPlanLimitError(error: { message?: string } | null): boolean {
-  return !!error && /PLAN_LIMIT/i.test(error.message ?? "");
+function planAllows(plan: string, used: number, limit: number | null): boolean {
+  if (limit === null) return true;
+  if (plan !== "free") return true;
+  return used < limit;
 }
 
 export async function checkProjectLimit(): Promise<boolean> {
-  const { data, error } = await supabase.rpc("can_create_project");
-  if (error) return true; // القاعدة لسه مفيهاش الحدود — ممنعش
-  return data === true;
+  try {
+    const [plan, used] = await Promise.all([getMyPlan(), countUserProjects()]);
+    return planAllows(plan, used, limitsFor(plan).projects);
+  } catch {
+    return true;
+  }
 }
 
-export async function checkTaskLimit(projectId: string): Promise<boolean> {
-  const { data, error } = await supabase.rpc("can_create_task", { p_project_id: projectId });
-  if (error) return true;
-  return data === true;
+export async function checkTaskLimit(): Promise<boolean> {
+  try {
+    const [plan, used] = await Promise.all([getMyPlan(), countTotalTasks()]);
+    return planAllows(plan, used, limitsFor(plan).tasks);
+  } catch {
+    return true;
+  }
+}
+
+export async function checkIdeaLimit(): Promise<boolean> {
+  try {
+    const [plan, used] = await Promise.all([getMyPlan(), countUserIdeas()]);
+    return planAllows(plan, used, limitsFor(plan).ideas);
+  } catch {
+    return true;
+  }
 }
 
 export async function checkStorageUpload(fileSizeBytes: number): Promise<boolean> {
-  const { data, error } = await supabase.rpc("can_upload_file", { p_size_bytes: fileSizeBytes });
-  if (error) return true;
-  return data === true;
+  try {
+    const [plan, used] = await Promise.all([getMyPlan(), getUsedStorageBytes()]);
+    const cap = limitsFor(plan).storageBytes;
+    if (plan !== "free") return true;
+    if (cap === null) return true;
+    return used + fileSizeBytes <= cap;
+  } catch {
+    return true;
+  }
 }
 
-export { isPlanLimitError };
+export function isPlanLimitError(error: { message?: string } | null): boolean {
+  return !!error && /PLAN_LIMIT/i.test(error.message ?? "");
+}
