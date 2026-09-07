@@ -175,3 +175,28 @@ create policy "activity_log select members" on activity_log
       )
     )
   );
+
+-- ============================================================
+-- 7) حماية عمود plan: المستخدم يقدر يحدّث بروفايله لكن مش يقدر
+-- يغيّر خطته من الواجهة (الدفع وحده يرفعها لplan > free).
+-- ============================================================
+create or replace function public.prevent_plan_self_update()
+returns trigger
+language plpgsql
+as $$
+begin
+  -- الخطة تتغيّر بس من service_role (الدفع/الادمن) أو من الـtrigger عند التسجيل
+  if new.plan is distinct from old.plan then
+    -- لو auth.uid() = id (مستخدم بيحدّث نفسه) → ارفض
+    if auth.uid() = old.id then
+      raise exception 'PLAN_IMMUTABLE: plan can only be changed by the system';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_block_plan_self_update on profiles;
+create trigger profiles_block_plan_self_update
+  before update on profiles
+  for each row execute function public.prevent_plan_self_update();

@@ -29,6 +29,8 @@ import {
   X,
 } from "lucide-react";
 import { supabase, type BoardColumn, type Project, type ProjectMember } from "@/lib/supabase";
+import { checkTaskLimit } from "@/lib/planLimits";
+import UpgradeLimitModal from "./UpgradeLimitModal";
 import {
   addBacklogItem,
   deleteBacklogItem,
@@ -492,6 +494,7 @@ export default function BacklogSection({
   const [open, setOpen] = useState(false);
   const [openStage, setOpenStage] = useState<BacklogStage>("ideas");
   const [creating, setCreating] = useState(false);
+  const [limitOpen, setLimitOpen] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("");
@@ -600,6 +603,11 @@ export default function BacklogSection({
   }
 
   async function saveDraft(draft: NewTaskDraft) {
+    // حد الخطة المجانية: 100 مهمة إجمالي (مشاريع + باك لوج)
+    if (!(await checkTaskLimit())) {
+      setLimitOpen(true);
+      return;
+    }
     setCreating(true);
     addBacklogItem({
       userId: currentUserId,
@@ -979,6 +987,8 @@ export default function BacklogSection({
           onCreate={saveDraft}
         />
       )}
+
+      <UpgradeLimitModal kind="tasks" open={limitOpen} onClose={() => setLimitOpen(false)} />
     </div>
   );
 }
