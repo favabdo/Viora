@@ -34,6 +34,7 @@ import {
 } from "@/lib/libraryFiles";
 import { fileKind, previewUrl } from "@/lib/taskAttachments";
 import { checkStorageUpload } from "@/lib/planLimits";
+import UpgradeLimitModal from "./UpgradeLimitModal";
 import { projectPath } from "@/lib/appRoutes";
 import { timeAgo } from "@/lib/timeAgo";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -114,6 +115,7 @@ export default function FilesSection({
   const [folderOpen, setFolderOpen] = useState(false);
   const [folderName, setFolderName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [limitOpen, setLimitOpen] = useState(false);
   const [scope, setScope] = useState<Scope>(lockedProjectId ? "project" : "free");
   const [addProjectId, setAddProjectId] = useState(lockedProjectId || "");
   const [addTaskId, setAddTaskId] = useState("");
@@ -270,7 +272,7 @@ export default function FilesSection({
       canUpload = false;
     }
     if (!canUpload) {
-      alert(t("plans.limitStorage"));
+      setLimitOpen(true);
       return;
     }
 
@@ -898,6 +900,8 @@ export default function FilesSection({
       )}
 
       {preview && <FilePreview file={libraryPreviewFile(preview)} onClose={() => setPreview(null)} />}
+
+      <UpgradeLimitModal kind="storage" open={limitOpen} onClose={() => setLimitOpen(false)} />
     </div>
   );
 }

@@ -41,6 +41,7 @@ import {
 import { displayName } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { checkTaskLimit } from "@/lib/planLimits";
+import UpgradeLimitModal from "./UpgradeLimitModal";
 import ClickableAvatar from "./ClickableAvatar";
 import IconButton from "./ui/IconButton";
 import { Input, Textarea } from "./ui/Input";
@@ -446,6 +447,7 @@ export default function BoardView({
   const [addTaskMode, setAddTaskMode] = useState<"quick" | "full">("quick");
   const [addTaskColumnId, setAddTaskColumnId] = useState<string | null>(null);
   const [creatingTask, setCreatingTask] = useState(false);
+  const [limitOpen, setLimitOpen] = useState(false);
   const [menu, setMenu] = useState<TaskMenuState | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [extrasTick, setExtrasTick] = useState(0);
@@ -629,7 +631,7 @@ export default function BoardView({
     if (draft.dueDate && !isDueAfterCreated(null, draft.dueDate)) return;
     const targetProjectId = draft.projectId || projectId;
     if (!(await checkTaskLimit(targetProjectId))) {
-      alert(t("plans.limitTasks"));
+      setLimitOpen(true);
       return;
     }
     let targetColumnId = targetProjectId === projectId ? draft.columnId : null;
@@ -1109,6 +1111,8 @@ export default function BoardView({
           {toast}
         </div>
       )}
+
+      <UpgradeLimitModal kind="tasks" open={limitOpen} onClose={() => setLimitOpen(false)} />
     </DndContext>
   );
 }

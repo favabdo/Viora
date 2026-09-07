@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase, Project, Task, BoardColumn, TASK_COLORS } from "@/lib/supabase";
 import { checkTaskLimit } from "@/lib/planLimits";
+import UpgradeLimitModal from "./UpgradeLimitModal";
 import { useSettings } from "@/lib/useSettings";
 import BoardView from "./BoardView";
 import CalendarView from "./CalendarView";
@@ -60,6 +61,7 @@ export default function TasksSection({
   }, [settings.defaultView]);
   const [newProjectName, setNewProjectName] = useState("");
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [limitOpen, setLimitOpen] = useState(false);
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
@@ -313,7 +315,7 @@ export default function TasksSection({
     const title = newTaskTitle.trim();
     if (!title || !activeProjectId) return;
     if (!(await checkTaskLimit(activeProjectId))) {
-      alert(t("plans.limitTasks"));
+      setLimitOpen(true);
       return;
     }
     // المهمة الجديدة تتحط فوق كل المهام غير المنجزة تلقائيًا
@@ -1120,6 +1122,8 @@ async function duplicateProject(project: Project) {
           </div>
         </div>
       )}
+
+      <UpgradeLimitModal kind="tasks" open={limitOpen} onClose={() => setLimitOpen(false)} />
     </div>
   );
 }
