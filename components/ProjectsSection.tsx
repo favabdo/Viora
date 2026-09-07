@@ -139,7 +139,7 @@ export default function ProjectsSection({
   const [projects, setProjects] = useState<Project[]>([]);
   const [cards, setCards] = useState<ProjectCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [filter, setFilter] = useState<StatusFilter>("active");
   const [query, setQuery] = useState("");
   const [view, setView] = useState<ViewMode>("grid");
   const [showCreate, setShowCreate] = useState(false);
@@ -603,6 +603,13 @@ export default function ProjectsSection({
     { id: "favorites", label: t("projects.filter.favorites"), count: counts.favorites },
     { id: "archived", label: t("projects.filter.archived"), count: counts.archived },
   ];
+
+  // لو الفلتر = "active" ومافيش مشاريع نشطة، ارجع "all" تلقائياً
+  useEffect(() => {
+    if (filter === "active" && counts.active === 0 && counts.all > 0) {
+      setFilter("all");
+    }
+  }, [filter, counts.active, counts.all]);
 
   return (
     <div className="fade-in">
