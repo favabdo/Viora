@@ -1559,6 +1559,15 @@ const dict: Record<string, { en: string; ar: string }> = {
     en: "Last {days} days",
     ar: "آخر {days} أيام",
   },
+  "plan.history.upgradeMore": {
+    en: "Upgrade to see more",
+    ar: "ترقية لمزيد",
+  },
+  "plan.history.ctaSoon": { en: "Coming soon", ar: "قريبًا" },
+  "plan.history.bodySoon": {
+    en: "Unlimited activity history is coming to Pro & Team plans.",
+    ar: "سجل نشاط بلا حدود قادم في خطط Pro و Team.",
+  },
 };
 
 export default dict;

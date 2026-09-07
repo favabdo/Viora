@@ -614,6 +614,8 @@ export default function ProjectHistoryView({
                 </button>
               </div>
             )}
+
+            <HistoryLimitBanner />
           </div>
         )}
       </div>
