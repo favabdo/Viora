@@ -200,3 +200,17 @@ drop trigger if exists profiles_block_plan_self_update on profiles;
 create trigger profiles_block_plan_self_update
   before update on profiles
   for each row execute function public.prevent_plan_self_update();
+
+-- ============================================================
+-- 8) تعداد فتح المشاريع: آخر مرة فتح + عدد المرات
+-- عشان نفتح المشروع الأكثر استخداماً افتراضياً، ونرتّب القائمة
+-- ============================================================
+alter table projects
+  add column if not exists last_opened_at timestamptz;
+alter table projects
+  add column if not exists open_count integer not null default 0;
+
+create index if not exists projects_last_opened_idx
+  on projects(user_id, last_opened_at desc nulls last);
+create index if not exists projects_open_count_idx
+  on projects(user_id, open_count desc);

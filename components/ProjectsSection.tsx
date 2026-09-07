@@ -23,6 +23,7 @@ import { isFavoriteProject, toggleFavoriteProject } from "@/lib/projectFavorites
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { checkProjectLimit, isPlanLimitError } from "@/lib/planLimits";
 import UpgradeLimitModal from "./UpgradeLimitModal";
+import FreeProjectsHeaderBar from "./FreeProjectsHeaderBar";
 import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
 import Modal from "./ui/Modal";
@@ -605,6 +606,7 @@ export default function ProjectsSection({
 
   return (
     <div className="fade-in">
+      <FreeProjectsHeaderBar used={projects.length} limit={3} />
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between mb-6">
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight text-ink">{t("projects.title")}</h1>

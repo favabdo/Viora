@@ -1568,6 +1568,14 @@ const dict: Record<string, { en: string; ar: string }> = {
     en: "Unlimited activity history is coming to Pro & Team plans.",
     ar: "سجل نشاط بلا حدود قادم في خطط Pro و Team.",
   },
+  "projects.remaining": {
+    en: "You can add up to {limit} projects on the Free plan — you have {used}.",
+    ar: "تستطيع إنشاء حتى {limit} مشروع على الخطة المجانية — عندك {used}.",
+  },
+  "projects.remaining.short": {
+    en: "Free plan: {used} / {limit} projects",
+    ar: "الخطة المجانية: {used} / {limit} مشروع",
+  },
 };
 
 export default dict;

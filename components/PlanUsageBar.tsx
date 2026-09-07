@@ -26,6 +26,9 @@ export default function PlanUsageBar() {
   const limits = limitsFor(plan);
   const [usage, setUsage] = useState<Usage | null>(null);
 
+  // الخطط المدفوعة (بلا حدود) → الشريط مخفي بالكامل
+  if (plan !== "free") return null;
+
   useEffect(() => {
     let alive = true;
     Promise.all([countUserProjects(), countTotalTasks(), countUserIdeas()]).then(
