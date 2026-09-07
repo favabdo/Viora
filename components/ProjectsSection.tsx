@@ -22,6 +22,7 @@ import { getProjectMeta, hydrateProjectMetas, PROJECT_COLORS, writeProjectMeta }
 import { isFavoriteProject, toggleFavoriteProject } from "@/lib/projectFavorites";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { checkProjectLimit, isPlanLimitError } from "@/lib/planLimits";
+import UpgradeLimitModal from "./UpgradeLimitModal";
 import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
 import Modal from "./ui/Modal";
@@ -152,6 +153,7 @@ export default function ProjectsSection({
   const [newImagePosX, setNewImagePosX] = useState(50);
   const [newImagePosY, setNewImagePosY] = useState(50);
   const [creating, setCreating] = useState(false);
+  const [limitOpen, setLimitOpen] = useState(false);
   const [contextMenuProject, setContextMenuProject] = useState<Project | null>(null);
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
 
@@ -519,13 +521,13 @@ export default function ProjectsSection({
     if (!name) return;
     // حد الخطة المجانية: 3 مشاريع
     if (!(await checkProjectLimit())) {
-      alert(t("plans.limitProjects"));
+      setLimitOpen(true);
       return;
     }
     setCreating(true);
     const { data, error } = await supabase.from("projects").insert({ name }).select().single();
     setCreating(false);
-    if (error && isPlanLimitError(error)) alert(t("plans.limitProjects"));
+    if (error && isPlanLimitError(error)) setLimitOpen(true);
     if (!error && data) {
       const newProject = data as Project;
       const meta = {
@@ -987,6 +989,8 @@ export default function ProjectsSection({
           </div>
         </Modal>
       )}
+
+      <UpgradeLimitModal kind="projects" open={limitOpen} onClose={() => setLimitOpen(false)} />
     </div>
   );
 }
