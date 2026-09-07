@@ -7,6 +7,7 @@ import { renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import HistoryLimitBanner from "./HistoryLimitBanner";
 
 type Entry = {
   id: string;
@@ -83,22 +84,25 @@ export default function ItemHistory({
       ) : entries.length === 0 ? (
         <p className="text-xs text-inkFaint">{t("itemHistory.noHistory")}</p>
       ) : (
-        entries.map((e) => {
-          const { label, rest, actorId } = renderActivity(e, t, currentUserId, table === "activity_log");
-          return (
-            <p key={e.id} className={`leading-relaxed ${alwaysOpen ? "text-xs text-inkSoft" : "text-2xs text-inkSoft"}`}>
-              {label && (
-                <>
-                  <ClickableName previewCard={column === "task_id"} userId={actorId} className="text-ink font-medium">
-                    {label}
-                  </ClickableName>{" "}
-                </>
-              )}
-              {label ? rest.trimStart() : rest}{" "}
-              <span className="text-inkFaint">— {timeAgo(e.created_at, t)}</span>
-            </p>
-          );
-        })
+        <>
+          {entries.map((e) => {
+            const { label, rest, actorId } = renderActivity(e, t, currentUserId, table === "activity_log");
+            return (
+              <p key={e.id} className={`leading-relaxed ${alwaysOpen ? "text-xs text-inkSoft" : "text-2xs text-inkSoft"}`}>
+                {label && (
+                  <>
+                    <ClickableName previewCard={column === "task_id"} userId={actorId} className="text-ink font-medium">
+                      {label}
+                    </ClickableName>{" "}
+                  </>
+                )}
+                {label ? rest.trimStart() : rest}{" "}
+                <span className="text-inkFaint">— {timeAgo(e.created_at, t)}</span>
+              </p>
+            );
+          })}
+          {alwaysOpen && <HistoryLimitBanner compact />}
+        </>
       )}
     </div>
   );

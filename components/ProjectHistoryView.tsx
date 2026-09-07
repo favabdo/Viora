@@ -22,6 +22,7 @@ import {
 import { supabase, ActivityEntry, Project, ProjectMember, Task } from "@/lib/supabase";
 import { displayName, renderActivity } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import HistoryLimitBanner from "./HistoryLimitBanner";
 import ClickableName from "./ClickableName";
 import Avatar from "./ui/Avatar";
 import Button from "./ui/Button";
@@ -426,7 +427,8 @@ export default function ProjectHistoryView({
   return (
     <div className="flex flex-col xl:flex-row gap-5 items-start">
       <div className="flex-1 min-w-0 w-full">
-        <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+        <HistoryLimitBanner />
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-4 mt-3">
           <div>
             <h2 className="text-[22px] font-semibold tracking-tight text-ink">{t("history.title")}</h2>
             <p className="text-sm text-inkFaint mt-0.5">{t("history.subtitle")}</p>

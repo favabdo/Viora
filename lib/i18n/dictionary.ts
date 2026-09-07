@@ -1546,6 +1546,19 @@ const dict: Record<string, { en: string; ar: string }> = {
   "plan.usage.tasks": { en: "Tasks", ar: "المهام" },
   "plan.usage.ideas": { en: "Ideas", ar: "الأفكار" },
   "plan.usage.upgrade": { en: "Upgrade", ar: "ترقية" },
+  "plan.history.title": {
+    en: "Showing the last {days} days of activity",
+    ar: "عرض آخر {days} أيام من سجل النشاط",
+  },
+  "plan.history.body": {
+    en: "Upgrade to Pro or Team to unlock unlimited activity history.",
+    ar: "رقّ إلى Pro أو Team للحصول على سجل نشاط بلا حدود.",
+  },
+  "plan.history.cta": { en: "Upgrade Plan", ar: "ترقية الخطة" },
+  "plan.history.compact": {
+    en: "Last {days} days",
+    ar: "آخر {days} أيام",
+  },
 };
 
 export default dict;
