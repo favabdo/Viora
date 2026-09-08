@@ -26,10 +26,9 @@ export default function PlanUsageBar() {
   const limits = limitsFor(plan);
   const [usage, setUsage] = useState<Usage | null>(null);
 
-  // الخطط المدفوعة (بلا حدود) → الشريط مخفي بالكامل
-  if (plan !== "free") return null;
-
   useEffect(() => {
+    // الخطط المدفوعة (بلا حدود) → ما فيش داعي للعد
+    if (plan !== "free") return;
     let alive = true;
     Promise.all([countUserProjects(), countTotalTasks(), countUserIdeas()]).then(
       ([projects, tasks, ideas]) => {
@@ -39,7 +38,10 @@ export default function PlanUsageBar() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [plan]);
+
+  // الخطط المدفوعة (بلا حدود) → الشريط مخفي بالكامل
+  if (plan !== "free") return null;
 
   const rows = [
     {
