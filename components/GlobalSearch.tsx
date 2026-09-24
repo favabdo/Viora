@@ -40,9 +40,11 @@ export default function GlobalSearch({ userId }: { userId: string }) {
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      // e.code بيشتغل كمان مع تخطيط الكيبورد العربي (e.key بيبقى "ك" مش "k")
+      if ((e.metaKey || e.ctrlKey) && (e.key?.toLowerCase() === "k" || e.code === "KeyK")) {
         e.preventDefault();
         setOpen(true);
+        inputRef.current?.focus();
       }
       if (e.key === "Escape") setOpen(false);
     }

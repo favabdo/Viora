@@ -590,8 +590,8 @@ html:not(.dark) .login-mask {
 }
 
 @keyframes viora-pulse {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(147, 197, 253, 0)); }
-  50% { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(147, 197, 253, 0.55)); }
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(22, 217, 255, 0)); }
+  50% { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(22, 217, 255, 0.55)); }
 }
 .viora-logo-pulse {
   animation: viora-pulse 2.2s ease-in-out 1.2s infinite;
