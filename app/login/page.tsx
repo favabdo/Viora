@@ -11,7 +11,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Button from "@/components/ui/Button";
 
 type Mode = "signin" | "signup" | "reset";
-type OAuthProvider = "google" | "github" | "azure";
+type OAuthProvider = "google" | "github";
 
 const INVITE_KEY = "viora_invite_token";
 const REMEMBER_KEY = "viora-remember-email";
@@ -62,17 +62,6 @@ function GithubMark() {
         fill="currentColor"
         d="M12 1.5a10.5 10.5 0 0 0-3.32 20.47c.52.1.71-.23.71-.5v-1.9c-2.9.63-3.51-1.24-3.51-1.24-.48-1.21-1.17-1.53-1.17-1.53-.95-.65.08-.64.08-.64 1.05.08 1.61 1.08 1.61 1.08.94 1.6 2.46 1.14 3.06.87.1-.68.37-1.14.66-1.4-2.33-.27-4.78-1.17-4.78-5.19 0-1.15.41-2.09 1.08-2.82-.11-.27-.47-1.34.1-2.79 0 0 .88-.28 2.88 1.08a10 10 0 0 1 5.24 0c2-1.36 2.88-1.08 2.88-1.08.57 1.45.21 2.52.1 2.79.67.73 1.08 1.67 1.08 2.82 0 4.03-2.46 4.92-4.8 5.18.38.33.72.98.72 1.98v2.94c0 .28.19.61.72.5A10.5 10.5 0 0 0 12 1.5Z"
       />
-    </svg>
-  );
-}
-
-function MicrosoftMark() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
-      <path fill="#F25022" d="M1 1h10v10H1z" />
-      <path fill="#7FBA00" d="M13 1h10v10H13z" />
-      <path fill="#00A4EF" d="M1 13h10v10H1z" />
-      <path fill="#FFB900" d="M13 13h10v10H13z" />
     </svg>
   );
 }
@@ -495,15 +484,6 @@ function LoginPageInner() {
                       {t("login.github")}
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => void oauth("azure")}
-                    disabled={Boolean(oauthLoading)}
-                    className="mt-2.5 h-11 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-line bg-paperDark/30 text-sm text-ink hover:bg-paperDark/60"
-                  >
-                    <MicrosoftMark />
-                    {t("login.microsoft")}
-                  </button>
                 </>
               )}
 

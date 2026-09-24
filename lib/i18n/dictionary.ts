@@ -232,7 +232,6 @@ const dict: Record<string, { en: string; ar: string }> = {
   "login.rememberMe": { en: "Remember me", ar: "تذكرني" },
   "login.orContinue": { en: "or continue with", ar: "أو المتابعة عبر" },
   "login.google": { en: "Google", ar: "Google" },
-  "login.microsoft": { en: "Microsoft", ar: "Microsoft" },
   "login.github": { en: "GitHub", ar: "GitHub" },
   "login.noAccount": { en: "Don't have an account?", ar: "ليس لديك حساب؟" },
   "login.signUp": { en: "Sign up", ar: "إنشاء حساب" },
