@@ -142,6 +142,7 @@ function LoginPageInner() {
   useEffect(() => {
     if (searchParams.get("confirmed") === "1") setInfo(t("login.confirmedInfo"));
     if (searchParams.get("reset") === "1") setInfo(t("login.resetSuccessInfo"));
+    if (searchParams.get("oauth") === "failed") setError(t("login.oauthFailed"));
   }, [searchParams, t]);
 
   useEffect(() => {
