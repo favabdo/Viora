@@ -44,12 +44,19 @@ export async function getMyPlan(): Promise<Plan> {
   return ((profile as { plan?: Plan } | null)?.plan || "free") as Plan;
 }
 
-// هوك React — بيجيب الخطة مرة واحدة
-export function usePlan(): Plan {
-  const [plan, setPlan] = useState<Plan>("free");
+// كاش على مستوى السيشن — بيمنع ارتداد الحالة بعد أول جلب (تنقل بين الصفحات من غير reflash)
+let cachedPlan: Plan | null = null;
+
+// هوك React — بيرجع null لحد ما الخطة تتأكد فعلًا، فالرسائل التحذيرية
+// الخاصة بفري ما تظهرش لثواني للمستخدمين المدفوعين وقت الريفريش
+export function usePlan(): Plan | null {
+  const [plan, setPlan] = useState<Plan | null>(cachedPlan);
   useEffect(() => {
     let alive = true;
-    getMyPlan().then((p) => alive && setPlan(p));
+    getMyPlan().then((p) => {
+      cachedPlan = p;
+      if (alive) setPlan(p);
+    });
     return () => {
       alive = false;
     };

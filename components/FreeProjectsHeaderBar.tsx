@@ -21,6 +21,8 @@ export default function FreeProjectsHeaderBar({
   const { t } = useTranslation();
   const router = useRouter();
   const plan = usePlan();
+  // الخطة لسه بتتأكد (ريفريش) → اخفِ لحد ما نعرف إنها فري فعلًا
+  if (plan === null) return null;
   const planLimit = limitsFor(plan).projects;
   // لو الخطة مدفوعة (بلا حد) أو الحد مختلف عن الـ prop المعطى → اخفِ
   if (planLimit === null) return null;

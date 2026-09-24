@@ -118,7 +118,8 @@ export default function FilesSection({
   const [limitOpen, setLimitOpen] = useState(false);
   // سعة التخزين حسب خطة المستخدم (المجانية = 1GB)
   const plan = usePlan();
-  const storageCap = limitsFor(plan).storageBytes;
+  // لحد ما الخطة تتأكد، اعتبر السعة بلا حد حتى ما يظهرش تحذير فري الكاذب وقت الريفريش
+  const storageCap = plan === null ? null : limitsFor(plan).storageBytes;
   const [scope, setScope] = useState<Scope>(lockedProjectId ? "project" : "free");
   const [addProjectId, setAddProjectId] = useState(lockedProjectId || "");
   const [addTaskId, setAddTaskId] = useState("");

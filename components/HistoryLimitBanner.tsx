@@ -16,6 +16,7 @@ export default function HistoryLimitBanner({ compact = false }: { compact?: bool
   const { t } = useTranslation();
   const router = useRouter();
   const plan = usePlan();
+  if (plan === null) return null;
   const historyDays = limitsFor(plan).historyDays;
 
   // Pro / Team → no banner (unlimited)
