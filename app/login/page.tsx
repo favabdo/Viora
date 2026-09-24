@@ -166,7 +166,10 @@ function LoginPageInner() {
       },
     });
     setOauthLoading(null);
-    if (oauthError) setError(t("login.oauthFailed"));
+    if (oauthError) {
+      const label = provider === "github" ? t("login.github") : t("login.google");
+      setError(oauthError.message ? `${label}: ${oauthError.message}` : t("login.oauthFailed"));
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
