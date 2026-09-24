@@ -86,7 +86,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
         )}
       </button>
       {open && (
-        <div className="absolute end-0 top-11 z-50 w-[min(92vw,360px)] rounded-xl border border-line bg-surface shadow-modal overflow-hidden fade-in">
+        <div className="absolute end-0 top-11 z-50 w-[min(92vw,360px)] max-sm:fixed max-sm:inset-x-3 max-sm:top-[68px] max-sm:w-auto rounded-xl border border-line bg-surface shadow-modal overflow-hidden fade-in">
           <div className="px-3.5 py-2.5 border-b border-line">
             <p className="text-sm font-semibold text-ink">{t("inbox.title")}</p>
           </div>
