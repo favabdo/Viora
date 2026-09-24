@@ -47,6 +47,7 @@ import IconButton from "./ui/IconButton";
 import { Input, Textarea } from "./ui/Input";
 import AddTaskModal, { type NewTaskDraft } from "./AddTaskModal";
 import TaskContextMenu, { type TaskMenuState } from "./TaskContextMenu";
+import { useLongPress } from "@/lib/useLongPress";
 import TaskComments from "./TaskComments";
 import TaskDetailModal from "./TaskDetailModal";
 import Modal from "./ui/Modal";
@@ -107,6 +108,7 @@ function TaskCard({
   const [editing, setEditing] = useState(false);
   const [titleDraft, setTitleDraft] = useState(task.title);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const longPress = useLongPress((x, y) => onContextMenu(task, x, y));
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     disabled: editing,
@@ -132,6 +134,7 @@ function TaskCard({
       style={style}
       {...attributes}
       {...listeners}
+      {...longPress}
       onClick={() => {
         if (!editing) onOpenDetail(task);
       }}
@@ -140,7 +143,7 @@ function TaskCard({
         e.stopPropagation();
         onContextMenu(task, e.clientX, e.clientY);
       }}
-      className="group viora-task bg-surfaceSunken border border-line rounded-lg p-3 hover:border-teal/50 transition-all duration-200 cursor-pointer touch-none"
+      className="group viora-task bg-surfaceSunken border border-line rounded-lg p-3 hover:border-teal/50 transition-all duration-200 cursor-pointer touch-none select-none"
     >
       <div className="flex items-start gap-1.5">
         {editing ? (

@@ -22,6 +22,7 @@ import { getProjectMeta, hydrateProjectMetas, PROJECT_COLORS, writeProjectMeta }
 import { isFavoriteProject, toggleFavoriteProject } from "@/lib/projectFavorites";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { checkProjectLimit, isPlanLimitError } from "@/lib/planLimits";
+import { useLongPress } from "@/lib/useLongPress";
 import UpgradeLimitModal from "./UpgradeLimitModal";
 import FreeProjectsHeaderBar from "./FreeProjectsHeaderBar";
 import Button from "./ui/Button";
@@ -94,36 +95,6 @@ function daysFromNow(iso: string): number {
   today.setHours(0, 0, 0, 0);
   due.setHours(0, 0, 0, 0);
   return Math.round((due.getTime() - today.getTime()) / 86400000);
-}
-
-/** Hook for long-press — fires `onLongPress(x, y)` after `delay`ms on touch */
-function useLongPress(onLongPress: (x: number, y: number) => void, delay = 500) {
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const movedRef = useRef(false);
-
-  const start = useCallback(
-    (e: React.TouchEvent) => {
-      movedRef.current = false;
-      const touch = e.touches[0];
-      const x = touch.clientX;
-      const y = touch.clientY;
-      timerRef.current = setTimeout(() => {
-        if (!movedRef.current) onLongPress(x, y);
-      }, delay);
-    },
-    [onLongPress, delay]
-  );
-
-  const cancel = useCallback(() => {
-    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
-  }, []);
-
-  const move = useCallback(() => {
-    movedRef.current = true;
-    cancel();
-  }, [cancel]);
-
-  return { onTouchStart: start, onTouchEnd: cancel, onTouchMove: move };
 }
 
 export default function ProjectsSection({

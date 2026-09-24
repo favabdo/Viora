@@ -22,6 +22,7 @@ import ProgressBar from "./ui/ProgressBar";
 import Modal from "./ui/Modal";
 import { Plus, Users, X, ListChecks, FolderPlus, Pencil, Check, LogOut, GripVertical, Palette, LayoutGrid, CalendarDays, GanttChart, Copy } from "lucide-react";
 import { displayName } from "@/lib/displayName";
+import { useLongPress } from "@/lib/useLongPress";
 import ClickableName from "./ClickableName";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -47,6 +48,14 @@ export default function TasksSection({
 }) {
   const [contextMenuProject, setContextMenuProject] = useState<Project | null>(null);
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const projectLongPress = useLongPress((x, y) => {
+    const el = document.elementFromPoint(x, y)?.closest("[data-project-item]") as HTMLElement | null;
+    const id = el?.dataset.projectItem;
+    const project = projects.find((pr) => pr.id === id);
+    if (!project) return;
+    setContextMenuProject(project);
+    setContextMenuPosition({ x, y });
+  });
   const { t, lang } = useTranslation();
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
@@ -570,13 +579,14 @@ async function duplicateProject(project: Project) {
           </div>
         )}
 
-        <ul className="space-y-0.5">
+        <ul className="space-y-0.5" {...projectLongPress}>
           {projects.map((p) => {
             const active = activeProjectId === p.id;
             return (
               <li
                 key={p.id}
-                className="group flex items-center"
+                data-project-item={p.id}
+                className="group flex items-center select-none"
                 onContextMenu={(e) => {
                   e.preventDefault();
                   setContextMenuProject(p);
