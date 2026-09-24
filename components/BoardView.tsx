@@ -17,8 +17,10 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { useSearchParams } from "next/navigation";
-import { Eye, Paperclip, Pin, Plus, X, Check, Palette, MessageCircle } from "lucide-react";
+import { Eye, Paperclip, Pin, Plus, X, Check, Palette, MessageCircle, GitCommitHorizontal, RefreshCw, Github } from "lucide-react";
 import { supabase, Task, BoardColumn, Project, ProjectMember, TASK_COLORS } from "@/lib/supabase";
+import type { GithubCommit } from "@/lib/github";
+import { timeAgo } from "@/lib/timeAgo";
 import { isDueAfterCreated, minDueDate, normalizeTask } from "@/lib/taskShape";
 import { ensureTodoColumn } from "@/lib/boardColumns";
 import {
@@ -292,6 +294,29 @@ function TaskCard({
   );
 }
 
+function CommitCard({ commit }: { commit: GithubCommit }) {
+  const { t } = useTranslation();
+  const author = commit.author_login || commit.author_name;
+  return (
+    <a
+      href={commit.html_url || commit.github_repos?.html_url || "#"}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block shrink-0 rounded-lg border border-line bg-paperDark/40 p-2.5 transition-colors hover:border-[#2563EB]/60"
+    >
+      <p className="text-sm text-ink break-words line-clamp-2">{commit.title}</p>
+      <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] text-inkFaint">
+        <span className="inline-flex items-center gap-1">
+          <GitCommitHorizontal size={11} strokeWidth={1.75} />
+          {commit.sha}
+        </span>
+        {author && <span className="max-w-[90px] truncate">{author}</span>}
+        <span>{timeAgo(commit.committed_at, t)}</span>
+      </p>
+    </a>
+  );
+}
+
 function ColumnContainer({
   column,
   tasks,
@@ -310,6 +335,10 @@ function ColumnContainer({
   onAddTask,
   onContextMenu,
   onOpenDetail,
+  commits,
+  repoName,
+  syncing,
+  onSync,
 }: {
   column: BoardColumn;
   tasks: Task[];
@@ -328,6 +357,10 @@ function ColumnContainer({
   onAddTask: (columnId: string) => void;
   onContextMenu: (task: Task, x: number, y: number) => void;
   onOpenDetail: (task: Task) => void;
+  commits?: GithubCommit[];
+  repoName?: string | null;
+  syncing?: boolean;
+  onSync?: () => void;
 }) {
   const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
@@ -398,6 +431,31 @@ function ColumnContainer({
             />
           ))}
         </SortableContext>
+
+        {commits && commits.length > 0 && (
+          <div className="mt-1 shrink-0 space-y-2 border-t border-line pt-2.5">
+            <div className="flex items-center gap-1.5">
+              <Github size={12} className="shrink-0 text-inkFaint" />
+              <span className="min-w-0 flex-1 truncate text-[10px] uppercase tracking-wide text-inkFaint">
+                {t("github.commitsIn").replace("{repo}", repoName || "")}
+              </span>
+              {onSync && (
+                <button
+                  type="button"
+                  onClick={onSync}
+                  disabled={syncing}
+                  aria-label={t("github.sync")}
+                  className="shrink-0 rounded-md p-1 text-inkFaint hover:text-[#2563EB] hover:bg-paperDark"
+                >
+                  <RefreshCw size={11} strokeWidth={1.75} className={syncing ? "animate-spin" : ""} />
+                </button>
+              )}
+            </div>
+            {commits.map((commit) => (
+              <CommitCard key={commit.id} commit={commit} />
+            ))}
+          </div>
+        )}
       </div>
 
       <button
@@ -424,6 +482,10 @@ export default function BoardView({
   onColumnsMutated,
   onCommentCountChange,
   onInvitePeople,
+  githubCommits,
+  githubRepoName,
+  githubSyncing,
+  onSyncGithub,
 }: {
   projectId: string;
   projects: Project[];
@@ -437,6 +499,10 @@ export default function BoardView({
   onColumnsMutated: (updater: (prev: BoardColumn[]) => BoardColumn[]) => void;
   onCommentCountChange: (taskId: string, delta: number) => void;
   onInvitePeople: () => void;
+  githubCommits?: GithubCommit[];
+  githubRepoName?: string | null;
+  githubSyncing?: boolean;
+  onSyncGithub?: () => void;
 }) {
   const { t, lang } = useTranslation();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
@@ -889,6 +955,10 @@ export default function BoardView({
               if (skipCardClickRef.current) return;
               setDetailTask(task);
             }}
+            commits={column.is_done_column ? githubCommits : undefined}
+            repoName={column.is_done_column ? githubRepoName : undefined}
+            syncing={column.is_done_column ? githubSyncing : undefined}
+            onSync={column.is_done_column ? onSyncGithub : undefined}
           />
         ))}
 

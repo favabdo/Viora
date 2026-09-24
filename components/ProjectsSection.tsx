@@ -16,6 +16,7 @@ import {
   LogOut,
   Pencil,
   Copy,
+  Github,
 } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
 import { getProjectMeta, hydrateProjectMetas, PROJECT_COLORS, writeProjectMeta } from "@/lib/projectMeta";
@@ -24,6 +25,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { checkProjectLimit, isPlanLimitError } from "@/lib/planLimits";
 import { useLongPress } from "@/lib/useLongPress";
 import UpgradeLimitModal from "./UpgradeLimitModal";
+import GitHubImportModal from "./GitHubImportModal";
 import FreeProjectsHeaderBar from "./FreeProjectsHeaderBar";
 import Button from "./ui/Button";
 import EmptyState from "./ui/EmptyState";
@@ -114,6 +116,7 @@ export default function ProjectsSection({
   const [query, setQuery] = useState("");
   const [view, setView] = useState<ViewMode>("grid");
   const [showCreate, setShowCreate] = useState(false);
+  const [githubOpen, setGithubOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newIcon, setNewIcon] = useState("folder");
@@ -643,6 +646,20 @@ export default function ProjectsSection({
             </button>
           </div>
           <button
+            onClick={() => setGithubOpen(true)}
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-inkSoft hover:text-ink"
+          >
+            <Github size={15} strokeWidth={1.75} />
+            {t("projects.importGithub")}
+          </button>
+          <button
+            onClick={() => setGithubOpen(true)}
+            className="sm:hidden h-10 w-10 inline-flex items-center justify-center rounded-lg border border-line bg-surface text-inkSoft"
+            aria-label={t("projects.importGithub")}
+          >
+            <Github size={18} strokeWidth={1.75} />
+          </button>
+          <button
             onClick={() => setShowCreate(true)}
             className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-[#2563EB] hover:bg-[#3B82F6] active:bg-[#1E40AF] text-white text-sm font-semibold px-3.5 py-2 transition-colors"
           >
@@ -969,6 +986,12 @@ export default function ProjectsSection({
           </div>
         </Modal>
       )}
+
+      <GitHubImportModal
+        open={githubOpen}
+        onClose={() => setGithubOpen(false)}
+        onImported={() => void load()}
+      />
 
       <UpgradeLimitModal kind="projects" open={limitOpen} onClose={() => setLimitOpen(false)} />
     </div>

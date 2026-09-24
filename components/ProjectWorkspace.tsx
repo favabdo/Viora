@@ -23,6 +23,7 @@ import { displayName } from "@/lib/displayName";
 import { deleteOwnedTask } from "@/lib/deletes";
 import { isFavoriteProject, toggleFavoriteProject } from "@/lib/projectFavorites";
 import { hydrateProjectMetas } from "@/lib/projectMeta";
+import { listLinkedRepos, listProjectCommits, syncRepoCommits, type GithubCommit, type LinkedRepo } from "@/lib/github";
 import BoardView from "./BoardView";
 import ProjectListView from "./ProjectListView";
 import ProjectCalendarView from "./ProjectCalendarView";
@@ -79,6 +80,27 @@ export default function ProjectWorkspace({
   const [showMore, setShowMore] = useState(false);
   const [favorited, setFavorited] = useState(false);
   const [deleteTask, setDeleteTask] = useState<Task | null>(null);
+  const [githubRepo, setGithubRepo] = useState<LinkedRepo | null>(null);
+  const [githubCommits, setGithubCommits] = useState<GithubCommit[]>([]);
+  const [syncingCommits, setSyncingCommits] = useState(false);
+
+  async function loadGithubCommits() {
+    const [rows, repos] = await Promise.all([listProjectCommits(projectId), listLinkedRepos()]);
+    setGithubCommits(rows);
+    setGithubRepo(repos.find((repo) => repo.project_id === projectId) || null);
+  }
+
+  useEffect(() => {
+    void loadGithubCommits();
+  }, [projectId]);
+
+  async function syncGithubCommits() {
+    if (!githubRepo) return;
+    setSyncingCommits(true);
+    await syncRepoCommits(githubRepo);
+    await loadGithubCommits();
+    setSyncingCommits(false);
+  }
 
   useEffect(() => {
     setFavorited(isFavoriteProject(projectId));
@@ -190,9 +212,20 @@ export default function ProjectWorkspace({
         }
       )
       .subscribe();
+    const commitsChannel = supabase
+      .channel(`workspace-commits-${projectId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "github_commits", filter: `project_id=eq.${projectId}` },
+        () => {
+          void loadGithubCommits();
+        }
+      )
+      .subscribe();
     return () => {
       supabase.removeChannel(tasksChannel);
       supabase.removeChannel(colsChannel);
+      supabase.removeChannel(commitsChannel);
     };
   }, [projectId]);
 
@@ -433,6 +466,10 @@ export default function ProjectWorkspace({
               setCommentCounts((prev) => ({ ...prev, [taskId]: Math.max(0, (prev[taskId] ?? 0) + delta) }));
             }}
             onInvitePeople={() => setShowTeam(true)}
+            githubRepoName={githubRepo?.full_name || null}
+            githubCommits={githubCommits}
+            githubSyncing={syncingCommits}
+            onSyncGithub={() => void syncGithubCommits()}
           />
           <div className="mt-6">
             <BoardAnalytics

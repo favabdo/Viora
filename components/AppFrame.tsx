@@ -21,12 +21,16 @@ import {
 import AppShell, { ShellTab } from "@/components/AppShell";
 import VioraSplash from "@/components/ui/VioraSplash";
 import PendingInvites from "@/components/PendingInvites";
+import GitHubImportModal from "@/components/GitHubImportModal";
 import ProfileCardProvider from "@/components/ProfileCardContext";
 import { AppSessionProvider } from "@/components/AppSession";
 import { supabase } from "@/lib/supabase";
+import { listLinkedRepos } from "@/lib/github";
 import { hydrateAllProjectMetas } from "@/lib/projectMeta";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { navIdFromPath, pathForNav } from "@/lib/appRoutes";
+
+const GITHUB_PROMPT_KEY = "viora-github-prompt-dismissed";
 
 export default function AppFrame({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -37,6 +41,7 @@ export default function AppFrame({ children }: { children: ReactNode }) {
   const [userName, setUserName] = useState("");
   const [userUsername, setUserUsername] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [githubSetupOpen, setGithubSetupOpen] = useState(false);
 
   const tabs: ShellTab[] = [
     { id: "dashboard", label: t("nav.dashboard"), icon: Home },
@@ -88,6 +93,24 @@ export default function AppFrame({ children }: { children: ReactNode }) {
     void hydrateAllProjectMetas();
   }, [session]);
 
+  // أول تسجيل بجيت هب من غير ما يربط أي ريبو → افتح اختيار الريبوز لوحده
+  useEffect(() => {
+    if (!session || session.user.app_metadata?.provider !== "github") return;
+    const dismissedKey = `${GITHUB_PROMPT_KEY}:${session.user.id}`;
+    try {
+      if (localStorage.getItem(dismissedKey)) return;
+    } catch {
+      // localStorage مش متاح
+    }
+    let alive = true;
+    void listLinkedRepos().then((rows) => {
+      if (alive && rows.length === 0) setGithubSetupOpen(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [session]);
+
   return (
     <>
       <AnimatePresence>
@@ -110,6 +133,18 @@ export default function AppFrame({ children }: { children: ReactNode }) {
               currentUserId={session.user.id}
             >
               <PendingInvites userId={session.user.id} />
+              <GitHubImportModal
+                open={githubSetupOpen}
+                onClose={() => {
+                  setGithubSetupOpen(false);
+                  try {
+                    localStorage.setItem(`${GITHUB_PROMPT_KEY}:${session.user.id}`, "1");
+                  } catch {
+                    // localStorage مش متاح
+                  }
+                }}
+                onImported={() => router.push("/projects")}
+              />
               {children}
             </AppShell>
           </AppSessionProvider>

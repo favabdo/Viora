@@ -11,7 +11,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Button from "@/components/ui/Button";
 
 type Mode = "signin" | "signup" | "reset";
-type OAuthProvider = "google" | "azure";
+type OAuthProvider = "google" | "github" | "azure";
 
 const INVITE_KEY = "viora_invite_token";
 const REMEMBER_KEY = "viora-remember-email";
@@ -51,6 +51,17 @@ function GoogleMark() {
       <path fill="#34A853" d="M6.6 14.3 5.5 15.2 3.1 17.1C4.7 20.3 8.1 22.5 12 22.5c2.7 0 5-.9 6.7-2.4l-3.1-2.4c-.9.6-2 .9-3.6.9-2.7 0-5-1.8-5.8-4.3Z" />
       <path fill="#FBBC05" d="M3.1 6.9C2.4 8.3 2 9.9 2 11.6c0 1.7.4 3.3 1.1 4.7l3.5-2.7c-.2-.7-.4-1.4-.4-2 0-.7.1-1.3.4-2L3.1 6.9Z" />
       <path fill="#4285F4" d="M12 4.8c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.9 1.8 14.7 1 12 1 8.1 1 4.7 3.2 3.1 6.4l3.5 2.7C7 6.6 9.3 4.8 12 4.8Z" />
+    </svg>
+  );
+}
+
+function GithubMark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M12 1.5a10.5 10.5 0 0 0-3.32 20.47c.52.1.71-.23.71-.5v-1.9c-2.9.63-3.51-1.24-3.51-1.24-.48-1.21-1.17-1.53-1.17-1.53-.95-.65.08-.64.08-.64 1.05.08 1.61 1.08 1.61 1.08.94 1.6 2.46 1.14 3.06.87.1-.68.37-1.14.66-1.4-2.33-.27-4.78-1.17-4.78-5.19 0-1.15.41-2.09 1.08-2.82-.11-.27-.47-1.34.1-2.79 0 0 .88-.28 2.88 1.08a10 10 0 0 1 5.24 0c2-1.36 2.88-1.08 2.88-1.08.57 1.45.21 2.52.1 2.79.67.73 1.08 1.67 1.08 2.82 0 4.03-2.46 4.92-4.8 5.18.38.33.72.98.72 1.98v2.94c0 .28.19.61.72.5A10.5 10.5 0 0 0 12 1.5Z"
+      />
     </svg>
   );
 }
@@ -159,7 +170,10 @@ function LoginPageInner() {
     setOauthLoading(provider);
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        ...(provider === "github" ? { scopes: "read:user user:email repo" } : {}),
+      },
     });
     setOauthLoading(null);
     if (oauthError) setError(t("login.oauthFailed"));
@@ -472,14 +486,23 @@ function LoginPageInner() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => void oauth("azure")}
+                      onClick={() => void oauth("github")}
                       disabled={Boolean(oauthLoading)}
                       className="h-11 inline-flex items-center justify-center gap-2 rounded-xl border border-line bg-paperDark/30 text-sm text-ink hover:bg-paperDark/60"
                     >
-                      <MicrosoftMark />
-                      {t("login.microsoft")}
+                      <GithubMark />
+                      {t("login.github")}
                     </button>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => void oauth("azure")}
+                    disabled={Boolean(oauthLoading)}
+                    className="mt-2.5 h-11 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-line bg-paperDark/30 text-sm text-ink hover:bg-paperDark/60"
+                  >
+                    <MicrosoftMark />
+                    {t("login.microsoft")}
+                  </button>
                 </>
               )}
 
