@@ -6,19 +6,19 @@
   --font-fraunces: "Fraunces", serif;
   --font-mono: "IBM Plex Mono", monospace;
 
-  /* فاتح: نفس روح البنفسجي والإضاءة، على خلفية ضبابية فاتحة — مش بيج قديم */
-  --color-paper: 244 241 255;
-  --color-paperDark: 234 228 252;
+  /* فاتح: رملي دافئ مع نحاسي (Copper) — هوية Ember & Sand */
+  --color-paper: 250 246 239;
+  --color-paperDark: 242 235 224;
   --color-surface: 255 255 255;
-  --color-surfaceSunken: 247 244 255;
-  --color-ink: 28 22 54;
-  --color-inkSoft: 90 82 122;
-  --color-inkFaint: 142 134 172;
-  --color-line: 220 212 245;
-  --color-lineStrong: 196 184 232;
-  --color-teal: 124 92 255;
-  --color-tealDark: 99 70 230;
-  --color-tealSoft: 236 230 255;
+  --color-surfaceSunken: 248 243 235;
+  --color-ink: 43 34 27;
+  --color-inkSoft: 101 87 75;
+  --color-inkFaint: 148 132 117;
+  --color-line: 231 221 206;
+  --color-lineStrong: 206 190 169;
+  --color-teal: 234 88 12;
+  --color-tealDark: 194 65 12;
+  --color-tealSoft: 255 237 213;
   --color-sage: 5 150 105;
   --color-sageSoft: 220 252 231;
   --color-clay: 220 38 38;
@@ -26,33 +26,33 @@
   --color-amber: 217 119 6;
   --color-amberSoft: 254 243 199;
 
-  --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(252, 250, 255, 0.78) 100%);
-  --glass-border: rgba(124, 92, 255, 0.16);
-  --glass-shadow: 0 14px 36px -22px rgba(76, 29, 149, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  --hover-glow: 0 16px 40px -12px rgba(124, 92, 255, 0.38), 0 0 0 1px rgba(124, 92, 255, 0.32), 0 0 28px rgba(139, 92, 246, 0.16);
+  --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(253, 250, 244, 0.78) 100%);
+  --glass-border: rgba(234, 88, 12, 0.16);
+  --glass-shadow: 0 14px 36px -22px rgba(124, 45, 18, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --hover-glow: 0 16px 40px -12px rgba(234, 88, 12, 0.38), 0 0 0 1px rgba(234, 88, 12, 0.32), 0 0 28px rgba(249, 115, 22, 0.16);
   --atmosphere:
-    radial-gradient(circle at center, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at center, rgba(56, 189, 248, 0.1) 0%, transparent 30%);
+    radial-gradient(circle at center, rgba(249, 115, 22, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at center, rgba(245, 158, 11, 0.1) 0%, transparent 30%);
   --atmosphere-strong:
-    radial-gradient(circle at center, rgba(139, 92, 246, 0.2) 0%, transparent 40%),
-    radial-gradient(circle at center, rgba(56, 189, 248, 0.12) 0%, transparent 30%);
+    radial-gradient(circle at center, rgba(249, 115, 22, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at center, rgba(245, 158, 11, 0.12) 0%, transparent 30%);
   --grain-opacity: 0.08;
-  --pro-orb: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.28) 0%, rgba(99, 102, 241, 0.1) 42%, transparent 70%);
+  --pro-orb: radial-gradient(ellipse at center, rgba(249, 115, 22, 0.28) 0%, rgba(180, 83, 9, 0.1) 42%, transparent 70%);
 }
 
 .dark {
-  --color-paper: 10 11 20;
-  --color-paperDark: 16 17 30;
-  --color-surface: 22 24 40;
-  --color-surfaceSunken: 14 15 26;
-  --color-ink: 237 238 245;
-  --color-inkSoft: 168 171 190;
-  --color-inkFaint: 108 111 133;
-  --color-line: 42 44 68;
-  --color-lineStrong: 62 64 96;
-  --color-teal: 124 92 255;
-  --color-tealDark: 108 75 230;
-  --color-tealSoft: 33 27 61;
+  --color-paper: 21 18 15;
+  --color-paperDark: 29 25 21;
+  --color-surface: 35 30 25;
+  --color-surfaceSunken: 25 22 18;
+  --color-ink: 243 237 229;
+  --color-inkSoft: 186 174 160;
+  --color-inkFaint: 131 119 106;
+  --color-line: 55 48 41;
+  --color-lineStrong: 79 69 58;
+  --color-teal: 249 115 22;
+  --color-tealDark: 234 88 12;
+  --color-tealSoft: 59 39 26;
   --color-sage: 34 197 94;
   --color-sageSoft: 16 36 26;
   --color-clay: 239 68 68;
@@ -60,18 +60,18 @@
   --color-amber: 234 179 8;
   --color-amberSoft: 42 34 10;
 
-  --glass-bg: linear-gradient(180deg, rgba(32, 34, 56, 0.72) 0%, rgba(14, 16, 30, 0.82) 100%);
+  --glass-bg: linear-gradient(180deg, rgba(42, 35, 29, 0.72) 0%, rgba(24, 20, 16, 0.82) 100%);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --hover-glow: 0 0 0 1px rgba(167, 139, 250, 0.5), 0 16px 40px -10px rgba(139, 92, 246, 0.5), 0 0 48px rgba(124, 92, 255, 0.22);
+  --hover-glow: 0 0 0 1px rgba(253, 186, 116, 0.5), 0 16px 40px -10px rgba(249, 115, 22, 0.5), 0 0 48px rgba(234, 88, 12, 0.22);
   --atmosphere:
-    radial-gradient(circle at center, rgba(139, 92, 246, 0.2) 0%, transparent 40%),
-    radial-gradient(circle at center, rgba(56, 189, 248, 0.12) 0%, transparent 30%);
+    radial-gradient(circle at center, rgba(249, 115, 22, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at center, rgba(245, 158, 11, 0.12) 0%, transparent 30%);
   --atmosphere-strong:
-    radial-gradient(circle at center, rgba(139, 92, 246, 0.25) 0%, transparent 40%),
-    radial-gradient(circle at center, rgba(56, 189, 248, 0.15) 0%, transparent 30%);
+    radial-gradient(circle at center, rgba(249, 115, 22, 0.25) 0%, transparent 40%),
+    radial-gradient(circle at center, rgba(245, 158, 11, 0.15) 0%, transparent 30%);
   --grain-opacity: 0.2;
-  --pro-orb: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.55) 0%, rgba(99, 102, 241, 0.18) 42%, transparent 70%);
+  --pro-orb: radial-gradient(ellipse at center, rgba(249, 115, 22, 0.55) 0%, rgba(180, 83, 9, 0.18) 42%, transparent 70%);
 }
 
 /* موبايل: تظبيط ألوان الوضع الليلي للمقاسات الصغيرة */
@@ -83,26 +83,26 @@
 
   .dark {
     /* أسطح أفتح درجة عشان التباين يبان أحسن على الشاشات الصغيرة */
-    --color-paper: 13 14 24;
-    --color-paperDark: 19 20 34;
-    --color-surface: 26 28 44;
-    --color-surfaceSunken: 16 17 29;
+    --color-paper: 24 21 17;
+    --color-paperDark: 32 28 23;
+    --color-surface: 40 34 28;
+    --color-surfaceSunken: 28 24 20;
 
-    --color-line: 48 50 74;
-    --color-lineStrong: 68 70 102;
+    --color-line: 61 53 44;
+    --color-lineStrong: 87 75 61;
 
     /* توهج أخف على الموبايل لأنه بيبان مبالغ فيه في المساحة الصغيرة */
-    --hover-glow: 0 0 0 1px rgba(167, 139, 250, 0.4), 0 10px 26px -10px rgba(139, 92, 246, 0.4), 0 0 30px rgba(124, 92, 255, 0.16);
+    --hover-glow: 0 0 0 1px rgba(253, 186, 116, 0.4), 0 10px 26px -10px rgba(249, 115, 22, 0.4), 0 0 30px rgba(234, 88, 12, 0.16);
 
     /* خلفية جوية معدّلة لنسب الشاشة الطولية - نمط ثابت ومنتظم */
     --atmosphere:
-      radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at 25% 75%, rgba(56, 189, 248, 0.1) 0%, transparent 40%),
-      radial-gradient(ellipse at 75% 25%, rgba(99, 102, 241, 0.1) 0%, transparent 40%);
+      radial-gradient(ellipse at 50% 50%, rgba(249, 115, 22, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 25% 75%, rgba(245, 158, 11, 0.1) 0%, transparent 40%),
+      radial-gradient(ellipse at 75% 25%, rgba(180, 83, 9, 0.1) 0%, transparent 40%);
     --atmosphere-strong:
-      radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.2) 0%, transparent 50%),
-      radial-gradient(ellipse at 25% 75%, rgba(56, 189, 248, 0.15) 0%, transparent 40%),
-      radial-gradient(ellipse at 75% 25%, rgba(99, 102, 241, 0.15) 0%, transparent 40%);
+      radial-gradient(ellipse at 50% 50%, rgba(249, 115, 22, 0.2) 0%, transparent 50%),
+      radial-gradient(ellipse at 25% 75%, rgba(245, 158, 11, 0.15) 0%, transparent 40%),
+      radial-gradient(ellipse at 75% 25%, rgba(180, 83, 9, 0.15) 0%, transparent 40%);
 
     /* الحبيبات أقل وضوحاً على الموبايل عشان المشهد ميبقاش مشوش */
     --grain-opacity: 0.1;
@@ -420,8 +420,8 @@ html:not(.dark) .upgrade-stage .text-transparent {
   -webkit-text-fill-color: transparent;
 }
 html:not(.dark) .upgrade-stage button[class*="bg-gradient"],
-html:not(.dark) .upgrade-stage button[class*="bg-[#7C5CFF]"],
-html:not(.dark) .upgrade-stage [class*="from-[#8b5cf6]"][class*="text-white"] {
+html:not(.dark) .upgrade-stage button[class*="bg-[#EA580C]"],
+html:not(.dark) .upgrade-stage [class*="from-[#F97316]"][class*="text-white"] {
   color: #fff !important;
   -webkit-text-fill-color: #fff;
 }
@@ -435,14 +435,14 @@ html:not(.dark) .upgrade-stage .bg-black\/25 {
 }
 
 .dark .upgrade-stage {
-  background: #0a0b14;
+  background: #151210;
 }
 
 .dark .upgrade-stage::before {
   background:
-    radial-gradient(ellipse 55% 70% at 50% -10%, rgba(139, 92, 246, 0.38), transparent 62%),
-    radial-gradient(ellipse 42% 55% at 68% 38%, rgba(56, 189, 248, 0.16), transparent 68%),
-    radial-gradient(ellipse 38% 50% at 22% 48%, rgba(99, 102, 241, 0.18), transparent 70%),
+    radial-gradient(ellipse 55% 70% at 50% -10%, rgba(249, 115, 22, 0.38), transparent 62%),
+    radial-gradient(ellipse 42% 55% at 68% 38%, rgba(245, 158, 11, 0.16), transparent 68%),
+    radial-gradient(ellipse 38% 50% at 22% 48%, rgba(180, 83, 9, 0.18), transparent 70%),
     radial-gradient(ellipse 30% 40% at 82% 18%, rgba(45, 212, 191, 0.1), transparent 70%);
 }
 
@@ -451,7 +451,7 @@ html:not(.dark) .upgrade-stage .bg-black\/25 {
 }
 
 .dark .upgrade-card {
-  background: linear-gradient(180deg, rgba(32, 34, 56, 0.62) 0%, rgba(14, 16, 30, 0.78) 100%);
+  background: linear-gradient(180deg, rgba(42, 35, 29, 0.62) 0%, rgba(24, 20, 16, 0.78) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow:
     0 18px 40px -24px rgba(0, 0, 0, 0.7),
@@ -459,21 +459,21 @@ html:not(.dark) .upgrade-stage .bg-black\/25 {
 }
 
 .dark .upgrade-card-pro {
-  border: 1.5px solid rgba(167, 139, 250, 0.95);
-  background: linear-gradient(180deg, rgba(48, 36, 92, 0.55) 0%, rgba(18, 16, 38, 0.82) 100%);
+  border: 1.5px solid rgba(253, 186, 116, 0.95);
+  background: linear-gradient(180deg, rgba(62, 32, 16, 0.55) 0%, rgba(24, 19, 15, 0.82) 100%);
   box-shadow:
-    0 0 0 1px rgba(139, 92, 246, 0.35),
-    0 0 28px 2px rgba(139, 92, 246, 0.45),
-    0 0 70px 10px rgba(108, 92, 231, 0.28),
-    0 24px 50px -16px rgba(76, 29, 149, 0.55),
+    0 0 0 1px rgba(249, 115, 22, 0.35),
+    0 0 28px 2px rgba(249, 115, 22, 0.45),
+    0 0 70px 10px rgba(234, 88, 12, 0.28),
+    0 24px 50px -16px rgba(124, 45, 18, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 0 40px rgba(139, 92, 246, 0.08);
+    inset 0 0 40px rgba(249, 115, 22, 0.08);
 }
 
 .dark .upgrade-ai-box {
-  border: 1px solid rgba(139, 92, 246, 0.38);
-  background: rgba(88, 70, 180, 0.12);
-  box-shadow: inset 0 0 24px rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.38);
+  background: rgba(154, 52, 18, 0.12);
+  box-shadow: inset 0 0 24px rgba(249, 115, 22, 0.08);
 }
 
 .dark .upgrade-ai-box-teal {
@@ -483,59 +483,59 @@ html:not(.dark) .upgrade-stage .bg-black\/25 {
 }
 
 .dark .upgrade-pill {
-  border: 1px solid rgba(167, 139, 250, 0.28);
-  background: rgba(20, 18, 40, 0.55);
-  box-shadow: 0 0 16px rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(253, 186, 116, 0.28);
+  background: rgba(36, 28, 20, 0.55);
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.08);
 }
 
 .dark .upgrade-icon {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
   box-shadow:
-    0 0 16px rgba(139, 92, 246, 0.18),
+    0 0 16px rgba(249, 115, 22, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .login-scene {
-  background-color: #07080f;
+  background-color: #120e0b;
   background-image:
-    radial-gradient(ellipse 70% 55% at 18% 108%, rgba(124, 58, 237, 0.55), transparent 58%),
-    radial-gradient(ellipse 50% 40% at 88% 8%, rgba(56, 189, 248, 0.12), transparent 55%),
-    radial-gradient(ellipse 45% 38% at 8% 18%, rgba(139, 92, 246, 0.18), transparent 50%);
+    radial-gradient(ellipse 70% 55% at 18% 108%, rgba(194, 65, 12, 0.55), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 88% 8%, rgba(245, 158, 11, 0.12), transparent 55%),
+    radial-gradient(ellipse 45% 38% at 8% 18%, rgba(249, 115, 22, 0.18), transparent 50%);
 }
 
 html:not(.dark) .login-scene {
-  background-color: #f4f1ff;
+  background-color: #faf6ef;
   background-image:
-    radial-gradient(ellipse 70% 55% at 18% 108%, rgba(124, 58, 237, 0.22), transparent 58%),
-    radial-gradient(ellipse 50% 40% at 88% 8%, rgba(56, 189, 248, 0.12), transparent 55%),
-    radial-gradient(ellipse 45% 38% at 8% 18%, rgba(139, 92, 246, 0.16), transparent 50%);
+    radial-gradient(ellipse 70% 55% at 18% 108%, rgba(194, 65, 12, 0.22), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 88% 8%, rgba(245, 158, 11, 0.12), transparent 55%),
+    radial-gradient(ellipse 45% 38% at 8% 18%, rgba(249, 115, 22, 0.16), transparent 50%);
 }
 
 .login-card {
-  background: linear-gradient(180deg, rgba(28, 30, 48, 0.72) 0%, rgba(16, 18, 32, 0.82) 100%);
+  background: linear-gradient(180deg, rgba(38, 32, 26, 0.72) 0%, rgba(26, 22, 18, 0.82) 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 28px 80px -28px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(22px);
 }
 
 html:not(.dark) .login-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(252, 250, 255, 0.86) 100%);
-  border: 1px solid rgba(124, 92, 255, 0.16);
-  box-shadow: 0 24px 60px -28px rgba(76, 29, 149, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(253, 250, 244, 0.86) 100%);
+  border: 1px solid rgba(234, 88, 12, 0.16);
+  box-shadow: 0 24px 60px -28px rgba(124, 45, 18, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 .login-field {
   width: 100%;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(8, 10, 18, 0.55);
+  background: rgba(16, 13, 10, 0.55);
   color: inherit;
   outline: none;
 }
 
 .login-field:focus {
-  border-color: #7c3aed;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.22);
+  border-color: #C2410C;
+  box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.22);
 }
 
 html:not(.dark) .login-field {
@@ -552,11 +552,11 @@ html:not(.dark) .login-field {
 }
 
 html.dark .login-mask {
-  background: rgba(12, 14, 22, 0.42);
+  background: rgba(22, 18, 15, 0.42);
 }
 
 html:not(.dark) .login-mask {
-  background: rgba(244, 241, 255, 0.48);
+  background: rgba(250, 245, 237, 0.48);
 }
 
 .login-preview {
@@ -578,7 +578,7 @@ html:not(.dark) .login-mask {
 
 .login-preview:hover .login-preview-frame {
   transform: perspective(1400px) rotateY(-8deg) rotateX(3deg) rotateZ(-0.6deg);
-  box-shadow: 0 44px 70px -28px rgba(124, 58, 237, 0.22), 0 20px 40px -24px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 44px 70px -28px rgba(194, 65, 12, 0.22), 0 20px 40px -24px rgba(0, 0, 0, 0.35);
 }
 
 @media (min-width: 1280px) {
@@ -615,8 +615,8 @@ html:not(.dark) .login-mask {
 }
 
 @keyframes viora-pulse {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(22, 217, 255, 0)); }
-  50% { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(22, 217, 255, 0.55)); }
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(251, 191, 36, 0)); }
+  50% { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.55)); }
 }
 .viora-logo-pulse {
   animation: viora-pulse 2.2s ease-in-out 1.2s infinite;

@@ -62,7 +62,7 @@ export function TaskHoverCard({
       role="tooltip"
     >
       {projectName ? (
-        <p className="text-[11px] font-medium text-[#7c5cff] mb-0.5 truncate">{projectName}</p>
+        <p className="text-[11px] font-medium text-[#EA580C] mb-0.5 truncate">{projectName}</p>
       ) : null}
       <p className="text-sm font-medium text-ink leading-snug">{task.title}</p>
       <p className={`mt-1 text-[11px] font-medium ${late > 0 ? "text-red-500" : "text-inkSoft"}`}>{status}</p>
@@ -96,7 +96,7 @@ export function TaskHoverCard({
             className="h-full rounded-full"
             style={{
               width: `${Math.min(pct, 100)}%`,
-              backgroundColor: late > 0 ? OVERDUE_COLOR : task.is_done ? DONE_COLOR : "#6C5CE7",
+              backgroundColor: late > 0 ? OVERDUE_COLOR : task.is_done ? DONE_COLOR : "#EA580C",
             }}
           />
         </div>
@@ -188,7 +188,7 @@ export function TaskDetailsPanel({
             className="h-full rounded-full"
             style={{
               width: `${Math.min(pct, 100)}%`,
-              backgroundColor: late > 0 ? OVERDUE_COLOR : task.is_done ? DONE_COLOR : "#6C5CE7",
+              backgroundColor: late > 0 ? OVERDUE_COLOR : task.is_done ? DONE_COLOR : "#EA580C",
             }}
           />
         </div>

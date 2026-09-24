@@ -14,19 +14,19 @@ const SHAPES = [
   // الشكل الأزرق — ذراع الشمال، نهايته السفلى مقطوعة بزاوية مايلة
   {
     points: "15,76 144,72 272,268 200,384",
-    fill: "url(#vioraBlue)",
+    fill: "url(#vioraCopper)",
     from: { x: -150, opacity: 0 },
   },
   // الشكل البنفسجي — رأسه بارز ناحية الشمال الغربي
   {
     points: "336,72 495,74 399,243 302,244 266,176",
-    fill: "url(#vioraPurple)",
+    fill: "url(#vioraAmber)",
     from: { x: 150, opacity: 0 },
   },
   // المثلث السماوي — قمة مايلة ورِجل يمنى شبه رأسية
   {
     points: "296,304 386,430 221,438",
-    fill: "url(#vioraCyan)",
+    fill: "url(#vioraTeal)",
     from: { y: 150, opacity: 0 },
   },
 ];
@@ -34,17 +34,17 @@ const SHAPES = [
 function GradientDefs() {
   return (
           <defs>
-            <linearGradient id="vioraBlue" x1="0" y1="0" x2="0.6" y2="1">
-              <stop offset="0%" stopColor="#585AFF" />
-              <stop offset="100%" stopColor="#484AF0" />
+            <linearGradient id="vioraCopper" x1="0" y1="0" x2="0.6" y2="1">
+              <stop offset="0%" stopColor="#EA580C" />
+              <stop offset="100%" stopColor="#C2410C" />
             </linearGradient>
-            <linearGradient id="vioraPurple" x1="0" y1="0" x2="0.6" y2="1">
-              <stop offset="0%" stopColor="#9C42FF" />
-              <stop offset="100%" stopColor="#8E34F2" />
+            <linearGradient id="vioraAmber" x1="0" y1="0" x2="0.6" y2="1">
+              <stop offset="0%" stopColor="#F59E0B" />
+              <stop offset="100%" stopColor="#D97706" />
             </linearGradient>
-            <linearGradient id="vioraCyan" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2BDCFF" />
-              <stop offset="100%" stopColor="#1FD0F2" />
+            <linearGradient id="vioraTeal" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#14B8A6" />
+              <stop offset="100%" stopColor="#0D9488" />
             </linearGradient>
           </defs>
   );
@@ -66,7 +66,7 @@ export function VioraLogoMark({
         className={`absolute rounded-full ${glowClass}`}
         style={{
           background:
-            "radial-gradient(circle, rgba(22,217,255,0.22), rgba(124,92,255,0.16) 45%, transparent 70%)",
+            "radial-gradient(circle, rgba(251, 191, 36,0.22), rgba(234, 88, 12,0.16) 45%, transparent 70%)",
           filter: "blur(8px)",
         }}
         initial={{ opacity: 0, scale: 0.7 }}
@@ -99,7 +99,7 @@ export function VioraLogoMark({
               className="viora-shine"
               points={s.points}
               fill="none"
-              stroke="#22D9FF"
+              stroke="#FBBF24"
               strokeWidth={7}
               strokeLinejoin="round"
               strokeLinecap="round"

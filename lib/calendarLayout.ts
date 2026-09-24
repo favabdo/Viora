@@ -10,7 +10,7 @@ export type WeekLane = {
   continuesAfter: boolean;
 };
 
-const BAR_COLORS = ["#6C5CE7", "#3B82F6", "#22C55E", "#F59E0B", "#14B8A6", "#EC4899", "#C4A574", "#8B5CF6"];
+const BAR_COLORS = ["#EA580C", "#3B82F6", "#22C55E", "#F59E0B", "#14B8A6", "#EC4899", "#C4A574", "#F97316"];
 
 export function taskBarColor(task: Task): string {
   if (task.is_done) return "#22C55E";

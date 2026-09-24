@@ -41,7 +41,7 @@ import type { WorkspaceView } from "@/lib/appRoutes";
 export type { WorkspaceView };
 
 const DEFAULT_COLUMNS = [
-  { name: "Backlog", color: "#6C5CE7", position: 0, is_done_column: false },
+  { name: "Backlog", color: "#EA580C", position: 0, is_done_column: false },
   { name: "To Do", color: "#3B82F6", position: 1, is_done_column: false },
   { name: "In Progress", color: "#F59E0B", position: 2, is_done_column: false },
   { name: "Review", color: "#EC4899", position: 3, is_done_column: false },
@@ -409,7 +409,7 @@ export default function ProjectWorkspace({
               >
                 <Icon size={14} strokeWidth={1.75} />
                 {label}
-                {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#6C5CE7]" />}
+                {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#EA580C]" />}
               </button>
             );
           })}

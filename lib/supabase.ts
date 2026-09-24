@@ -83,7 +83,7 @@ export const TASK_COLORS: { name: string; value: string; label: string }[] = [
   { name: "yellow", value: "#eab308", label: "Medium" },
   { name: "green", value: "#22c55e", label: "Low" },
   { name: "blue", value: "#3b82f6", label: "Info" },
-  { name: "purple", value: "#a855f7", label: "Later" },
+  { name: "purple", value: "#EC4899", label: "Later" },
 ];
 
 export type LinkItem = {

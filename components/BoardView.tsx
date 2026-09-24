@@ -52,7 +52,7 @@ import TaskDetailModal from "./TaskDetailModal";
 import Modal from "./ui/Modal";
 import Button from "./ui/Button";
 
-const COLUMN_PALETTE = ["#3b82f6", "#a855f7", "#22c55e", "#f97316", "#ef4444", "#06b6d4", "#eab308", "#6b7280"];
+const COLUMN_PALETTE = ["#3b82f6", "#EC4899", "#22c55e", "#f97316", "#ef4444", "#0D9488", "#eab308", "#6b7280"];
 
 /** إسقاط فقط لو المؤشر فوق العمود أو المهمة فعلًا — مش أقرب عمود في الفاضي */
 const exactDropCollision: CollisionDetection = (args) => pointerWithin(args);
@@ -197,7 +197,7 @@ function TaskCard({
           })()}
 
         {extras.category && (
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#6C5CE7]/15 text-[#5B21B6] dark:text-[#A78BFA]">
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#EA580C]/15 text-[#9A3412] dark:text-[#FDBA74]">
             {t(`taskDetail.category.${extras.category}`)}
           </span>
         )}
@@ -214,7 +214,7 @@ function TaskCard({
         {progress.total > 0 && (
           <span className="text-[10px] text-inkSoft">{`${progress.done}/${progress.total}`}</span>
         )}
-        {extras.pinned && <Pin size={11} className="text-[#8C3AED]" />}
+        {extras.pinned && <Pin size={11} className="text-[#EA580C]" />}
         {extras.watching && <Eye size={11} className="text-inkSoft" />}
         {(extras.attachments?.length || 0) > 0 && (
           <span className="flex items-center gap-0.5 text-[10px] text-inkFaint">
@@ -335,7 +335,7 @@ function ColumnContainer({
     <div
       ref={setNodeRef}
       className={`flex flex-col w-[280px] h-full min-h-0 shrink-0 rounded-xl border p-3 transition-colors ${
-        isOver ? "border-[#8C3AED] bg-[#8C3AED]/10" : "border-line bg-surface"
+        isOver ? "border-[#EA580C] bg-[#EA580C]/10" : "border-line bg-surface"
       }`}
     >
       <div className="flex items-center gap-2 mb-3 px-0.5 shrink-0">
@@ -355,7 +355,7 @@ function ColumnContainer({
               onRenameColumn(column, nameDraft);
               setEditingName(false);
             }}
-            className="flex-1 min-w-0 bg-transparent text-sm font-semibold text-ink focus:outline-none border-b border-[#8C3AED]"
+            className="flex-1 min-w-0 bg-transparent text-sm font-semibold text-ink focus:outline-none border-b border-[#EA580C]"
           />
         ) : (
           <button
@@ -363,7 +363,7 @@ function ColumnContainer({
               setNameDraft(column.name);
               setEditingName(true);
             }}
-            className="flex-1 min-w-0 text-start text-sm font-semibold text-ink truncate hover:text-[#8C3AED] transition-colors"
+            className="flex-1 min-w-0 text-start text-sm font-semibold text-ink truncate hover:text-[#EA580C] transition-colors"
           >
             {column.name}
           </button>
@@ -399,7 +399,7 @@ function ColumnContainer({
 
       <button
         onClick={() => onAddTask(column.id)}
-        className="flex items-center gap-1.5 mt-2 shrink-0 px-2 py-2 text-xs text-inkFaint hover:text-[#8C3AED] rounded-md border border-transparent hover:border-dashed hover:border-[#8C3AED] transition-colors"
+        className="flex items-center gap-1.5 mt-2 shrink-0 px-2 py-2 text-xs text-inkFaint hover:text-[#EA580C] rounded-md border border-transparent hover:border-dashed hover:border-[#EA580C] transition-colors"
       >
         <Plus size={13} strokeWidth={2} />
         {t("board.addTask")}
@@ -856,7 +856,7 @@ export default function BoardView({
         <button
           type="button"
           onClick={() => openAddTask(columns[0]?.id, "quick")}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[#6C5CE7] px-3.5 py-2 text-sm font-medium text-white hover:bg-[#7c6ef0] active:bg-[#5a4bd1] transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] px-3.5 py-2 text-sm font-medium text-white hover:bg-[#C2410C] active:bg-[#9A3412] transition-colors"
         >
           <Plus size={15} strokeWidth={2.25} />
           {t("board.addTask")}
@@ -911,7 +911,7 @@ export default function BoardView({
                       key={color}
                       type="button"
                       onClick={() => setNewColumnColor(color)}
-                      className={`h-5 w-5 rounded-full border ${newColumnColor === color ? "ring-2 ring-offset-1 ring-[#6C5CE7] border-transparent" : "border-line"}`}
+                      className={`h-5 w-5 rounded-full border ${newColumnColor === color ? "ring-2 ring-offset-1 ring-[#EA580C] border-transparent" : "border-line"}`}
                       style={{ backgroundColor: color }}
                       aria-label={color}
                     />
@@ -958,7 +958,7 @@ export default function BoardView({
                 setNewColumnOrder(columns.length);
                 setShowAddColumn(true);
               }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-inkFaint hover:text-[#8C3AED] hover:bg-paperDark rounded-lg transition-colors w-full"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-inkFaint hover:text-[#EA580C] hover:bg-paperDark rounded-lg transition-colors w-full"
             >
               <Plus size={14} strokeWidth={2} />
               {t("board.addColumn")}
@@ -969,7 +969,7 @@ export default function BoardView({
 
       <DragOverlay>
         {activeTask ? (
-          <div className="bg-surface border border-[#8C3AED] rounded-lg p-3 shadow-modal w-72 opacity-90">
+          <div className="bg-surface border border-[#EA580C] rounded-lg p-3 shadow-modal w-72 opacity-90">
             <p className="text-sm text-ink">{activeTask.title}</p>
           </div>
         ) : null}

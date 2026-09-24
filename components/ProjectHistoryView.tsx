@@ -29,7 +29,7 @@ import Button from "./ui/Button";
 import { Input } from "./ui/Input";
 
 const PAGE = 25;
-const ACCENT = "#6C5CE7";
+const ACCENT = "#EA580C";
 
 type HistoryTab = "all" | "tasks" | "comments" | "files" | "members" | "invitations" | "settings" | "audit";
 type DateRange = "7" | "30" | "90" | "all";
@@ -322,7 +322,7 @@ export default function ProjectHistoryView({
     const memberN = entries.filter((e) => MEMBER_ACTIONS.includes(inferAction(e))).length;
     const inviteN = entries.filter((e) => INVITE_ACTIONS.includes(inferAction(e))).length;
     return [
-      { key: "all", label: t("history.stat.all"), count: all, color: "bg-[#6C5CE7]/12 text-[#6C5CE7]", Icon: History },
+      { key: "all", label: t("history.stat.all"), count: all, color: "bg-[#EA580C]/12 text-[#EA580C]", Icon: History },
       { key: "tasks", label: t("history.stat.tasks"), count: taskN, color: "bg-[#22C55E]/12 text-[#16A34A]", Icon: Check },
       { key: "comments", label: t("history.stat.comments"), count: commentN, color: "bg-[#3B82F6]/12 text-[#2563EB]", Icon: MessageSquare },
       { key: "files", label: t("history.stat.files"), count: 0, color: "bg-[#F59E0B]/12 text-[#D97706]", Icon: FileText },
@@ -460,7 +460,7 @@ export default function ProjectHistoryView({
                 }`}
               >
                 {item.label}
-                {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#6C5CE7]" />}
+                {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#EA580C]" />}
               </button>
             );
           })}
@@ -523,12 +523,12 @@ export default function ProjectHistoryView({
                                 </span>
                                 <span className="text-inkSoft"> {verb} </span>
                                 {title && action !== "project_renamed" && action !== "member_joined" && action !== "member_invited" && (
-                                  <span className="font-medium text-[#6C5CE7]">{title}</span>
+                                  <span className="font-medium text-[#EA580C]">{title}</span>
                                 )}
                                 {action === "member_invited" && param(entry, "member") && (
-                                  <span className="font-medium text-[#6C5CE7]">{param(entry, "member")}</span>
+                                  <span className="font-medium text-[#EA580C]">{param(entry, "member")}</span>
                                 )}
-                                {action === "project_renamed" && <span className="font-medium text-[#6C5CE7]">{param(entry, "name")}</span>}
+                                {action === "project_renamed" && <span className="font-medium text-[#EA580C]">{param(entry, "name")}</span>}
                               </p>
                               <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-inkFaint">
                                 <Folder size={11} />
@@ -654,7 +654,7 @@ export default function ProjectHistoryView({
           <Button variant="primary" size="sm" fullWidth className="mt-1" onClick={applyFilters}>
             {t("history.apply")}
           </Button>
-          <button onClick={resetFilters} className="w-full text-center text-xs text-inkFaint hover:text-[#6C5CE7]">
+          <button onClick={resetFilters} className="w-full text-center text-xs text-inkFaint hover:text-[#EA580C]">
             {t("history.reset")}
           </button>
         </div>
@@ -685,7 +685,7 @@ export default function ProjectHistoryView({
                   <div className="min-w-0 flex-1">
                     <p className="text-xs text-ink truncate">{member.name}</p>
                     <div className="mt-1 h-1.5 rounded-full bg-surfaceSunken overflow-hidden">
-                      <div className="h-full rounded-full bg-[#6C5CE7]" style={{ width: `${(member.count / member.max) * 100}%` }} />
+                      <div className="h-full rounded-full bg-[#EA580C]" style={{ width: `${(member.count / member.max) * 100}%` }} />
                     </div>
                   </div>
                   <span className="text-[11px] text-inkFaint">{member.count}</span>

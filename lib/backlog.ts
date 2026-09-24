@@ -1,4 +1,5 @@
 import type { TaskAttachment } from "./taskExtras";
+import { migrateBrandColor } from "./colorCompat";
 
 export const BACKLOG_STAGES = ["ideas", "refinement", "ready", "archived"] as const;
 export type BacklogStage = (typeof BACKLOG_STAGES)[number];
@@ -44,7 +45,7 @@ function normalizeItem(raw: Partial<BacklogItem> & { id: string; userId: string;
     description: raw.description || "",
     projectId: raw.projectId || null,
     columnId: raw.columnId || null,
-    color: raw.color || null,
+    color: migrateBrandColor(raw.color) || null,
     dueDate: raw.dueDate || null,
     assigneeId: raw.assigneeId || "",
     tags: raw.tags || "",

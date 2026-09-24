@@ -49,7 +49,7 @@ import {
 } from "@/lib/homeDashboard";
 
 const OVERVIEW = [
-  { id: "todo", color: "#6C5CE7", labelKey: "home.todo" },
+  { id: "todo", color: "#EA580C", labelKey: "home.todo" },
   { id: "progress", color: "#3B82F6", labelKey: "home.inProgress" },
   { id: "review", color: "#F59E0B", labelKey: "home.review" },
   { id: "done", color: "#22C55E", labelKey: "home.done" },
@@ -361,7 +361,7 @@ export default function HomeDashboard() {
         </div>
 
         <div className="grid grid-cols-2 xl:grid-cols-5 gap-2.5 sm:gap-3">
-          <StatCard title={t("home.totalProjects")} value={scopedProjects.length} change={pctChange(projectsNow, projectsPrev)} color="#6C5CE7" Icon={FolderKanban} spark={sparkProjects} vs={t("home.vsPrev")} />
+          <StatCard title={t("home.totalProjects")} value={scopedProjects.length} change={pctChange(projectsNow, projectsPrev)} color="#EA580C" Icon={FolderKanban} spark={sparkProjects} vs={t("home.vsPrev")} />
           <StatCard title={t("home.totalTasks")} value={scopedTasks.length} change={pctChange(createdNow, createdPrev)} color="#3B82F6" Icon={CheckSquare} spark={sparkTasks} vs={t("home.vsPrev")} />
           <StatCard title={t("home.completedTasks")} value={completed} change={pctChange(doneNow, donePrev)} color="#22C55E" Icon={CheckCircle2} spark={sparkDone} vs={t("home.vsPrev")} />
           <StatCard title={t("home.inProgress")} value={inProgress} change={pctChange(progressNow, progressPrev)} color="#F59E0B" Icon={Timer} spark={sparkProgress} vs={t("home.vsPrev")} />
@@ -395,7 +395,7 @@ export default function HomeDashboard() {
             )}
           </Panel>
           <Panel title={t("home.tasksCompleted")} action={<span className="text-[11px] text-inkFaint">{periodLabel}</span>}>
-            <BarChart values={sparkDone} labels={keys.map((key) => weekday(key, locale))} color="#6C5CE7" />
+            <BarChart values={sparkDone} labels={keys.map((key) => weekday(key, locale))} color="#EA580C" />
           </Panel>
         </div>
 
@@ -473,7 +473,7 @@ export default function HomeDashboard() {
                       <span className="text-xs tabular-nums text-inkSoft">{row.pct}%</span>
                     </div>
                     <div className="h-1.5 rounded-full bg-paperDark overflow-hidden">
-                      <div className="h-full rounded-full bg-[#6C5CE7]" style={{ width: `${row.pct}%` }} />
+                      <div className="h-full rounded-full bg-[#EA580C]" style={{ width: `${row.pct}%` }} />
                     </div>
                   </div>
                 ))
@@ -486,7 +486,7 @@ export default function HomeDashboard() {
           <AreaChart
             labels={keys.map((key) => weekday(key, locale))}
             series={[
-              { label: t("home.created"), color: "#6C5CE7", values: sparkTasks },
+              { label: t("home.created"), color: "#EA580C", values: sparkTasks },
               { label: t("home.completedLine"), color: "#22C55E", values: sparkDone },
               { label: t("home.comments"), color: "#3B82F6", values: countsForDays(scopedComments.map((c) => c.created_at), keys) },
               { label: t("home.files"), color: "#F97316", values: countsForDays(files.map((row) => row.created_at), keys) },
@@ -545,7 +545,7 @@ export default function HomeDashboard() {
                     key={key}
                     type="button"
                     onClick={() => setPickedDay(key)}
-                    className={`min-w-0 rounded-lg py-1.5 px-0.5 text-center ${active ? "bg-[#6C5CE7] text-white" : "bg-paperDark text-inkSoft"}`}
+                    className={`min-w-0 rounded-lg py-1.5 px-0.5 text-center ${active ? "bg-[#EA580C] text-white" : "bg-paperDark text-inkSoft"}`}
                   >
                     <span className="block text-[9px] sm:text-[10px] opacity-80 truncate">{weekday(key, locale)}</span>
                     <span className="block text-xs sm:text-sm font-medium">{day.getDate()}</span>
@@ -578,7 +578,7 @@ export default function HomeDashboard() {
                   const rendered = renderActivity(entry, t, session.user.id);
                   return (
                     <li key={entry.id} className="flex gap-2.5">
-                      <span className="mt-0.5 h-7 w-7 rounded-full bg-paperDark text-[#6C5CE7] inline-flex items-center justify-center shrink-0">
+                      <span className="mt-0.5 h-7 w-7 rounded-full bg-paperDark text-[#EA580C] inline-flex items-center justify-center shrink-0">
                         <ListTodo size={13} />
                       </span>
                       <div className="min-w-0">

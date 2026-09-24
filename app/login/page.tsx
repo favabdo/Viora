@@ -269,12 +269,12 @@ function LoginPageInner() {
 
         <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(380px,460px)] lg:gap-16">
           <section className="hidden min-w-0 lg:block relative z-10">
-            <span className="inline-flex rounded-full bg-[#7C3AED]/20 px-3 py-1 text-xs font-medium text-ink">
+            <span className="inline-flex rounded-full bg-[#C2410C]/20 px-3 py-1 text-xs font-medium text-ink">
               {t("login.heroBadge")}
             </span>
             <h1 className="mt-5 max-w-xl text-5xl font-semibold leading-[1.12] tracking-tight text-ink">
               {t("login.heroTitleBefore")}{" "}
-              <span className="text-[#8B5CF6]">Viora</span> {t("login.heroTitleAfter")}
+              <span className="text-[#F97316]">Viora</span> {t("login.heroTitleAfter")}
             </h1>
             <p className="mt-4 max-w-md text-base leading-relaxed text-inkSoft">{t("login.heroSubtitle")}</p>
             <DashboardPreview theme={theme} />
@@ -288,7 +288,7 @@ function LoginPageInner() {
                     type="button"
                     onClick={() => setLang("en")}
                     className={`h-8 min-w-9 rounded-lg px-2 text-[11px] font-semibold ${
-                      lang === "en" ? "bg-[#7C3AED] text-white" : "text-inkSoft hover:text-ink"
+                      lang === "en" ? "bg-[#C2410C] text-white" : "text-inkSoft hover:text-ink"
                     }`}
                   >
                     {t("login.english")}
@@ -297,7 +297,7 @@ function LoginPageInner() {
                     type="button"
                     onClick={() => setLang("ar")}
                     className={`h-8 min-w-9 rounded-lg px-2 text-[11px] font-semibold ${
-                      lang === "ar" ? "bg-[#7C3AED] text-white" : "text-inkSoft hover:text-ink"
+                      lang === "ar" ? "bg-[#C2410C] text-white" : "text-inkSoft hover:text-ink"
                     }`}
                   >
                     {t("login.arabic")}
@@ -415,7 +415,7 @@ function LoginPageInner() {
                         type="checkbox"
                         checked={remember}
                         onChange={(e) => setRemember(e.target.checked)}
-                        className="h-4 w-4 rounded accent-[#7C3AED]"
+                        className="h-4 w-4 rounded accent-[#C2410C]"
                       />
                       {t("login.rememberMe")}
                     </label>
@@ -426,7 +426,7 @@ function LoginPageInner() {
                         setError(null);
                         setInfo(null);
                       }}
-                      className="text-sm font-medium text-[#8B5CF6] hover:underline"
+                      className="text-sm font-medium text-[#F97316] hover:underline"
                     >
                       {t("login.forgotPassword")}
                     </button>
@@ -443,7 +443,7 @@ function LoginPageInner() {
                   variant="primary"
                   fullWidth
                   loading={loading}
-                  className="mt-1 h-12 rounded-xl bg-[#7C3AED] text-sm font-semibold shadow-[0_10px_24px_-8px_rgba(124,58,237,0.85)] hover:bg-[#6D28D9]"
+                  className="mt-1 h-12 rounded-xl bg-[#C2410C] text-sm font-semibold shadow-[0_10px_24px_-8px_rgba(194, 65, 12,0.85)] hover:bg-[#9A3412]"
                 >
                   {mode === "signin"
                     ? t("login.signIn")
@@ -492,7 +492,7 @@ function LoginPageInner() {
                       setError(null);
                       setInfo(null);
                     }}
-                    className="font-medium text-[#8B5CF6] hover:underline"
+                    className="font-medium text-[#F97316] hover:underline"
                   >
                     {t("login.backToSignIn")}
                   </button>
@@ -507,7 +507,7 @@ function LoginPageInner() {
                         setInfo(null);
                         setUsername("");
                       }}
-                      className="font-semibold text-[#8B5CF6] hover:underline"
+                      className="font-semibold text-[#F97316] hover:underline"
                     >
                       {mode === "signin" ? t("login.signUp") : t("login.signIn")}
                     </button>

@@ -168,7 +168,7 @@ export default function TaskComments({
                   type="button"
                   onClick={addComment}
                   disabled={sending || !draft.trim()}
-                  className="ms-auto rounded-lg bg-[#6C5CE7] text-white text-xs font-medium px-3 py-1.5 disabled:opacity-40"
+                  className="ms-auto rounded-lg bg-[#EA580C] text-white text-xs font-medium px-3 py-1.5 disabled:opacity-40"
                 >
                   {t("taskDetail.postComment")}
                 </button>

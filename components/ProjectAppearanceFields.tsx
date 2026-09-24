@@ -78,7 +78,7 @@ function FitSlider({
           step={5}
           value={value}
           onChange={(e) => onChange(clampImageScale(Number(e.target.value)))}
-          className="flex-1 accent-[#6C5CE7]"
+          className="flex-1 accent-[#EA580C]"
         />
         <button
           type="button"
@@ -278,7 +278,7 @@ export default function ProjectAppearanceFields({
                     setIconQuery("");
                   }}
                   className={`h-8 w-8 rounded-lg inline-flex items-center justify-center ${
-                    icon === id && !imageUrl ? "bg-[#6C5CE7]/20 text-[#6C5CE7]" : "text-inkSoft hover:bg-surface"
+                    icon === id && !imageUrl ? "bg-[#EA580C]/20 text-[#EA580C]" : "text-inkSoft hover:bg-surface"
                   }`}
                 >
                   <Item size={15} />
@@ -291,7 +291,7 @@ export default function ProjectAppearanceFields({
 
       <div>
         <label className="block text-xs font-medium text-inkFaint mb-2">{t("projects.colorLabel")}</label>
-        <ColorPicker value={/^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#6C5CE7"} onChange={(next) => onChange({ color: next })} />
+        <ColorPicker value={/^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#EA580C"} onChange={(next) => onChange({ color: next })} />
       </div>
     </div>
   );

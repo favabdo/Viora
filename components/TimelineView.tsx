@@ -271,7 +271,7 @@ function CompletedToggle({
           role="switch"
           aria-checked={showCompleted}
           onClick={onToggle}
-          className={`relative h-5 w-9 rounded-full ${showCompleted ? "bg-[#6C5CE7]" : "bg-lineStrong"}`}
+          className={`relative h-5 w-9 rounded-full ${showCompleted ? "bg-[#EA580C]" : "bg-lineStrong"}`}
         >
           <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${showCompleted ? "start-4" : "start-0.5"}`} />
         </button>

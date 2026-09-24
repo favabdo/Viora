@@ -333,19 +333,19 @@ function SidebarPanel({
               onClick={() => onTabClick(id)}
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 ${
                 active && id === "upgrade"
-                  ? "bg-gradient-to-r from-[#8b5cf6] to-[#6C5CE7] text-white shadow-[0_8px_20px_-8px_rgba(124,92,255,0.9)]"
+                  ? "bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white shadow-[0_8px_20px_-8px_rgba(234, 88, 12,0.9)]"
                   : active
-                    ? "bg-teal/16 text-ink shadow-[0_0_16px_rgba(124,92,255,0.18)]"
-                    : "text-inkSoft hover:bg-tealSoft hover:text-ink hover:shadow-[0_0_16px_rgba(124,92,255,0.16)]"
+                    ? "bg-teal/16 text-ink shadow-[0_0_16px_rgba(234, 88, 12,0.18)]"
+                    : "text-inkSoft hover:bg-tealSoft hover:text-ink hover:shadow-[0_0_16px_rgba(234, 88, 12,0.16)]"
               }`}
             >
               {active && id !== "upgrade" && (
-                <span className="absolute start-0 inset-y-1.5 w-[3px] rounded-full bg-[#6C5CE7]" />
+                <span className="absolute start-0 inset-y-1.5 w-[3px] rounded-full bg-[#EA580C]" />
               )}
-              <Icon size={16} strokeWidth={1.75} className={active && id !== "upgrade" ? "text-[#6C5CE7]" : ""} />
+              <Icon size={16} strokeWidth={1.75} className={active && id !== "upgrade" ? "text-[#EA580C]" : ""} />
               {label}
               {showBadge && (
-                <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#6C5CE7] px-1 text-2xs font-semibold text-white">
+                <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#EA580C] px-1 text-2xs font-semibold text-white">
                   {notifCount}
                 </span>
               )}
@@ -366,7 +366,7 @@ function SidebarPanel({
               <X size={14} strokeWidth={1.75} />
             </button>
             <div className="flex items-center gap-2 mb-1.5 pe-7">
-              <div className="h-7 w-7 rounded-lg bg-[#6C5CE7]/18 text-[#6C5CE7] flex items-center justify-center">
+              <div className="h-7 w-7 rounded-lg bg-[#EA580C]/18 text-[#EA580C] flex items-center justify-center">
                 <Crown size={14} strokeWidth={1.75} />
               </div>
               <p className="text-sm font-semibold text-ink">{t("shell.upgradeTitle")}</p>
@@ -379,7 +379,7 @@ function SidebarPanel({
             <button
               type="button"
               onClick={onUpgrade}
-              className="w-full rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#6C5CE7] hover:shadow-[0_8px_20px_-8px_rgba(124,92,255,0.9)] text-white text-xs font-semibold py-2 transition-all"
+              className="w-full rounded-lg bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:shadow-[0_8px_20px_-8px_rgba(234, 88, 12,0.9)] text-white text-xs font-semibold py-2 transition-all"
             >
               {t("shell.upgradeNow")}
             </button>

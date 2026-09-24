@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
+import { migrateBrandColor } from "./colorCompat";
 
 const META_KEY = "viora-project-meta";
 export const PROJECT_IMAGES_BUCKET = "project-images";
 
 export const PROJECT_COLORS = [
-  "#6C5CE7",
+  "#EA580C",
   "#3B82F6",
   "#14B8A6",
   "#F59E0B",
   "#EC4899",
-  "#A855F7",
+  "#EC4899",
   "#EAB308",
   "#6B7280",
 ];
@@ -93,7 +94,7 @@ function normalizeMeta(value: Partial<ProjectMeta> | undefined): ProjectMeta {
   return {
     description: value?.description ?? "",
     icon: value?.icon ?? "folder",
-    color: value?.color ?? PROJECT_COLORS[0],
+    color: migrateBrandColor(value?.color) ?? PROJECT_COLORS[0],
     key: value?.key,
     visibility: value?.visibility,
     guestAccess: value?.guestAccess,
