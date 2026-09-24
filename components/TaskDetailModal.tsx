@@ -302,7 +302,7 @@ export default function TaskDetailModal({
               <div>
                 <p className="text-[11px] text-inkFaint mb-1.5">{t("taskDetail.project")}</p>
                 <div className="flex items-center gap-2 text-sm font-medium text-ink">
-                  <FolderKanban size={15} className="text-[#EA580C]" />
+                  <FolderKanban size={15} className="text-[#3D6EA5]" />
                   {project?.name || "—"}
                 </div>
               </div>
@@ -344,7 +344,7 @@ export default function TaskDetailModal({
                   {t("taskDetail.completedOf").replace("{done}", String(progress.done)).replace("{total}", String(progress.total))}
                 </span>
                 <div className="flex-1 h-1.5 rounded-full bg-paperDark overflow-hidden min-w-[80px]">
-                  <div className="h-full rounded-full bg-[#EA580C]" style={{ width: `${percent}%` }} />
+                  <div className="h-full rounded-full bg-[#3D6EA5]" style={{ width: `${percent}%` }} />
                 </div>
               </div>
               {(extras.subtasks || []).length === 0 && (
@@ -417,7 +417,7 @@ export default function TaskDetailModal({
                 <button
                   type="button"
                   onClick={addSubtask}
-                  className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-[#EA580C] text-white text-xs font-medium px-3 py-2"
+                  className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-[#3D6EA5] text-white text-xs font-medium px-3 py-2"
                 >
                   <Plus size={13} />
                   {t("taskDetail.addSubtask")}
@@ -450,7 +450,7 @@ export default function TaskDetailModal({
                   <select
                     value={extras.category || ""}
                     onChange={(e) => savePatch({ category: e.target.value })}
-                    className="rounded-md bg-[#EA580C]/15 text-[#EA580C] px-2 py-1 text-xs font-medium outline-none"
+                    className="rounded-md bg-[#3D6EA5]/15 text-[#3D6EA5] px-2 py-1 text-xs font-medium outline-none"
                   >
                     <option value="">{t("taskDetail.none")}</option>
                     {CATEGORIES.map((id) => (
@@ -492,7 +492,7 @@ export default function TaskDetailModal({
                         key={label}
                         type="button"
                         onClick={() => removeChip("labels", label)}
-                        className="rounded-md px-2 py-1 text-xs bg-[#EA580C]/20 text-[#9A3412] dark:text-[#FDBA74]"
+                        className="rounded-md px-2 py-1 text-xs bg-[#3D6EA5]/20 text-[#1E3F5E] dark:text-[#B7D5EE]"
                       >
                         {label} ×
                       </button>
@@ -537,7 +537,7 @@ export default function TaskDetailModal({
                 <h3 className="text-sm font-semibold text-ink">
                   {t("taskDetail.attachments")} {(extras.attachments || []).length}
                 </h3>
-                <button type="button" onClick={onAttach} className="text-xs text-[#EA580C] inline-flex items-center gap-1">
+                <button type="button" onClick={onAttach} className="text-xs text-[#3D6EA5] inline-flex items-center gap-1">
                   <Plus size={12} />
                   {t("board.menu.attachFile")}
                 </button>
@@ -604,7 +604,7 @@ export default function TaskDetailModal({
                   className={`relative pb-3 text-xs font-medium ${tab === id ? "text-ink" : "text-inkFaint hover:text-inkSoft"}`}
                 >
                   {label}
-                  {tab === id && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#EA580C]" />}
+                  {tab === id && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#3D6EA5]" />}
                 </button>
               ))}
             </div>
@@ -618,7 +618,7 @@ export default function TaskDetailModal({
                       const { label, rest, actorId } = renderActivity(entry, t, currentUserId, true);
                       return (
                         <li key={entry.id} className="relative ps-4 text-xs text-inkSoft">
-                          <span className="absolute start-0 top-1.5 h-2 w-2 rounded-full bg-[#EA580C]" />
+                          <span className="absolute start-0 top-1.5 h-2 w-2 rounded-full bg-[#3D6EA5]" />
                           <p>
                             {label && (
                               <ClickableName previewCard userId={actorId} className="text-ink font-medium">

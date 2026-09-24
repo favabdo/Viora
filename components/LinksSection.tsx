@@ -31,7 +31,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 const PAGE_SIZE = 7;
 const META_KEY = "viora-link-meta";
-const TAG_COLORS = ["#EA580C", "#3B82F6", "#22C55E", "#F59E0B", "#EC4899", "#14B8A6", "#EF4444"];
+const TAG_COLORS = ["#3D6EA5", "#3B82F6", "#22C55E", "#F59E0B", "#0891B2", "#14B8A6", "#EF4444"];
 
 type TabId = "all" | "favorites" | "project" | "tag";
 type SortId = "recent" | "oldest" | "title";
@@ -330,7 +330,7 @@ export default function LinksSection({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between mb-5">
         <div>
           <h1 className="flex items-center gap-2 text-[26px] font-semibold tracking-tight text-ink">
-            <Paperclip size={22} className="text-[#EA580C]" />
+            <Paperclip size={22} className="text-[#3D6EA5]" />
             {t("links.pageTitle")}
           </h1>
           <p className="mt-1 text-sm text-inkSoft">{t("links.pageSubtitle")}</p>
@@ -350,14 +350,14 @@ export default function LinksSection({
             <button
               aria-label={t("links.listView")}
               onClick={() => setView("list")}
-              className={`rounded-md p-1.5 ${view === "list" ? "bg-[#EA580C] text-white" : "text-inkFaint hover:text-ink"}`}
+              className={`rounded-md p-1.5 ${view === "list" ? "bg-[#3D6EA5] text-white" : "text-inkFaint hover:text-ink"}`}
             >
               <List size={15} />
             </button>
             <button
               aria-label={t("links.gridView")}
               onClick={() => setView("grid")}
-              className={`rounded-md p-1.5 ${view === "grid" ? "bg-[#EA580C] text-white" : "text-inkFaint hover:text-ink"}`}
+              className={`rounded-md p-1.5 ${view === "grid" ? "bg-[#3D6EA5] text-white" : "text-inkFaint hover:text-ink"}`}
             >
               <LayoutGrid size={15} />
             </button>
@@ -379,7 +379,7 @@ export default function LinksSection({
               className={`relative shrink-0 px-3 py-2.5 text-sm font-medium ${active ? "text-ink" : "text-inkFaint hover:text-inkSoft"}`}
             >
               {item.label}
-              {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#EA580C]" />}
+              {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#3D6EA5]" />}
             </button>
           );
         })}
@@ -449,7 +449,7 @@ export default function LinksSection({
                               setEditing(false);
                             }}
                             className={`w-full text-start rounded-xl border bg-surface p-3.5 transition-colors ${
-                              active ? "border-[#EA580C]" : "border-line hover:border-lineStrong"
+                              active ? "border-[#3D6EA5]" : "border-line hover:border-lineStrong"
                             }`}
                           >
                             <div className="flex items-start gap-3">
@@ -489,7 +489,7 @@ export default function LinksSection({
                               <div className="hidden sm:flex flex-col items-end gap-1 shrink-0 text-[11px] text-inkFaint">
                                 {extra.projectId && (
                                   <span className="inline-flex items-center gap-1 text-inkSoft">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-[#EA580C]" />
+                                    <span className="h-1.5 w-1.5 rounded-full bg-[#3D6EA5]" />
                                     {projectName(extra.projectId)}
                                   </span>
                                 )}
@@ -497,7 +497,7 @@ export default function LinksSection({
                                 <span className="inline-flex items-center gap-1">
                                   <Bookmark
                                     size={14}
-                                    className={link.is_done ? "text-[#EA580C]" : ""}
+                                    className={link.is_done ? "text-[#3D6EA5]" : ""}
                                     fill={link.is_done ? "currentColor" : "none"}
                                   />
                                 </span>
@@ -576,7 +576,7 @@ export default function LinksSection({
                         key={n}
                         onClick={() => setPage(n)}
                         className={`h-8 min-w-8 px-2 rounded-lg text-xs ${
-                          n === currentPage ? "bg-[#EA580C] text-white" : "border border-line text-inkSoft"
+                          n === currentPage ? "bg-[#3D6EA5] text-white" : "border border-line text-inkSoft"
                         }`}
                       >
                         {n}
@@ -648,7 +648,7 @@ export default function LinksSection({
                     href={selected.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-1 inline-flex items-center gap-1 text-xs text-[#EA580C] break-all"
+                    className="mt-1 inline-flex items-center gap-1 text-xs text-[#3D6EA5] break-all"
                     dir="ltr"
                   >
                     {selected.url}
@@ -659,7 +659,7 @@ export default function LinksSection({
                       href={selected.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#9A3412] text-white text-sm font-medium py-2"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#3D6EA5] hover:bg-[#1E3F5E] text-white text-sm font-medium py-2"
                     >
                       {t("links.openLink")}
                     </a>

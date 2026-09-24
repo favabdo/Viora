@@ -49,7 +49,7 @@ export default function UpgradePlans() {
         <div className="text-center max-w-3xl mx-auto mb-10">
           <h1 className="text-[1.85rem] sm:text-[2.35rem] md:text-[2.75rem] font-semibold tracking-tight text-ink leading-[1.15]">
             {t("upgrade.titleBefore")}{" "}
-            <span className="bg-gradient-to-r from-[#FDBA74] via-[#FB923C] to-[#FBBF24] bg-clip-text text-transparent drop-shadow-[0_0_18px_rgba(249, 115, 22,0.55)]">
+            <span className="bg-gradient-to-r from-[#B7D5EE] via-[#9CC3E5] to-[#93C5FD] bg-clip-text text-transparent drop-shadow-[0_0_18px_rgba(91, 143, 199,0.55)]">
               {t("upgrade.titleHighlight")}
             </span>{" "}
             {t("upgrade.titleAfter")}
@@ -106,7 +106,7 @@ export default function UpgradePlans() {
 
           <aside className="upgrade-card rounded-2xl p-4 flex flex-col min-h-[440px]">
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles size={16} className="text-[#EA580C] dark:text-[#FDBA74] drop-shadow-[0_0_8px_rgba(253, 186, 116,0.8)]" />
+              <Sparkles size={16} className="text-[#3D6EA5] dark:text-[#B7D5EE] drop-shadow-[0_0_8px_rgba(156, 195, 229,0.8)]" />
               <h2 className="text-sm font-semibold text-ink">{t("upgrade.meet.title")}</h2>
             </div>
             <p className="text-[11px] text-inkFaint mb-4">{t("upgrade.meet.subtitle")}</p>
@@ -120,7 +120,7 @@ export default function UpgradePlans() {
             <blockquote className="mt-4 rounded-xl border border-line bg-paperDark/60 p-3">
               <p className="text-[12px] leading-relaxed text-inkSoft italic">“{t("upgrade.quote")}”</p>
               <div className="mt-2.5 flex items-center justify-between">
-                <div className="flex gap-0.5 text-[#fbbf24] drop-shadow-[0_0_8px_rgba(251,191,36,0.45)]">
+                <div className="flex gap-0.5 text-[#FBBF24] drop-shadow-[0_0_8px_rgba(251,191,36,0.45)]">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star key={i} size={12} fill="currentColor" />
                   ))}
@@ -141,7 +141,7 @@ export default function UpgradePlans() {
                 <tr className="text-inkFaint">
                   <th className="text-start font-medium px-5 py-3 w-[34%]">{t("upgrade.compare.feature")}</th>
                   <th className="text-start font-medium px-4 py-3">{t("upgrade.free.name")}</th>
-                  <th className="text-start font-medium px-4 py-3 text-[#EA580C] dark:text-[#FDBA74]">{t("upgrade.pro.name")}</th>
+                  <th className="text-start font-medium px-4 py-3 text-[#3D6EA5] dark:text-[#B7D5EE]">{t("upgrade.pro.name")}</th>
                   <th className="text-start font-medium px-4 py-3 text-[#0F766E] dark:text-[#5eead4]">{t("upgrade.team.name")}</th>
                 </tr>
               </thead>
@@ -150,7 +150,7 @@ export default function UpgradePlans() {
                   <tr key={key} className={i % 2 === 0 ? "bg-paperDark/50" : "bg-transparent"}>
                     <td className="px-5 py-3 text-inkSoft">
                       <span className="inline-flex items-center gap-2">
-                        <Icon size={14} className="text-[#FDBA74]" />
+                        <Icon size={14} className="text-[#B7D5EE]" />
                         {t(`upgrade.compare.${key}`)}
                       </span>
                     </td>
@@ -199,10 +199,10 @@ function PlanCard({
   comingSoon?: boolean;
   accent: Accent;
 }) {
-  const checkClass = accent === "teal" ? "text-[#2dd4bf]" : "text-[#FDBA74]";
+  const checkClass = accent === "teal" ? "text-[#2dd4bf]" : "text-[#B7D5EE]";
   const ctaClass =
     ctaStyle === "primary"
-      ? "text-white bg-gradient-to-r from-[#F97316] via-[#EA580C] to-[#9A3412] shadow-[0_10px_28px_-6px_rgba(234, 88, 12,0.95)]"
+      ? "text-white bg-gradient-to-r from-[#5B8FC7] via-[#3D6EA5] to-[#1E3F5E] shadow-[0_10px_28px_-6px_rgba(61, 110, 165,0.95)]"
       : ctaStyle === "teal"
         ? "border border-[#0F766E]/50 text-[#0F766E] dark:border-[#2dd4bf]/70 dark:text-[#5eead4] shadow-[0_0_18px_rgba(45,212,191,0.18)] hover:bg-[#2dd4bf]/10"
         : "border border-line text-ink hover:bg-paperDark";
@@ -214,7 +214,7 @@ function PlanCard({
           aria-hidden
           className="pointer-events-none absolute -inset-10 z-0"
           style={{
-            background: "radial-gradient(ellipse at center, rgba(249, 115, 22,0.55) 0%, rgba(180, 83, 9,0.18) 42%, transparent 70%)",
+            background: "radial-gradient(ellipse at center, rgba(91, 143, 199,0.55) 0%, rgba(47, 93, 140,0.18) 42%, transparent 70%)",
             filter: "blur(16px)",
           }}
         />
@@ -224,7 +224,7 @@ function PlanCard({
       >
         {badge && (
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#F97316] to-[#C2410C] px-3 py-1 text-[10px] font-semibold text-white shadow-[0_8px_20px_rgba(234, 88, 12,0.7)]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#5B8FC7] to-[#2B5680] px-3 py-1 text-[10px] font-semibold text-white shadow-[0_8px_20px_rgba(61, 110, 165,0.7)]">
               <Crown size={11} />
               {badge}
             </span>
@@ -277,7 +277,7 @@ function PlanCard({
           <ul className="space-y-1.5">
             {aiItems.map((item) => (
               <li key={item} className="flex items-start gap-2 text-[12px] text-inkSoft">
-                <Sparkles size={12} className={`mt-0.5 shrink-0 ${accent === "teal" ? "text-[#0F766E] dark:text-[#5eead4]" : "text-[#EA580C] dark:text-[#FDBA74]"}`} />
+                <Sparkles size={12} className={`mt-0.5 shrink-0 ${accent === "teal" ? "text-[#0F766E] dark:text-[#5eead4]" : "text-[#3D6EA5] dark:text-[#B7D5EE]"}`} />
                 {item}
               </li>
             ))}
@@ -300,9 +300,9 @@ function MeetRow({
   tone: "violet" | "blue" | "fuchsia" | "cyan";
 }) {
   const tones = {
-    violet: "bg-[#EA580C]/20 text-[#9A3412] dark:text-[#FDBA74] shadow-[0_0_12px_rgba(234, 88, 12,0.25)]",
+    violet: "bg-[#3D6EA5]/20 text-[#1E3F5E] dark:text-[#B7D5EE] shadow-[0_0_12px_rgba(61, 110, 165,0.25)]",
     blue: "bg-[#3b82f6]/20 text-[#1D4ED8] dark:text-[#93c5fd] shadow-[0_0_12px_rgba(59,130,246,0.25)]",
-    fuchsia: "bg-[#E11D48]/18 text-[#9F1239] dark:text-[#FDA4AF] shadow-[0_0_12px_rgba(225, 29, 72,0.22)]",
+    fuchsia: "bg-[#0D9488]/18 text-[#115E59] dark:text-[#5EEAD4] shadow-[0_0_12px_rgba(13, 148, 136,0.22)]",
     cyan: "bg-[#84CC16]/16 text-[#3F6212] dark:text-[#BEF264] shadow-[0_0_12px_rgba(132, 204, 22,0.22)]",
   };
   return (

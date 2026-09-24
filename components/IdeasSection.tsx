@@ -71,10 +71,10 @@ const ICONS: { id: string; icon: LucideIcon }[] = [
 ];
 
 const DEFAULT_COLUMNS = [
-  { name: "Backlog", color: "#EA580C", position: 0, is_done_column: false },
+  { name: "Backlog", color: "#3D6EA5", position: 0, is_done_column: false },
   { name: "To Do", color: "#3B82F6", position: 1, is_done_column: false },
   { name: "In Progress", color: "#F59E0B", position: 2, is_done_column: false },
-  { name: "Review", color: "#EC4899", position: 3, is_done_column: false },
+  { name: "Review", color: "#0891B2", position: 3, is_done_column: false },
   { name: "Done", color: "#22C55E", position: 4, is_done_column: true },
 ];
 
@@ -92,21 +92,21 @@ function IdeaIcon({ id, size = 18 }: { id: string; size?: number }) {
 
 function statusTone(status: IdeaStatus) {
   if (status === "in_progress") return "bg-[#3B82F6]/15 text-[#2563EB] dark:text-[#60A5FA]";
-  if (status === "planned") return "bg-[#F59E0B]/15 text-[#B45309] dark:text-[#FBBF24]";
+  if (status === "planned") return "bg-[#F59E0B]/15 text-[#B45309] dark:text-[#93C5FD]";
   if (status === "implemented") return "bg-[#22C55E]/15 text-[#15803D] dark:text-[#4ADE80]";
   return "bg-paperDark text-inkSoft";
 }
 
 function priorityTone(priority: IdeaPriority) {
   if (priority === "high") return "bg-[#EF4444]/15 text-[#DC2626] dark:text-[#F87171]";
-  if (priority === "medium") return "bg-[#F59E0B]/15 text-[#B45309] dark:text-[#FBBF24]";
+  if (priority === "medium") return "bg-[#F59E0B]/15 text-[#B45309] dark:text-[#93C5FD]";
   return "bg-[#22C55E]/15 text-[#15803D] dark:text-[#4ADE80]";
 }
 
 function categoryTone(category: string) {
-  if (category === "AI") return "bg-[#EA580C]/15 text-[#9A3412] dark:text-[#FDBA74]";
+  if (category === "AI") return "bg-[#3D6EA5]/15 text-[#1E3F5E] dark:text-[#B7D5EE]";
   if (category === "Mobile") return "bg-[#3B82F6]/15 text-[#2563EB] dark:text-[#60A5FA]";
-  if (category === "Design") return "bg-[#EC4899]/15 text-[#BE185D] dark:text-[#F472B6]";
+  if (category === "Design") return "bg-[#0891B2]/15 text-[#0E7490] dark:text-[#67E8F9]";
   return "bg-paperDark text-inkSoft";
 }
 
@@ -450,7 +450,7 @@ export default function IdeasSection({
   ];
 
   const statCards = [
-    { key: "all", label: t("ideas.stat.all"), value: stats.all, hint: t("ideas.stat.totalHint"), color: "#EA580C", Icon: Lightbulb, pct: 100 },
+    { key: "all", label: t("ideas.stat.all"), value: stats.all, hint: t("ideas.stat.totalHint"), color: "#3D6EA5", Icon: Lightbulb, pct: 100 },
     { key: "in_progress", label: t("ideas.status.in_progress"), value: stats.in_progress, hint: t("ideas.stat.pct").replace("{n}", String(Math.round((stats.in_progress / liveTotal) * 100))), color: "#3B82F6", Icon: Sparkles, pct: Math.round((stats.in_progress / liveTotal) * 100) },
     { key: "planned", label: t("ideas.status.planned"), value: stats.planned, hint: t("ideas.stat.pct").replace("{n}", String(Math.round((stats.planned / liveTotal) * 100))), color: "#F59E0B", Icon: FolderKanban, pct: Math.round((stats.planned / liveTotal) * 100) },
     { key: "implemented", label: t("ideas.status.implemented"), value: stats.implemented, hint: t("ideas.stat.pct").replace("{n}", String(Math.round((stats.implemented / liveTotal) * 100))), color: "#22C55E", Icon: Check, pct: Math.round((stats.implemented / liveTotal) * 100) },
@@ -467,7 +467,7 @@ export default function IdeasSection({
       )}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div className="flex items-start gap-3">
-          <div className="h-11 w-11 rounded-xl bg-[#EA580C]/15 text-[#EA580C] flex items-center justify-center">
+          <div className="h-11 w-11 rounded-xl bg-[#3D6EA5]/15 text-[#3D6EA5] flex items-center justify-center">
             <Lightbulb size={20} />
           </div>
           <div>
@@ -494,14 +494,14 @@ export default function IdeasSection({
           <div className="flex rounded-lg border border-line p-0.5">
             <button
               onClick={() => setView("list")}
-              className={`h-8 w-8 inline-flex items-center justify-center rounded-md ${view === "list" ? "bg-[#EA580C] text-white" : "text-inkFaint"}`}
+              className={`h-8 w-8 inline-flex items-center justify-center rounded-md ${view === "list" ? "bg-[#3D6EA5] text-white" : "text-inkFaint"}`}
               aria-label={t("ideas.listView")}
             >
               <List size={15} />
             </button>
             <button
               onClick={() => setView("grid")}
-              className={`h-8 w-8 inline-flex items-center justify-center rounded-md ${view === "grid" ? "bg-[#EA580C] text-white" : "text-inkFaint"}`}
+              className={`h-8 w-8 inline-flex items-center justify-center rounded-md ${view === "grid" ? "bg-[#3D6EA5] text-white" : "text-inkFaint"}`}
               aria-label={t("ideas.gridView")}
             >
               <LayoutGrid size={15} />
@@ -525,7 +525,7 @@ export default function IdeasSection({
             className={`relative shrink-0 px-3 py-2.5 text-sm font-medium ${scope === item.id ? "text-ink" : "text-inkFaint hover:text-inkSoft"}`}
           >
             {item.label} ({item.count})
-            {scope === item.id && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#EA580C]" />}
+            {scope === item.id && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#3D6EA5]" />}
           </button>
         ))}
       </div>
@@ -629,7 +629,7 @@ export default function IdeasSection({
                       setDetailTab("overview");
                     }}
                     className={`w-full text-start rounded-xl border bg-surface p-4 viora-lift ${
-                      active ? "border-[#EA580C] ring-1 ring-[#EA580C]/40 shadow-glow" : "border-line"
+                      active ? "border-[#3D6EA5] ring-1 ring-[#3D6EA5]/40 shadow-glow" : "border-line"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -714,7 +714,7 @@ export default function IdeasSection({
                   <button
                     key={n}
                     onClick={() => setPage(n)}
-                    className={`h-8 min-w-8 rounded-lg px-2 ${n === safePage ? "bg-[#EA580C] text-white" : "hover:bg-paperDark text-inkSoft"}`}
+                    className={`h-8 min-w-8 rounded-lg px-2 ${n === safePage ? "bg-[#3D6EA5] text-white" : "hover:bg-paperDark text-inkSoft"}`}
                   >
                     {n}
                   </button>
@@ -782,7 +782,7 @@ export default function IdeasSection({
                   className={`relative shrink-0 px-2.5 py-2 text-xs font-medium ${detailTab === id ? "text-ink" : "text-inkFaint"}`}
                 >
                   {label}
-                  {detailTab === id && <span className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-[#EA580C]" />}
+                  {detailTab === id && <span className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-[#3D6EA5]" />}
                 </button>
               ))}
             </div>
@@ -867,7 +867,7 @@ export default function IdeasSection({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-xs font-semibold text-inkFaint uppercase">{t("ideas.detail.notes")}</h4>
-                      <button className="text-[11px] text-[#EA580C] dark:text-[#FDBA74]" onClick={() => setDetailTab("notes")}>{t("ideas.viewAll")}</button>
+                      <button className="text-[11px] text-[#3D6EA5] dark:text-[#B7D5EE]" onClick={() => setDetailTab("notes")}>{t("ideas.viewAll")}</button>
                     </div>
                     <div className="flex items-start gap-2">
                       <ClickableAvatar userId={selected.notes[selected.notes.length - 1].userId} name={selected.notes[selected.notes.length - 1].authorName} size="xs" />
@@ -1005,7 +1005,7 @@ export default function IdeasSection({
                     key={id}
                     type="button"
                     onClick={() => setIcon(id)}
-                    className={`h-9 w-9 rounded-lg inline-flex items-center justify-center ${icon === id ? "ring-2 ring-[#EA580C]" : "bg-paperDark text-inkSoft"}`}
+                    className={`h-9 w-9 rounded-lg inline-flex items-center justify-center ${icon === id ? "ring-2 ring-[#3D6EA5]" : "bg-paperDark text-inkSoft"}`}
                     style={icon === id ? { backgroundColor: `${color}22`, color } : undefined}
                   >
                     <Item size={16} />

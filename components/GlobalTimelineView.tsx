@@ -259,7 +259,7 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
             <div className="relative">
               {todayOffset >= 0 && todayOffset < totalDays && (
                 <div className="absolute top-0 bottom-0 z-10 pointer-events-none" style={{ insetInlineStart: LABEL_WIDTH + todayOffset * dayWidth }}>
-                  <div className="h-full w-px bg-[#EA580C]" />
+                  <div className="h-full w-px bg-[#3D6EA5]" />
                 </div>
               )}
 
@@ -305,14 +305,14 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
                           key={task.id}
                           role="button"
                           tabIndex={0}
-                          className={`flex items-center border-b cursor-pointer ${isSelected ? "border-line bg-[#EA580C]/[0.06]" : "border-line/70 hover:bg-paperDark/60"}`}
+                          className={`flex items-center border-b cursor-pointer ${isSelected ? "border-line bg-[#3D6EA5]/[0.06]" : "border-line/70 hover:bg-paperDark/60"}`}
                           style={{ height: ROW_HEIGHT, opacity: faded ? DIM : 1 }}
                           onMouseMove={(e) => setHover({ task, x: e.clientX, y: e.clientY })}
                           onMouseLeave={() => setHover((h) => (h?.task.id === task.id ? null : h))}
                           onClick={() => setSelectedId(task.id)}
                         >
                           <div
-                            className={`shrink-0 sticky start-0 z-[5] px-3 flex items-center gap-2 border-e border-line ${isSelected ? "bg-[#EA580C]/[0.06]" : "bg-surface"}`}
+                            className={`shrink-0 sticky start-0 z-[5] px-3 flex items-center gap-2 border-e border-line ${isSelected ? "bg-[#3D6EA5]/[0.06]" : "bg-surface"}`}
                             style={{ width: LABEL_WIDTH, height: ROW_HEIGHT }}
                           >
                             <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: late > 0 ? OVERDUE_COLOR : color }} />
@@ -417,7 +417,7 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
                   role="switch"
                   aria-checked={showCompleted}
                   onClick={() => setShowCompleted((v) => !v)}
-                  className={`relative h-5 w-9 rounded-full ${showCompleted ? "bg-[#EA580C]" : "bg-lineStrong"}`}
+                  className={`relative h-5 w-9 rounded-full ${showCompleted ? "bg-[#3D6EA5]" : "bg-lineStrong"}`}
                 >
                   <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${showCompleted ? "start-4" : "start-0.5"}`} />
                 </button>

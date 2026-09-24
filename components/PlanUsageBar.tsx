@@ -49,8 +49,8 @@ export default function PlanUsageBar() {
       icon: FolderKanban,
       used: usage?.projects ?? 0,
       limit: limits.projects,
-      color: "#EA580C",
-      barClass: "bg-[#EA580C]",
+      color: "#3D6EA5",
+      barClass: "bg-[#3D6EA5]",
     },
     {
       key: "tasks" as const,

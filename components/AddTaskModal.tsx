@@ -359,7 +359,7 @@ export default function AddTaskModal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="h-[42px] w-full inline-flex items-center justify-center gap-1.5 rounded-[1.75rem] border border-dashed border-line text-xs text-inkSoft hover:border-[#EA580C] hover:text-ink"
+                  className="h-[42px] w-full inline-flex items-center justify-center gap-1.5 rounded-[1.75rem] border border-dashed border-line text-xs text-inkSoft hover:border-[#3D6EA5] hover:text-ink"
                 >
                   <Paperclip size={14} />
                   {fileBusy ? t("common.loading") : t("board.addFile")}
@@ -438,7 +438,7 @@ export default function AddTaskModal({
                 type="checkbox"
                 checked={createAnother}
                 onChange={(e) => setCreateAnother(e.target.checked)}
-                className="accent-[#EA580C]"
+                className="accent-[#3D6EA5]"
               />
               {t("board.createAnother")}
             </label>

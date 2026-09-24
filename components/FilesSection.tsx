@@ -51,7 +51,7 @@ type QuickFilter = "all" | "recent" | "shared" | "favorites" | "trash";
 type ViewMode = "list" | "grid";
 type KindFilter = "all" | "folder" | "image" | "doc" | "video" | "audio" | "other";
 
-const PROJECT_COLORS = ["#F97316", "#3B82F6", "#22C55E", "#F59E0B", "#EC4899", "#14B8A6"];
+const PROJECT_COLORS = ["#5B8FC7", "#3B82F6", "#22C55E", "#F59E0B", "#0891B2", "#14B8A6"];
 const selectClass =
   "h-9 rounded-xl border border-line bg-surface px-3 text-xs text-ink outline-none";
 
@@ -77,9 +77,9 @@ function FileGlyph({ file }: { file: LibraryFile }) {
   if (isFolder(file)) return <Folder size={16} className="text-[#F59E0B]" />;
   const kind = fileKind(libraryPreviewFile(file));
   const name = file.name.toLowerCase();
-  if (kind === "image") return <ImageIcon size={16} className="text-[#FBBF24]" />;
-  if (kind === "video") return <Film size={16} className="text-[#FDBA74]" />;
-  if (kind === "audio") return <Music size={16} className="text-[#F472B6]" />;
+  if (kind === "image") return <ImageIcon size={16} className="text-[#93C5FD]" />;
+  if (kind === "video") return <Film size={16} className="text-[#B7D5EE]" />;
+  if (kind === "audio") return <Music size={16} className="text-[#67E8F9]" />;
   if (name.endsWith(".pdf")) return <FileText size={16} className="text-[#EF4444]" />;
   if (/\.xlsx?$/.test(name)) return <FileSpreadsheet size={16} className="text-[#22C55E]" />;
   return <FileText size={16} className="text-inkSoft" />;
@@ -325,8 +325,8 @@ export default function FilesSection({
   }
 
   const donut = [
-    { key: "files.images", value: buckets.image, color: "#FBBF24" },
-    { key: "files.documents", value: buckets.doc, color: "#F97316" },
+    { key: "files.images", value: buckets.image, color: "#93C5FD" },
+    { key: "files.documents", value: buckets.doc, color: "#5B8FC7" },
     { key: "files.videos", value: buckets.video, color: "#F59E0B" },
     { key: "files.others", value: others, color: "#64748B" },
   ];
@@ -370,8 +370,8 @@ export default function FilesSection({
 
       <div className="mb-4 grid grid-cols-2 xl:grid-cols-4 gap-3">
         {[
-          { title: t("files.totalFiles"), value: String(visible.length), Icon: FileText, color: "#F97316" },
-          { title: t("files.totalSize"), value: formatFileBytes(totalSize), Icon: Cloud, color: "#FBBF24" },
+          { title: t("files.totalFiles"), value: String(visible.length), Icon: FileText, color: "#5B8FC7" },
+          { title: t("files.totalSize"), value: formatFileBytes(totalSize), Icon: Cloud, color: "#93C5FD" },
           { title: t("files.folders"), value: String(folderCount), Icon: Folder, color: "#F59E0B" },
           { title: t("files.sharedFiles"), value: String(sharedCount), Icon: Users, color: "#22C55E" },
         ].map((card) => (
@@ -425,7 +425,7 @@ export default function FilesSection({
                   type="button"
                   aria-label={t("files.viewList")}
                   onClick={() => setView("list")}
-                  className={`h-8 w-8 inline-flex items-center justify-center rounded-lg ${view === "list" ? "bg-[#C2410C] text-white" : "text-inkSoft"}`}
+                  className={`h-8 w-8 inline-flex items-center justify-center rounded-lg ${view === "list" ? "bg-[#2B5680] text-white" : "text-inkSoft"}`}
                 >
                   <List size={14} />
                 </button>
@@ -433,7 +433,7 @@ export default function FilesSection({
                   type="button"
                   aria-label={t("files.viewGrid")}
                   onClick={() => setView("grid")}
-                  className={`h-8 w-8 inline-flex items-center justify-center rounded-lg ${view === "grid" ? "bg-[#C2410C] text-white" : "text-inkSoft"}`}
+                  className={`h-8 w-8 inline-flex items-center justify-center rounded-lg ${view === "grid" ? "bg-[#2B5680] text-white" : "text-inkSoft"}`}
                 >
                   <LayoutGrid size={14} />
                 </button>
@@ -452,7 +452,7 @@ export default function FilesSection({
                   key={file.id}
                   type="button"
                   onClick={() => setSelectedId(file.id)}
-                  className={`rounded-xl border p-3 text-start ${selectedId === file.id ? "border-[#C2410C]" : "border-line hover:border-lineStrong"}`}
+                  className={`rounded-xl border p-3 text-start ${selectedId === file.id ? "border-[#2B5680]" : "border-line hover:border-lineStrong"}`}
                 >
                   <span className="h-10 w-10 rounded-xl bg-paperDark inline-flex items-center justify-center">
                     <FileGlyph file={file} />
@@ -471,7 +471,7 @@ export default function FilesSection({
                     <th className="w-10 px-3 py-2.5">
                       <input
                         type="checkbox"
-                        className="accent-[#C2410C]"
+                        className="accent-[#2B5680]"
                         checked={paged.length > 0 && paged.every(({ file }) => checked.has(file.id))}
                         onChange={(e) => {
                           const next = new Set(checked);
@@ -497,13 +497,13 @@ export default function FilesSection({
                       key={file.id}
                       onClick={() => setSelectedId(file.id)}
                       className={`border-b border-line last:border-b-0 cursor-pointer ${
-                        selectedId === file.id ? "bg-[#C2410C]/10" : "hover:bg-paperDark/50"
+                        selectedId === file.id ? "bg-[#2B5680]/10" : "hover:bg-paperDark/50"
                       }`}
                     >
                       <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
-                          className="accent-[#C2410C]"
+                          className="accent-[#2B5680]"
                           checked={checked.has(file.id)}
                           onChange={(e) => {
                             const next = new Set(checked);
@@ -593,7 +593,7 @@ export default function FilesSection({
                     key={n}
                     type="button"
                     onClick={() => setPage(n)}
-                    className={`h-7 min-w-7 px-1 rounded-lg ${n === pageSafe ? "bg-[#C2410C] text-white" : "hover:bg-paperDark text-inkSoft"}`}
+                    className={`h-7 min-w-7 px-1 rounded-lg ${n === pageSafe ? "bg-[#2B5680] text-white" : "hover:bg-paperDark text-inkSoft"}`}
                   >
                     {n}
                   </button>
@@ -623,7 +623,7 @@ export default function FilesSection({
                 <button
                   type="button"
                   onClick={() => setPreview(selected)}
-                  className="w-full rounded-xl border border-line bg-paperDark/50 p-3 text-start hover:border-[#C2410C] mb-3"
+                  className="w-full rounded-xl border border-line bg-paperDark/50 p-3 text-start hover:border-[#2B5680] mb-3"
                 >
                   <p className="text-[11px] uppercase tracking-wide text-inkFaint mb-1">{t("files.preview")}</p>
                   <p className="text-sm font-medium text-ink truncate">{selected.name}</p>
@@ -745,7 +745,7 @@ export default function FilesSection({
                   ))}
                 </ul>
                 <div className="mt-3 h-1.5 rounded-full bg-paperDark overflow-hidden">
-                  <div className="h-full rounded-full bg-[#C2410C]" style={{ width: `${usedPct}%` }} />
+                  <div className="h-full rounded-full bg-[#2B5680]" style={{ width: `${usedPct}%` }} />
                 </div>
                 <p className="mt-1.5 text-[11px] text-inkFaint">
                   {t("files.usedOf").replace("{pct}", String(usedPct)).replace("{cap}", storageCap ? formatFileBytes(storageCap) : "∞")}
@@ -760,7 +760,7 @@ export default function FilesSection({
                     type="button"
                     onClick={() => setQuick(quick === id ? "all" : id)}
                     className={`w-full flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm ${
-                      quick === id ? "bg-[#C2410C]/15 text-ink" : "text-inkSoft hover:bg-paperDark"
+                      quick === id ? "bg-[#2B5680]/15 text-ink" : "text-inkSoft hover:bg-paperDark"
                     }`}
                   >
                     {id === "favorites" ? <Star size={14} /> : id === "trash" ? <Trash2 size={14} /> : <FileText size={14} />}
@@ -816,7 +816,7 @@ export default function FilesSection({
                     if (id === "project") setAddTaskId("");
                     if (lockedProjectId) setAddProjectId(lockedProjectId);
                   }}
-                  className={`rounded-xl border px-2 py-2 text-xs ${scope === id ? "border-[#EA580C] text-ink" : "border-line text-inkSoft"}`}
+                  className={`rounded-xl border px-2 py-2 text-xs ${scope === id ? "border-[#3D6EA5] text-ink" : "border-line text-inkSoft"}`}
                 >
                   {t(`files.scope.${id}`)}
                 </button>

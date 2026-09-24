@@ -137,7 +137,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       type="button"
       onClick={() => onChange(!checked)}
       className={`h-6 w-11 rounded-full transition-colors shrink-0 p-0.5 flex ${
-        checked ? "bg-[#EA580C] justify-end" : "bg-paperDark justify-start"
+        checked ? "bg-[#3D6EA5] justify-end" : "bg-paperDark justify-start"
       }`}
     >
       <span className="h-5 w-5 rounded-full bg-white shadow-sm" />
@@ -154,7 +154,7 @@ function CardTitle({ icon: Icon, title, tone = "default" }: { icon: LucideIcon; 
     <div className="flex items-center gap-2.5 mb-4">
       <div
         className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-          tone === "danger" ? "bg-[#EF4444]/15 text-[#EF4444]" : "bg-[#EA580C]/15 text-[#EA580C]"
+          tone === "danger" ? "bg-[#EF4444]/15 text-[#EF4444]" : "bg-[#3D6EA5]/15 text-[#3D6EA5]"
         }`}
       >
         <Icon size={15} strokeWidth={1.75} />
@@ -422,7 +422,7 @@ export default function ProjectSettingsView({
               }`}
             >
               {item.label}
-              {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#EA580C]" />}
+              {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#3D6EA5]" />}
             </button>
           );
         })}
@@ -688,7 +688,7 @@ export default function ProjectSettingsView({
           <Card>
             <div className="flex items-center justify-between gap-2 mb-4">
               <h3 className="text-sm font-semibold text-ink">{t("projectSettings.activity")}</h3>
-              <button type="button" onClick={onOpenHistory} className="text-xs text-[#EA580C] hover:text-[#9A3412] dark:text-[#FDBA74] dark:hover:text-[#FDBA74]">
+              <button type="button" onClick={onOpenHistory} className="text-xs text-[#3D6EA5] hover:text-[#1E3F5E] dark:text-[#B7D5EE] dark:hover:text-[#B7D5EE]">
                 {t("projectSettings.viewHistory")}
               </button>
             </div>
@@ -715,7 +715,7 @@ export default function ProjectSettingsView({
                               {label}
                             </ClickableName>
                           )}
-                          <span className="text-[#EA580C] dark:text-[#FDBA74]">{rest}</span>
+                          <span className="text-[#3D6EA5] dark:text-[#B7D5EE]">{rest}</span>
                         </p>
                         <p className="text-[11px] text-inkFaint mt-0.5">{timeAgo(entry.created_at, t)}</p>
                       </div>

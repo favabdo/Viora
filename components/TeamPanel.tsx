@@ -376,7 +376,7 @@ export default function TeamPanel({
               role="switch"
               aria-checked={linkEnabled}
               onClick={() => void prepareInviteLink(!linkEnabled)}
-              className={`relative h-6 w-11 rounded-full transition-colors ${linkEnabled ? "bg-[#EA580C]" : "bg-lineStrong"}`}
+              className={`relative h-6 w-11 rounded-full transition-colors ${linkEnabled ? "bg-[#3D6EA5]" : "bg-lineStrong"}`}
             >
               <span
                 className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-[inset-inline-start]"
@@ -464,8 +464,8 @@ export default function TeamPanel({
               </div>
             </div>
 
-            <div className="mt-4 flex items-start gap-2 rounded-xl bg-[#EA580C]/10 px-3 py-2.5 text-xs text-inkSoft leading-relaxed">
-              <Info size={14} className="text-[#EA580C] mt-0.5 shrink-0" />
+            <div className="mt-4 flex items-start gap-2 rounded-xl bg-[#3D6EA5]/10 px-3 py-2.5 text-xs text-inkSoft leading-relaxed">
+              <Info size={14} className="text-[#3D6EA5] mt-0.5 shrink-0" />
               {t("share.linkSummary")
                 .replace("{project}", projectName || t("invites.defaultProject"))
                 .replace("{role}", roleLabel(linkRole))}
