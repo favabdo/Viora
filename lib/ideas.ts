@@ -55,7 +55,7 @@ export type Idea = {
 };
 
 export const IDEA_CATEGORIES = ["AI", "Product", "Mobile", "Design", "Integration", "Growth", "Ops"] as const;
-export const IDEA_COLORS = ["#3D6EA5", "#3B82F6", "#14B8A6", "#F59E0B", "#0891B2", "#22C55E", "#EAB308", "#6B7280"];
+export const IDEA_COLORS = ["#2563EB", "#3B82F6", "#10B981", "#F59E0B", "#0891B2", "#22C55E", "#EAB308", "#6B7280"];
 
 type IdeaRow = {
   id: string;

@@ -77,14 +77,14 @@ function DashboardPreview({ theme }: { theme: Theme }) {
     { left: "72.5%", top: "46%", width: "26.5%", height: "14%" },
   ];
   return (
-    <div className="login-preview relative mt-10 w-[min(100%,640px)]">
+    <div className="login-preview relative mt-6 w-[min(100%,640px)]">
       <div className="login-preview-frame relative overflow-hidden rounded-2xl border border-line">
         <Image
           src={src}
           alt=""
           width={1600}
           height={1000}
-          className="h-auto w-full"
+          className="h-auto max-h-[42vh] w-full object-contain"
           priority
         />
         {masks.map((box, i) => (
@@ -261,34 +261,34 @@ function LoginPageInner() {
     "login-field h-12 ps-11 pe-4 text-sm text-ink placeholder:text-inkFaint";
 
   return (
-    <main className="login-scene relative min-h-screen overflow-x-hidden">
-      <div className="relative mx-auto flex min-h-screen max-w-[1440px] flex-col px-5 sm:px-8 lg:px-12">
-        <header className="flex items-center pt-7">
+    <main className="login-scene relative h-[100dvh] overflow-hidden">
+      <div className="relative mx-auto flex h-full max-w-[1440px] flex-col px-5 sm:px-8 lg:px-12">
+        <header className="flex items-center pt-5">
           <BrandLogo />
         </header>
 
-        <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(380px,460px)] lg:gap-16">
+        <div className="grid min-h-0 flex-1 items-center gap-10 py-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(380px,460px)] lg:gap-16 lg:py-6">
           <section className="hidden min-w-0 lg:block relative z-10">
-            <span className="inline-flex rounded-full bg-[#2B5680]/20 px-3 py-1 text-xs font-medium text-ink">
+            <span className="inline-flex rounded-full bg-[#1D4ED8]/20 px-3 py-1 text-xs font-medium text-ink">
               {t("login.heroBadge")}
             </span>
             <h1 className="mt-5 max-w-xl text-5xl font-semibold leading-[1.12] tracking-tight text-ink">
               {t("login.heroTitleBefore")}{" "}
-              <span className="text-[#5B8FC7]">Viora</span> {t("login.heroTitleAfter")}
+              <span className="text-[#3B82F6]">Viora</span> {t("login.heroTitleAfter")}
             </h1>
             <p className="mt-4 max-w-md text-base leading-relaxed text-inkSoft">{t("login.heroSubtitle")}</p>
             <DashboardPreview theme={theme} />
           </section>
 
-          <section className="relative z-30 mx-auto w-full max-w-[420px] lg:mx-0 lg:justify-self-end">
-            <div className="login-card rounded-[28px] p-6 sm:p-8">
+          <section className="relative z-30 mx-auto flex h-full max-h-full w-full max-w-[420px] -translate-y-4 items-center sm:-translate-y-6 lg:mx-0 lg:justify-self-end">
+            <div className="login-card thin-scroll max-h-full w-full overflow-y-auto rounded-[28px] p-6 sm:p-8">
               <div className="mb-6 flex items-center justify-between gap-2">
                 <div className="inline-flex rounded-xl border border-line bg-paperDark/40 p-0.5" role="group" aria-label={t("login.language")}>
                   <button
                     type="button"
                     onClick={() => setLang("en")}
                     className={`h-8 min-w-9 rounded-lg px-2 text-[11px] font-semibold ${
-                      lang === "en" ? "bg-[#2B5680] text-white" : "text-inkSoft hover:text-ink"
+                      lang === "en" ? "bg-[#1D4ED8] text-white" : "text-inkSoft hover:text-ink"
                     }`}
                   >
                     {t("login.english")}
@@ -297,7 +297,7 @@ function LoginPageInner() {
                     type="button"
                     onClick={() => setLang("ar")}
                     className={`h-8 min-w-9 rounded-lg px-2 text-[11px] font-semibold ${
-                      lang === "ar" ? "bg-[#2B5680] text-white" : "text-inkSoft hover:text-ink"
+                      lang === "ar" ? "bg-[#1D4ED8] text-white" : "text-inkSoft hover:text-ink"
                     }`}
                   >
                     {t("login.arabic")}
@@ -415,7 +415,7 @@ function LoginPageInner() {
                         type="checkbox"
                         checked={remember}
                         onChange={(e) => setRemember(e.target.checked)}
-                        className="h-4 w-4 rounded accent-[#2B5680]"
+                        className="h-4 w-4 rounded accent-[#1D4ED8]"
                       />
                       {t("login.rememberMe")}
                     </label>
@@ -426,7 +426,7 @@ function LoginPageInner() {
                         setError(null);
                         setInfo(null);
                       }}
-                      className="text-sm font-medium text-[#5B8FC7] hover:underline"
+                      className="text-sm font-medium text-[#3B82F6] hover:underline"
                     >
                       {t("login.forgotPassword")}
                     </button>
@@ -443,7 +443,7 @@ function LoginPageInner() {
                   variant="primary"
                   fullWidth
                   loading={loading}
-                  className="mt-1 h-12 rounded-xl bg-[#2B5680] text-sm font-semibold shadow-[0_10px_24px_-8px_rgba(43, 86, 128,0.85)] hover:bg-[#1E3F5E]"
+                  className="mt-1 h-12 rounded-xl bg-[#1D4ED8] text-sm font-semibold shadow-[0_10px_24px_-8px_rgba(29, 78, 216,0.85)] hover:bg-[#1E40AF]"
                 >
                   {mode === "signin"
                     ? t("login.signIn")
@@ -492,7 +492,7 @@ function LoginPageInner() {
                       setError(null);
                       setInfo(null);
                     }}
-                    className="font-medium text-[#5B8FC7] hover:underline"
+                    className="font-medium text-[#3B82F6] hover:underline"
                   >
                     {t("login.backToSignIn")}
                   </button>
@@ -507,7 +507,7 @@ function LoginPageInner() {
                         setInfo(null);
                         setUsername("");
                       }}
-                      className="font-semibold text-[#5B8FC7] hover:underline"
+                      className="font-semibold text-[#3B82F6] hover:underline"
                     >
                       {mode === "signin" ? t("login.signUp") : t("login.signIn")}
                     </button>
@@ -518,7 +518,7 @@ function LoginPageInner() {
           </section>
         </div>
 
-        <footer className="mt-auto flex flex-col gap-2 border-t border-white/10 py-5 text-xs text-inkFaint sm:flex-row sm:items-center sm:justify-between">
+        <footer className="mt-auto flex flex-col gap-1 border-t border-white/10 py-3 text-xs text-inkFaint sm:flex-row sm:items-center sm:justify-between">
           <p className="inline-flex items-center gap-1.5">
             <Shield size={13} />
             {t("login.secure")}

@@ -31,7 +31,7 @@ export default function HistoryLimitBanner({ compact = false }: { compact?: bool
         <button
           type="button"
           onClick={() => router.push("/upgrade")}
-          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#3D6EA5] hover:text-[#2B5680] transition-colors"
+          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors"
         >
           <Sparkles size={11} />
           {t("plan.history.upgradeMore")}
@@ -54,7 +54,7 @@ export default function HistoryLimitBanner({ compact = false }: { compact?: bool
       <button
         type="button"
         onClick={() => router.push("/upgrade")}
-        className="inline-flex items-center gap-1 rounded-lg bg-[#3D6EA5] px-3 py-1.5 text-[11px] font-semibold text-white shadow-[0_2px_8px_rgba(61, 110, 165,0.4)] hover:bg-[#2B5680] transition-colors"
+        className="inline-flex items-center gap-1 rounded-lg bg-[#2563EB] px-3 py-1.5 text-[11px] font-semibold text-white shadow-[0_2px_8px_rgba(37, 99, 235,0.4)] hover:bg-[#1D4ED8] transition-colors"
       >
         <Sparkles size={12} />
         {t("plan.history.upgradeMore")}

@@ -30,8 +30,8 @@ type TabId = "overview" | "projects" | "tasks" | "activity";
 type TaskFilter = "all" | "assigned" | "created";
 type ActivityFilter = "all" | "tasks" | "comments" | "files";
 
-const ACCENT = "#3D6EA5";
-const PROJECT_COLORS = ["#3D6EA5", "#3B82F6", "#22C55E", "#F59E0B", "#EF4444", "#0891B2", "#14B8A6", "#EAB308"];
+const ACCENT = "#2563EB";
+const PROJECT_COLORS = ["#2563EB", "#3B82F6", "#22C55E", "#F59E0B", "#EF4444", "#0891B2", "#10B981", "#EAB308"];
 const ROLES_KEY = "viora-member-roles";
 const TASK_ACTIONS = new Set([
   "task_created",
@@ -84,7 +84,7 @@ function parseSkills(value: string | null | undefined): string[] {
 function priorityOf(task: Task): "high" | "medium" | "low" | null {
   if (!task.color) return null;
   if (task.color === "#ef4444" || task.color === "#0891B2") return "high";
-  if (task.color === "#5B8FC7" || task.color === "#eab308") return "medium";
+  if (task.color === "#3B82F6" || task.color === "#eab308") return "medium";
   return "low";
 }
 
@@ -319,7 +319,7 @@ export default function UserProfileCard({
   }
 
   function roleClass(role: AccessRole | "owner") {
-    if (role === "owner" || role === "admin") return "bg-[#3D6EA5]/12 text-[#3D6EA5]";
+    if (role === "owner" || role === "admin") return "bg-[#2563EB]/12 text-[#2563EB]";
     if (role === "editor") return "bg-[#3B82F6]/12 text-[#2563EB]";
     if (role === "commenter") return "bg-[#F59E0B]/12 text-[#D97706]";
     return "bg-paperDark text-inkSoft";
@@ -370,7 +370,7 @@ export default function UserProfileCard({
         className="w-full max-w-[720px] rounded-2xl border border-line bg-surface shadow-modal max-h-[88vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative bg-[#3D6EA5]/10 px-6 pt-7 pb-5">
+        <div className="relative bg-[#2563EB]/10 px-6 pt-7 pb-5">
           <button
             type="button"
             onClick={onClose}
@@ -412,7 +412,7 @@ export default function UserProfileCard({
                         onClose();
                         router.push("/profile");
                       }}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#3D6EA5] hover:bg-[#1E3F5E] text-white text-xs font-semibold px-3 py-2"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563EB] hover:bg-[#1E40AF] text-white text-xs font-semibold px-3 py-2"
                     >
                       <Pencil size={13} strokeWidth={2} />
                       {t("userCard.editProfile")}
@@ -433,7 +433,7 @@ export default function UserProfileCard({
                   <>
                     <a
                       href={profile.email ? `mailto:${profile.email}` : undefined}
-                      className={`inline-flex items-center gap-1.5 rounded-lg bg-[#3D6EA5] hover:bg-[#1E3F5E] text-white text-xs font-semibold px-3 py-2 ${
+                      className={`inline-flex items-center gap-1.5 rounded-lg bg-[#2563EB] hover:bg-[#1E40AF] text-white text-xs font-semibold px-3 py-2 ${
                         profile.email ? "" : "pointer-events-none opacity-50"
                       }`}
                     >
@@ -497,7 +497,7 @@ export default function UserProfileCard({
                 type="button"
                 onClick={() => setTab(item.id)}
                 className={`relative shrink-0 px-3 py-2.5 text-[13px] font-medium ${
-                  active ? "text-[#3D6EA5]" : "text-inkFaint hover:text-inkSoft"
+                  active ? "text-[#2563EB]" : "text-inkFaint hover:text-inkSoft"
                 }`}
               >
                 {item.label}
@@ -632,7 +632,7 @@ export default function UserProfileCard({
                   <button
                     type="button"
                     onClick={() => setShowAllProjects(true)}
-                    className="mt-3 text-xs font-semibold text-[#3D6EA5] hover:underline"
+                    className="mt-3 text-xs font-semibold text-[#2563EB] hover:underline"
                     hidden={showAllProjects}
                   >
                     {t("userCard.viewAllProjects")}
@@ -658,7 +658,7 @@ export default function UserProfileCard({
                       setShowAllTasks(false);
                     }}
                     className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
-                      taskFilter === id ? "bg-[#3D6EA5] text-white" : "bg-paperDark text-inkSoft hover:text-ink"
+                      taskFilter === id ? "bg-[#2563EB] text-white" : "bg-paperDark text-inkSoft hover:text-ink"
                     }`}
                   >
                     {label}
@@ -676,7 +676,7 @@ export default function UserProfileCard({
                       prio === "high"
                         ? "bg-[#EF4444]/12 text-[#EF4444]"
                         : prio === "medium"
-                          ? "bg-[#3D6EA5]/12 text-[#3D6EA5]"
+                          ? "bg-[#2563EB]/12 text-[#2563EB]"
                           : prio === "low"
                             ? "bg-[#22C55E]/12 text-[#16A34A]"
                             : "bg-paperDark text-inkFaint";
@@ -701,7 +701,7 @@ export default function UserProfileCard({
                 </ul>
               )}
               {visibleTasks.length > 5 && !showAllTasks && (
-                <button type="button" onClick={() => setShowAllTasks(true)} className="mt-3 text-xs font-semibold text-[#3D6EA5] hover:underline">
+                <button type="button" onClick={() => setShowAllTasks(true)} className="mt-3 text-xs font-semibold text-[#2563EB] hover:underline">
                   {t("userCard.viewAllTasks")}
                 </button>
               )}
@@ -779,7 +779,7 @@ export default function UserProfileCard({
                 <button
                   type="button"
                   onClick={() => setShowAllActivity(true)}
-                  className="mt-4 text-xs font-semibold text-[#3D6EA5] hover:underline"
+                  className="mt-4 text-xs font-semibold text-[#2563EB] hover:underline"
                 >
                   {t("userCard.viewAllActivity")}
                 </button>

@@ -12,7 +12,7 @@ import Avatar from "./ui/Avatar";
 import DonutChart from "./ui/DonutChart";
 import { TaskDetailsPanel, TaskHoverCard } from "./TaskInspect";
 
-const PROJECT_COLORS = ["#3D6EA5", "#3B82F6", "#22C55E", "#F59E0B", "#EF4444", "#0891B2", "#14B8A6", "#EAB308"];
+const PROJECT_COLORS = ["#2563EB", "#3B82F6", "#22C55E", "#F59E0B", "#EF4444", "#0891B2", "#10B981", "#EAB308"];
 
 function colorForProject(id: string): string {
   let hash = 0;
@@ -38,7 +38,7 @@ function addMonths(date: Date, n: number) {
 function priorityOf(task: Task): "high" | "medium" | "low" | null {
   if (!task.color) return null;
   if (task.color === "#ef4444" || task.color === "#0891B2") return "high";
-  if (task.color === "#5B8FC7" || task.color === "#eab308") return "medium";
+  if (task.color === "#3B82F6" || task.color === "#eab308") return "medium";
   return "low";
 }
 
@@ -443,7 +443,7 @@ export default function ProjectCalendarView({
               role="switch"
               aria-checked={showCompleted}
               onClick={() => setShowCompleted((v) => !v)}
-              className={`relative h-5 w-9 rounded-full transition-colors ${showCompleted ? "bg-[#3D6EA5]" : "bg-lineStrong"}`}
+              className={`relative h-5 w-9 rounded-full transition-colors ${showCompleted ? "bg-[#2563EB]" : "bg-lineStrong"}`}
             >
               <span
                 className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${

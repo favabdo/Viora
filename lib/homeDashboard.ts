@@ -97,8 +97,8 @@ export function statusKind(task: Task, columnsById: Map<string, BoardColumn>): S
 
 export function priorityOf(task: Task): PriorityKind {
   const color = (task.color || "").toLowerCase();
-  if (["#ef4444", "#dc2626", "#0D9488", "#f43f5e", "#b91c1c"].includes(color)) return "high";
-  if (["#5B8FC7", "#3D6EA5", "#eab308", "#f59e0b", "#facc15"].includes(color)) return "medium";
+  if (["#ef4444", "#dc2626", "#059669", "#f43f5e", "#b91c1c"].includes(color)) return "high";
+  if (["#3B82F6", "#2563EB", "#eab308", "#f59e0b", "#facc15"].includes(color)) return "medium";
   return "low";
 }
 

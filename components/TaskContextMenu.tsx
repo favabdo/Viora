@@ -185,7 +185,7 @@ export default function TaskContextMenu({
               <button
                 type="button"
                 onClick={onInvite}
-                className="mt-1 w-full flex items-center gap-2 px-2 py-2 rounded-lg text-[13px] text-[#3D6EA5] hover:bg-[#3D6EA5]/10"
+                className="mt-1 w-full flex items-center gap-2 px-2 py-2 rounded-lg text-[13px] text-[#2563EB] hover:bg-[#2563EB]/10"
               >
                 <UserPlus size={15} />
                 {t("board.menu.invitePeople")}

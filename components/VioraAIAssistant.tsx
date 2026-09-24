@@ -21,8 +21,8 @@ export default function VioraAIAssistant() {
     <div className="fixed z-[60] bottom-5 end-4 sm:end-6 flex flex-col items-end gap-3 pointer-events-none">
       {open && (
         <div className="pointer-events-auto w-[min(92vw,380px)] h-[min(70vh,520px)] rounded-2xl border border-line bg-surface shadow-modal flex flex-col overflow-hidden fade-in viora-glass">
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-line bg-gradient-to-r from-[#3D6EA5]/20 to-transparent">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#9CC3E5] to-[#3D6EA5] text-white flex items-center justify-center shadow-[0_0_16px_rgba(61, 110, 165,0.45)]">
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-line bg-gradient-to-r from-[#2563EB]/20 to-transparent">
+            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#93C5FD] to-[#2563EB] text-white flex items-center justify-center shadow-[0_0_16px_rgba(37, 99, 235,0.45)]">
               <Sparkles size={16} />
             </div>
             <div className="min-w-0 flex-1">
@@ -40,7 +40,7 @@ export default function VioraAIAssistant() {
           </div>
 
           <div className="flex-1 overflow-y-auto thin-scroll px-4 py-6 flex flex-col items-center justify-center text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#5B8FC7]/25 to-[#3D6EA5]/25 text-[#B7D5EE] shadow-[0_0_24px_rgba(61, 110, 165,0.35)]">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3B82F6]/25 to-[#2563EB]/25 text-[#BFDBFE] shadow-[0_0_24px_rgba(37, 99, 235,0.35)]">
               <Sparkles size={24} />
             </div>
             <p className="text-sm font-semibold text-ink">{t("ai.comingSoon.title")}</p>
@@ -62,7 +62,7 @@ export default function VioraAIAssistant() {
             <button
               type="submit"
               disabled
-              className="h-10 w-10 inline-flex items-center justify-center rounded-full bg-[#3D6EA5] text-white opacity-50"
+              className="h-10 w-10 inline-flex items-center justify-center rounded-full bg-[#2563EB] text-white opacity-50"
               aria-label={t("ai.send")}
             >
               <Send size={15} />
@@ -72,7 +72,7 @@ export default function VioraAIAssistant() {
       )}
 
       <div className="pointer-events-auto flex flex-col items-center gap-1.5">
-        <span className="rounded-full bg-gradient-to-r from-[#0F766E] to-[#0d9488] px-2.5 py-0.5 text-[10px] font-semibold text-white shadow-[0_4px_14px_rgba(13,148,136,0.5)]">
+        <span className="rounded-full bg-gradient-to-r from-[#047857] to-[#059669] px-2.5 py-0.5 text-[10px] font-semibold text-white shadow-[0_4px_14px_rgba(5, 150, 105,0.5)]">
           {t("upgrade.comingSoon")}
         </span>
         <button
@@ -80,7 +80,7 @@ export default function VioraAIAssistant() {
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-label={t("ai.open")}
-          className="h-14 w-14 rounded-full bg-gradient-to-br from-[#5B8FC7] to-[#1E3F5E] text-white shadow-[0_10px_30px_-8px_rgba(61, 110, 165,0.9)] hover:scale-[1.04] active:scale-[0.98] transition-transform flex items-center justify-center ring-2 ring-white/10"
+          className="h-14 w-14 rounded-full bg-gradient-to-br from-[#3B82F6] to-[#1E40AF] text-white shadow-[0_10px_30px_-8px_rgba(37, 99, 235,0.9)] hover:scale-[1.04] active:scale-[0.98] transition-transform flex items-center justify-center ring-2 ring-white/10"
         >
           {open ? <X size={22} /> : <Sparkles size={22} />}
         </button>

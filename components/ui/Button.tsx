@@ -18,7 +18,7 @@ const base =
 
 const variants: Record<Variant, string> = {
   primary:
-    "text-white bg-gradient-to-r from-[#5B8FC7] via-[#3D6EA5] to-[#2B5680] shadow-[0_8px_22px_-8px_rgba(61, 110, 165,0.85)] hover:shadow-[0_12px_28px_-6px_rgba(61, 110, 165,0.95)] hover:-translate-y-0.5",
+    "text-white bg-gradient-to-r from-[#3B82F6] via-[#2563EB] to-[#1D4ED8] shadow-[0_8px_22px_-8px_rgba(37, 99, 235,0.85)] hover:shadow-[0_12px_28px_-6px_rgba(37, 99, 235,0.95)] hover:-translate-y-0.5",
   secondary: "bg-transparent text-ink border border-line hover:border-teal/50 hover:bg-tealSoft hover:shadow-glow",
   ghost: "bg-transparent text-inkSoft hover:text-ink hover:bg-tealSoft",
   danger: "bg-[#E85D4C] text-white hover:bg-[#d14e3e]",

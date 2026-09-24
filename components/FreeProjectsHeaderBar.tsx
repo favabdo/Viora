@@ -34,12 +34,12 @@ export default function FreeProjectsHeaderBar({
       className={`mb-5 flex flex-wrap items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-[12px] ${
         full
           ? "border-[#EF4444]/30 bg-[#EF4444]/8 text-ink"
-          : "border-[#3D6EA5]/25 bg-[#3D6EA5]/8 text-inkSoft"
+          : "border-[#2563EB]/25 bg-[#2563EB]/8 text-inkSoft"
       }`}
     >
       <div
         className={`flex h-7 w-7 items-center justify-center rounded-lg ${
-          full ? "bg-[#EF4444]/15 text-[#dc2626]" : "bg-[#3D6EA5]/15 text-[#1E3F5E]"
+          full ? "bg-[#EF4444]/15 text-[#dc2626]" : "bg-[#2563EB]/15 text-[#1E40AF]"
         }`}
       >
         <FolderKanban size={14} />
@@ -57,7 +57,7 @@ export default function FreeProjectsHeaderBar({
       <button
         type="button"
         onClick={() => router.push("/upgrade")}
-        className="inline-flex items-center gap-1 rounded-lg bg-[#3D6EA5] px-3 py-1.5 text-[11px] font-semibold text-white shadow-[0_2px_8px_rgba(61, 110, 165,0.4)] hover:bg-[#2B5680] transition-colors"
+        className="inline-flex items-center gap-1 rounded-lg bg-[#2563EB] px-3 py-1.5 text-[11px] font-semibold text-white shadow-[0_2px_8px_rgba(37, 99, 235,0.4)] hover:bg-[#1D4ED8] transition-colors"
       >
         <Sparkles size={12} />
         {t("plan.history.upgradeMore")}

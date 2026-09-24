@@ -64,13 +64,13 @@ type Accent = {
 };
 
 const ACCENTS: Accent[] = [
-  { bar: "bg-[#3D6EA5]", iconBg: "bg-[#3D6EA5]/18", iconText: "text-[#3D6EA5]" },
+  { bar: "bg-[#2563EB]", iconBg: "bg-[#2563EB]/18", iconText: "text-[#2563EB]" },
   { bar: "bg-[#22C55E]", iconBg: "bg-[#22C55E]/18", iconText: "text-[#22C55E]" },
   { bar: "bg-[#3B82F6]", iconBg: "bg-[#3B82F6]/18", iconText: "text-[#3B82F6]" },
   { bar: "bg-[#F59E0B]", iconBg: "bg-[#F59E0B]/18", iconText: "text-[#F59E0B]" },
   { bar: "bg-[#EF4444]", iconBg: "bg-[#EF4444]/18", iconText: "text-[#EF4444]" },
   { bar: "bg-[#0891B2]", iconBg: "bg-[#0891B2]/18", iconText: "text-[#0891B2]" },
-  { bar: "bg-[#14B8A6]", iconBg: "bg-[#14B8A6]/18", iconText: "text-[#14B8A6]" },
+  { bar: "bg-[#10B981]", iconBg: "bg-[#10B981]/18", iconText: "text-[#10B981]" },
   { bar: "bg-[#EAB308]", iconBg: "bg-[#EAB308]/18", iconText: "text-[#EAB308]" },
 ];
 
@@ -631,7 +631,7 @@ export default function ProjectsSection({
                 onClick={() => setFilter(item.id)}
                 className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors ${
                   active
-                    ? "bg-[#3D6EA5] text-white"
+                    ? "bg-[#2563EB] text-white"
                     : "bg-surface text-inkSoft hover:text-ink border border-line"
                 }`}
               >
@@ -659,28 +659,28 @@ export default function ProjectsSection({
             <button
               onClick={() => setView("grid")}
               aria-label={t("projects.gridView")}
-              className={`rounded-md p-1.5 ${view === "grid" ? "bg-[#3D6EA5] text-white" : "text-inkFaint hover:text-ink"}`}
+              className={`rounded-md p-1.5 ${view === "grid" ? "bg-[#2563EB] text-white" : "text-inkFaint hover:text-ink"}`}
             >
               <LayoutGrid size={15} strokeWidth={1.75} />
             </button>
             <button
               onClick={() => setView("list")}
               aria-label={t("projects.listView")}
-              className={`rounded-md p-1.5 ${view === "list" ? "bg-[#3D6EA5] text-white" : "text-inkFaint hover:text-ink"}`}
+              className={`rounded-md p-1.5 ${view === "list" ? "bg-[#2563EB] text-white" : "text-inkFaint hover:text-ink"}`}
             >
               <List size={15} strokeWidth={1.75} />
             </button>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-[#3D6EA5] hover:bg-[#5B8FC7] active:bg-[#1E3F5E] text-white text-sm font-semibold px-3.5 py-2 transition-colors"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-[#2563EB] hover:bg-[#3B82F6] active:bg-[#1E40AF] text-white text-sm font-semibold px-3.5 py-2 transition-colors"
           >
             <Plus size={15} strokeWidth={2.25} />
             {t("projects.new")}
           </button>
           <button
             onClick={() => setShowCreate(true)}
-            className="sm:hidden h-10 w-10 inline-flex items-center justify-center rounded-lg bg-[#3D6EA5] hover:bg-[#5B8FC7] active:bg-[#1E3F5E] text-white"
+            className="sm:hidden h-10 w-10 inline-flex items-center justify-center rounded-lg bg-[#2563EB] hover:bg-[#3B82F6] active:bg-[#1E40AF] text-white"
             aria-label={t("projects.new")}
           >
             <Plus size={18} strokeWidth={2.25} />

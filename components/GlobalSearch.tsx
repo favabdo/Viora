@@ -190,7 +190,7 @@ export default function GlobalSearch({ userId }: { userId: string }) {
                         i === active ? "bg-paperDark" : ""
                       }`}
                     >
-                      <Icon size={15} className="text-[#3D6EA5] shrink-0" />
+                      <Icon size={15} className="text-[#2563EB] shrink-0" />
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm text-ink truncate">{hit.title}</span>
                         {hit.hint && <span className="block text-[11px] text-inkFaint truncate">{hit.hint}</span>}

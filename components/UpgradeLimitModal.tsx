@@ -19,11 +19,11 @@ const LIMIT_STYLE: Record<
 > = {
   projects: {
     icon: FolderKanban,
-    iconClass: "bg-[#3D6EA5]/15 text-[#1E3F5E]",
+    iconClass: "bg-[#2563EB]/15 text-[#1E40AF]",
   },
   tasks: {
     icon: ListTodo,
-    iconClass: "bg-[#2B5680]/15 text-[#1E3F5E]",
+    iconClass: "bg-[#1D4ED8]/15 text-[#1E40AF]",
   },
   ideas: {
     icon: Lightbulb,
@@ -39,7 +39,7 @@ const LIMIT_STYLE: Record<
   },
   ai: {
     icon: Sparkles,
-    iconClass: "bg-[#5B8FC7]/15 text-[#2B5680]",
+    iconClass: "bg-[#3B82F6]/15 text-[#1D4ED8]",
   },
 };
 
@@ -64,7 +64,7 @@ export default function UpgradeLimitModal({
     <Modal onClose={onClose} titleAlign="center" maxWidth="max-w-sm">
       <div className="text-center">
         <div
-          className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl ${iconClass} shadow-[0_0_20px_rgba(61, 110, 165,0.25)]`}
+          className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl ${iconClass} shadow-[0_0_20px_rgba(37, 99, 235,0.25)]`}
         >
           <Icon size={26} strokeWidth={1.75} />
         </div>

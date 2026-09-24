@@ -29,7 +29,7 @@ import Button from "./ui/Button";
 import { Input } from "./ui/Input";
 
 const PAGE = 25;
-const ACCENT = "#3D6EA5";
+const ACCENT = "#2563EB";
 
 type HistoryTab = "all" | "tasks" | "comments" | "files" | "members" | "invitations" | "settings" | "audit";
 type DateRange = "7" | "30" | "90" | "all";
@@ -145,7 +145,7 @@ function verbKey(action: string): string {
 function priorityMeta(color: string, t: (k: string) => string): { label: string; className: string } | null {
   if (!color) return null;
   if (color === "#ef4444") return { label: t("list.priority.high"), className: "bg-[#EF4444]/15 text-[#EF4444]" };
-  if (color === "#5B8FC7" || color === "#eab308") return { label: t("list.priority.medium"), className: "bg-[#F59E0B]/15 text-[#D97706]" };
+  if (color === "#3B82F6" || color === "#eab308") return { label: t("list.priority.medium"), className: "bg-[#F59E0B]/15 text-[#D97706]" };
   return { label: t("list.priority.low"), className: "bg-[#22C55E]/15 text-[#16A34A]" };
 }
 
@@ -322,12 +322,12 @@ export default function ProjectHistoryView({
     const memberN = entries.filter((e) => MEMBER_ACTIONS.includes(inferAction(e))).length;
     const inviteN = entries.filter((e) => INVITE_ACTIONS.includes(inferAction(e))).length;
     return [
-      { key: "all", label: t("history.stat.all"), count: all, color: "bg-[#3D6EA5]/12 text-[#3D6EA5]", Icon: History },
+      { key: "all", label: t("history.stat.all"), count: all, color: "bg-[#2563EB]/12 text-[#2563EB]", Icon: History },
       { key: "tasks", label: t("history.stat.tasks"), count: taskN, color: "bg-[#22C55E]/12 text-[#16A34A]", Icon: Check },
       { key: "comments", label: t("history.stat.comments"), count: commentN, color: "bg-[#3B82F6]/12 text-[#2563EB]", Icon: MessageSquare },
       { key: "files", label: t("history.stat.files"), count: 0, color: "bg-[#F59E0B]/12 text-[#D97706]", Icon: FileText },
-      { key: "members", label: t("history.stat.members"), count: memberN, color: "bg-[#0891B2]/12 text-[#0F766E]", Icon: Users },
-      { key: "invitations", label: t("history.stat.invites"), count: inviteN, color: "bg-[#14B8A6]/12 text-[#0F766E]", Icon: Mail },
+      { key: "members", label: t("history.stat.members"), count: memberN, color: "bg-[#0891B2]/12 text-[#047857]", Icon: Users },
+      { key: "invitations", label: t("history.stat.invites"), count: inviteN, color: "bg-[#10B981]/12 text-[#047857]", Icon: Mail },
     ];
   }, [entries, t]);
 
@@ -460,7 +460,7 @@ export default function ProjectHistoryView({
                 }`}
               >
                 {item.label}
-                {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#3D6EA5]" />}
+                {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#2563EB]" />}
               </button>
             );
           })}
@@ -523,12 +523,12 @@ export default function ProjectHistoryView({
                                 </span>
                                 <span className="text-inkSoft"> {verb} </span>
                                 {title && action !== "project_renamed" && action !== "member_joined" && action !== "member_invited" && (
-                                  <span className="font-medium text-[#3D6EA5]">{title}</span>
+                                  <span className="font-medium text-[#2563EB]">{title}</span>
                                 )}
                                 {action === "member_invited" && param(entry, "member") && (
-                                  <span className="font-medium text-[#3D6EA5]">{param(entry, "member")}</span>
+                                  <span className="font-medium text-[#2563EB]">{param(entry, "member")}</span>
                                 )}
-                                {action === "project_renamed" && <span className="font-medium text-[#3D6EA5]">{param(entry, "name")}</span>}
+                                {action === "project_renamed" && <span className="font-medium text-[#2563EB]">{param(entry, "name")}</span>}
                               </p>
                               <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-inkFaint">
                                 <Folder size={11} />
@@ -654,7 +654,7 @@ export default function ProjectHistoryView({
           <Button variant="primary" size="sm" fullWidth className="mt-1" onClick={applyFilters}>
             {t("history.apply")}
           </Button>
-          <button onClick={resetFilters} className="w-full text-center text-xs text-inkFaint hover:text-[#3D6EA5]">
+          <button onClick={resetFilters} className="w-full text-center text-xs text-inkFaint hover:text-[#2563EB]">
             {t("history.reset")}
           </button>
         </div>
@@ -685,7 +685,7 @@ export default function ProjectHistoryView({
                   <div className="min-w-0 flex-1">
                     <p className="text-xs text-ink truncate">{member.name}</p>
                     <div className="mt-1 h-1.5 rounded-full bg-surfaceSunken overflow-hidden">
-                      <div className="h-full rounded-full bg-[#3D6EA5]" style={{ width: `${(member.count / member.max) * 100}%` }} />
+                      <div className="h-full rounded-full bg-[#2563EB]" style={{ width: `${(member.count / member.max) * 100}%` }} />
                     </div>
                   </div>
                   <span className="text-[11px] text-inkFaint">{member.count}</span>

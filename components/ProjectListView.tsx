@@ -30,7 +30,7 @@ type Priority = "high" | "medium" | "low" | null;
 function priorityOf(task: Task): Priority {
   if (!task.color) return null;
   if (task.color === "#ef4444" || task.color === "#0891B2") return "high";
-  if (task.color === "#5B8FC7" || task.color === "#eab308") return "medium";
+  if (task.color === "#3B82F6" || task.color === "#eab308") return "medium";
   return "low";
 }
 
@@ -117,7 +117,7 @@ export default function ProjectListView({
     list = [...list].sort((a, b) => rank(a).localeCompare(rank(b)));
 
     if (groupBy === "none") {
-      return [{ id: "all", name: t("list.allTasks"), color: "#3D6EA5", tasks: list }];
+      return [{ id: "all", name: t("list.allTasks"), color: "#2563EB", tasks: list }];
     }
 
     const byColumn = columns.map((column) => ({
@@ -359,7 +359,7 @@ export default function ProjectListView({
                         />
                         <button
                           onClick={() => addTask(group.id === "all" || group.id === "none" ? null : group.id)}
-                          className="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-[#3D6EA5] text-white"
+                          className="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-[#2563EB] text-white"
                           aria-label={t("tasks.add")}
                         >
                           <Check size={14} />
@@ -371,7 +371,7 @@ export default function ProjectListView({
                           setAddingFor(group.id);
                           setNewTitle("");
                         }}
-                        className="flex items-center gap-1.5 px-4 py-2 text-xs text-inkFaint hover:text-[#3D6EA5]"
+                        className="flex items-center gap-1.5 px-4 py-2 text-xs text-inkFaint hover:text-[#2563EB]"
                       >
                         <Plus size={13} />
                         {t("list.addTask")}

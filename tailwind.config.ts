@@ -44,7 +44,7 @@ const config: Config = {
         xs: "0 1px 2px -1px rgb(var(--color-teal) / 0.12)",
         raised: "0 4px 14px -6px rgb(var(--color-teal) / 0.22)",
         panel: "var(--glass-shadow)",
-        modal: "0 28px 56px -18px rgb(var(--color-teal) / 0.35), 0 8px 24px -8px rgba(30, 20, 12, 0.28)",
+        modal: "0 28px 56px -18px rgb(var(--color-teal) / 0.35), 0 8px 24px -8px rgba(17, 24, 39, 0.28)",
         glow: "var(--hover-glow)",
       },
       spacing: {

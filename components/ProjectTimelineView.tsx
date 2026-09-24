@@ -14,7 +14,7 @@ import { Textarea } from "./ui/Input";
 const LABEL_WIDTH = 260;
 const ROW_HEIGHT = 48;
 const MIN_BAR_PX = 140;
-const BAR_COLORS = ["#3D6EA5", "#22C55E", "#3B82F6", "#C4A574", "#F59E0B", "#14B8A6", "#0891B2"];
+const BAR_COLORS = ["#2563EB", "#22C55E", "#3B82F6", "#C4A574", "#F59E0B", "#10B981", "#0891B2"];
 const OVERDUE_COLOR = "#EF4444";
 const DONE_COLOR = "#22C55E";
 
@@ -139,7 +139,7 @@ export default function ProjectTimelineView({
       if (assigneeFilter !== "all" && task.user_id !== assigneeFilter) return false;
       if (!showCompleted && task.is_done) return false;
       if (priorityFilter === "high" && task.color !== "#ef4444") return false;
-      if (priorityFilter === "medium" && task.color !== "#5B8FC7") return false;
+      if (priorityFilter === "medium" && task.color !== "#3B82F6") return false;
       if (priorityFilter === "low" && task.color && task.color !== "#3b82f6" && task.color !== "#22c55e") return false;
       return true;
     });
@@ -346,10 +346,10 @@ export default function ProjectTimelineView({
                   className="absolute top-0 bottom-0 z-10 pointer-events-none"
                   style={{ insetInlineStart: LABEL_WIDTH + todayOffset * dayWidth }}
                 >
-                  <div className="absolute -top-0 -translate-x-1/2 rounded-md bg-[#3D6EA5] px-1.5 py-0.5 text-[9px] text-white whitespace-nowrap">
+                  <div className="absolute -top-0 -translate-x-1/2 rounded-md bg-[#2563EB] px-1.5 py-0.5 text-[9px] text-white whitespace-nowrap">
                     {formatTaskDate(today, locale)}
                   </div>
-                  <div className="h-full w-px bg-[#3D6EA5]" />
+                  <div className="h-full w-px bg-[#2563EB]" />
                 </div>
               )}
 
@@ -380,7 +380,7 @@ export default function ProjectTimelineView({
                     role="button"
                     tabIndex={0}
                     className={`flex items-center border-b cursor-pointer ${
-                      isSelected ? "border-line bg-[#3D6EA5]/[0.06]" : "border-line/70 hover:bg-paperDark/60"
+                      isSelected ? "border-line bg-[#2563EB]/[0.06]" : "border-line/70 hover:bg-paperDark/60"
                     }`}
                     style={{ height: ROW_HEIGHT }}
                     onMouseEnter={(e) => moveHover(task, e)}
@@ -396,7 +396,7 @@ export default function ProjectTimelineView({
                   >
                     <div
                       className={`shrink-0 sticky start-0 z-[5] px-3 flex items-center gap-2 border-e border-line ${
-                        isSelected ? "bg-[#3D6EA5]/[0.06]" : "bg-surface"
+                        isSelected ? "bg-[#2563EB]/[0.06]" : "bg-surface"
                       }`}
                       style={{ width: LABEL_WIDTH, height: ROW_HEIGHT }}
                     >
@@ -491,7 +491,7 @@ export default function ProjectTimelineView({
                   />
                   <button
                     onClick={addTask}
-                    className="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-[#3D6EA5] text-white"
+                    className="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-[#2563EB] text-white"
                     aria-label={t("tasks.add")}
                   >
                     <Check size={14} />
@@ -503,7 +503,7 @@ export default function ProjectTimelineView({
                     setAdding(true);
                     setNewTitle("");
                   }}
-                  className="flex items-center gap-1.5 px-8 py-2.5 text-xs text-inkFaint hover:text-[#3D6EA5] border-b border-line w-full text-start"
+                  className="flex items-center gap-1.5 px-8 py-2.5 text-xs text-inkFaint hover:text-[#2563EB] border-b border-line w-full text-start"
                 >
                   <Plus size={13} />
                   {t("list.addTask")}
@@ -553,7 +553,7 @@ export default function ProjectTimelineView({
               role="switch"
               aria-checked={showCompleted}
               onClick={() => setShowCompleted((v) => !v)}
-              className={`relative h-5 w-9 rounded-full transition-colors ${showCompleted ? "bg-[#3D6EA5]" : "bg-lineStrong"}`}
+              className={`relative h-5 w-9 rounded-full transition-colors ${showCompleted ? "bg-[#2563EB]" : "bg-lineStrong"}`}
             >
               <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${showCompleted ? "start-4" : "start-0.5"}`} />
             </button>
@@ -716,7 +716,7 @@ function TaskHoverCard({
             className="h-full rounded-full"
             style={{
               width: `${Math.min(pct, 100)}%`,
-              backgroundColor: late > 0 ? OVERDUE_COLOR : task.is_done ? DONE_COLOR : "#3D6EA5",
+              backgroundColor: late > 0 ? OVERDUE_COLOR : task.is_done ? DONE_COLOR : "#2563EB",
             }}
           />
         </div>
@@ -776,7 +776,7 @@ function TimelineTaskSidebar({
   const priorityLabel =
     task.color === "#ef4444"
       ? t("list.priority.high")
-      : task.color === "#5B8FC7"
+      : task.color === "#3B82F6"
         ? t("list.priority.medium")
         : task.color
           ? t("list.priority.low")
@@ -819,7 +819,7 @@ function TimelineTaskSidebar({
             className="h-full rounded-full"
             style={{
               width: `${Math.min(pct, 100)}%`,
-              backgroundColor: late > 0 ? OVERDUE_COLOR : task.is_done ? DONE_COLOR : "#3D6EA5",
+              backgroundColor: late > 0 ? OVERDUE_COLOR : task.is_done ? DONE_COLOR : "#2563EB",
             }}
           />
         </div>

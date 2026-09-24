@@ -35,16 +35,16 @@ function GradientDefs() {
   return (
           <defs>
             <linearGradient id="vioraAzure" x1="0" y1="0" x2="0.6" y2="1">
-              <stop offset="0%" stopColor="#3D6EA5" />
-              <stop offset="100%" stopColor="#2B5680" />
+              <stop offset="0%" stopColor="#2563EB" />
+              <stop offset="100%" stopColor="#1D4ED8" />
             </linearGradient>
             <linearGradient id="vioraGreen" x1="0" y1="0" x2="0.6" y2="1">
-              <stop offset="0%" stopColor="#2E9E6B" />
-              <stop offset="100%" stopColor="#1F7A52" />
+              <stop offset="0%" stopColor="#10B981" />
+              <stop offset="100%" stopColor="#059669" />
             </linearGradient>
             <linearGradient id="vioraTeal" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#14B8A6" />
-              <stop offset="100%" stopColor="#0D9488" />
+              <stop offset="0%" stopColor="#34D399" />
+              <stop offset="100%" stopColor="#10B981" />
             </linearGradient>
           </defs>
   );
@@ -66,7 +66,7 @@ export function VioraLogoMark({
         className={`absolute rounded-full ${glowClass}`}
         style={{
           background:
-            "radial-gradient(circle, rgba(147, 197, 253,0.22), rgba(61, 110, 165,0.16) 45%, transparent 70%)",
+            "radial-gradient(circle, rgba(147, 197, 253,0.22), rgba(37, 99, 235,0.16) 45%, transparent 70%)",
           filter: "blur(8px)",
         }}
         initial={{ opacity: 0, scale: 0.7 }}

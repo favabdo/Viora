@@ -8,9 +8,9 @@ const META_KEY = "viora-project-meta";
 export const PROJECT_IMAGES_BUCKET = "project-images";
 
 export const PROJECT_COLORS = [
-  "#3D6EA5",
+  "#2563EB",
   "#3B82F6",
-  "#14B8A6",
+  "#10B981",
   "#F59E0B",
   "#0891B2",
   "#0891B2",

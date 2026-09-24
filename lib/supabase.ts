@@ -79,7 +79,7 @@ export type TaskComment = {
 /** ألوان جاهزة للدلالة على أهمية المهمة */
 export const TASK_COLORS: { name: string; value: string; label: string }[] = [
   { name: "red", value: "#ef4444", label: "Urgent" },
-  { name: "orange", value: "#5B8FC7", label: "Important" },
+  { name: "orange", value: "#3B82F6", label: "Important" },
   { name: "yellow", value: "#eab308", label: "Medium" },
   { name: "green", value: "#22c55e", label: "Low" },
   { name: "blue", value: "#3b82f6", label: "Info" },
