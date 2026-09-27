@@ -27,8 +27,10 @@ export default function AuthCallback() {
       recoveryListener.data.subscription.unsubscribe();
 
       const session = data.session;
-      // مزوّد OAuth (جيت هب/جوجل) = دخول ناجح، نكمّل للتطبيق
-      if (session && session.user.app_metadata?.provider !== "email") {
+      // لينك تأكيد البريد القديم بيوصل هنا بنوع في الهاش؛ أي جلسة تانية = دخول ناجح
+      const isEmailConfirmation = /type=(signup|email|magiclink|invite)/i.test(hash);
+
+      if (session && !isEmailConfirmation) {
         const invite = typeof window !== "undefined" ? localStorage.getItem("viora_invite_token") : null;
         router.replace(invite ? `/join/${invite}` : HOME_PATH);
         return;

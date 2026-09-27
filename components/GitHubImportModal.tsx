@@ -12,6 +12,7 @@ import {
   fetchGithubRepos,
   getRepoSlots,
   importRepos,
+  isGithubConnected,
   listLinkedRepos,
   unlinkRepo,
   type GithubRepoSummary,
@@ -47,13 +48,12 @@ export default function GitHubImportModal({
     setLoading(true);
     setError(null);
     try {
-      const { data } = await supabase.auth.getSession();
-      const provider = data.session?.user.app_metadata?.provider;
-      setIsGithubAccount(provider === "github");
+      const connected = await isGithubConnected();
+      setIsGithubAccount(connected);
       const [linkedRows, remaining] = await Promise.all([listLinkedRepos(), getRepoSlots()]);
       setLinked(linkedRows);
       setSlots(remaining);
-      if (provider !== "github") {
+      if (!connected) {
         setRepos([]);
         return;
       }

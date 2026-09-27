@@ -25,7 +25,7 @@ import GitHubImportModal from "@/components/GitHubImportModal";
 import ProfileCardProvider from "@/components/ProfileCardContext";
 import { AppSessionProvider } from "@/components/AppSession";
 import { supabase } from "@/lib/supabase";
-import { listLinkedRepos } from "@/lib/github";
+import { isGithubConnected, listLinkedRepos } from "@/lib/github";
 import { hydrateAllProjectMetas } from "@/lib/projectMeta";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { navIdFromPath, pathForNav } from "@/lib/appRoutes";
@@ -93,9 +93,9 @@ export default function AppFrame({ children }: { children: ReactNode }) {
     void hydrateAllProjectMetas();
   }, [session]);
 
-  // أول تسجيل بجيت هب من غير ما يربط أي ريبو → افتح اختيار الريبوز لوحده
+  // أول مرة مستخدم عنده وصول لجيت هب من غير ما يربط أي ريبو → افتح اختيار الريبوز لوحده
   useEffect(() => {
-    if (!session || session.user.app_metadata?.provider !== "github") return;
+    if (!session) return;
     const dismissedKey = `${GITHUB_PROMPT_KEY}:${session.user.id}`;
     try {
       if (localStorage.getItem(dismissedKey)) return;
@@ -103,9 +103,11 @@ export default function AppFrame({ children }: { children: ReactNode }) {
       // localStorage مش متاح
     }
     let alive = true;
-    void listLinkedRepos().then((rows) => {
+    void (async () => {
+      if (!(await isGithubConnected())) return;
+      const rows = await listLinkedRepos();
       if (alive && rows.length === 0) setGithubSetupOpen(true);
-    });
+    })();
     return () => {
       alive = false;
     };

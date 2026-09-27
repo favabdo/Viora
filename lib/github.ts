@@ -63,17 +63,15 @@ export async function getGithubToken(): Promise<string | null> {
   return data.session?.provider_token || null;
 }
 
-export async function getGithubLogin(): Promise<string | null> {
+/** هل فيه توكن جيت هب صالح في الجلسة (دخول بجيت هب أو هُوية مربوطة بحساب الإيميل)؟ */
+export async function isGithubConnected(): Promise<boolean> {
   const { data } = await supabase.auth.getSession();
   const session = data.session;
-  if (!session) return null;
-  const meta = session.user.app_metadata || {};
-  if (meta.provider !== "github") return null;
-  return (meta.user_name as string) || null;
-}
+  if (!session?.provider_token) return false;
+  if (session.user.app_metadata?.provider === "github") return true;
 
-export async function isGithubUser(): Promise<boolean> {
-  return (await getGithubLogin()) !== null;
+  const { data: identities } = await supabase.auth.getUserIdentities();
+  return Boolean(identities?.identities?.some((identity) => identity.provider === "github"));
 }
 
 /** ريبوز المستخدم (العامة والخاصة) مرتبة بالأحدث نشاطًا */
