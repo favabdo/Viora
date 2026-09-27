@@ -440,10 +440,16 @@ function LoginPageInner() {
                   </div>
                 )}
 
-                {error && <p className="rounded-xl bg-[#E85D4C]/10 px-3 py-2 text-sm text-[#E85D4C]">{error}</p>}
-                {info && (
-                  <p className="rounded-xl bg-[#22C55E]/10 px-3 py-2 text-sm text-[#15803D] dark:text-[#4ADE80]">{info}</p>
-                )}
+                <div className="grid h-10 place-items-center" aria-live="polite">
+                  {error && (
+                    <p className="line-clamp-2 w-full rounded-xl bg-[#E85D4C]/10 px-3 py-2 text-sm text-[#E85D4C]">{error}</p>
+                  )}
+                  {!error && info && (
+                    <p className="line-clamp-2 w-full rounded-xl bg-[#22C55E]/10 px-3 py-2 text-sm text-[#15803D] dark:text-[#4ADE80]">
+                      {info}
+                    </p>
+                  )}
+                </div>
 
                 <Button
                   type="submit"
