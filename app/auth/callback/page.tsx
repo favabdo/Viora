@@ -30,7 +30,11 @@ export default function AuthCallback() {
       let session = data.session;
       // لو دخول جيت هب اتدمج في حساب إيميل، نحوّله لحساب جيت هب المستقل
       if (session?.provider_token) {
-        await isolateGithubSession();
+        const isolation = await isolateGithubSession();
+        if (isolation.reason) {
+          router.replace(`/login?oauth=isolate_failed&code=${encodeURIComponent(isolation.reason)}`);
+          return;
+        }
         session = (await supabase.auth.getSession()).data.session;
       }
       // لينك تأكيد البريد القديم بيوصل هنا بنوع في الهاش؛ أي جلسة تانية = دخول ناجح

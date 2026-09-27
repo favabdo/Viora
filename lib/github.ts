@@ -72,13 +72,13 @@ export async function isGithubConnected(): Promise<boolean> {
 
 /**
  * لو تسجيل الدخول بجيت هب اتدمج في حساب إيميل موجود، بنبدّل الجلسة بحساب
- * فيورا المخصص لهُوية جيت هب. بيرجّع true لو حصل تبديل.
+ * فيورا المخصص لهُوية جيت هب. بيرجّع سبب الفشل لو التبديل ما حصلش.
  */
-export async function isolateGithubSession(): Promise<boolean> {
+export async function isolateGithubSession(): Promise<{ swapped: boolean; reason?: string }> {
   const { data } = await supabase.auth.getSession();
   const session = data.session;
-  if (!session?.provider_token) return false;
-  if (session.user.app_metadata?.provider === "github") return false;
+  if (!session?.provider_token) return { swapped: false };
+  if (session.user.app_metadata?.provider === "github") return { swapped: false };
 
   const res = await fetch("/api/auth/github/isolate", {
     method: "POST",
@@ -88,16 +88,20 @@ export async function isolateGithubSession(): Promise<boolean> {
     },
     body: JSON.stringify({ github_token: session.provider_token }),
   });
-  if (!res.ok) return false;
+  if (!res.ok) {
+    const detail = (await res.json().catch(() => null)) as { errorCode?: string; reason?: string } | null;
+    return { swapped: false, reason: detail?.reason || detail?.errorCode || `http_${res.status}` };
+  }
 
   const json = (await res.json().catch(() => null)) as { access_token?: string; refresh_token?: string } | null;
-  if (!json?.access_token || !json.refresh_token) return false;
+  if (!json?.access_token || !json.refresh_token) return { swapped: false, reason: "no_session_returned" };
 
   const { error } = await supabase.auth.setSession({
     access_token: json.access_token,
     refresh_token: json.refresh_token,
   });
-  return !error;
+  if (error) return { swapped: false, reason: error.message };
+  return { swapped: true };
 }
 
 /** ريبوز المستخدم (العامة والخاصة) مرتبة بالأحدث نشاطًا */

@@ -45,8 +45,11 @@ export async function POST(request: Request) {
   if (!identity) return NextResponse.json({ errorCode: "invalid_github_token" }, { status: 400 });
 
   const publicClient = supabasePublic();
-  const session = await mintGithubSession(identity, githubToken, async (tokenHash) => {
-    const { data, error } = await publicClient.auth.verifyOtp({ type: "magiclink", token_hash: tokenHash });
+  const result = await mintGithubSession(identity, githubToken, async (tokenHash, type) => {
+    const { data, error } = await publicClient.auth.verifyOtp({
+      type: type === "invite" ? "invite" : "magiclink",
+      token_hash: tokenHash,
+    });
     if (error || !data.session) return null;
     const out: IsolatedSession = {
       access_token: data.session.access_token,
@@ -57,6 +60,8 @@ export async function POST(request: Request) {
     return out;
   });
 
-  if (!session) return NextResponse.json({ errorCode: "isolation_failed" }, { status: 500 });
-  return NextResponse.json(session);
+  if (!result.session) {
+    return NextResponse.json({ errorCode: "isolation_failed", reason: result.reason }, { status: 500 });
+  }
+  return NextResponse.json(result.session);
 }

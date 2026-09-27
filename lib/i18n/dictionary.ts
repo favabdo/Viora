@@ -233,6 +233,10 @@ const dict: Record<string, { en: string; ar: string }> = {
   "login.orContinue": { en: "or continue with", ar: "أو المتابعة عبر" },
   "login.google": { en: "Google", ar: "Google" },
   "login.github": { en: "GitHub", ar: "GitHub" },
+  "login.githubAccountFailed": {
+    en: "Could not open your GitHub account in Viora.",
+    ar: "مش قادر يفتح حساب جيت هب الخاص بيك في فيورا.",
+  },
   "login.noAccount": { en: "Don't have an account?", ar: "ليس لديك حساب؟" },
   "login.signUp": { en: "Sign up", ar: "إنشاء حساب" },
   "login.showPassword": { en: "Show password", ar: "إظهار كلمة المرور" },

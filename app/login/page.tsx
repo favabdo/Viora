@@ -132,6 +132,10 @@ function LoginPageInner() {
     if (searchParams.get("confirmed") === "1") setInfo(t("login.confirmedInfo"));
     if (searchParams.get("reset") === "1") setInfo(t("login.resetSuccessInfo"));
     if (searchParams.get("oauth") === "failed") setError(t("login.oauthFailed"));
+    if (searchParams.get("oauth") === "isolate_failed") {
+      const code = searchParams.get("code");
+      setError(code ? `${t("login.githubAccountFailed")} (${code})` : t("login.githubAccountFailed"));
+    }
   }, [searchParams, t]);
 
   useEffect(() => {
