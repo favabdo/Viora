@@ -244,6 +244,10 @@ export async function importRepos(repos: GithubRepoSummary[], slots: number | nu
     if (!reasons.includes(message)) reasons.push(message);
   };
 
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData?.user?.id;
+  if (!uid) return { created: [], failed: repos.map((repo) => repo.full_name), reasons: ["no_session"] };
+
   for (const repo of repos) {
     if (slots !== null && created.length >= slots) break;
 
@@ -261,6 +265,7 @@ export async function importRepos(repos: GithubRepoSummary[], slots: number | nu
     const { data: link, error: linkError } = await supabase
       .from("github_repos")
       .insert({
+        user_id: uid,
         project_id: project.id,
         repo_id: repo.repo_id,
         full_name: repo.full_name,
