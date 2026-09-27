@@ -17,3 +17,15 @@ export function supabaseForToken(accessToken: string) {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }
+
+/**
+ * كلاينت بالمفتاح العام (anon) من غير أي Authorization — للمهام اللي المفروض
+ * تتعامل كطلبات مجهولة من السيرفر، زي التحقق من رابط مسجّله الأدمن.
+ */
+export function supabasePublic() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
+  return createClient(supabaseUrl, anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}

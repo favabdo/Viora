@@ -57,21 +57,47 @@ function ghHeaders(token: string) {
   };
 }
 
-/** بيوت GitHub جوه سيشن Supabase — موجود بس لو المستخدم داخل بجيت هب */
+/** توكن جيت هب في الجلسة — من OAuth مباشرة أو من حساب جيت هب معزول */
 export async function getGithubToken(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
-  return data.session?.provider_token || null;
+  const session = data.session;
+  if (!session) return null;
+  return session.provider_token || (session.user.app_metadata?.github_token as string) || null;
 }
 
-/** هل فيه توكن جيت هب صالح في الجلسة (دخول بجيت هب أو هُوية مربوطة بحساب الإيميل)؟ */
+/** هل الجلسة دي تقدر تكلم جيت هب أصلًا؟ */
 export async function isGithubConnected(): Promise<boolean> {
+  return Boolean(await getGithubToken());
+}
+
+/**
+ * لو تسجيل الدخول بجيت هب اتدمج في حساب إيميل موجود، بنبدّل الجلسة بحساب
+ * فيورا المخصص لهُوية جيت هب. بيرجّع true لو حصل تبديل.
+ */
+export async function isolateGithubSession(): Promise<boolean> {
   const { data } = await supabase.auth.getSession();
   const session = data.session;
   if (!session?.provider_token) return false;
-  if (session.user.app_metadata?.provider === "github") return true;
+  if (session.user.app_metadata?.provider === "github") return false;
 
-  const { data: identities } = await supabase.auth.getUserIdentities();
-  return Boolean(identities?.identities?.some((identity) => identity.provider === "github"));
+  const res = await fetch("/api/auth/github/isolate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ github_token: session.provider_token }),
+  });
+  if (!res.ok) return false;
+
+  const json = (await res.json().catch(() => null)) as { access_token?: string; refresh_token?: string } | null;
+  if (!json?.access_token || !json.refresh_token) return false;
+
+  const { error } = await supabase.auth.setSession({
+    access_token: json.access_token,
+    refresh_token: json.refresh_token,
+  });
+  return !error;
 }
 
 /** ريبوز المستخدم (العامة والخاصة) مرتبة بالأحدث نشاطًا */

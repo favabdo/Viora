@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { HOME_PATH } from "@/lib/appRoutes";
+import { isolateGithubSession } from "@/lib/github";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import VioraSplash from "@/components/ui/VioraSplash";
 
@@ -26,7 +27,12 @@ export default function AuthCallback() {
       const { data } = await supabase.auth.getSession();
       recoveryListener.data.subscription.unsubscribe();
 
-      const session = data.session;
+      let session = data.session;
+      // لو دخول جيت هب اتدمج في حساب إيميل، نحوّله لحساب جيت هب المستقل
+      if (session?.provider_token) {
+        await isolateGithubSession();
+        session = (await supabase.auth.getSession()).data.session;
+      }
       // لينك تأكيد البريد القديم بيوصل هنا بنوع في الهاش؛ أي جلسة تانية = دخول ناجح
       const isEmailConfirmation = /type=(signup|email|magiclink|invite)/i.test(hash);
 
