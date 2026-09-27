@@ -108,13 +108,17 @@ export default function GitHubImportModal({
     const chosen = repos.filter((r) => selected.includes(r.full_name));
     if (!chosen.length) return;
     setImporting(true);
-    const { created, failed } = await importRepos(chosen, slots);
+    const { created, failed, reasons } = await importRepos(chosen, slots);
     setImporting(false);
     setSelected([]);
-    if (created.length) onImported?.();
-    if (failed.length) setError(t("github.err.import").replace("{n}", String(failed.length)));
-    if (!failed.length) onClose();
-    else await refresh();
+    if (created.length) {
+      onImported?.();
+      onClose();
+      return;
+    }
+    if (failed.length) {
+      setError(`${t("github.err.import").replace("{n}", String(failed.length))} — ${reasons[0] || "unknown"}`);
+    }
   }
 
   async function removeRepo(repo: LinkedRepo, deleteProject: boolean) {

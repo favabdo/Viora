@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { countUserProjects, getMyPlan, limitsFor } from "./planUsage";
+import { getMyPlan, limitsFor } from "./planUsage";
 
 const GITHUB_API = "https://api.github.com";
 
@@ -154,8 +154,16 @@ export async function getRepoSlots(): Promise<number | null> {
   const plan = await getMyPlan();
   const cap = limitsFor(plan).projects;
   if (cap === null) return null;
-  const used = await countUserProjects();
-  return Math.max(0, cap - used);
+
+  const { data } = await supabase.auth.getUser();
+  const uid = data?.user?.id;
+  if (!uid) return cap;
+  // الحد في القاعدة بيعدّ مشاريع المستخدم نفسه بس، مش المشاركوله
+  const { count } = await supabase
+    .from("projects")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", uid);
+  return Math.max(0, cap - (count ?? 0));
 }
 
 type CommitPayload = {
@@ -222,7 +230,7 @@ export async function listProjectCommits(projectId: string, limit = 60): Promise
     .map((row) => ({ ...row, sha: row.sha.slice(0, 7) }));
 }
 
-export type ImportResult = { created: LinkedRepo[]; failed: string[] };
+export type ImportResult = { created: LinkedRepo[]; failed: string[]; reasons: string[] };
 
 /**
  * استيراد ريبوز كمشاريع: ينشئ المشروع، يربطه بالريبو، يعمل Webhook، ويجيب آخر الكوميتات.
@@ -231,6 +239,10 @@ export type ImportResult = { created: LinkedRepo[]; failed: string[] };
 export async function importRepos(repos: GithubRepoSummary[], slots: number | null): Promise<ImportResult> {
   const created: LinkedRepo[] = [];
   const failed: string[] = [];
+  const reasons: string[] = [];
+  const note = (message: string) => {
+    if (!reasons.includes(message)) reasons.push(message);
+  };
 
   for (const repo of repos) {
     if (slots !== null && created.length >= slots) break;
@@ -242,6 +254,7 @@ export async function importRepos(repos: GithubRepoSummary[], slots: number | nu
       .single();
     if (projectError || !project) {
       failed.push(repo.full_name);
+      note(projectError?.message || "project_insert_failed");
       continue;
     }
 
@@ -264,6 +277,7 @@ export async function importRepos(repos: GithubRepoSummary[], slots: number | nu
     if (linkError || !link) {
       await supabase.from("projects").delete().eq("id", project.id);
       failed.push(repo.full_name);
+      note(linkError?.message || "repo_link_failed");
       continue;
     }
 
@@ -290,7 +304,7 @@ export async function importRepos(repos: GithubRepoSummary[], slots: number | nu
     }
   }
 
-  return { created, failed };
+  return { created, failed, reasons };
 }
 
 /** فك ربط ريبو — بيحذف المشروع تبعها لو ماحدش تاني لسه شالها */
