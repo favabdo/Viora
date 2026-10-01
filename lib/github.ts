@@ -1,3 +1,4 @@
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 import { getMyPlan, limitsFor } from "./planUsage";
 
@@ -57,7 +58,7 @@ function ghHeaders(token: string) {
   };
 }
 
-/** توكن جيت هب في الجلسة — من OAuth مباشرة أو من حساب جيت هب معزول */
+/** توكن جيت هب في الجلسة — من OAuth مباشرة أو من الحساب المرتبط بيه */
 export async function getGithubToken(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
   const session = data.session;
@@ -70,17 +71,25 @@ export async function isGithubConnected(): Promise<boolean> {
   return Boolean(await getGithubToken());
 }
 
+/** هل الجلسة دي صادرة من/مرتبطة بهوية جيت هب؟ */
+export function sessionHasGithub(session: Session | null): boolean {
+  if (!session) return false;
+  return (
+    session.user.app_metadata?.provider === "github" ||
+    Boolean(session.user.identities?.some((i) => i.provider === "github"))
+  );
+}
+
 /**
- * لو تسجيل الدخول بجيت هب اتدمج في حساب إيميل موجود، بنبدّل الجلسة بحساب
- * فيورا المخصص لهُوية جيت هب. بيرجّع سبب الفشل لو التبديل ما حصلش.
+ * لو الدخول دلوقتي بجيت هب (provider_token موجود)، بيخزّن التوكن على نفس
+ * الحساب المرتبط بيه عشان الاستيراد يشتغل من أي جلسة بعده — حتى الجيميل.
  */
-export async function isolateGithubSession(): Promise<{ swapped: boolean; reason?: string }> {
+export async function storeGithubToken(): Promise<{ stored: boolean; reason?: string }> {
   const { data } = await supabase.auth.getSession();
   const session = data.session;
-  if (!session?.provider_token) return { swapped: false };
-  if (session.user.app_metadata?.provider === "github") return { swapped: false };
+  if (!session?.provider_token || !sessionHasGithub(session)) return { stored: false };
 
-  const res = await fetch("/api/auth/github/isolate", {
+  const res = await fetch("/api/auth/github/link", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -89,19 +98,12 @@ export async function isolateGithubSession(): Promise<{ swapped: boolean; reason
     body: JSON.stringify({ github_token: session.provider_token }),
   });
   if (!res.ok) {
-    const detail = (await res.json().catch(() => null)) as { errorCode?: string; reason?: string } | null;
-    return { swapped: false, reason: detail?.reason || detail?.errorCode || `http_${res.status}` };
+    const detail = (await res.json().catch(() => null)) as { errorCode?: string } | null;
+    return { stored: false, reason: detail?.errorCode || `http_${res.status}` };
   }
 
-  const json = (await res.json().catch(() => null)) as { access_token?: string; refresh_token?: string } | null;
-  if (!json?.access_token || !json.refresh_token) return { swapped: false, reason: "no_session_returned" };
-
-  const { error } = await supabase.auth.setSession({
-    access_token: json.access_token,
-    refresh_token: json.refresh_token,
-  });
-  if (error) return { swapped: false, reason: error.message };
-  return { swapped: true };
+  await supabase.auth.refreshSession();
+  return { stored: true };
 }
 
 /** ريبوز المستخدم (العامة والخاصة) مرتبة بالأحدث نشاطًا */

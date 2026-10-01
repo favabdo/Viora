@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { HOME_PATH } from "@/lib/appRoutes";
-import { isolateGithubSession } from "@/lib/github";
+import { sessionHasGithub, storeGithubToken } from "@/lib/github";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import VioraSplash from "@/components/ui/VioraSplash";
 
@@ -28,13 +28,10 @@ export default function AuthCallback() {
       recoveryListener.data.subscription.unsubscribe();
 
       let session = data.session;
-      // لو دخول جيت هب اتدمج في حساب إيميل، نحوّله لحساب جيت هب المستقل
-      if (session?.provider_token) {
-        const isolation = await isolateGithubSession();
-        if (isolation.reason) {
-          router.replace(`/login?oauth=isolate_failed&code=${encodeURIComponent(isolation.reason)}`);
-          return;
-        }
+      // دخول جيت هب: نخزّن التوكن على الحساب المرتبط نفسه عشان الاستيراد
+      // يشتغل من أي جلسة بعده (حتى المسجّلة بالجيميل) من غير تبديل حساب
+      if (session?.provider_token && sessionHasGithub(session)) {
+        await storeGithubToken();
         session = (await supabase.auth.getSession()).data.session;
       }
       // لينك تأكيد البريد القديم بيوصل هنا بنوع في الهاش؛ أي جلسة تانية = دخول ناجح

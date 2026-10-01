@@ -93,7 +93,8 @@ export default function GitHubImportModal({
   }
 
   async function startGithubLogin() {
-    await supabase.auth.signOut();
+    // من غير signOut: لو الحساب مرتبط فعلًا بجيت هب بنفضل في نفس الجلسة،
+    // ولو لسه بنربط الهوية الجديدة بنفس الحساب من غير ما نطلّع المستخدم بره
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "github",
       options: {
