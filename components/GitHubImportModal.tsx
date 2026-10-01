@@ -11,6 +11,7 @@ import { timeAgo } from "@/lib/timeAgo";
 import {
   fetchGithubRepos,
   getRepoSlots,
+  GH_LINK_DEBUG_KEY,
   importRepos,
   isGithubConnected,
   listLinkedRepos,
@@ -55,6 +56,15 @@ export default function GitHubImportModal({
       setSlots(remaining);
       if (!connected) {
         setRepos([]);
+        try {
+          const dbg = sessionStorage.getItem(GH_LINK_DEBUG_KEY);
+          if (dbg) {
+            setError(`GitHub link failed: ${dbg}`);
+            sessionStorage.removeItem(GH_LINK_DEBUG_KEY);
+          }
+        } catch {
+          // sessionStorage مش متاح
+        }
         return;
       }
       const rows = await fetchGithubRepos();

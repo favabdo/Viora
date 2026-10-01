@@ -1,4 +1,3 @@
-import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 import { getMyPlan, limitsFor } from "./planUsage";
 
@@ -71,23 +70,18 @@ export async function isGithubConnected(): Promise<boolean> {
   return Boolean(await getGithubToken());
 }
 
-/** هل الجلسة دي صادرة من/مرتبطة بهوية جيت هب؟ */
-export function sessionHasGithub(session: Session | null): boolean {
-  if (!session) return false;
-  return (
-    session.user.app_metadata?.provider === "github" ||
-    Boolean(session.user.identities?.some((i) => i.provider === "github"))
-  );
-}
+/** مفتاح تشخيصي: سبب فشل ربط التوكن، بتعرضه نافذة الاستيراد لو حصلت */
+export const GH_LINK_DEBUG_KEY = "viora_github_link_debug";
 
 /**
  * لو الدخول دلوقتي بجيت هب (provider_token موجود)، بيخزّن التوكن على نفس
  * الحساب المرتبط بيه عشان الاستيراد يشتغل من أي جلسة بعده — حتى الجيميل.
+ * الراوت نفسه بيتأكد إن التوكن بتاع جيت هب، فتوكن مزوّد تاني بترفضه.
  */
 export async function storeGithubToken(): Promise<{ stored: boolean; reason?: string }> {
   const { data } = await supabase.auth.getSession();
   const session = data.session;
-  if (!session?.provider_token || !sessionHasGithub(session)) return { stored: false };
+  if (!session?.provider_token) return { stored: false, reason: "no_provider_token" };
 
   const res = await fetch("/api/auth/github/link", {
     method: "POST",
@@ -103,6 +97,7 @@ export async function storeGithubToken(): Promise<{ stored: boolean; reason?: st
   }
 
   await supabase.auth.refreshSession();
+  if (!(await getGithubToken())) return { stored: false, reason: "stored_but_not_visible" };
   return { stored: true };
 }
 

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { HOME_PATH } from "@/lib/appRoutes";
-import { sessionHasGithub, storeGithubToken } from "@/lib/github";
+import { GH_LINK_DEBUG_KEY, storeGithubToken } from "@/lib/github";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import VioraSplash from "@/components/ui/VioraSplash";
 
@@ -30,8 +30,14 @@ export default function AuthCallback() {
       let session = data.session;
       // دخول جيت هب: نخزّن التوكن على الحساب المرتبط نفسه عشان الاستيراد
       // يشتغل من أي جلسة بعده (حتى المسجّلة بالجيميل) من غير تبديل حساب
-      if (session?.provider_token && sessionHasGithub(session)) {
-        await storeGithubToken();
+      if (session?.provider_token) {
+        const link = await storeGithubToken();
+        try {
+          if (link.stored) sessionStorage.removeItem(GH_LINK_DEBUG_KEY);
+          else sessionStorage.setItem(GH_LINK_DEBUG_KEY, link.reason || "unknown");
+        } catch {
+          // localStorage مش متاح
+        }
         session = (await supabase.auth.getSession()).data.session;
       }
       // لينك تأكيد البريد القديم بيوصل هنا بنوع في الهاش؛ أي جلسة تانية = دخول ناجح
