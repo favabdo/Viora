@@ -24,14 +24,15 @@
    - `invite_links` (روابط الدعوة)
    - `activity_log` (سجل نشاط المشروع + سجل كل مهمة لوحدها عبر `task_id`)
    - `link_activity_log` (سجل كل لينك لوحده)
-3. من **Database → Replication** (أو **Table Editor** → أيقونة الـ Realtime)، فعّل الـ Realtime على جدولي `tasks` و `activity_log` عشان التحديثات تظهر لايف لكل أعضاء المشروع من غير ما يعملوا Refresh.
-4. من **Authentication → Providers → Email**، سيب "Confirm email" شغالة (ده اللي بيخلي رسالة التأكيد تتبعت). لو حابب تقفلها، اليوزر هيقدر يسجّل دخول على طول من غير تأكيد إيميل.
-5. من **Authentication → URL Configuration**:
+3. شغّل بعده محتوى ملف `supabase/plans-migration.sql` بنفس الطريقة (نسخ/لصق وRun). ده اللي بيزود عمود `plan` في جدول `profiles` (بقيمة افتراضية `free`) وبيضيف دوال حدود الخطط (`my_plan`, `can_create_project`, `can_create_task`, `can_upload_file`) والـ trigger اللي بيمنع اليوزر يغيّر خطة حسابه بنفسه. آمن تشغّله أكتر من مرة.
+4. من **Database → Replication** (أو **Table Editor** → أيقونة الـ Realtime)، فعّل الـ Realtime على جدولي `tasks` و `activity_log` عشان التحديثات تظهر لايف لكل أعضاء المشروع من غير ما يعملوا Refresh.
+5. من **Authentication → Providers → Email**، سيب "Confirm email" شغالة (ده اللي بيخلي رسالة التأكيد تتبعت). لو حابب تقفلها، اليوزر هيقدر يسجّل دخول على طول من غير تأكيد إيميل.
+6. من **Authentication → URL Configuration**:
    - حط **Site URL** = رابط موقعك (مثلاً `https://your-app.vercel.app` أو `http://localhost:3000` وقت التجربة).
    - ضيف في **Redirect URLs** الروابط: `.../auth/callback` و `.../auth/reset-password` (استبدل `...` برابط موقعك، أو حط `http://localhost:3000/**` وقت التجربة المحلية عشان يشتغل مع أي بورت/رابط).
    - ده اللي بيخلي لينك تأكيد الإيميل ياخد اليوزر لصفحة تسجيل الدخول، ولينك إعادة تعيين كلمة المرور يفتح صفحة تعيين كلمة مرور جديدة.
    - من **Authentication → Email Templates → Reset Password**: انسخ محتوى `supabase/emails/reset-password.html`، وحط الموضوع: `إعادة تعيين كلمة المرور — فيورا | Reset your password — Viora`.
-6. من **Project Settings → API** خد:
+7. من **Project Settings → API** خد:
    - `Project URL`
    - `anon public key`
 
@@ -66,6 +67,20 @@ npm run dev
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 4. Deploy، وخلاص هيشتغل.
 
+## 4. تغيير خطة مستخدم (Pro / Team)
+
+الخطة بتتخزّن في عمود `plan` في جدول `profiles` (قيمته `free` أو `pro` أو `team`) — مفيش جدول اشتراكات منفصل ولا بوابة دفع لحد دلوقتي، وصفحة `/upgrade` عرض بس.
+
+لتغيير خطة أي يوزر بالايميل بتاعه:
+
+1. افتح ملف `supabase/promote-user-to-pro.sql`.
+2. عدّل المتغيرين جوه الـ `do $$` بلوك: `target_email` (إيميل اليوزر) و`target_plan` (`free` / `pro` / `team`).
+3. انسخ بلوك الـ `do $$ ... $$;` كله وشغّله في **Supabase SQL Editor**.
+
+لازم يتشغّل من الـ SQL Editor (أو بمفتاح service role) لأن فيه trigger اسمه `profiles_block_plan_self_update` بيمنع اليوزر إنه يغيّر خطة حسابه من التطبيق. لو عرفت الـ `user_id` مباشرة بدل الإيميل، في آخر الملف بديل (سطور معلّقة) هو `update public.profiles set plan = ... where id = ...`.
+
+بعد التشغيل اليوزر لازم يعمل Refresh للصفحة (`Ctrl+Shift+R`) أو يسجّل دخول من جديد، لأن الخطة بتتخزّن في كاش جوه `usePlan()`.
+
 ## ملاحظة عن الحماية (RLS) وتعدد المستخدمين
 
 كل يوزر بيسجل حساب باسم مستخدم (username) لازم يكون يونيك — الجدول `profiles` فيه constraint بيمنع تكراره، وفي دالة `username_exists` بتتأكد إنه متاح قبل ما يخلّص التسجيل.
@@ -95,4 +110,6 @@ lib/
   supabase.ts        # الاتصال بالداتا بيز + الأنواع
 supabase/
   schema.sql          # السكريبت اللي بتشغله في Supabase
+  plans-migration.sql # عمود plan + دوال الحدود + trigger منع تعديل اليوزر لخطته
+  promote-user-to-pro.sql # تغيير خطة يوزر بالايميل (يُشغّل في SQL Editor)
 ```

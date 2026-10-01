@@ -1,10 +1,7 @@
 "use client";
 
-import ComingSoon from "@/components/ComingSoon";
-import { BarChart3 } from "lucide-react";
-import { useTranslation } from "@/lib/i18n/LanguageContext";
+import ReportsDashboard from "@/components/ReportsDashboard";
 
 export default function ReportsPage() {
-  const { t } = useTranslation();
-  return <ComingSoon title={t("nav.reports")} icon={BarChart3} />;
+  return <ReportsDashboard />;
 }
