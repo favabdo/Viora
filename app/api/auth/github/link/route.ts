@@ -51,7 +51,13 @@ export async function POST(request: Request) {
       github_token: githubToken,
     },
   });
-  if (error) return NextResponse.json({ errorCode: "store_failed" }, { status: 500 });
+  if (error) {
+    console.error("[github/link] updateUserById failed", user.id, error.code, error.message);
+    return NextResponse.json(
+      { errorCode: "store_failed", reason: error.message || error.code || "update_user_failed" },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ ok: true, login: identity.login });
 }

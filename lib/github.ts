@@ -92,8 +92,8 @@ export async function storeGithubToken(): Promise<{ stored: boolean; reason?: st
     body: JSON.stringify({ github_token: session.provider_token }),
   });
   if (!res.ok) {
-    const detail = (await res.json().catch(() => null)) as { errorCode?: string } | null;
-    return { stored: false, reason: detail?.errorCode || `http_${res.status}` };
+    const detail = (await res.json().catch(() => null)) as { errorCode?: string; reason?: string } | null;
+    return { stored: false, reason: detail?.reason || detail?.errorCode || `http_${res.status}` };
   }
 
   await supabase.auth.refreshSession();
