@@ -380,11 +380,13 @@ function TimelineTaskTip({
   const filled =
     task.is_done || todayIso >= stop ? planned : todayIso < created ? 0 : inclusiveDays(created, todayIso);
   const below = y < 220;
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1200;
+  const tipX = Math.min(Math.max(x, 138), Math.max(vw - 138, 138));
 
   return createPortal(
     <div
       className={`pointer-events-none fixed z-[80] w-[260px] -translate-x-1/2 rounded-xl border border-line bg-surface p-3 shadow-lg fade-in ${below ? "" : "-translate-y-full"}`}
-      style={{ left: x, top: below ? y + 38 : Math.max(y - 12, 16) }}
+      style={{ left: tipX, top: below ? y + 38 : Math.max(y - 12, 16) }}
       role="tooltip"
     >
       <p className="text-sm font-medium text-ink">{task.title}</p>

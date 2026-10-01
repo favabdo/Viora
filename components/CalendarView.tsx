@@ -7,6 +7,7 @@ import { ChevronRight, ChevronLeft } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings } from "@/lib/useSettings";
 import { dateKey } from "@/lib/taskShape";
+import { canHover } from "@/lib/canHover";
 import { TaskDetailsPanel, TaskHoverCard } from "./TaskInspect";
 
 function ymd(date: Date): string {
@@ -154,7 +155,9 @@ export default function CalendarView({
                   <button
                     key={task.id}
                     type="button"
-                    onMouseMove={(e) => setHover({ task, x: e.clientX, y: e.clientY })}
+                    onMouseMove={(e) => {
+                      if (canHover()) setHover({ task, x: e.clientX, y: e.clientY });
+                    }}
                     onMouseLeave={() => setHover((h) => (h?.task.id === task.id ? null : h))}
                     onClick={() => setSelectedId(task.id)}
                     className={`text-start text-[10px] leading-tight px-1 py-0.5 rounded truncate ${

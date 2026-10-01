@@ -7,6 +7,7 @@ import { dateKey, formatTaskDate } from "@/lib/taskShape";
 import { spanCoversDay } from "@/lib/calendarLayout";
 import { colorForProject } from "@/lib/projectColor";
 import { displayName } from "@/lib/displayName";
+import { canHover } from "@/lib/canHover";
 import { useWorkspaceSchedule } from "@/lib/useWorkspaceSchedule";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings } from "@/lib/useSettings";
@@ -176,7 +177,9 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
         key={`${dayKey}-${kind}-${task.id}`}
         className="flex min-w-0 max-w-full items-center p-0.5 -m-0.5 sm:p-0 sm:m-0 sm:w-full cursor-pointer"
         style={{ opacity: faded ? DIM : task.is_done ? 0.5 : 1 }}
-        onMouseMove={(e) => setHover({ task, x: e.clientX, y: e.clientY })}
+        onMouseMove={(e) => {
+          if (canHover()) setHover({ task, x: e.clientX, y: e.clientY });
+        }}
         onMouseLeave={() => setHover((h) => (h?.task.id === task.id ? null : h))}
         onClick={() => setSelectedId(task.id)}
       >
@@ -191,6 +194,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
           style={labelStyle}
         >
           {task.title}
+          {kind === "start" && due ? ` · ${t("taskDetail.due")} ${formatTaskDate(due, locale)}` : ""}
         </span>
       </button>
     );

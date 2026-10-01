@@ -6,6 +6,7 @@ import { FolderKanban, Minus, Plus, X } from "lucide-react";
 import { Task } from "@/lib/supabase";
 import { dateKey, formatTaskDate } from "@/lib/taskShape";
 import { displayName } from "@/lib/displayName";
+import { canHover } from "@/lib/canHover";
 import { colorForProject } from "@/lib/projectColor";
 import { useWorkspaceSchedule } from "@/lib/useWorkspaceSchedule";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -324,7 +325,9 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
                           tabIndex={0}
                           className={`flex items-center border-b cursor-pointer ${isSelected ? "border-line bg-[#2563EB]/[0.06]" : "border-line/70 hover:bg-paperDark/60"}`}
                           style={{ height: ROW_HEIGHT, opacity: faded ? DIM : 1 }}
-                          onMouseMove={(e) => setHover({ task, x: e.clientX, y: e.clientY })}
+                          onMouseMove={(e) => {
+                            if (canHover()) setHover({ task, x: e.clientX, y: e.clientY });
+                          }}
                           onMouseLeave={() => setHover((h) => (h?.task.id === task.id ? null : h))}
                           onClick={() => setSelectedId(task.id)}
                         >
@@ -514,12 +517,16 @@ function HoverCard({
   t: (key: string) => string;
 }) {
   const late = overdueDays(task, ymd(new Date()));
+  const cardW = 280;
+  const cardH = 190;
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1200;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 800;
   let left = x + 14;
   let top = y + 16;
-  if (typeof window !== "undefined") {
-    if (left + 288 > window.innerWidth) left = x - 294;
-    if (top + 180 > window.innerHeight) top = y - 188;
-  }
+  if (left + cardW + 8 > vw) left = x - cardW - 14;
+  if (top + cardH + 8 > vh) top = y - cardH - 8;
+  left = Math.max(8, Math.min(left, vw - cardW - 8));
+  top = Math.max(8, top);
   const assignee = task.profiles
     ? displayName(task.user_id, task.profiles, currentUserId, t("common.you"))
     : t("timeline.unassigned");

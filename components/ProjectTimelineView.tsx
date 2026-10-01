@@ -6,6 +6,7 @@ import { ChevronDown, Plus, Check, Minus, Filter, MoreHorizontal, ArrowDown, X }
 import { supabase, Project, Task } from "@/lib/supabase";
 import { dateKey, formatTaskDate, normalizeTask } from "@/lib/taskShape";
 import { displayName } from "@/lib/displayName";
+import { canHover } from "@/lib/canHover";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Avatar from "./ui/Avatar";
 import DonutChart from "./ui/DonutChart";
@@ -214,6 +215,7 @@ export default function ProjectTimelineView({
   const selectedTask = selectedId ? projectTasks.find((task) => task.id === selectedId) || null : null;
 
   function moveHover(task: Task, event: React.MouseEvent<HTMLElement>) {
+    if (!canHover()) return;
     setHover({ task, x: event.clientX, y: event.clientY });
   }
 
@@ -675,7 +677,7 @@ function TaskHoverCard({
   let top = y + 16;
   if (left + cardW + 8 > vw) left = x - cardW - 14;
   if (top + cardH + 8 > vh) top = y - cardH - 8;
-  left = Math.max(8, left);
+  left = Math.max(8, Math.min(left, Math.max(vw - cardW - 8, 8)));
   top = Math.max(8, top);
 
   return createPortal(

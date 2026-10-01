@@ -6,6 +6,7 @@ import { supabase, Project, Task, BoardColumn } from "@/lib/supabase";
 import { dateKey, formatTaskDate, normalizeTask } from "@/lib/taskShape";
 import { layoutWeekLanes, spanCoversDay, taskBarColor } from "@/lib/calendarLayout";
 import { displayName } from "@/lib/displayName";
+import { canHover } from "@/lib/canHover";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings } from "@/lib/useSettings";
 import Avatar from "./ui/Avatar";
@@ -313,7 +314,9 @@ export default function ProjectCalendarView({
                           borderEndEndRadius: endRound,
                           opacity: item.task.is_done ? 0.55 : 1,
                         }}
-                        onMouseMove={(e) => setHover({ task: item.task, x: e.clientX, y: e.clientY })}
+                        onMouseMove={(e) => {
+                          if (canHover()) setHover({ task: item.task, x: e.clientX, y: e.clientY });
+                        }}
                         onMouseLeave={() => setHover((h) => (h?.task.id === item.task.id ? null : h))}
                         onClick={() => setSelectedId(item.task.id)}
                       >

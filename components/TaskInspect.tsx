@@ -52,7 +52,7 @@ export function TaskHoverCard({
   let top = y + 16;
   if (left + cardW + 8 > vw) left = x - cardW - 14;
   if (top + cardH + 8 > vh) top = y - cardH - 8;
-  left = Math.max(8, left);
+  left = Math.max(8, Math.min(left, Math.max(vw - cardW - 8, 8)));
   top = Math.max(8, top);
 
   return createPortal(
