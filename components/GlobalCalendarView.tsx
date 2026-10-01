@@ -184,10 +184,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
         ? `${t("calendar.dueShort")} ${formatTaskDate(linkDate, locale)}`
         : `${t("calendar.fromShort")} ${formatTaskDate(linkDate, locale)}`
       : "";
-    const pillStyle =
-      kind === "due"
-        ? { backgroundColor: chipColor, color: "#fff" }
-        : { backgroundColor: `${color}2E`, color, boxShadow: `inset 0 0 0 1px ${color}8C` };
+    const pillStyle = { backgroundColor: chipColor, color: "#fff" };
     return (
       <div key={`${dayKey}-${kind}-${task.id}`} className="flex min-w-0 max-w-full flex-col sm:w-full">
         <button
@@ -200,10 +197,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
           onMouseLeave={() => setHover((h) => (h?.task.id === task.id ? null : h))}
           onClick={() => setSelectedId(task.id)}
         >
-          <span
-            className="h-2.5 w-2.5 shrink-0 rounded-full sm:hidden"
-            style={kind === "due" ? { backgroundColor: chipColor } : { backgroundColor: `${color}59` }}
-          />
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full sm:hidden" style={{ backgroundColor: chipColor }} />
           <span
             className={`hidden sm:block w-full min-w-0 truncate text-[10px] leading-[18px] h-[18px] rounded-full px-1.5 text-start ${
               overdue ? "font-semibold" : "font-medium"
