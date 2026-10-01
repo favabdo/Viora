@@ -186,10 +186,10 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
       : "";
     const pillStyle = { backgroundColor: chipColor, color: "#fff" };
     return (
-      <div key={`${dayKey}-${kind}-${task.id}`} className="flex min-w-0 max-w-full flex-col sm:w-full">
+      <div key={`${dayKey}-${kind}-${task.id}`} className="flex min-w-0 w-full max-w-full flex-col">
         <button
           type="button"
-          className="flex min-w-0 max-w-full items-center p-0.5 -m-0.5 sm:p-0 sm:m-0 sm:w-full cursor-pointer"
+          className="flex min-w-0 max-w-full w-full items-center p-0.5 -m-0.5 sm:p-0 sm:m-0 cursor-pointer"
           style={{ opacity: faded ? DIM : task.is_done ? 0.5 : 1 }}
           onMouseMove={(e) => {
             if (canHover()) setHover({ task, x: e.clientX, y: e.clientY });
@@ -197,9 +197,8 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
           onMouseLeave={() => setHover((h) => (h?.task.id === task.id ? null : h))}
           onClick={() => setSelectedId(task.id)}
         >
-          <span className="h-2.5 w-2.5 shrink-0 rounded-full sm:hidden" style={{ backgroundColor: chipColor }} />
           <span
-            className={`hidden sm:block w-full min-w-0 truncate text-[10px] leading-[18px] h-[18px] rounded-full px-1.5 text-start ${
+            className={`block w-full min-w-0 truncate text-[10px] leading-[18px] h-[18px] rounded-full px-1.5 text-start ${
               overdue ? "font-semibold" : "font-medium"
             }`}
             style={pillStyle}
@@ -213,7 +212,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
             tabIndex={-1}
             title={kind === "start" ? `${t("taskDetail.due")} ${formatTaskDate(linkDate, locale)}` : `${t("taskDetail.created")} ${formatTaskDate(linkDate, locale)}`}
             onClick={() => jumpToDay(linkDate)}
-            className="hidden sm:block text-[9px] leading-[12px] cursor-pointer underline decoration-dotted underline-offset-2 px-1.5 hover:brightness-125"
+            className="block min-w-0 truncate text-[9px] leading-[12px] cursor-pointer underline decoration-dotted underline-offset-2 px-1.5 hover:brightness-125"
             style={{ color: chipColor }}
           >
             {linkLabel}
@@ -258,14 +257,15 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
         </div>
 
         <div className="rounded-xl border border-line bg-surface overflow-hidden">
-          <div className="grid grid-cols-7 border-b border-line">
+          <div className="overflow-x-auto thin-scroll">
+          <div className="grid grid-cols-7 min-w-[560px] sm:min-w-0 border-b border-line">
             {weekdayLabels.map((label) => (
               <div key={label} className="px-2 py-2 text-center text-[11px] font-medium text-inkFaint">
                 {label}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7">
+          <div className="grid grid-cols-7 min-w-[560px] sm:min-w-0">
             {days.map((day, i) => {
               const key = ymd(day);
               const inMonth = day.getMonth() === cursor.getMonth();
@@ -286,14 +286,14 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
                 >
                   <div className="flex justify-end">
                     <span
-                      className={`text-[11px] w-5 h-5 flex items-center justify-center rounded-full ${
+                      className={`text-xs sm:text-[11px] w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center rounded-full ${
                         isToday ? "bg-[#3B82F6] text-white" : inMonth ? "text-inkSoft" : "text-inkFaint"
                       }`}
                     >
                       {day.getDate()}
                     </span>
                   </div>
-                  <div className="flex flex-row flex-wrap gap-1 sm:flex-col sm:gap-0.5">
+                  <div className="flex flex-col gap-0.5">
                     {dueShown.map((task) => renderChip(task, key, "due"))}
                     {startShown.map((task) => renderChip(task, key, "start"))}
                     {total > MAX_CHIPS_PER_DAY && (
@@ -309,6 +309,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
       </div>
