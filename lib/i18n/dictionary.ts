@@ -595,6 +595,8 @@ const dict: Record<string, { en: string; ar: string }> = {
   "calendar.month": { en: "Month", ar: "شهر" },
   "calendar.more": { en: "more", ar: "المزيد" },
   "calendar.less": { en: "less", ar: "أقل" },
+  "calendar.dueShort": { en: "due", ar: "تسليم" },
+  "calendar.fromShort": { en: "from", ar: "من" },
   "calendar.allProjects": { en: "All Projects", ar: "كل المشاريع" },
   "calendar.allAssignees": { en: "All Assignees", ar: "كل المسؤولين" },
   "calendar.allPriorities": { en: "All Priorities", ar: "كل الأولويات" },

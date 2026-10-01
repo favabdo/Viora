@@ -42,6 +42,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
   const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expandedDays, setExpandedDays] = useState<Set<string>>(() => new Set());
+  const [flashDay, setFlashDay] = useState<string | null>(null);
 
   const projectNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -161,16 +162,26 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
     });
   }
 
+  function jumpToDay(key: string) {
+    setCursor(startOfMonth(new Date(`${key}T00:00:00`)));
+    setFlashDay(key);
+    setTimeout(() => {
+      document.querySelector(`[data-day="${key}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
+    setTimeout(() => setFlashDay(null), 2200);
+  }
+
   function renderChip(task: Task, dayKey: string, kind: "due" | "start") {
     const faded = dimmed(task);
     const color = colorForProject(task.project_id);
     const due = dateKey(task.due_date);
+    const created = dateKey(task.created_at) || dateKey(task.start_date);
     const overdue = kind === "due" && !task.is_done && !!due && due < todayKey;
     const chipColor = overdue ? OVERDUE_COLOR : color;
-    const labelStyle =
+    const pillStyle =
       kind === "due"
         ? { backgroundColor: chipColor, color: "#fff" }
-        : { backgroundColor: `${color}14`, color, boxShadow: `inset 0 0 0 1px ${color}40` };
+        : { backgroundColor: `${color}2E`, color, boxShadow: `inset 0 0 0 1px ${color}8C` };
     return (
       <button
         type="button"
@@ -185,16 +196,34 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
       >
         <span
           className="h-2.5 w-2.5 shrink-0 rounded-full sm:hidden"
-          style={kind === "due" ? { backgroundColor: chipColor } : { boxShadow: `inset 0 0 0 1.5px ${color}` }}
+          style={kind === "due" ? { backgroundColor: chipColor } : { backgroundColor: `${color}59` }}
         />
         <span
-          className={`hidden sm:block w-full min-w-0 truncate text-[10px] leading-[18px] h-[18px] rounded-full px-1.5 text-start ${
+          className={`hidden sm:flex w-full min-w-0 items-center gap-1.5 text-[10px] h-[18px] rounded-full px-1.5 text-start ${
             overdue ? "font-semibold" : "font-medium"
           }`}
-          style={labelStyle}
+          style={pillStyle}
         >
-          {task.title}
-          {kind === "start" && due ? ` · ${t("taskDetail.due")} ${formatTaskDate(due, locale)}` : ""}
+          <span className="truncate min-w-0">{task.title}</span>
+          {kind === "start" && due && (
+            <span className="ms-auto shrink-0 font-semibold">
+              {t("calendar.dueShort")} {formatTaskDate(due, locale)}
+            </span>
+          )}
+          {kind === "due" && created && due && created !== due && (
+            <span
+              role="button"
+              tabIndex={-1}
+              title={`${t("taskDetail.created")} ${formatTaskDate(created, locale)}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                jumpToDay(created);
+              }}
+              className="ms-auto shrink-0 cursor-pointer underline decoration-dotted underline-offset-2 hover:brightness-125"
+            >
+              {t("calendar.fromShort")} {formatTaskDate(created, locale)}
+            </span>
+          )}
         </span>
       </button>
     );
@@ -256,8 +285,9 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
               return (
                 <div
                   key={i}
+                  data-day={key}
                   className={`flex flex-col gap-1 p-1 min-h-[104px] border-b border-e border-line/70 [&:nth-child(7n)]:border-e-0 [&:nth-child(n+36)]:border-b-0 ${
-                    isToday ? "ring-1 ring-inset ring-[#3B82F6]" : ""
+                    flashDay === key ? "ring-2 ring-inset ring-[#F59E0B]" : isToday ? "ring-1 ring-inset ring-[#3B82F6]" : ""
                   } ${inMonth ? "bg-surface" : "bg-paperDark/40"}`}
                 >
                   <div className="flex justify-end">
