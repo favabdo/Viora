@@ -15,16 +15,18 @@ import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 
 const LABEL_WIDTH = 280;
+const LABEL_WIDTH_MOBILE = 132;
 const ROW_HEIGHT = 48;
 const MIN_BAR_PX = 140;
+const MIN_BAR_PX_MOBILE = 96;
 const OVERDUE_COLOR = "#EF4444";
 const DIM = 0.22;
 
-function scaleBar(plannedDays: number, overdueDaysCount: number, filledDays: number, remainingDays: number, dayWidth: number) {
+function scaleBar(plannedDays: number, overdueDaysCount: number, filledDays: number, remainingDays: number, dayWidth: number, minBarPx: number) {
   const plannedPx = Math.max(plannedDays, 1) * dayWidth;
   const overduePx = Math.max(overdueDaysCount, 0) * dayWidth;
   const raw = plannedPx + overduePx;
-  const total = Math.max(MIN_BAR_PX, raw - 8);
+  const total = Math.max(minBarPx, raw - 8);
   const k = total / Math.max(raw, 1);
   return {
     filledWidth: Math.max(filledDays, 0) * dayWidth * k,
@@ -83,8 +85,11 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
   const [assigneeFilter, setAssigneeFilter] = useState("all");
   const [showCompleted, setShowCompleted] = useState(false);
   const [dayWidth, setDayWidth] = useState(16);
+  const [narrow, setNarrow] = useState(false);
   const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const labelWidth = narrow ? LABEL_WIDTH_MOBILE : LABEL_WIDTH;
 
   const today = ymd(new Date());
   const todayDate = toDate(today);
@@ -183,6 +188,17 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
   }
 
   useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const apply = () => {
+      setNarrow(mq.matches);
+      setDayWidth(mq.matches ? 10 : 16);
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
     const node = scrollRef.current;
     if (!node) return;
     const hide = () => setHover(null);
@@ -225,9 +241,9 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
         </div>
 
         <div ref={scrollRef} className="overflow-auto rounded-xl border border-line bg-surface thin-scroll max-h-[70vh]">
-          <div style={{ minWidth: LABEL_WIDTH + gridWidth }}>
+          <div style={{ minWidth: labelWidth + gridWidth }}>
             <div className="flex border-b border-line bg-surface sticky top-0 z-20">
-              <div className="shrink-0 border-e border-line px-3 py-3 text-xs text-inkFaint" style={{ width: LABEL_WIDTH }}>
+              <div className="shrink-0 border-e border-line px-3 py-3 text-xs text-inkFaint" style={{ width: labelWidth }}>
                 {t("list.col.task")}
               </div>
               <div>
@@ -258,7 +274,7 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
 
             <div className="relative">
               {todayOffset >= 0 && todayOffset < totalDays && (
-                <div className="absolute top-0 bottom-0 z-10 pointer-events-none" style={{ insetInlineStart: LABEL_WIDTH + todayOffset * dayWidth }}>
+                <div className="absolute top-0 bottom-0 z-10 pointer-events-none" style={{ insetInlineStart: labelWidth + todayOffset * dayWidth }}>
                   <div className="h-full w-px bg-[#2563EB]" />
                 </div>
               )}
@@ -269,7 +285,7 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
                 return (
                   <div key={project.id}>
                     <div className="flex items-center border-b border-line bg-paperDark/70" style={{ opacity: groupDim ? 0.45 : 1 }}>
-                      <div className="shrink-0 sticky start-0 z-[5] bg-paperDark px-3 flex items-center gap-2 border-e border-line" style={{ width: LABEL_WIDTH, height: 36 }}>
+                      <div className="shrink-0 sticky start-0 z-[5] bg-paperDark px-3 flex items-center gap-2 border-e border-line" style={{ width: labelWidth, height: 36 }}>
                         <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
                         <span className="truncate text-xs font-semibold text-ink">{project.name}</span>
                         <span className="text-[10px] text-inkFaint">{items.length}</span>
@@ -292,7 +308,8 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
                         late,
                         filledSpan,
                         remainingSpan,
-                        dayWidth
+                        dayWidth,
+                        narrow ? MIN_BAR_PX_MOBILE : MIN_BAR_PX
                       );
                       const faded = dimmed(task);
                       const isSelected = selectedId === task.id;
@@ -313,11 +330,11 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
                         >
                           <div
                             className={`shrink-0 sticky start-0 z-[5] px-3 flex items-center gap-2 border-e border-line ${isSelected ? "bg-[#2563EB]/[0.06]" : "bg-surface"}`}
-                            style={{ width: LABEL_WIDTH, height: ROW_HEIGHT }}
+                            style={{ width: labelWidth, height: ROW_HEIGHT }}
                           >
                             <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: late > 0 ? OVERDUE_COLOR : color }} />
                             <span className="truncate text-[13px] text-ink flex-1">{task.title}</span>
-                            {task.profiles && <Avatar name={assignee} src={task.profiles.avatar_url} size="xs" className="ring-1 ring-line" />}
+                            {!narrow && task.profiles && <Avatar name={assignee} src={task.profiles.avatar_url} size="xs" className="ring-1 ring-line" />}
                           </div>
                           <div className="relative" style={{ width: gridWidth, height: ROW_HEIGHT }}>
                             <div

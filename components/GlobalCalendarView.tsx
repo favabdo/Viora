@@ -4,18 +4,19 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, FolderKanban } from "lucide-react";
 import { Task } from "@/lib/supabase";
 import { dateKey, formatTaskDate } from "@/lib/taskShape";
-import { layoutWeekLanes, spanCoversDay } from "@/lib/calendarLayout";
+import { spanCoversDay } from "@/lib/calendarLayout";
 import { colorForProject } from "@/lib/projectColor";
 import { displayName } from "@/lib/displayName";
 import { useWorkspaceSchedule } from "@/lib/useWorkspaceSchedule";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings } from "@/lib/useSettings";
-import Avatar from "./ui/Avatar";
 import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 import { TaskDetailsPanel, TaskHoverCard } from "./TaskInspect";
 
 const DIM = 0.22;
+const OVERDUE_COLOR = "#EF4444";
+const MAX_CHIPS_PER_DAY = 3;
 
 function ymd(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -39,6 +40,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
   const [showCompleted, setShowCompleted] = useState(false);
   const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(() => new Set());
 
   const projectNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -77,16 +79,6 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
     });
   }, [cursor, weekStartsOnMonday]);
 
-  const weekRows = useMemo(() => {
-    const rows: { days: Date[]; items: ReturnType<typeof layoutWeekLanes>["items"]; laneCount: number }[] = [];
-    for (let i = 0; i < days.length; i += 7) {
-      const weekDays = days.slice(i, i + 7);
-      const laid = layoutWeekLanes(weekDays.map(ymd), visibleTasks);
-      rows.push({ days: weekDays, items: laid.items, laneCount: laid.laneCount });
-    }
-    return rows;
-  }, [days, visibleTasks]);
-
   const weekdayLabels = useMemo(() => {
     const base = new Date(2024, 0, weekStartsOnMonday ? 8 : 7);
     return Array.from({ length: 7 }, (_, i) => {
@@ -100,6 +92,48 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
   const todayKey = ymd(new Date());
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  const dayChips = useMemo(() => {
+    const map = new Map<string, { due: Task[]; start: Task[] }>();
+    for (const day of days) map.set(ymd(day), { due: [], start: [] });
+    for (const task of visibleTasks) {
+      const created = dateKey(task.created_at) || dateKey(task.start_date);
+      const due = dateKey(task.due_date);
+      let startKey: string | null = null;
+      let endKey: string | null = null;
+      if (created && due) {
+        if (due > created) {
+          startKey = created;
+          endKey = due;
+        } else {
+          endKey = due;
+        }
+      } else if (created) {
+        startKey = created;
+      } else if (due) {
+        endKey = due;
+      }
+      if (startKey && endKey) {
+        map.get(startKey)?.start.push(task);
+        map.get(endKey)?.due.push(task);
+      } else if (endKey) {
+        map.get(endKey)?.due.push(task);
+      } else if (startKey) {
+        map.get(startKey)?.start.push(task);
+      }
+    }
+    const rank = (task: Task) => {
+      if (task.is_done) return 2;
+      const d = dateKey(task.due_date);
+      return d && d < todayKey ? 0 : 1;
+    };
+    const byImportance = (a: Task, b: Task) => rank(a) - rank(b) || a.title.localeCompare(b.title);
+    for (const entry of map.values()) {
+      entry.due.sort(byImportance);
+      entry.start.sort(byImportance);
+    }
+    return map;
+  }, [days, visibleTasks, todayKey]);
 
   const upcoming = useMemo(() => {
     return visibleTasks
@@ -115,6 +149,51 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
 
   function dimmed(task: Task) {
     return focusProject !== "all" && task.project_id !== focusProject;
+  }
+
+  function toggleDay(key: string) {
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  function renderChip(task: Task, dayKey: string, kind: "due" | "start") {
+    const faded = dimmed(task);
+    const color = colorForProject(task.project_id);
+    const due = dateKey(task.due_date);
+    const overdue = kind === "due" && !task.is_done && !!due && due < todayKey;
+    const chipColor = overdue ? OVERDUE_COLOR : color;
+    const labelStyle =
+      kind === "due"
+        ? { backgroundColor: chipColor, color: "#fff" }
+        : { backgroundColor: `${color}14`, color, boxShadow: `inset 0 0 0 1px ${color}40` };
+    return (
+      <button
+        type="button"
+        key={`${dayKey}-${kind}-${task.id}`}
+        className="flex min-w-0 max-w-full items-center p-0.5 -m-0.5 sm:p-0 sm:m-0 sm:w-full cursor-pointer"
+        style={{ opacity: faded ? DIM : task.is_done ? 0.5 : 1 }}
+        onMouseMove={(e) => setHover({ task, x: e.clientX, y: e.clientY })}
+        onMouseLeave={() => setHover((h) => (h?.task.id === task.id ? null : h))}
+        onClick={() => setSelectedId(task.id)}
+      >
+        <span
+          className="h-2.5 w-2.5 shrink-0 rounded-full sm:hidden"
+          style={kind === "due" ? { backgroundColor: chipColor } : { boxShadow: `inset 0 0 0 1.5px ${color}` }}
+        />
+        <span
+          className={`hidden sm:block w-full min-w-0 truncate text-[10px] leading-[18px] h-[18px] rounded-full px-1.5 text-start ${
+            overdue ? "font-semibold" : "font-medium"
+          }`}
+          style={labelStyle}
+        >
+          {task.title}
+        </span>
+      </button>
+    );
   }
 
   if (loading) return <SkeletonList rows={6} />;
@@ -159,91 +238,49 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
               </div>
             ))}
           </div>
-          <div>
-            {weekRows.map((week, wi) => (
-              <div
-                key={wi}
-                className="relative border-b border-line last:border-b-0"
-                style={{ minHeight: 28 + Math.max(week.laneCount, 1) * 22 }}
-              >
-                <div className="grid grid-cols-7">
-                  {week.days.map((day, di) => {
-                    const key = ymd(day);
-                    const inMonth = day.getMonth() === cursor.getMonth();
-                    const isToday = key === todayKey;
-                    return (
-                      <div
-                        key={di}
-                        className={`border-e border-line last:border-e-0 ${isToday ? "ring-1 ring-inset ring-[#3B82F6]" : ""} ${
-                          inMonth ? "bg-surface" : "bg-paperDark/40"
-                        }`}
-                        style={{ minHeight: 28 + Math.max(week.laneCount, 1) * 22 }}
-                      >
-                        <div className="flex justify-end p-1">
-                          <span
-                            className={`text-[11px] w-5 h-5 flex items-center justify-center rounded-full ${
-                              isToday ? "bg-[#3B82F6] text-white" : inMonth ? "text-inkSoft" : "text-inkFaint"
-                            }`}
-                          >
-                            {day.getDate()}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+          <div className="grid grid-cols-7">
+            {days.map((day, i) => {
+              const key = ymd(day);
+              const inMonth = day.getMonth() === cursor.getMonth();
+              const isToday = key === todayKey;
+              const entry = dayChips.get(key) || { due: [], start: [] };
+              const total = entry.due.length + entry.start.length;
+              const expanded = expandedDays.has(key);
+              const dueShown = expanded ? entry.due : entry.due.slice(0, MAX_CHIPS_PER_DAY);
+              const startShown = expanded ? entry.start : entry.start.slice(0, Math.max(0, MAX_CHIPS_PER_DAY - dueShown.length));
+              const hiddenCount = total - dueShown.length - startShown.length;
+              return (
                 <div
-                  className="pointer-events-none absolute inset-x-0 top-7 grid grid-cols-7"
-                  style={{ gridAutoRows: 20, rowGap: 2, paddingBottom: 4 }}
+                  key={i}
+                  className={`flex flex-col gap-1 p-1 min-h-[104px] border-b border-e border-line/70 [&:nth-child(7n)]:border-e-0 [&:nth-child(n+36)]:border-b-0 ${
+                    isToday ? "ring-1 ring-inset ring-[#3B82F6]" : ""
+                  } ${inMonth ? "bg-surface" : "bg-paperDark/40"}`}
                 >
-                  {week.items.map((item) => {
-                    const faded = dimmed(item.task);
-                    const name = item.task.profiles
-                      ? displayName(item.task.user_id, item.task.profiles, currentUserId, t("common.you"))
-                      : t("timeline.unassigned");
-                    const color = colorForProject(item.task.project_id);
-                    const startRound = item.continuesBefore ? "0" : "999px";
-                    const endRound = item.continuesAfter ? "0" : "999px";
-                    const wide = item.colEnd - item.colStart >= 1;
-                    const projectName = projectNameById.get(item.task.project_id) || "";
-                    return (
+                  <div className="flex justify-end">
+                    <span
+                      className={`text-[11px] w-5 h-5 flex items-center justify-center rounded-full ${
+                        isToday ? "bg-[#3B82F6] text-white" : inMonth ? "text-inkSoft" : "text-inkFaint"
+                      }`}
+                    >
+                      {day.getDate()}
+                    </span>
+                  </div>
+                  <div className="flex flex-row flex-wrap gap-1 sm:flex-col sm:gap-0.5">
+                    {dueShown.map((task) => renderChip(task, key, "due"))}
+                    {startShown.map((task) => renderChip(task, key, "start"))}
+                    {total > MAX_CHIPS_PER_DAY && (
                       <button
                         type="button"
-                        key={item.task.id}
-                        className="pointer-events-auto flex min-w-0 items-center gap-1 overflow-hidden px-1.5 text-[10px] font-medium text-white text-start cursor-pointer"
-                        style={{
-                          gridColumn: `${item.colStart + 1} / ${item.colEnd + 2}`,
-                          gridRow: item.lane + 1,
-                          backgroundColor: color,
-                          height: 20,
-                          zIndex: faded ? 0 : 2,
-                          marginInlineStart: item.continuesBefore ? 0 : 3,
-                          marginInlineEnd: item.continuesAfter ? 0 : 3,
-                          borderStartStartRadius: startRound,
-                          borderEndStartRadius: startRound,
-                          borderStartEndRadius: endRound,
-                          borderEndEndRadius: endRound,
-                          opacity: faded ? DIM : item.task.is_done ? 0.55 : 1,
-                        }}
-                        onMouseMove={(e) => setHover({ task: item.task, x: e.clientX, y: e.clientY })}
-                        onMouseLeave={() => setHover((h) => (h?.task.id === item.task.id ? null : h))}
-                        onClick={() => setSelectedId(item.task.id)}
+                        onClick={() => toggleDay(key)}
+                        className="text-[10px] text-inkFaint hover:text-ink text-start px-1 cursor-pointer"
                       >
-                        {item.task.profiles && (
-                          <Avatar name={name} src={item.task.profiles.avatar_url} size="xs" className="h-4 w-4 text-[8px] ring-1 ring-white/40 border-white/20" />
-                        )}
-                        <span className="truncate">{item.task.title}</span>
-                        {wide && (
-                          <span className="ms-auto truncate text-[9px] font-normal text-white/90 max-w-[45%]">
-                            {name}
-                          </span>
-                        )}
+                        {expanded ? t("calendar.less") : `+${hiddenCount} ${t("calendar.more")}`}
                       </button>
-                    );
-                  })}
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
