@@ -17,7 +17,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { useSearchParams } from "next/navigation";
-import { Eye, Paperclip, Pin, Plus, X, Check, Palette, MessageCircle, GitCommitHorizontal, RefreshCw, Github } from "lucide-react";
+import { Eye, Paperclip, Pin, Plus, X, Check, Palette, MessageCircle, GitCommitHorizontal, RefreshCw, Github, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase, Task, BoardColumn, Project, ProjectMember, TASK_COLORS } from "@/lib/supabase";
 import type { GithubCommit } from "@/lib/github";
 import { timeAgo } from "@/lib/timeAgo";
@@ -531,6 +531,29 @@ export default function BoardView({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const attachTaskRef = useRef<Task | null>(null);
 
+  const boardScrollRef = useRef<HTMLDivElement>(null);
+  const [boardScrollEdges, setBoardScrollEdges] = useState({ left: false, right: false });
+
+  useEffect(() => {
+    const el = boardScrollRef.current;
+    if (!el) return;
+    const measure = () => {
+      const max = el.scrollWidth - el.clientWidth;
+      setBoardScrollEdges({ left: el.scrollLeft > 8, right: el.scrollLeft < max - 8 });
+    };
+    measure();
+    el.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      el.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+    };
+  }, [columns.length]);
+
+  function scrollBoardColumns(direction: 1 | -1) {
+    boardScrollRef.current?.scrollBy({ left: direction * 296, behavior: "smooth" });
+  }
+
   useEffect(() => {
     setExtrasReady(true);
   }, []);
@@ -931,7 +954,8 @@ export default function BoardView({
           {t("board.addTask")}
         </button>
       </div>
-      <div className="flex items-stretch gap-4 overflow-x-auto pb-2 thin-scroll h-[calc(100dvh-16.5rem)] min-h-[32rem]">
+      <div className="relative">
+        <div ref={boardScrollRef} className="flex items-stretch gap-4 overflow-x-auto pb-2 thin-scroll h-[calc(100dvh-16.5rem)] min-h-[32rem]">
         {columns.map((column) => (
           <ColumnContainer
             key={column.id}
@@ -1038,6 +1062,27 @@ export default function BoardView({
             </button>
           )}
         </div>
+        </div>
+        {boardScrollEdges.left && (
+          <button
+            type="button"
+            aria-label="Scroll columns left"
+            onClick={() => scrollBoardColumns(-1)}
+            className="absolute left-0 top-1/2 z-10 -translate-y-1/2 hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface/85 text-inkFaint shadow-sm backdrop-blur-sm hover:text-ink hover:bg-surface hover:shadow transition-all"
+          >
+            <ChevronLeft size={17} strokeWidth={2} />
+          </button>
+        )}
+        {boardScrollEdges.right && (
+          <button
+            type="button"
+            aria-label="Scroll columns right"
+            onClick={() => scrollBoardColumns(1)}
+            className="absolute right-0 top-1/2 z-10 -translate-y-1/2 hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface/85 text-inkFaint shadow-sm backdrop-blur-sm hover:text-ink hover:bg-surface hover:shadow transition-all"
+          >
+            <ChevronRight size={17} strokeWidth={2} />
+          </button>
+        )}
       </div>
 
       <DragOverlay>
