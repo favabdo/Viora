@@ -402,231 +402,243 @@ export default function ProfilePage() {
         )}
       </AnimatePresence>
       {session && profile && (
-        <main className="min-h-screen px-4 pb-16 sm:px-6">
+        <main className="min-h-screen px-4 pb-16 sm:px-6 lg:px-8">
           <SettingsHeader title={t("profile.title")} onBack={() => router.push(HOME_PATH)} backLabel={t("profile.back")} />
-          <div className="mx-auto max-w-2xl">
-            {/* كارت الهوية */}
-            <section className="mb-5 overflow-hidden rounded-2xl border border-line bg-surface fade-in">
-              <div className="flex flex-col items-center px-5 py-6 text-center">
-                <div className="relative">
-                  <Avatar name={profile.full_name || profile.username} src={profile.avatar_url} size="xl" />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingAvatar}
-                    aria-label={t("profile.changeAvatar")}
-                    className="absolute -bottom-1 -end-1 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-surface bg-[#2563EB] text-white transition-colors hover:bg-[#1D4ED8] disabled:opacity-60"
-                  >
-                    {uploadingAvatar ? <VLogoLoader size={13} /> : <Camera size={13} strokeWidth={2} />}
-                  </button>
-                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarFileSelect} className="hidden" />
-                </div>
-                <p className="mt-3 text-[17px] font-semibold text-ink">{profile.full_name || profile.username}</p>
-                {profile.username && (
-                  <p className="text-sm text-inkFaint" dir="ltr">
-                    @{profile.username}
+          <div className="mx-auto grid w-full max-w-7xl items-start gap-6 lg:grid-cols-[19rem_minmax(0,1fr)]">
+            {/* العمود الجانبي: الهوية ومنطقة الخطر */}
+            <aside className="space-y-6 lg:sticky lg:top-[5.25rem]">
+              <section className="overflow-hidden rounded-2xl border border-line bg-surface fade-in">
+                <div className="flex flex-col items-center px-5 py-6 text-center">
+                  <div className="relative">
+                    <Avatar name={profile.full_name || profile.username} src={profile.avatar_url} size="xl" />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      aria-label={t("profile.changeAvatar")}
+                      className="absolute -bottom-1 -end-1 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-surface bg-[#2563EB] text-white transition-colors hover:bg-[#1D4ED8] disabled:opacity-60"
+                    >
+                      {uploadingAvatar ? <VLogoLoader size={13} /> : <Camera size={13} strokeWidth={2} />}
+                    </button>
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarFileSelect} className="hidden" />
+                  </div>
+                  <p className="mt-3 text-[17px] font-semibold text-ink">{profile.full_name || profile.username}</p>
+                  {profile.username && (
+                    <p className="text-sm text-inkFaint" dir="ltr">
+                      @{profile.username}
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-inkFaint" dir="ltr">
+                    {profile.email || session.user.email}
                   </p>
-                )}
-                <p className="mt-1 text-xs text-inkFaint" dir="ltr">
-                  {profile.email || session.user.email}
-                </p>
-                {joinedLabel && <p className="mt-2 text-[11px] text-inkFaint">{joinedLabel}</p>}
-                {avatarError && <p className="mt-2 text-xs text-[#C0483B] dark:text-[#F3A99E]">{avatarError}</p>}
-              </div>
-            </section>
-
-            {cropImageSrc && (
-              <AvatarCropModal imageSrc={cropImageSrc} onCancel={() => setCropImageSrc(null)} onConfirm={uploadCroppedAvatar} />
-            )}
-
-            {/* البيانات الأساسية */}
-            <SettingsGroupTitle>{t("profile.basicInfo")}</SettingsGroupTitle>
-            <SettingsGroup>
-              <FieldRow label={t("profile.name")}>
-                <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t("profile.namePlaceholder")} />
-              </FieldRow>
-              <FieldRow label={t("profile.username")} hint={t("profile.usernameHint")}>
-                <Input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-                  dir="ltr"
-                  className="font-mono"
-                />
-              </FieldRow>
-              <FieldRow label={t("profile.email")}>
-                <Input
-                  value={profile.email || session.user.email || ""}
-                  disabled
-                  dir="ltr"
-                  className="text-end opacity-70 cursor-not-allowed"
-                />
-              </FieldRow>
-              <FieldRow label={t("profile.bio")}>
-                <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t("profile.bioPlaceholder")} rows={3} />
-              </FieldRow>
-              <div className="grid sm:grid-cols-2">
-                <FieldRow label={t("profile.location")}>
-                  <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder={t("profile.locationPlaceholder")} />
-                </FieldRow>
-                <FieldRow label={t("profile.timezone")}>
-                  <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="Africa/Cairo" dir="ltr" />
-                </FieldRow>
-              </div>
-              <FieldRow label={t("profile.skills")} hint={t("profile.skillsHint")}>
-                <Input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="Python, SQL" dir="ltr" />
-              </FieldRow>
-              {(infoError || infoMsg) && (
-                <div className="space-y-2 px-4 pb-1">
-                  {infoError && <Notice kind="error" text={infoError} />}
-                  {infoMsg && <Notice kind="success" text={infoMsg} />}
+                  {joinedLabel && <p className="mt-2 text-[11px] text-inkFaint">{joinedLabel}</p>}
+                  {avatarError && <p className="mt-2 text-xs text-[#C0483B] dark:text-[#F3A99E]">{avatarError}</p>}
                 </div>
-              )}
-              <div className="px-4 py-4">
-                <Button variant="primary" fullWidth loading={savingInfo} onClick={saveInfo}>
-                  {t("profile.saveChanges")}
-                </Button>
+              </section>
+
+              <div>
+                <SettingsGroupTitle>{t("profile.dangerZone")}</SettingsGroupTitle>
+                <SettingsGroup danger>
+                  <SettingsRow
+                    icon={DoorOpen}
+                    iconColor="#E85D4C"
+                    danger
+                    title={t("profile.deleteAccount")}
+                    hint={t("profile.deleteAccountWarning")}
+                    stacked
+                    control={
+                      <Button variant="danger" size="sm" onClick={() => setShowDeleteAccount(true)}>
+                        {t("profile.deleteAccount")}
+                      </Button>
+                    }
+                  />
+                  {deleteAccountError && (
+                    <div className="px-4 pb-4">
+                      <Notice kind="error" text={deleteAccountError} />
+                    </div>
+                  )}
+                </SettingsGroup>
               </div>
-            </SettingsGroup>
+            </aside>
 
-            {/* الأمان */}
-            <SettingsGroupTitle>{t("profile.resetPassword")}</SettingsGroupTitle>
-            <SettingsGroup>
-              <SettingsRow
-                icon={KeyRound}
-                title={t("profile.resetPasswordButton")}
-                hint={t("profile.resetPasswordHint")}
-                control={
-                  <Button variant="secondary" size="sm" loading={sendingReset} onClick={sendPasswordReset}>
-                    {t("profile.send")}
-                  </Button>
-                }
-              />
-              {(passwordError || passwordMsg) && (
-                <div className="space-y-2 px-4 pb-4">
-                  {passwordError && <Notice kind="error" text={passwordError} />}
-                  {passwordMsg && <Notice kind="success" text={passwordMsg} />}
-                </div>
+            {/* منطقة المحتوى */}
+            <div className="min-w-0 space-y-6">
+              {cropImageSrc && (
+                <AvatarCropModal imageSrc={cropImageSrc} onCancel={() => setCropImageSrc(null)} onConfirm={uploadCroppedAvatar} />
               )}
-            </SettingsGroup>
 
-            {/* التفضيلات */}
-            <SettingsGroupTitle>{t("profile.preferences")}</SettingsGroupTitle>
-            <SettingsGroup>
-              <SettingsRow
-                icon={Languages}
-                title={t("profile.language")}
-                hint={t("profile.languageHint")}
-                control={
-                  <Segmented
-                    value={lang}
-                    onChange={(v) => setLang(v)}
-                    options={[
-                      { value: "en", label: "EN" },
-                      { value: "ar", label: "ع" },
-                    ]}
-                  />
-                }
-              />
-              <SettingsRow
-                icon={theme === "dark" ? Moon : Sun}
-                title={t("profile.appearance")}
-                hint={t("profile.appearanceHint")}
-                control={
-                  <Segmented
-                    value={theme}
-                    onChange={(v) => handleThemeChange(v)}
-                    options={[
-                      { value: "light", label: <span className="inline-flex items-center gap-1"><Sun size={12} />{t("profile.light")}</span> },
-                      { value: "dark", label: <span className="inline-flex items-center gap-1"><Moon size={12} />{t("profile.dark")}</span> },
-                    ]}
-                  />
-                }
-              />
-            </SettingsGroup>
-
-            {/* قسم Rooms المقفول */}
-            {!checkingRoomsAuth && (roomsUnlocked ? (
-              <>
-                <SettingsGroupTitle>{t("profile.nilechat.title")}</SettingsGroupTitle>
+              <div>
+                <SettingsGroupTitle>{t("profile.basicInfo")}</SettingsGroupTitle>
                 <SettingsGroup>
-                  {nilechatLink ? (
+                  <div className="grid sm:grid-cols-2">
+                    <FieldRow label={t("profile.name")}>
+                      <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t("profile.namePlaceholder")} />
+                    </FieldRow>
+                    <FieldRow label={t("profile.username")} hint={t("profile.usernameHint")}>
+                      <Input
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                        dir="ltr"
+                        className="font-mono"
+                      />
+                    </FieldRow>
+                    <FieldRow label={t("profile.email")}>
+                      <Input
+                        value={profile.email || session.user.email || ""}
+                        disabled
+                        dir="ltr"
+                        className="text-end opacity-70 cursor-not-allowed"
+                      />
+                    </FieldRow>
+                    <FieldRow label={t("profile.timezone")}>
+                      <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="Africa/Cairo" dir="ltr" />
+                    </FieldRow>
+                    <FieldRow label={t("profile.location")}>
+                      <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder={t("profile.locationPlaceholder")} />
+                    </FieldRow>
+                    <FieldRow label={t("profile.skills")} hint={t("profile.skillsHint")}>
+                      <Input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="Python, SQL" dir="ltr" />
+                    </FieldRow>
+                  </div>
+                  <FieldRow label={t("profile.bio")}>
+                    <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t("profile.bioPlaceholder")} rows={3} />
+                  </FieldRow>
+                  {(infoError || infoMsg) && (
+                    <div className="space-y-2 px-4 pb-1">
+                      {infoError && <Notice kind="error" text={infoError} />}
+                      {infoMsg && <Notice kind="success" text={infoMsg} />}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-end gap-3 border-t border-line px-4 py-4">
+                    <Button variant="primary" loading={savingInfo} onClick={saveInfo}>
+                      {t("profile.saveChanges")}
+                    </Button>
+                  </div>
+                </SettingsGroup>
+              </div>
+
+              <div className="grid items-start gap-6 xl:grid-cols-2">
+                <div>
+                  <SettingsGroupTitle>{t("profile.resetPassword")}</SettingsGroupTitle>
+                  <SettingsGroup>
                     <SettingsRow
-                      icon={DoorOpen}
-                      title={t("profile.nilechat.linkedAs")}
-                      hint={nilechatLink.agentName}
+                      icon={KeyRound}
+                      title={t("profile.resetPasswordButton")}
+                      hint={t("profile.resetPasswordHint")}
+                      stacked
                       control={
-                        <Button variant="secondary" size="sm" loading={linkingNilechat} onClick={unlinkNilechat}>
-                          {t("profile.nilechat.unlink")}
+                        <Button variant="secondary" size="sm" loading={sendingReset} onClick={sendPasswordReset}>
+                          {t("profile.send")}
                         </Button>
                       }
                     />
-                  ) : (
-                    <FieldRow label={t("profile.nilechat.title")} hint={t("profile.nilechat.hint")}>
-                      <div className="flex items-center gap-2">
+                    {(passwordError || passwordMsg) && (
+                      <div className="space-y-2 px-4 pb-4">
+                        {passwordError && <Notice kind="error" text={passwordError} />}
+                        {passwordMsg && <Notice kind="success" text={passwordMsg} />}
+                      </div>
+                    )}
+                  </SettingsGroup>
+                </div>
+
+                <div>
+                  <SettingsGroupTitle>{t("profile.preferences")}</SettingsGroupTitle>
+                  <SettingsGroup>
+                    <SettingsRow
+                      icon={Languages}
+                      title={t("profile.language")}
+                      hint={t("profile.languageHint")}
+                      control={
+                        <Segmented
+                          value={lang}
+                          onChange={(v) => setLang(v)}
+                          options={[
+                            { value: "en", label: "EN" },
+                            { value: "ar", label: "ع" },
+                          ]}
+                        />
+                      }
+                    />
+                    <SettingsRow
+                      icon={theme === "dark" ? Moon : Sun}
+                      title={t("profile.appearance")}
+                      hint={t("profile.appearanceHint")}
+                      control={
+                        <Segmented
+                          value={theme}
+                          onChange={(v) => handleThemeChange(v)}
+                          options={[
+                            { value: "light", label: <span className="inline-flex items-center gap-1"><Sun size={12} />{t("profile.light")}</span> },
+                            { value: "dark", label: <span className="inline-flex items-center gap-1"><Moon size={12} />{t("profile.dark")}</span> },
+                          ]}
+                        />
+                      }
+                    />
+                  </SettingsGroup>
+                </div>
+
+                {!checkingRoomsAuth && (roomsUnlocked ? (
+                  <div>
+                    <SettingsGroupTitle>{t("profile.nilechat.title")}</SettingsGroupTitle>
+                    <SettingsGroup>
+                      {nilechatLink ? (
+                        <SettingsRow
+                          icon={DoorOpen}
+                          title={t("profile.nilechat.linkedAs")}
+                          hint={nilechatLink.agentName}
+                          control={
+                            <Button variant="secondary" size="sm" loading={linkingNilechat} onClick={unlinkNilechat}>
+                              {t("profile.nilechat.unlink")}
+                            </Button>
+                          }
+                        />
+                      ) : (
+                        <FieldRow label={t("profile.nilechat.title")} hint={t("profile.nilechat.hint")}>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={nilechatToken}
+                              onChange={(e) => setNilechatToken(e.target.value)}
+                              placeholder={t("profile.nilechat.tokenPlaceholder")}
+                              dir="ltr"
+                              className="text-end flex-1"
+                            />
+                            <Button variant="primary" loading={linkingNilechat} onClick={linkNilechat}>
+                              {t("profile.nilechat.linkButton")}
+                            </Button>
+                          </div>
+                          {nilechatError && <p className="mt-2 text-xs text-[#C0483B] dark:text-[#F3A99E]">{nilechatError}</p>}
+                          {nilechatMsg && <p className="mt-2 text-xs text-[#0F766E] dark:text-[#5EEAD4]">{nilechatMsg}</p>}
+                        </FieldRow>
+                      )}
+                    </SettingsGroup>
+                  </div>
+                ) : (
+                  <SettingsGroup>
+                    <div className="flex flex-col items-center gap-2.5 px-5 py-7 text-center">
+                      <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#2563EB]/10 text-[#2563EB]">
+                        <Lock size={18} strokeWidth={1.9} />
+                      </span>
+                      <p className="text-sm font-medium text-ink">{t("profile.lockedSection.title")}</p>
+                      <p className="max-w-[280px] text-xs leading-relaxed text-inkFaint">{t("profile.lockedSection.hint")}</p>
+                      <div className="mt-1 flex w-full max-w-[280px] items-center gap-2">
                         <Input
-                          value={nilechatToken}
-                          onChange={(e) => setNilechatToken(e.target.value)}
-                          placeholder={t("profile.nilechat.tokenPlaceholder")}
+                          type="password"
+                          value={roomsPasswordInput}
+                          onChange={(e) => setRoomsPasswordInput(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && unlockRooms()}
                           dir="ltr"
                           className="text-end flex-1"
+                          placeholder="••••••••"
                         />
-                        <Button variant="primary" loading={linkingNilechat} onClick={linkNilechat}>
-                          {t("profile.nilechat.linkButton")}
+                        <Button variant="primary" loading={unlockingRooms} onClick={unlockRooms}>
+                          <DoorOpen size={14} strokeWidth={1.75} />
                         </Button>
                       </div>
-                      {nilechatError && <p className="mt-2 text-xs text-[#C0483B] dark:text-[#F3A99E]">{nilechatError}</p>}
-                      {nilechatMsg && <p className="mt-2 text-xs text-[#0F766E] dark:text-[#5EEAD4]">{nilechatMsg}</p>}
-                    </FieldRow>
-                  )}
-                </SettingsGroup>
-              </>
-            ) : (
-              <SettingsGroup>
-                <div className="flex flex-col items-center gap-2.5 px-5 py-7 text-center">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#2563EB]/10 text-[#2563EB]">
-                    <Lock size={18} strokeWidth={1.9} />
-                  </span>
-                  <p className="text-sm font-medium text-ink">{t("profile.lockedSection.title")}</p>
-                  <p className="max-w-[280px] text-xs leading-relaxed text-inkFaint">{t("profile.lockedSection.hint")}</p>
-                  <div className="mt-1 flex w-full max-w-[280px] items-center gap-2">
-                    <Input
-                      type="password"
-                      value={roomsPasswordInput}
-                      onChange={(e) => setRoomsPasswordInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && unlockRooms()}
-                      dir="ltr"
-                      className="text-end flex-1"
-                      placeholder="••••••••"
-                    />
-                    <Button variant="primary" loading={unlockingRooms} onClick={unlockRooms}>
-                      <DoorOpen size={14} strokeWidth={1.75} />
-                    </Button>
-                  </div>
-                  {roomsUnlockError && <p className="text-xs text-[#C0483B] dark:text-[#F3A99E]">{roomsUnlockError}</p>}
-                </div>
-              </SettingsGroup>
-            ))}
-
-            {/* منطقة الخطر */}
-            <SettingsGroupTitle>{t("profile.dangerZone")}</SettingsGroupTitle>
-            <SettingsGroup danger>
-              <SettingsRow
-                icon={DoorOpen}
-                iconColor="#E85D4C"
-                danger
-                title={t("profile.deleteAccount")}
-                hint={t("profile.deleteAccountWarning")}
-                control={
-                  <Button variant="danger" size="sm" onClick={() => setShowDeleteAccount(true)}>
-                    {t("profile.deleteAccount")}
-                  </Button>
-                }
-              />
-              {deleteAccountError && (
-                <div className="px-4 pb-4">
-                  <Notice kind="error" text={deleteAccountError} />
-                </div>
-              )}
-            </SettingsGroup>
+                      {roomsUnlockError && <p className="text-xs text-[#C0483B] dark:text-[#F3A99E]">{roomsUnlockError}</p>}
+                    </div>
+                  </SettingsGroup>
+                ))}
+              </div>
+            </div>
           </div>
 
           {showDeleteAccount && (

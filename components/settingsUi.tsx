@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 export function SettingsHeader({ title, subtitle, onBack, backLabel }: { title: string; subtitle?: string; onBack: () => void; backLabel: string }) {
   return (
     <header className="sticky top-0 z-20 -mx-4 mb-4 border-b border-line/60 bg-paper/85 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6">
-      <div className="mx-auto flex max-w-2xl items-center gap-3">
+      <div className="mx-auto flex w-full max-w-7xl items-center gap-3">
         <button
           type="button"
           onClick={onBack}
@@ -32,7 +32,7 @@ export function SettingsGroupTitle({ children }: { children: ReactNode }) {
 export function SettingsGroup({ children, danger }: { children: ReactNode; danger?: boolean }) {
   return (
     <section
-      className={`mb-5 overflow-hidden rounded-2xl border bg-surface ${danger ? "border-[#E85D4C]/30" : "border-line"}`}
+      className={`overflow-hidden rounded-2xl border bg-surface ${danger ? "border-[#E85D4C]/30" : "border-line"}`}
     >
       <div className="divide-y divide-line">{children}</div>
     </section>

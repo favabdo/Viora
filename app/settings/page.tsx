@@ -26,7 +26,7 @@ import {
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings, DateFormat, TimeFormat, WeekStart, DefaultView } from "@/lib/useSettings";
 import { HOME_PATH } from "@/lib/appRoutes";
-import { FieldRow, Segmented, Select, SettingsGroup, SettingsGroupTitle, SettingsHeader, SettingsRow, Toggle } from "@/components/settingsUi";
+import { Segmented, Select, SettingsGroup, SettingsGroupTitle, SettingsHeader, SettingsRow, Toggle } from "@/components/settingsUi";
 
 const TIMEZONES = [
   "auto",
@@ -78,156 +78,178 @@ export default function SettingsPage() {
         {(checking || !session) && <VioraSplash key="splash" />}
       </AnimatePresence>
       {session && (
-        <main className="min-h-screen px-4 pb-16 sm:px-6">
+        <main className="min-h-screen px-4 pb-16 sm:px-6 lg:px-8">
           <SettingsHeader title={t("settings.title")} subtitle={t("settings.subtitle")} onBack={() => router.push(HOME_PATH)} backLabel={t("profile.back")} />
-          <div className="mx-auto max-w-2xl">
-            <SettingsGroupTitle>{t("settings.yourAccount")}</SettingsGroupTitle>
-            <SettingsGroup>
-              <SettingsRow
-                icon={UserRound}
-                title={profile?.full_name || profile?.username || t("common.you")}
-                hint={profile?.email || session.user.email || ""}
-                control={<Avatar name={profile?.full_name || profile?.username || "?"} src={profile?.avatar_url} size="md" />}
-                onClick={() => router.push("/profile")}
-              />
-              <SettingsRow
-                title={t("settings.editProfile")}
-                control={<ChevronRight size={16} className="text-inkFaint rtl:rotate-180" />}
-                onClick={() => router.push("/profile")}
-              />
-            </SettingsGroup>
-
-            <SettingsGroupTitle>{t("settings.general")}</SettingsGroupTitle>
-            <SettingsGroup>
-              <SettingsRow
-                icon={Languages}
-                title={t("settings.language")}
-                hint={t("settings.languageHint")}
-                control={
-                  <Segmented
-                    value={lang}
-                    onChange={(v) => setLang(v)}
-                    options={[
-                      { value: "en", label: "EN" },
-                      { value: "ar", label: "ع" },
-                    ]}
+          <div className="mx-auto grid w-full max-w-7xl items-start gap-6 lg:grid-cols-[19rem_minmax(0,1fr)]">
+            {/* العمود الجانبي: الحساب ومنطقة الخطر */}
+            <aside className="space-y-6 lg:sticky lg:top-[5.25rem]">
+              <div>
+                <SettingsGroupTitle>{t("settings.yourAccount")}</SettingsGroupTitle>
+                <SettingsGroup>
+                  <SettingsRow
+                    icon={UserRound}
+                    title={profile?.full_name || profile?.username || t("common.you")}
+                    hint={profile?.email || session.user.email || ""}
+                    control={<Avatar name={profile?.full_name || profile?.username || "?"} src={profile?.avatar_url} size="md" />}
+                    onClick={() => router.push("/profile")}
                   />
-                }
-              />
-              <SettingsRow
-                icon={Clock}
-                title={t("settings.timezone")}
-                hint={t("settings.timezoneHint")}
-                badge={t("settings.comingSoon")}
-                control={
-                  <Select value={settings.timezone} onChange={(v) => updateSetting("timezone", v)} ariaLabel={t("settings.timezone")}>
-                    {TIMEZONES.map((tz) => (
-                      <option key={tz} value={tz}>
-                        {tz === "auto" ? t("settings.timezoneAuto") : tz}
-                      </option>
-                    ))}
-                  </Select>
-                }
-              />
-              <SettingsRow
-                icon={CalendarDays}
-                title={t("settings.dateFormat")}
-                hint={t("settings.dateFormatHint")}
-                badge={t("settings.comingSoon")}
-                control={
-                  <Select value={settings.dateFormat} onChange={(v) => updateSetting("dateFormat", v as DateFormat)} ariaLabel={t("settings.dateFormat")}>
-                    <option value="MMM_D_YYYY">Aug 17, 2026</option>
-                    <option value="DD_MM_YYYY">17/08/2026</option>
-                    <option value="YYYY_MM_DD">2026-08-17</option>
-                  </Select>
-                }
-              />
-              <SettingsRow
-                icon={Timer}
-                title={t("settings.timeFormat")}
-                hint={t("settings.timeFormatHint")}
-                control={
-                  <Segmented
-                    value={settings.timeFormat}
-                    onChange={(v) => updateSetting("timeFormat", v as TimeFormat)}
-                    options={[
-                      { value: "12h", label: t("settings.time12h") },
-                      { value: "24h", label: t("settings.time24h") },
-                    ]}
+                  <SettingsRow
+                    title={t("settings.editProfile")}
+                    control={<ChevronRight size={16} className="text-inkFaint rtl:rotate-180" />}
+                    onClick={() => router.push("/profile")}
                   />
-                }
-              />
-              <SettingsRow
-                icon={Calendar}
-                title={t("settings.weekStartsOn")}
-                hint={t("settings.weekStartsOnHint")}
-                control={
-                  <Segmented
-                    value={settings.weekStart}
-                    onChange={(v) => updateSetting("weekStart", v as WeekStart)}
-                    options={[
-                      { value: "sunday", label: t("settings.sunday") },
-                      { value: "monday", label: t("settings.monday") },
-                    ]}
+                </SettingsGroup>
+              </div>
+
+              <div>
+                <SettingsGroupTitle>{t("settings.dangerZone")}</SettingsGroupTitle>
+                <SettingsGroup danger>
+                  <SettingsRow
+                    icon={UserRound}
+                    iconColor="#E85D4C"
+                    danger
+                    title={t("settings.manageInProfile")}
+                    control={<ChevronRight size={16} className="text-inkFaint rtl:rotate-180" />}
+                    onClick={() => router.push("/profile")}
                   />
-                }
-              />
-              <SettingsRow
-                icon={LayoutGrid}
-                title={t("settings.defaultView")}
-                hint={t("settings.defaultViewHint")}
-                control={
-                  <Select value={settings.defaultView} onChange={(v) => updateSetting("defaultView", v as DefaultView)} ariaLabel={t("settings.defaultView")}>
-                    <option value="list">{t("views.list")}</option>
-                    <option value="board">{t("views.board")}</option>
-                    <option value="calendar">{t("views.calendar")}</option>
-                    <option value="timeline">{t("views.timeline")}</option>
-                  </Select>
-                }
-              />
-            </SettingsGroup>
+                </SettingsGroup>
+              </div>
+            </aside>
 
-            <SettingsGroupTitle>{t("settings.otherSettings")}</SettingsGroupTitle>
-            <SettingsGroup>
-              <FieldRow label={t("settings.importData")} hint={t("settings.importDataHint")}>
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="secondary" size="sm" onClick={() => setShowShortcuts(true)}>
-                    <Keyboard size={14} />
-                    {t("settings.viewShortcuts")}
-                  </Button>
-                  <Button variant="secondary" size="sm" onClick={() => setShowImportNotice(true)}>
-                    <Download size={14} />
-                    {t("settings.import")}
-                  </Button>
-                </div>
-              </FieldRow>
-              <SettingsRow
-                icon={Archive}
-                title={t("settings.archiveCompleted")}
-                hint={t("settings.archiveCompletedHint")}
-                badge={t("settings.comingSoon")}
-                control={<Toggle checked={settings.archiveCompletedTasks} onChange={(v) => updateSetting("archiveCompletedTasks", v)} />}
-              />
-              <SettingsRow
-                icon={Trash2}
-                title={t("settings.moveToTrash")}
-                hint={t("settings.moveToTrashHint")}
-                badge={t("settings.comingSoon")}
-                control={<Toggle checked={settings.moveTasksToTrash} onChange={(v) => updateSetting("moveTasksToTrash", v)} />}
-              />
-            </SettingsGroup>
+            {/* منطقة المحتوى */}
+            <div className="grid min-w-0 items-start gap-6 2xl:grid-cols-2">
+              <div>
+                <SettingsGroupTitle>{t("settings.general")}</SettingsGroupTitle>
+                <SettingsGroup>
+                  <SettingsRow
+                    icon={Languages}
+                    title={t("settings.language")}
+                    hint={t("settings.languageHint")}
+                    control={
+                      <Segmented
+                        value={lang}
+                        onChange={(v) => setLang(v)}
+                        options={[
+                          { value: "en", label: "EN" },
+                          { value: "ar", label: "ع" },
+                        ]}
+                      />
+                    }
+                  />
+                  <SettingsRow
+                    icon={Clock}
+                    title={t("settings.timezone")}
+                    hint={t("settings.timezoneHint")}
+                    badge={t("settings.comingSoon")}
+                    control={
+                      <Select value={settings.timezone} onChange={(v) => updateSetting("timezone", v)} ariaLabel={t("settings.timezone")}>
+                        {TIMEZONES.map((tz) => (
+                          <option key={tz} value={tz}>
+                            {tz === "auto" ? t("settings.timezoneAuto") : tz}
+                          </option>
+                        ))}
+                      </Select>
+                    }
+                  />
+                  <SettingsRow
+                    icon={CalendarDays}
+                    title={t("settings.dateFormat")}
+                    hint={t("settings.dateFormatHint")}
+                    badge={t("settings.comingSoon")}
+                    control={
+                      <Select value={settings.dateFormat} onChange={(v) => updateSetting("dateFormat", v as DateFormat)} ariaLabel={t("settings.dateFormat")}>
+                        <option value="MMM_D_YYYY">Aug 17, 2026</option>
+                        <option value="DD_MM_YYYY">17/08/2026</option>
+                        <option value="YYYY_MM_DD">2026-08-17</option>
+                      </Select>
+                    }
+                  />
+                  <SettingsRow
+                    icon={Timer}
+                    title={t("settings.timeFormat")}
+                    hint={t("settings.timeFormatHint")}
+                    control={
+                      <Segmented
+                        value={settings.timeFormat}
+                        onChange={(v) => updateSetting("timeFormat", v as TimeFormat)}
+                        options={[
+                          { value: "12h", label: t("settings.time12h") },
+                          { value: "24h", label: t("settings.time24h") },
+                        ]}
+                      />
+                    }
+                  />
+                  <SettingsRow
+                    icon={Calendar}
+                    title={t("settings.weekStartsOn")}
+                    hint={t("settings.weekStartsOnHint")}
+                    control={
+                      <Segmented
+                        value={settings.weekStart}
+                        onChange={(v) => updateSetting("weekStart", v as WeekStart)}
+                        options={[
+                          { value: "sunday", label: t("settings.sunday") },
+                          { value: "monday", label: t("settings.monday") },
+                        ]}
+                      />
+                    }
+                  />
+                  <SettingsRow
+                    icon={LayoutGrid}
+                    title={t("settings.defaultView")}
+                    hint={t("settings.defaultViewHint")}
+                    control={
+                      <Select value={settings.defaultView} onChange={(v) => updateSetting("defaultView", v as DefaultView)} ariaLabel={t("settings.defaultView")}>
+                        <option value="list">{t("views.list")}</option>
+                        <option value="board">{t("views.board")}</option>
+                        <option value="calendar">{t("views.calendar")}</option>
+                        <option value="timeline">{t("views.timeline")}</option>
+                      </Select>
+                    }
+                  />
+                </SettingsGroup>
+              </div>
 
-            <SettingsGroupTitle>{t("settings.dangerZone")}</SettingsGroupTitle>
-            <SettingsGroup danger>
-              <SettingsRow
-                icon={UserRound}
-                iconColor="#E85D4C"
-                danger
-                title={t("settings.manageInProfile")}
-                control={<ChevronRight size={16} className="text-inkFaint rtl:rotate-180" />}
-                onClick={() => router.push("/profile")}
-              />
-            </SettingsGroup>
+              <div>
+                <SettingsGroupTitle>{t("settings.otherSettings")}</SettingsGroupTitle>
+                <SettingsGroup>
+                  <SettingsRow
+                    icon={Keyboard}
+                    title={t("settings.keyboardShortcuts")}
+                    hint={t("settings.keyboardShortcutsHint")}
+                    control={
+                      <Button variant="secondary" size="sm" onClick={() => setShowShortcuts(true)}>
+                        {t("settings.viewShortcuts")}
+                      </Button>
+                    }
+                  />
+                  <SettingsRow
+                    icon={Download}
+                    title={t("settings.importData")}
+                    hint={t("settings.importDataHint")}
+                    control={
+                      <Button variant="secondary" size="sm" onClick={() => setShowImportNotice(true)}>
+                        {t("settings.import")}
+                      </Button>
+                    }
+                  />
+                  <SettingsRow
+                    icon={Archive}
+                    title={t("settings.archiveCompleted")}
+                    hint={t("settings.archiveCompletedHint")}
+                    badge={t("settings.comingSoon")}
+                    control={<Toggle checked={settings.archiveCompletedTasks} onChange={(v) => updateSetting("archiveCompletedTasks", v)} />}
+                  />
+                  <SettingsRow
+                    icon={Trash2}
+                    title={t("settings.moveToTrash")}
+                    hint={t("settings.moveToTrashHint")}
+                    badge={t("settings.comingSoon")}
+                    control={<Toggle checked={settings.moveTasksToTrash} onChange={(v) => updateSetting("moveTasksToTrash", v)} />}
+                  />
+                </SettingsGroup>
+              </div>
+            </div>
           </div>
 
           {showShortcuts && (
