@@ -69,13 +69,13 @@ function GithubMark() {
 function DashboardPreview({ theme }: { theme: Theme }) {
   const src = theme === "light" ? "/login-preview-light.png" : "/login-preview-dark.png";
   return (
-    <div className="login-preview relative mt-3 flex min-h-0 flex-1 justify-center">
+    <div className="login-preview relative mt-3 flex min-h-0 flex-1 items-start justify-center lg:justify-start">
       <Image
         src={src}
         alt=""
-        width={1315}
-        height={1197}
-        className="h-auto max-h-[46vh] w-full max-w-[800px] object-contain lg:h-full lg:max-h-none lg:w-auto lg:max-w-full"
+        width={1226}
+        height={882}
+        className="h-auto max-h-[46vh] w-full max-w-[800px] object-contain lg:h-auto lg:max-h-full lg:w-auto lg:max-w-full"
         priority
       />
     </div>
