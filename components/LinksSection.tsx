@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase, LinkItem, Project } from "@/lib/supabase";
 import ItemHistory from "./ItemHistory";
 import Button from "./ui/Button";
@@ -143,6 +143,21 @@ export default function LinksSection({
   const [editTags, setEditTags] = useState("");
   const [editProjectId, setEditProjectId] = useState("");
   const [tagDraft, setTagDraft] = useState("");
+  const detailRef = useRef<HTMLElement | null>(null);
+  const [revealTick, setRevealTick] = useState(0);
+
+  function revealDetail() {
+    setRevealTick((n) => n + 1);
+  }
+
+  useEffect(() => {
+    if (!selectedId) return;
+    if (typeof window === "undefined" || window.innerWidth >= 1280) return;
+    const id = requestAnimationFrame(() => {
+      detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [selectedId, revealTick]);
 
   useEffect(() => {
     setMeta(readMeta());
@@ -259,6 +274,7 @@ export default function LinksSection({
     setNewProjectId("");
     setShowCreate(false);
     setSelectedId(created.id);
+    revealDetail();
   }
 
   async function saveEdit() {
@@ -441,6 +457,7 @@ export default function LinksSection({
                             onClick={() => {
                               setSelectedId(link.id);
                               setEditing(false);
+                              revealDetail();
                             }}
                             className={`w-full text-start rounded-xl border bg-surface p-3.5 transition-colors ${
                               active ? "border-[#2563EB]" : "border-line hover:border-lineStrong"
@@ -520,6 +537,7 @@ export default function LinksSection({
                                   setEditProjectId(meta[link.id]?.projectId || "");
                                   setEditing(true);
                                   setMenuId(null);
+                                  revealDetail();
                                 }}
                               >
                                 {t("links.edit")}
@@ -589,7 +607,7 @@ export default function LinksSection({
           )}
         </div>
 
-        <aside className={`w-full xl:w-[320px] shrink-0 ${selected ? "" : "hidden xl:block"}`}>
+        <aside ref={detailRef} className={`w-full scroll-mt-20 xl:w-[320px] shrink-0 ${selected ? "" : "hidden xl:block"}`}>
           {selected ? (
             <div className="rounded-xl border border-line bg-surface p-4">
               <div className="flex items-start justify-between gap-2 mb-3">
