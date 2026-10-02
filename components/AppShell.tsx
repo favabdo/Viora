@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 import Avatar from "./ui/Avatar";
-import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
+import { useThemePreference } from "@/lib/userSettings";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useRoomsPendingPoll } from "@/lib/useRoomsPendingPoll";
 import { Plan, usePlan } from "@/lib/planUsage";
@@ -56,9 +56,9 @@ export default function AppShell({
   const pathname = usePathname();
   const isUpgrade = pathname.startsWith("/upgrade");
   const { t, lang } = useTranslation();
+  const [theme, setTheme] = useThemePreference();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
-  const [theme, setTheme] = useState<Theme>("dark");
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const [isNilechatLinked, setIsNilechatLinked] = useState(false);
   const { pendingCount } = useRoomsPendingPoll(isNilechatLinked);
@@ -89,10 +89,6 @@ export default function AppShell({
     }
     onTabChange(id);
   }
-
-  useEffect(() => {
-    setTheme(getStoredTheme());
-  }, []);
 
   useEffect(() => {
     if (!showAccountMenu) return;
@@ -137,9 +133,7 @@ export default function AppShell({
   }
 
   function toggleTheme() {
-    const next: Theme = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    applyTheme(next);
+    setTheme(theme === "dark" ? "light" : "dark");
   }
 
   const Logo = (

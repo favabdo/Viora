@@ -2,10 +2,9 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import dict from "./dictionary";
+import { getStoredPreferences, setPreference, subscribePreferences } from "../userSettings";
 
 export type Lang = "en" | "ar";
-
-const STORAGE_KEY = "viora-lang";
 
 type TranslateVars = Record<string, string | number | boolean | null | undefined>;
 
@@ -29,32 +28,21 @@ type LanguageContextValue = {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  // الإنجليزية هي الافتراضية دايمًا في أول رندر (سيرفر وكلاينت) عشان نتجنب hydration mismatch،
-  // وبعدين لو المستخدم كان مخزّن عربي في localStorage بنطبقه فورًا بعد mount (والسكريبت في layout.tsx
-  // بيطبق dir/lang على <html> قبل أول رسم أصلاً عشان يمنع الوميض).
+  // الإنجليزية في أول رندر (سيرفر وكلاينت) عشان ما يحصلش hydration mismatch،
+  // وبعدين المتجر (lib/userSettings) بيدي اللغة المحفوظة على الحساب أو كاش الجهاز.
   const [lang, setLangState] = useState<Lang>("en");
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === "ar" || stored === "en") setLangState(stored);
-    } catch {
-      // localStorage مش متاح - نفضل على الإنجليزية
-    }
+    const sync = () => setLangState(getStoredPreferences().language);
+    sync();
+    return subscribePreferences(sync);
   }, []);
 
-  useEffect(() => {
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
-    try {
-      localStorage.setItem(STORAGE_KEY, lang);
-    } catch {
-      // تجاهل لو localStorage مش متاح
-    }
-  }, [lang]);
-
-  const setLang = useCallback((next: Lang) => setLangState(next), []);
-  const toggleLang = useCallback(() => setLangState((prev) => (prev === "en" ? "ar" : "en")), []);
+  const setLang = useCallback((next: Lang) => setPreference("language", next), []);
+  const toggleLang = useCallback(
+    () => setPreference("language", getStoredPreferences().language === "ar" ? "en" : "ar"),
+    []
+  );
 
   const t = useCallback(
     (key: string, vars?: TranslateVars) => {

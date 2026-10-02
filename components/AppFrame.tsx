@@ -24,6 +24,7 @@ import PendingInvites from "@/components/PendingInvites";
 import GitHubImportModal from "@/components/GitHubImportModal";
 import ProfileCardProvider from "@/components/ProfileCardContext";
 import { AppSessionProvider } from "@/components/AppSession";
+import { hydrateUserSettings } from "@/lib/userSettings";
 import { supabase } from "@/lib/supabase";
 import { isGithubConnected, listLinkedRepos } from "@/lib/github";
 import { hydrateAllProjectMetas } from "@/lib/projectMeta";
@@ -78,6 +79,7 @@ export default function AppFrame({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!session) return;
+    void hydrateUserSettings(session.user.id);
     supabase
       .from("profiles")
       .select("full_name, username, avatar_url")

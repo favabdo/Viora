@@ -1,73 +1,50 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  DEFAULT_PREFERENCES,
+  getStoredPreferences,
+  setSetting,
+  usePreferences,
+  type DateFormat,
+  type DefaultView,
+  type TimeFormat,
+  type VioraSettings,
+  type WeekStart,
+} from "./userSettings";
 
-export type WeekStart = "sunday" | "monday";
-export type DefaultView = "list" | "board" | "calendar" | "timeline";
-export type DateFormat = "MMM_D_YYYY" | "DD_MM_YYYY" | "YYYY_MM_DD";
-export type TimeFormat = "12h" | "24h";
-
-export type VioraSettings = {
-  timezone: string;
-  dateFormat: DateFormat;
-  timeFormat: TimeFormat;
-  weekStart: WeekStart;
-  defaultView: DefaultView;
-  archiveCompletedTasks: boolean;
-  moveTasksToTrash: boolean;
-};
-
-const STORAGE_KEY = "viora-settings";
-
-const DEFAULT_SETTINGS: VioraSettings = {
-  timezone: "auto",
-  dateFormat: "MMM_D_YYYY",
-  timeFormat: "12h",
-  weekStart: "sunday",
-  defaultView: "list",
-  archiveCompletedTasks: false,
-  moveTasksToTrash: false,
-};
-
-function loadSettings(): VioraSettings {
-  if (typeof window === "undefined") return DEFAULT_SETTINGS;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : DEFAULT_SETTINGS;
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
-}
+export type { DateFormat, DefaultView, TimeFormat, WeekStart };
+export type { VioraSettings };
+export type { UserPreferences } from "./userSettings";
 
 /**
- * تفضيلات عامة للتطبيق متخزنة محليًا (localStorage) - مش مرتبطة بحساب معيّن.
- * كل القيم شغالة فعليًا في التطبيق: timezone/dateFormat/timeFormat عبر lib/displayFormat،
+ * الإعدادات العامة للتطبيق — بقت مرتبطة بالحساب: نفس القيم بتترجع لأي جهاز
+ * بنفس اليوزر (التخزين على user_settings في القاعدة، والكاش المحلي للسرعة).
+ * كل القيم شغالة فعليًا: timezone/dateFormat/timeFormat عبر lib/displayFormat،
  * weekStart في التقاويم وشريط الرئيسية، defaultView في projectPath،
  * وarchiveCompletedTasks/moveTasksToTrash في lib/taskExtras.
  */
 export function useSettings() {
-  const [settings, setSettings] = useState<VioraSettings>(DEFAULT_SETTINGS);
+  const { prefs } = usePreferences();
+  const settings: VioraSettings = {
+    timezone: prefs.timezone,
+    dateFormat: prefs.dateFormat,
+    timeFormat: prefs.timeFormat,
+    weekStart: prefs.weekStart,
+    defaultView: prefs.defaultView,
+    archiveCompletedTasks: prefs.archiveCompletedTasks,
+    moveTasksToTrash: prefs.moveTasksToTrash,
+  };
 
-  useEffect(() => {
-    setSettings(loadSettings());
-  }, []);
-
-  const updateSetting = useCallback(<K extends keyof VioraSettings>(key: K, value: VioraSettings[K]) => {
-    setSettings((prev) => {
-      const next = { ...prev, [key]: value };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // تجاهل لو localStorage مش متاح
-      }
-      return next;
-    });
-  }, []);
+  function updateSetting<K extends keyof VioraSettings>(key: K, value: VioraSettings[K]) {
+    setSetting(key, value);
+  }
 
   return { settings, updateSetting };
 }
 
-/** بيرجع الإعدادات المخزّنة مباشرة (من غير hook) - يفيد في مكوّنات بتحتاج القيمة أول ما تفتح بس */
+/** بيرجع الإعدادات المخزّنة مباشرة (من غير hook) - للمكوّنات اللي محتاجاها أول ما تفتح */
 export function getStoredSettings(): VioraSettings {
-  return loadSettings();
+  return getStoredPreferences();
 }
+
+export { DEFAULT_PREFERENCES };

@@ -26,11 +26,11 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings, DateFormat, TimeFormat, WeekStart, DefaultView } from "@/lib/useSettings";
+import { useThemePreference } from "@/lib/userSettings";
 import { deleteOwnedTask } from "@/lib/deletes";
 import { listTrashedTasks, restoreTaskFromTrash } from "@/lib/taskExtras";
 import { useDisplay } from "@/lib/displayFormat";
 import { timeAgo } from "@/lib/timeAgo";
-import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
 import { HOME_PATH } from "@/lib/appRoutes";
 import { Segmented, Select, SettingsGroup, SettingsGroupTitle, SettingsHeader, SettingsRow, Toggle } from "@/components/settingsUi";
 
@@ -50,20 +50,16 @@ export default function SettingsPage() {
   const router = useRouter();
   const { t, lang, setLang } = useTranslation();
   const { settings, updateSetting } = useSettings();
+  const [theme, setTheme] = useThemePreference();
 
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showImportNotice, setShowImportNotice] = useState(false);
-  const [theme, setThemeState] = useState<Theme>("dark");
   const [trashTick, setTrashTick] = useState(0);
   const [trashed, setTrashed] = useState<{ taskId: string; trashedAt: string; title: string }[]>([]);
   const { opts } = useDisplay();
-
-  useEffect(() => {
-    setThemeState(getStoredTheme());
-  }, []);
 
   useEffect(() => {
     const items = listTrashedTasks();
@@ -81,10 +77,6 @@ export default function SettingsPage() {
       });
   }, [trashTick, session]);
 
-  function handleThemeChange(next: Theme) {
-    setThemeState(next);
-    applyTheme(next);
-  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -176,7 +168,7 @@ export default function SettingsPage() {
                     control={
                       <Segmented
                         value={theme}
-                        onChange={(v) => handleThemeChange(v as Theme)}
+                        onChange={(v) => setTheme(v as "light" | "dark")}
                         options={[
                           { value: "light", label: <span className="inline-flex items-center gap-1"><Sun size={12} />{t("settings.light")}</span> },
                           { value: "dark", label: <span className="inline-flex items-center gap-1"><Moon size={12} />{t("settings.dark")}</span> },
