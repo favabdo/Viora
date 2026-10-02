@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   Cloud,
   FileSpreadsheet,
@@ -136,7 +137,7 @@ export default function FilesSection({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [checked, setChecked] = useState<Set<string>>(new Set());
-  const [menuId, setMenuId] = useState<string | null>(null);
+  const [menu, setMenu] = useState<{ fileId: string; x: number; y: number } | null>(null);
   const [metaTick, setMetaTick] = useState(0);
 
   const selected = files.find((file) => file.id === selectedId) || null;
@@ -322,7 +323,7 @@ export default function FilesSection({
   function toggleMeta(id: string, patch: { favorite?: boolean; trash?: boolean }) {
     patchFileMeta(id, patch);
     setMetaTick((n) => n + 1);
-    setMenuId(null);
+    setMenu(null);
   }
 
   const donut = [
@@ -536,42 +537,22 @@ export default function FilesSection({
                       </td>
                       <td className="px-2 py-2.5 text-inkSoft tabular-nums">{isFolder(file) ? "—" : formatFileBytes(file.size)}</td>
                       <td className="px-2 py-2.5 text-inkFaint whitespace-nowrap">{modifiedLabel(file.createdAt)}</td>
-                      <td className="px-2 py-2.5 relative" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-2 py-2.5" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
                           aria-label={t("files.more")}
-                          onClick={() => setMenuId(menuId === file.id ? null : file.id)}
+                          onClick={(e) => {
+                            if (menu?.fileId === file.id) {
+                              setMenu(null);
+                              return;
+                            }
+                            const r = e.currentTarget.getBoundingClientRect();
+                            setMenu({ fileId: file.id, x: r.right, y: r.bottom + 4 });
+                          }}
                           className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-inkFaint hover:text-ink hover:bg-paperDark"
                         >
                           <MoreHorizontal size={15} />
                         </button>
-                        {menuId === file.id && (
-                          <div className="absolute end-2 top-10 z-20 min-w-[140px] rounded-xl border border-line bg-surface shadow-modal p-1">
-                            {!isFolder(file) && (
-                              <button
-                                className="w-full text-start rounded-lg px-2.5 py-1.5 text-sm text-inkSoft hover:bg-paperDark"
-                                onClick={() => {
-                                  setPreview(file);
-                                  setMenuId(null);
-                                }}
-                              >
-                                {t("files.preview")}
-                              </button>
-                            )}
-                            <button
-                              className="w-full text-start rounded-lg px-2.5 py-1.5 text-sm text-inkSoft hover:bg-paperDark"
-                              onClick={() => toggleMeta(file.id, { favorite: !meta.favorite })}
-                            >
-                              {t("files.favorite")}
-                            </button>
-                            <button
-                              className="w-full text-start rounded-lg px-2.5 py-1.5 text-sm text-inkSoft hover:bg-paperDark"
-                              onClick={() => toggleMeta(file.id, { trash: !meta.trash })}
-                            >
-                              {meta.trash ? t("files.restore") : t("common.delete")}
-                            </button>
-                          </div>
-                        )}
                       </td>
                     </tr>
                   ))}
@@ -907,7 +888,85 @@ export default function FilesSection({
 
       {preview && <FilePreview file={libraryPreviewFile(preview)} onClose={() => setPreview(null)} />}
 
+      {menu &&
+        (() => {
+          const menuFile = files.find((f) => f.id === menu.fileId);
+          if (!menuFile) return null;
+          const menuMeta = getFileMeta(menuFile.id);
+          return (
+            <RowMenu anchor={{ x: menu.x, y: menu.y }} onClose={() => setMenu(null)}>
+              {!isFolder(menuFile) && (
+                <button
+                  className="w-full text-start rounded-lg px-2.5 py-1.5 text-sm text-inkSoft hover:bg-paperDark"
+                  onClick={() => {
+                    setPreview(menuFile);
+                    setMenu(null);
+                  }}
+                >
+                  {t("files.preview")}
+                </button>
+              )}
+              <button
+                className="w-full text-start rounded-lg px-2.5 py-1.5 text-sm text-inkSoft hover:bg-paperDark"
+                onClick={() => toggleMeta(menuFile.id, { favorite: !menuMeta.favorite })}
+              >
+                {t("files.favorite")}
+              </button>
+              <button
+                className="w-full text-start rounded-lg px-2.5 py-1.5 text-sm text-inkSoft hover:bg-paperDark"
+                onClick={() => toggleMeta(menuFile.id, { trash: !menuMeta.trash })}
+              >
+                {menuMeta.trash ? t("files.restore") : t("common.delete")}
+              </button>
+            </RowMenu>
+          );
+        })()}
+
       <UpgradeLimitModal kind="storage" open={limitOpen} onClose={() => setLimitOpen(false)} />
     </div>
+  );
+}
+
+function RowMenu({ anchor, onClose, children }: { anchor: { x: number; y: number }; onClose: () => void; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const pad = 12;
+    const left = Math.min(Math.max(anchor.x - r.width, pad), Math.max(pad, window.innerWidth - r.width - pad));
+    let top = anchor.y;
+    if (top + r.height > window.innerHeight - pad) top = Math.max(pad, anchor.y - r.height - 44);
+    setPos({ left, top });
+  }, [anchor]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    function onDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("scroll", onClose, true);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("scroll", onClose, true);
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div
+      ref={ref}
+      className="fixed z-[80] min-w-[140px] rounded-xl border border-line bg-surface shadow-modal p-1"
+      style={{ left: pos?.left ?? anchor.x, top: pos?.top ?? anchor.y, visibility: pos ? "visible" : "hidden" }}
+    >
+      {children}
+    </div>,
+    document.body
   );
 }

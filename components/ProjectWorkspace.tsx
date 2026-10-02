@@ -429,14 +429,14 @@ export default function ProjectWorkspace({
           </div>
         </div>
 
-        <div className="flex items-center gap-1 overflow-x-auto border-b border-line">
+        <div className="flex flex-wrap items-center gap-x-1 border-b border-line">
           {views.map(({ id, label, icon: Icon }) => {
             const active = view === id;
             return (
               <button
                 key={id}
                 onClick={() => onViewChange(id)}
-                className={`relative shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors ${
+                className={`relative inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2.5 text-[13px] sm:text-sm font-medium transition-colors ${
                   active ? "text-ink" : "text-inkFaint hover:text-inkSoft"
                 }`}
               >
