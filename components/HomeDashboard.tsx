@@ -160,9 +160,14 @@ export default function HomeDashboard() {
           <PlanUsageBar />
             <div className="space-y-3">
               <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl font-semibold text-ink tracking-tight">{t("home.title")}</h1>
-                <p className="mt-1 text-sm font-medium text-ink break-words">{t("home.welcome").replace("{name}", firstName)}</p>
-                <p className="text-sm text-inkFaint">{t("home.subtitle")}</p>
+                <p className="text-2xs font-semibold uppercase tracking-wide text-inkFaint">{t("home.title")}</p>
+                <h1 className="mt-1 flex min-w-0 items-baseline gap-x-2 text-xl sm:text-2xl font-semibold text-ink tracking-tight">
+                  <span className="shrink-0">{t("home.welcomeGreeting")}</span>
+                  <span className="inline-block min-w-0 max-w-[14ch] truncate text-tealDark dark:text-[#93C5FD]" title={firstName}>
+                    {firstName}
+                  </span>
+                </h1>
+                <p className="mt-0.5 text-sm text-inkFaint">{t("home.subtitle")}</p>
               </div>
               <div className="relative w-fit">
                 <Button
