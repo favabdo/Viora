@@ -19,6 +19,7 @@ import Avatar from "./ui/Avatar";
 import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useRoomsPendingPoll } from "@/lib/useRoomsPendingPoll";
+import { Plan, usePlan } from "@/lib/planUsage";
 import { supabase } from "@/lib/supabase";
 import VioraAIAssistant from "./VioraAIAssistant";
 import NotificationBell from "./NotificationBell";
@@ -289,6 +290,7 @@ function SidebarPanel({
   onCloseMobile: () => void;
 }) {
   const [showUpgradePromo, setShowUpgradePromo] = useState(true);
+  const plan = usePlan();
 
   useEffect(() => {
     try {
@@ -395,9 +397,24 @@ function SidebarPanel({
           <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="md" />
           <div className="min-w-0 text-start flex-1">
             <p className="text-sm font-medium text-ink truncate">{userName || t("shell.myAccount")}</p>
-            <p className="text-[11px] text-inkFaint truncate" dir="ltr">
-              {userUsername ? `@${userUsername}` : t("shell.admin")}
-            </p>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <p className="text-[11px] text-inkFaint truncate" dir="ltr">
+                {userUsername ? `@${userUsername}` : t("shell.admin")}
+              </p>
+              {plan && (
+                <span
+                  className={`shrink-0 inline-flex items-center rounded-full px-2 py-px text-[10px] font-semibold ${
+                    plan === "pro"
+                      ? "bg-[#2563EB]/10 text-[#2563EB]"
+                      : plan === "team"
+                        ? "bg-[#22C55E]/15 text-[#16A34A] dark:text-[#4ADE80]"
+                        : "bg-paperDark text-inkSoft"
+                  }`}
+                >
+                  {t(`plan.name.${plan}`)}
+                </span>
+              )}
+            </div>
           </div>
           <ChevronDown size={14} className="text-inkFaint shrink-0" />
         </button>
@@ -406,6 +423,7 @@ function SidebarPanel({
             userName={userName}
             userUsername={userUsername}
             avatarUrl={avatarUrl}
+            plan={plan}
             t={t}
             onProfile={onProfile}
             onSettings={onSettings}
@@ -421,6 +439,7 @@ function AccountMenu({
   userName,
   userUsername,
   avatarUrl,
+  plan,
   t,
   onProfile,
   onSettings,
@@ -429,6 +448,7 @@ function AccountMenu({
   userName: string;
   userUsername?: string;
   avatarUrl?: string | null;
+  plan: Plan | null;
   t: (key: string) => string;
   onProfile: () => void;
   onSettings: () => void;
@@ -438,7 +458,7 @@ function AccountMenu({
     <div className="absolute z-40 bg-surface border border-line rounded-xl shadow-modal p-1.5 min-w-[180px] fade-in bottom-16 start-3 end-3 md:start-auto">
       <div className="flex items-center gap-2.5 px-2.5 py-2 border-b border-line mb-1">
         <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="sm" />
-        <span className="min-w-0">
+        <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium text-ink truncate">{userName || t("shell.myAccount")}</span>
           {userUsername && (
             <span className="block text-[11px] text-inkFaint truncate" dir="ltr">
@@ -446,6 +466,19 @@ function AccountMenu({
             </span>
           )}
         </span>
+        {plan && (
+          <span
+            className={`shrink-0 inline-flex items-center rounded-full px-2 py-px text-[10px] font-semibold ${
+              plan === "pro"
+                ? "bg-[#2563EB]/10 text-[#2563EB]"
+                : plan === "team"
+                  ? "bg-[#22C55E]/15 text-[#16A34A] dark:text-[#4ADE80]"
+                  : "bg-paperDark text-inkSoft"
+            }`}
+          >
+            {t(`plan.name.${plan}`)}
+          </span>
+        )}
       </div>
       <button
         onClick={onProfile}
