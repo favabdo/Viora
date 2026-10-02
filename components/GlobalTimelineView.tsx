@@ -10,6 +10,7 @@ import { canHover } from "@/lib/canHover";
 import { colorForProject } from "@/lib/projectColor";
 import { useWorkspaceSchedule } from "@/lib/useWorkspaceSchedule";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useRevealPanelOnMobile } from "@/lib/revealPanel";
 import Avatar from "./ui/Avatar";
 import DonutChart from "./ui/DonutChart";
 import EmptyState from "./ui/EmptyState";
@@ -89,6 +90,8 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
   const [narrow, setNarrow] = useState(false);
   const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const asideRef = useRef<HTMLElement>(null);
+  useRevealPanelOnMobile(asideRef, selectedId);
 
   const labelWidth = narrow ? LABEL_WIDTH_MOBILE : LABEL_WIDTH;
 
@@ -377,7 +380,7 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
         </div>
       </div>
 
-      <aside className="w-full xl:w-[280px] shrink-0 space-y-4">
+      <aside ref={asideRef} className="w-full xl:w-[280px] shrink-0 space-y-4">
         {selectedTask ? (
           <div className="rounded-xl border border-line bg-surface p-3 space-y-3">
             <div className="flex items-start justify-between gap-2">

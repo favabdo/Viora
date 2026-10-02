@@ -8,6 +8,7 @@ import { dateKey, formatTaskDate, normalizeTask } from "@/lib/taskShape";
 import { displayName } from "@/lib/displayName";
 import { canHover } from "@/lib/canHover";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useRevealPanelOnMobile } from "@/lib/revealPanel";
 import Avatar from "./ui/Avatar";
 import DonutChart from "./ui/DonutChart";
 import { Textarea } from "./ui/Input";
@@ -122,6 +123,8 @@ export default function ProjectTimelineView({
   const [dayWidth, setDayWidth] = useState(16);
   const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const asideRef = useRef<HTMLElement>(null);
+  useRevealPanelOnMobile(asideRef, selectedId);
 
   const today = ymd(new Date());
   const todayDate = toDate(today);
@@ -516,7 +519,7 @@ export default function ProjectTimelineView({
         </div>
       </div>
 
-      <aside className="w-full xl:w-[280px] shrink-0 space-y-4">
+      <aside ref={asideRef} className="w-full xl:w-[280px] shrink-0 space-y-4">
         {selectedTask ? (
           <TimelineTaskSidebar
             task={selectedTask}

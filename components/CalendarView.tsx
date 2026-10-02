@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Task } from "@/lib/supabase";
+import { useRevealPanelOnMobile } from "@/lib/revealPanel";
 import IconButton from "./ui/IconButton";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -36,6 +37,8 @@ export default function CalendarView({
   const [showCompleted, setShowCompleted] = useState(false);
   const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const asideRef = useRef<HTMLElement>(null);
+  useRevealPanelOnMobile(asideRef, selectedId);
 
   const openTasks = useMemo(
     () => (showCompleted ? tasks : tasks.filter((task) => !task.is_done)),
@@ -196,7 +199,7 @@ export default function CalendarView({
       )}
       </div>
       {selectedTask && (
-        <aside className="w-full xl:w-72 shrink-0">
+        <aside ref={asideRef} className="w-full xl:w-72 shrink-0">
           <TaskDetailsPanel
             task={selectedTask}
             projectName={projectName}

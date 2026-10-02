@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Filter, MoreHorizontal, ChevronDown } from "lucide-react";
+import { useRevealPanelOnMobile } from "@/lib/revealPanel";
 import { supabase, Project, Task, BoardColumn } from "@/lib/supabase";
 import { dateKey, formatTaskDate, normalizeTask } from "@/lib/taskShape";
 import { layoutWeekLanes, spanCoversDay, taskBarColor } from "@/lib/calendarLayout";
@@ -71,6 +72,8 @@ export default function ProjectCalendarView({
   const [showFilters, setShowFilters] = useState(true);
   const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const asideRef = useRef<HTMLElement>(null);
+  useRevealPanelOnMobile(asideRef, selectedId);
 
   useEffect(() => {
     setProjectFilter(project.id);
@@ -344,7 +347,7 @@ export default function ProjectCalendarView({
         </div>
       </div>
 
-      <aside className={`w-full xl:w-72 shrink-0 space-y-4 ${showFilters ? "" : "hidden xl:block"}`}>
+      <aside ref={asideRef} className={`w-full xl:w-72 shrink-0 space-y-4 ${showFilters || selectedTask ? "" : "hidden xl:block"}`}>
         {selectedTask ? (
           <TaskDetailsPanel
             task={selectedTask}

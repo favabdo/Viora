@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, FolderKanban } from "lucide-react";
 import { Task } from "@/lib/supabase";
+import { useRevealPanelOnMobile } from "@/lib/revealPanel";
 import { dateKey, formatTaskDate } from "@/lib/taskShape";
 import { spanCoversDay } from "@/lib/calendarLayout";
 import { colorForProject } from "@/lib/projectColor";
@@ -43,6 +44,8 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expandedDays, setExpandedDays] = useState<Set<string>>(() => new Set());
   const [flashDay, setFlashDay] = useState<string | null>(null);
+  const asideRef = useRef<HTMLElement>(null);
+  useRevealPanelOnMobile(asideRef, selectedId);
 
   const projectNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -314,7 +317,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
         </div>
       </div>
 
-      <aside className="w-full xl:w-72 shrink-0 space-y-4">
+      <aside ref={asideRef} className="w-full xl:w-72 shrink-0 space-y-4">
         {selectedTask ? (
           <TaskDetailsPanel
             task={selectedTask}
