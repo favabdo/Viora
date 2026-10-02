@@ -16,6 +16,7 @@ import ConfirmPasswordModal from "@/components/ConfirmPasswordModal";
 import { HOME_PATH } from "@/lib/appRoutes";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
+import { usePlan } from "@/lib/planUsage";
 import { FieldRow, Segmented, SettingsGroup, SettingsGroupTitle, SettingsHeader, SettingsRow } from "@/components/settingsUi";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
@@ -40,6 +41,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t, lang, setLang } = useTranslation();
+  const plan = usePlan();
   const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
@@ -394,6 +396,32 @@ export default function ProfilePage() {
     ? t("profile.joined").replace("{date}", new Intl.DateTimeFormat(lang === "ar" ? "ar-EG" : "en-US", { month: "long", year: "numeric" }).format(new Date(profile.created_at)))
     : "";
 
+  const dangerBlock = (
+    <div>
+      <SettingsGroupTitle>{t("profile.dangerZone")}</SettingsGroupTitle>
+      <SettingsGroup danger>
+        <SettingsRow
+          icon={DoorOpen}
+          iconColor="#E85D4C"
+          danger
+          title={t("profile.deleteAccount")}
+          hint={t("profile.deleteAccountWarning")}
+          stacked
+          control={
+            <Button variant="danger" size="sm" onClick={() => setShowDeleteAccount(true)}>
+              {t("profile.deleteAccount")}
+            </Button>
+          }
+        />
+        {deleteAccountError && (
+          <div className="px-4 pb-4">
+            <Notice kind="error" text={deleteAccountError} />
+          </div>
+        )}
+      </SettingsGroup>
+    </div>
+  );
+
   return (
     <>
       <AnimatePresence>
@@ -427,6 +455,19 @@ export default function ProfilePage() {
                       @{profile.username}
                     </p>
                   )}
+                  {plan && (
+                    <span
+                      className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                        plan === "pro"
+                          ? "bg-[#2563EB]/10 text-[#2563EB]"
+                          : plan === "team"
+                            ? "bg-[#22C55E]/15 text-[#16A34A] dark:text-[#4ADE80]"
+                            : "bg-paperDark text-inkSoft"
+                      }`}
+                    >
+                      {t(`plan.name.${plan}`)}
+                    </span>
+                  )}
                   <p className="mt-1 text-xs text-inkFaint" dir="ltr">
                     {profile.email || session.user.email}
                   </p>
@@ -435,29 +476,7 @@ export default function ProfilePage() {
                 </div>
               </section>
 
-              <div>
-                <SettingsGroupTitle>{t("profile.dangerZone")}</SettingsGroupTitle>
-                <SettingsGroup danger>
-                  <SettingsRow
-                    icon={DoorOpen}
-                    iconColor="#E85D4C"
-                    danger
-                    title={t("profile.deleteAccount")}
-                    hint={t("profile.deleteAccountWarning")}
-                    stacked
-                    control={
-                      <Button variant="danger" size="sm" onClick={() => setShowDeleteAccount(true)}>
-                        {t("profile.deleteAccount")}
-                      </Button>
-                    }
-                  />
-                  {deleteAccountError && (
-                    <div className="px-4 pb-4">
-                      <Notice kind="error" text={deleteAccountError} />
-                    </div>
-                  )}
-                </SettingsGroup>
-              </div>
+              <div className="hidden lg:block">{dangerBlock}</div>
             </aside>
 
             {/* منطقة المحتوى */}
@@ -638,6 +657,8 @@ export default function ProfilePage() {
                   </SettingsGroup>
                 ))}
               </div>
+
+              <div className="lg:hidden">{dangerBlock}</div>
             </div>
           </div>
 

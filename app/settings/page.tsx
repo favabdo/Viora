@@ -13,15 +13,14 @@ import {
   Archive,
   Calendar,
   CalendarDays,
-  ChevronRight,
   Clock,
   Download,
   Keyboard,
   Languages,
   LayoutGrid,
+  AlertTriangle,
   Timer,
   Trash2,
-  UserRound,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings, DateFormat, TimeFormat, WeekStart, DefaultView } from "@/lib/useSettings";
@@ -72,6 +71,21 @@ export default function SettingsPage() {
       .then(({ data }) => setProfile(data as Profile));
   }, [session]);
 
+  const dangerBlock = (
+    <div>
+      <SettingsGroupTitle>{t("settings.dangerZone")}</SettingsGroupTitle>
+      <SettingsGroup danger>
+        <SettingsRow
+          icon={AlertTriangle}
+          iconColor="#E85D4C"
+          danger
+          title={t("settings.manageInProfile")}
+          onClick={() => router.push("/profile")}
+        />
+      </SettingsGroup>
+    </div>
+  );
+
   return (
     <>
       <AnimatePresence>
@@ -83,41 +97,24 @@ export default function SettingsPage() {
           <div className="mx-auto grid w-full max-w-7xl items-start gap-6 lg:grid-cols-[19rem_minmax(0,1fr)]">
             {/* العمود الجانبي: الحساب ومنطقة الخطر */}
             <aside className="space-y-6 lg:sticky lg:top-[5.25rem]">
-              <div>
-                <SettingsGroupTitle>{t("settings.yourAccount")}</SettingsGroupTitle>
-                <SettingsGroup>
-                  <SettingsRow
-                    icon={UserRound}
-                    title={profile?.full_name || profile?.username || t("common.you")}
-                    hint={profile?.email || session.user.email || ""}
-                    control={<Avatar name={profile?.full_name || profile?.username || "?"} src={profile?.avatar_url} size="md" />}
-                    onClick={() => router.push("/profile")}
-                  />
-                  <SettingsRow
-                    title={t("settings.editProfile")}
-                    control={<ChevronRight size={16} className="text-inkFaint rtl:rotate-180" />}
-                    onClick={() => router.push("/profile")}
-                  />
-                </SettingsGroup>
-              </div>
+              <section className="overflow-hidden rounded-2xl border border-line bg-surface">
+                <div className="flex flex-col items-center px-5 py-6 text-center">
+                  <Avatar name={profile?.full_name || profile?.username || "?"} src={profile?.avatar_url} size="lg" />
+                  <p className="mt-3 text-[15px] font-semibold text-ink">{profile?.full_name || profile?.username || t("common.you")}</p>
+                  <p className="text-xs text-inkFaint" dir="ltr">
+                    {profile?.email || session.user.email}
+                  </p>
+                  <Button variant="secondary" size="sm" className="mt-4" onClick={() => router.push("/profile")}>
+                    {t("settings.editProfile")}
+                  </Button>
+                </div>
+              </section>
 
-              <div>
-                <SettingsGroupTitle>{t("settings.dangerZone")}</SettingsGroupTitle>
-                <SettingsGroup danger>
-                  <SettingsRow
-                    icon={UserRound}
-                    iconColor="#E85D4C"
-                    danger
-                    title={t("settings.manageInProfile")}
-                    control={<ChevronRight size={16} className="text-inkFaint rtl:rotate-180" />}
-                    onClick={() => router.push("/profile")}
-                  />
-                </SettingsGroup>
-              </div>
+              <div className="hidden lg:block">{dangerBlock}</div>
             </aside>
 
             {/* منطقة المحتوى */}
-            <div className="grid min-w-0 items-start gap-6 2xl:grid-cols-2">
+            <div className="min-w-0 space-y-6">
               <div>
                 <SettingsGroupTitle>{t("settings.general")}</SettingsGroupTitle>
                 <SettingsGroup>
@@ -249,6 +246,8 @@ export default function SettingsPage() {
                   />
                 </SettingsGroup>
               </div>
+
+              <div className="lg:hidden">{dangerBlock}</div>
             </div>
           </div>
 
