@@ -69,7 +69,7 @@ function GithubMark() {
 function DashboardPreview({ theme }: { theme: Theme }) {
   const src = theme === "light" ? "/login-preview-light.png" : "/login-preview-dark.png";
   return (
-    <div className="login-preview relative mt-8 w-full max-w-[640px]">
+    <div className="login-preview relative mt-8 w-full max-w-[800px]">
       <Image
         src={src}
         alt=""
@@ -270,7 +270,7 @@ function LoginPageInner() {
           <BrandLogo />
         </header>
 
-        <div className="grid flex-1 items-center gap-10 py-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(380px,460px)] lg:gap-16 lg:py-6">
+        <div className="grid flex-1 items-center gap-10 py-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(380px,460px)] lg:gap-16 lg:py-6">
           <section className="relative z-10 order-2 min-w-0 lg:order-1">
             <span className="inline-flex rounded-full bg-[#1D4ED8]/20 px-3 py-1 text-xs font-medium text-ink">
               {t("login.heroBadge")}
