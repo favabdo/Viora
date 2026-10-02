@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail, Moon, Shield, Sun } from "lucide-react";
+import { AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail, Moon, ShieldCheck, Sun } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { HOME_PATH } from "@/lib/appRoutes";
 import { applyTheme, getStoredTheme, type Theme } from "@/lib/theme";
@@ -531,15 +531,12 @@ function LoginPageInner() {
           </section>
         </div>
 
-        <footer className="mt-auto flex flex-col gap-1 border-t border-white/10 py-3 lg:py-2 text-xs text-inkFaint sm:flex-row sm:items-center sm:justify-between">
-          <p className="inline-flex items-center gap-1.5">
-            <Shield size={13} />
+        <footer className="login-foot mt-auto flex flex-nowrap items-center border-t border-white/10 py-2.5 text-2xs text-inkFaint">
+          <p className="login-secure inline-flex min-w-0 items-center gap-1.5">
+            <span className="login-secure-badge inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#2563EB]">
+              <ShieldCheck size={12} strokeWidth={2.2} fill="#fff" stroke="#2563EB" />
+            </span>
             {t("login.secure")}
-          </p>
-          <p className="inline-flex items-center gap-2">
-            <span>{t("login.privacy")}</span>
-            <span>·</span>
-            <span>{t("login.terms")}</span>
           </p>
         </footer>
       </div>

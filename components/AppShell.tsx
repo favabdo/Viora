@@ -11,7 +11,6 @@ import {
   Sun,
   Settings,
   Crown,
-  ChevronDown,
   Menu,
   X,
 } from "lucide-react";
@@ -60,6 +59,7 @@ export default function AppShell({
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
+  const plan = usePlan();
   const [isNilechatLinked, setIsNilechatLinked] = useState(false);
   const { pendingCount } = useRoomsPendingPoll(isNilechatLinked);
 
@@ -157,22 +157,27 @@ export default function AppShell({
     tabs,
     activeTab,
     notifCount: pendingCount,
-    userName,
-    userUsername,
-    avatarUrl,
-    showAccountMenu,
-    accountMenuRef,
     t,
     onTabClick: handleTabClick,
     onUpgrade: () => {
       setShowMobileNav(false);
       router.push("/upgrade");
     },
+    onCloseMobile: () => setShowMobileNav(false),
+  };
+
+  const account = {
+    userName,
+    userUsername,
+    avatarUrl,
+    plan,
+    t,
+    showAccountMenu,
+    accountMenuRef,
     onToggleAccount: () => setShowAccountMenu((v) => !v),
     onProfile: goToProfile,
     onSettings: goToSettings,
     onSignOut: signOut,
-    onCloseMobile: () => setShowMobileNav(false),
   };
 
   return (
@@ -212,6 +217,7 @@ export default function AppShell({
           </div>
 
           <div className="flex items-center gap-2 ms-auto">
+            <PlanPill plan={plan} t={t} className="hidden sm:inline-flex" />
             <NotificationBell userId={currentUserId} />
             <button
               aria-label={theme === "dark" ? t("shell.enableLight") : t("shell.enableDark")}
@@ -220,9 +226,12 @@ export default function AppShell({
             >
               {theme === "dark" ? <Sun size={17} strokeWidth={1.75} /> : <Moon size={17} strokeWidth={1.75} />}
             </button>
+            <AccountControl {...account} />
           </div>
         </header>
         )}
+
+        {isUpgrade && <AccountControl {...account} floating />}
 
         {isUpgrade && (
           <button
@@ -251,40 +260,21 @@ function SidebarPanel({
   tabs,
   activeTab,
   notifCount,
-  userName,
-  userUsername,
-  avatarUrl,
-  showAccountMenu,
-  accountMenuRef,
   t,
   onTabClick,
   onUpgrade,
-  onToggleAccount,
-  onProfile,
-  onSettings,
-  onSignOut,
   onCloseMobile,
 }: {
   logo: ReactNode;
   tabs: ShellTab[];
   activeTab: string;
   notifCount: number;
-  userName: string;
-  userUsername?: string;
-  avatarUrl?: string | null;
-  showAccountMenu: boolean;
-  accountMenuRef: RefObject<HTMLDivElement>;
   t: (key: string) => string;
   onTabClick: (id: string) => void;
   onUpgrade: () => void;
-  onToggleAccount: () => void;
-  onProfile: () => void;
-  onSettings: () => void;
-  onSignOut: () => void;
   onCloseMobile: () => void;
 }) {
   const [showUpgradePromo, setShowUpgradePromo] = useState(true);
-  const plan = usePlan();
 
   useEffect(() => {
     try {
@@ -382,50 +372,88 @@ function SidebarPanel({
           </div>
         </div>
       )}
-
-      <div className="relative px-3 pb-4" ref={accountMenuRef}>
-        <button
-          onClick={onToggleAccount}
-          className="w-full flex items-center gap-2.5 rounded-xl px-2 py-2 hover:bg-paperDark transition-colors"
-        >
-          <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="md" />
-          <div className="min-w-0 text-start flex-1">
-            <p className="text-sm font-medium text-ink truncate">{userName || t("shell.myAccount")}</p>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <p className="text-[11px] text-inkFaint truncate" dir="ltr">
-                {userUsername ? `@${userUsername}` : t("shell.admin")}
-              </p>
-              {plan && (
-                <span
-                  className={`shrink-0 inline-flex items-center rounded-full px-2 py-px text-[10px] font-semibold ${
-                    plan === "pro"
-                      ? "bg-[#2563EB]/10 text-[#2563EB]"
-                      : plan === "team"
-                        ? "bg-[#22C55E]/15 text-[#16A34A] dark:text-[#4ADE80]"
-                        : "bg-paperDark text-inkSoft"
-                  }`}
-                >
-                  {t(`plan.name.${plan}`)}
-                </span>
-              )}
-            </div>
-          </div>
-          <ChevronDown size={14} className="text-inkFaint shrink-0" />
-        </button>
-        {showAccountMenu && (
-          <AccountMenu
-            userName={userName}
-            userUsername={userUsername}
-            avatarUrl={avatarUrl}
-            plan={plan}
-            t={t}
-            onProfile={onProfile}
-            onSettings={onSettings}
-            onSignOut={onSignOut}
-          />
-        )}
-      </div>
     </>
+  );
+}
+
+function PlanPill({
+  plan,
+  t,
+  className = "inline-flex",
+}: {
+  plan: Plan | null;
+  t: (key: string) => string;
+  className?: string;
+}) {
+  if (!plan) return null;
+  return (
+    <span
+      className={`shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+        plan === "pro"
+          ? "bg-[#2563EB]/10 text-[#2563EB]"
+          : plan === "team"
+            ? "bg-[#22C55E]/15 text-[#16A34A] dark:text-[#4ADE80]"
+            : "bg-paperDark text-inkSoft"
+      } ${className}`}
+    >
+      {t(`plan.name.${plan}`)}
+    </span>
+  );
+}
+
+function AccountControl({
+  userName,
+  userUsername,
+  avatarUrl,
+  plan,
+  t,
+  showAccountMenu,
+  accountMenuRef,
+  onToggleAccount,
+  onProfile,
+  onSettings,
+  onSignOut,
+  floating = false,
+}: {
+  userName: string;
+  userUsername?: string;
+  avatarUrl?: string | null;
+  plan: Plan | null;
+  t: (key: string) => string;
+  showAccountMenu: boolean;
+  accountMenuRef: RefObject<HTMLDivElement>;
+  onToggleAccount: () => void;
+  onProfile: () => void;
+  onSettings: () => void;
+  onSignOut: () => void;
+  floating?: boolean;
+}) {
+  return (
+    <div className={floating ? "fixed top-3 end-3 z-40" : "relative"} ref={accountMenuRef}>
+      <button
+        type="button"
+        onClick={onToggleAccount}
+        aria-label={t("shell.myAccount")}
+        aria-expanded={showAccountMenu}
+        className={`h-9 w-9 inline-flex items-center justify-center rounded-full transition-shadow hover:shadow-[0_0_16px_rgba(37,99,235,0.28)] ${
+          floating ? "bg-surface border border-line shadow-sm" : ""
+        }`}
+      >
+        <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="sm" />
+      </button>
+      {showAccountMenu && (
+        <AccountMenu
+          userName={userName}
+          userUsername={userUsername}
+          avatarUrl={avatarUrl}
+          plan={plan}
+          t={t}
+          onProfile={onProfile}
+          onSettings={onSettings}
+          onSignOut={onSignOut}
+        />
+      )}
+    </div>
   );
 }
 
@@ -449,7 +477,7 @@ function AccountMenu({
   onSignOut: () => void;
 }) {
   return (
-    <div className="absolute z-40 bg-surface border border-line rounded-xl shadow-modal p-1.5 min-w-[180px] fade-in bottom-16 start-3 end-3 md:start-auto">
+    <div className="absolute z-40 top-11 end-0 mt-1 bg-surface border border-line rounded-xl shadow-modal p-1.5 min-w-[220px] max-w-[calc(100vw-1.5rem)] fade-in">
       <div className="flex items-center gap-2.5 px-2.5 py-2 border-b border-line mb-1">
         <Avatar name={userName || t("shell.unnamed")} src={avatarUrl} size="sm" />
         <span className="min-w-0 flex-1">
@@ -460,19 +488,7 @@ function AccountMenu({
             </span>
           )}
         </span>
-        {plan && (
-          <span
-            className={`shrink-0 inline-flex items-center rounded-full px-2 py-px text-[10px] font-semibold ${
-              plan === "pro"
-                ? "bg-[#2563EB]/10 text-[#2563EB]"
-                : plan === "team"
-                  ? "bg-[#22C55E]/15 text-[#16A34A] dark:text-[#4ADE80]"
-                  : "bg-paperDark text-inkSoft"
-            }`}
-          >
-            {t(`plan.name.${plan}`)}
-          </span>
-        )}
+        <PlanPill plan={plan} t={t} />
       </div>
       <button
         onClick={onProfile}

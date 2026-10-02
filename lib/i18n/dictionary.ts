@@ -227,8 +227,6 @@ const dict: Record<string, { en: string; ar: string }> = {
   "login.showPassword": { en: "Show password", ar: "إظهار كلمة المرور" },
   "login.hidePassword": { en: "Hide password", ar: "إخفاء كلمة المرور" },
   "login.secure": { en: "Your data is secure with us", ar: "بياناتك محمية معنا" },
-  "login.privacy": { en: "Privacy Policy", ar: "سياسة الخصوصية" },
-  "login.terms": { en: "Terms of Service", ar: "شروط الخدمة" },
   "login.language": { en: "Language", ar: "اللغة" },
   "login.english": { en: "EN", ar: "EN" },
   "login.arabic": { en: "AR", ar: "ع" },
