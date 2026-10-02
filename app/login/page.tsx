@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { Eye, EyeOff, Lock, Mail, Moon, Shield, Sun } from "lucide-react";
+import { AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail, Moon, Shield, Sun } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { HOME_PATH } from "@/lib/appRoutes";
 import { applyTheme, getStoredTheme, type Theme } from "@/lib/theme";
@@ -115,6 +115,16 @@ function LoginPageInner() {
   const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
   const hasInvite = searchParams.get("invite") === "1";
 
+  function translateAuthError(raw: string): string {
+    const m = raw.toLowerCase();
+    if (m.includes("invalid login credentials")) return t("login.err.badCredentials");
+    if (m.includes("email not confirmed") || m.includes("confirm")) return t("login.err.emailUnconfirmed");
+    if (m.includes("rate limit") || m.includes("too many") || m.includes("failed to send email")) return t("login.err.tooMany");
+    if (m.includes("password")) return t("login.err.weakPassword");
+    if (m.includes("email")) return t("login.err.badEmail");
+    return t("login.err.generic");
+  }
+
   useEffect(() => {
     setTheme(getStoredTheme());
     try {
@@ -167,8 +177,7 @@ function LoginPageInner() {
     });
     setOauthLoading(null);
     if (oauthError) {
-      const label = provider === "github" ? t("login.github") : t("login.google");
-      setError(oauthError.message ? `${label}: ${oauthError.message}` : t("login.oauthFailed"));
+      setError(t("login.oauthFailed"));
     }
   }
 
@@ -258,7 +267,7 @@ function LoginPageInner() {
       }
     } catch (err: unknown) {
       const message = err && typeof err === "object" && "message" in err ? String((err as { message?: string }).message) : "";
-      setError(message || t("login.err.generic"));
+      setError(translateAuthError(message));
     } finally {
       setLoading(false);
     }
@@ -440,13 +449,17 @@ function LoginPageInner() {
                   </div>
                 )}
 
-                <div className="grid h-10 place-items-center" aria-live="polite">
+                <div className="grid min-h-11 place-items-center py-1" aria-live="polite">
                   {error && (
-                    <p className="line-clamp-2 w-full rounded-xl bg-[#E85D4C]/10 px-3 py-2 text-sm text-[#E85D4C]">{error}</p>
+                    <p className="flex w-full items-center gap-2 rounded-xl border border-[#E85D4C]/30 bg-[#E85D4C]/10 px-3 py-2 text-[13px] font-medium leading-tight text-[#C0483B] dark:text-[#F3A99E]">
+                      <AlertCircle size={15} strokeWidth={2.25} className="shrink-0" />
+                      <span>{error}</span>
+                    </p>
                   )}
                   {!error && info && (
-                    <p className="line-clamp-2 w-full rounded-xl bg-[#22C55E]/10 px-3 py-2 text-sm text-[#15803D] dark:text-[#4ADE80]">
-                      {info}
+                    <p className="flex w-full items-center gap-2 rounded-xl border border-[#14B8A6]/30 bg-[#14B8A6]/10 px-3 py-2 text-[13px] font-medium leading-tight text-[#0F766E] dark:text-[#5EEAD4]">
+                      <CheckCircle2 size={15} strokeWidth={2.25} className="shrink-0" />
+                      <span>{info}</span>
                     </p>
                   )}
                 </div>
