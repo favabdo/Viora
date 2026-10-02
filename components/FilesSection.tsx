@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useMemo, useState } from "react";
+import AnchorMenu, { type MenuAnchor } from "./ui/AnchorMenu";
 import {
   Cloud,
   FileSpreadsheet,
@@ -137,7 +137,7 @@ export default function FilesSection({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [checked, setChecked] = useState<Set<string>>(new Set());
-  const [menu, setMenu] = useState<{ fileId: string; x: number; y: number } | null>(null);
+  const [menu, setMenu] = useState<{ fileId: string; anchor: MenuAnchor } | null>(null);
   const [metaTick, setMetaTick] = useState(0);
 
   const selected = files.find((file) => file.id === selectedId) || null;
@@ -547,7 +547,7 @@ export default function FilesSection({
                               return;
                             }
                             const r = e.currentTarget.getBoundingClientRect();
-                            setMenu({ fileId: file.id, x: r.right, y: r.bottom + 4 });
+                            setMenu({ fileId: file.id, anchor: { left: r.left, right: r.right, top: r.top, bottom: r.bottom } });
                           }}
                           className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-inkFaint hover:text-ink hover:bg-paperDark"
                         >
@@ -894,7 +894,7 @@ export default function FilesSection({
           if (!menuFile) return null;
           const menuMeta = getFileMeta(menuFile.id);
           return (
-            <RowMenu anchor={{ x: menu.x, y: menu.y }} onClose={() => setMenu(null)}>
+            <AnchorMenu anchor={menu.anchor} align="end" minWidth={140} onClose={() => setMenu(null)}>
               {!isFolder(menuFile) && (
                 <button
                   className="w-full text-start rounded-lg px-2.5 py-1.5 text-sm text-inkSoft hover:bg-paperDark"
@@ -918,55 +918,11 @@ export default function FilesSection({
               >
                 {menuMeta.trash ? t("files.restore") : t("common.delete")}
               </button>
-            </RowMenu>
+            </AnchorMenu>
           );
         })()}
 
       <UpgradeLimitModal kind="storage" open={limitOpen} onClose={() => setLimitOpen(false)} />
     </div>
-  );
-}
-
-function RowMenu({ anchor, onClose, children }: { anchor: { x: number; y: number }; onClose: () => void; children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const pad = 12;
-    const left = Math.min(Math.max(anchor.x - r.width, pad), Math.max(pad, window.innerWidth - r.width - pad));
-    let top = anchor.y;
-    if (top + r.height > window.innerHeight - pad) top = Math.max(pad, anchor.y - r.height - 44);
-    setPos({ left, top });
-  }, [anchor]);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    function onDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("scroll", onClose, true);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("scroll", onClose, true);
-    };
-  }, [onClose]);
-
-  return createPortal(
-    <div
-      ref={ref}
-      className="fixed z-[80] min-w-[140px] rounded-xl border border-line bg-surface shadow-modal p-1"
-      style={{ left: pos?.left ?? anchor.x, top: pos?.top ?? anchor.y, visibility: pos ? "visible" : "hidden" }}
-    >
-      {children}
-    </div>,
-    document.body
   );
 }
