@@ -1068,7 +1068,7 @@ export default function BoardView({
             type="button"
             aria-label="Scroll columns left"
             onClick={() => scrollBoardColumns(-1)}
-            className="absolute left-0 top-1/2 z-10 -translate-y-1/2 hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface/85 text-inkFaint shadow-sm backdrop-blur-sm hover:text-ink hover:bg-surface hover:shadow transition-all"
+            className="absolute left-0 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-surface/85 text-inkFaint shadow-sm backdrop-blur-sm hover:text-ink hover:bg-surface hover:shadow transition-all"
           >
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
@@ -1078,7 +1078,7 @@ export default function BoardView({
             type="button"
             aria-label="Scroll columns right"
             onClick={() => scrollBoardColumns(1)}
-            className="absolute right-0 top-1/2 z-10 -translate-y-1/2 hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface/85 text-inkFaint shadow-sm backdrop-blur-sm hover:text-ink hover:bg-surface hover:shadow transition-all"
+            className="absolute right-0 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-surface/85 text-inkFaint shadow-sm backdrop-blur-sm hover:text-ink hover:bg-surface hover:shadow transition-all"
           >
             <ChevronRight size={17} strokeWidth={2} />
           </button>
