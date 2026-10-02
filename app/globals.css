@@ -478,6 +478,7 @@ html:not(.dark) .upgrade-stage .bg-black\/25 {
 
 .login-scene {
   background-color: #0a0f1e;
+  overflow-x: clip;
 }
 
 html:not(.dark) .login-scene {
@@ -525,18 +526,8 @@ html:not(.dark) .login-field {
   transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-/* الصورة فيها منظور ثلاثي مرسوم بالفعل — أي ميلان إضافي هنا هيبدّلها */
-.login-preview-frame {
-  box-shadow: 0 40px 80px -28px rgba(0, 0, 0, 0.55);
-  transition: box-shadow 0.9s ease;
-}
-
 .login-preview:hover {
   transform: scale(1.04);
-}
-
-.login-preview:hover .login-preview-frame {
-  box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.35);
 }
 
 @media (min-width: 1280px) {
