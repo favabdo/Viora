@@ -30,7 +30,7 @@ import ProjectCalendarView from "./ProjectCalendarView";
 import ProjectTimelineView from "./ProjectTimelineView";
 import ProjectHistoryView from "./ProjectHistoryView";
 import FilesSection from "./FilesSection";
-import BoardAnalytics from "./BoardAnalytics";
+import ProjectOverview from "./ProjectOverview";
 import TeamPanel from "./TeamPanel";
 import ClickableAvatar from "./ClickableAvatar";
 import Button from "./ui/Button";
@@ -472,12 +472,11 @@ export default function ProjectWorkspace({
             onSyncGithub={() => void syncGithubCommits()}
           />
           <div className="mt-6">
-            <BoardAnalytics
-              projects={projects}
-              activeProjectId={project.id}
+            <ProjectOverview
               tasks={tasks}
               columns={columns}
-              layout="workspace"
+              members={acceptedMembers}
+              currentUserId={currentUserId}
             />
           </div>
         </>
