@@ -69,13 +69,13 @@ function GithubMark() {
 function DashboardPreview({ theme }: { theme: Theme }) {
   const src = theme === "light" ? "/login-preview-light.png" : "/login-preview-dark.png";
   return (
-    <div className="login-preview relative mt-8 w-full max-w-[800px]">
+    <div className="login-preview relative mt-3 flex min-h-0 flex-1 justify-center">
       <Image
         src={src}
         alt=""
         width={1315}
         height={1197}
-        className="h-auto w-full"
+        className="h-auto max-h-[46vh] w-full max-w-[800px] object-contain lg:h-full lg:max-h-none lg:w-auto lg:max-w-full"
         priority
       />
     </div>
@@ -264,27 +264,27 @@ function LoginPageInner() {
     "login-field h-12 ps-11 pe-4 text-sm text-ink placeholder:text-inkFaint";
 
   return (
-    <main className="login-scene relative min-h-[100dvh]">
-      <div className="relative mx-auto flex min-h-full max-w-[1440px] flex-col px-5 sm:px-8 lg:px-12">
-        <header className="flex items-center pt-5">
+    <main className="login-scene relative min-h-[100dvh] lg:h-[100dvh] lg:overflow-hidden">
+      <div className="relative mx-auto flex min-h-full max-w-[1440px] flex-col px-5 sm:px-8 lg:h-full lg:px-12">
+        <header className="flex items-center pt-4">
           <BrandLogo />
         </header>
 
-        <div className="grid flex-1 items-center gap-10 py-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(380px,460px)] lg:gap-16 lg:py-6">
-          <section className="relative z-10 order-2 min-w-0 lg:order-1">
-            <span className="inline-flex rounded-full bg-[#1D4ED8]/20 px-3 py-1 text-xs font-medium text-ink">
+        <div className="grid min-h-0 flex-1 items-center gap-8 py-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(380px,460px)] lg:grid-rows-[minmax(0,1fr)] lg:gap-16">
+          <section className="relative z-10 order-2 flex min-h-0 min-w-0 flex-col lg:order-1 lg:self-stretch">
+            <span className="inline-flex shrink-0 self-start rounded-full bg-[#1D4ED8]/20 px-3 py-1 text-xs font-medium text-ink">
               {t("login.heroBadge")}
             </span>
-            <h1 className="mt-5 max-w-xl text-4xl font-semibold leading-[1.12] tracking-tight text-ink sm:text-5xl">
+            <h1 className="mt-3 max-w-xl text-4xl font-semibold leading-[1.12] tracking-tight text-ink sm:text-5xl">
               {t("login.heroTitleBefore")}{" "}
               <span className="text-[#3B82F6]">Viora</span> {t("login.heroTitleAfter")}
             </h1>
-            <p className="mt-4 max-w-md text-base leading-relaxed text-inkSoft">{t("login.heroSubtitle")}</p>
+            <p className="mt-2 max-w-md text-base leading-relaxed text-inkSoft">{t("login.heroSubtitle")}</p>
             <DashboardPreview theme={theme} />
           </section>
 
-          <section className="relative z-30 order-1 mx-auto flex w-full max-w-[420px] lg:order-2 lg:mx-0 lg:justify-self-end">
-            <div className="login-card w-full rounded-[28px] p-6 sm:p-8">
+          <section className="relative z-30 order-1 mx-auto flex w-full max-w-[420px] lg:order-2 lg:mx-0 lg:self-stretch lg:justify-self-end">
+            <div className="login-card thin-scroll w-full self-center rounded-[28px] p-6 sm:p-8 lg:max-h-full lg:overflow-y-auto">
               <div className="mb-6 flex items-center justify-between gap-2">
                 <div className="inline-flex rounded-xl border border-line bg-paperDark/40 p-0.5" role="group" aria-label={t("login.language")}>
                   <button
