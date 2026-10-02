@@ -261,17 +261,17 @@ function LoginPageInner() {
   }
 
   const field =
-    "login-field h-12 ps-11 pe-4 text-sm text-ink placeholder:text-inkFaint";
+    "login-field h-12 ps-11 pe-4 text-sm text-ink placeholder:text-inkFaint lg:h-11";
 
   return (
     <main className="login-scene relative min-h-[100dvh] lg:h-[100dvh] lg:overflow-hidden">
       <div className="relative mx-auto flex min-h-full max-w-[1440px] flex-col px-5 sm:px-8 lg:h-full lg:px-12">
-        <header className="flex items-center pt-4">
+        <header className="flex items-center pt-3 sm:pt-4">
           <BrandLogo />
         </header>
 
-        <div className="grid min-h-0 flex-1 items-center gap-8 py-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(380px,460px)] lg:grid-rows-[minmax(0,1fr)] lg:gap-16">
-          <section className="relative z-10 order-2 flex min-h-0 min-w-0 flex-col lg:order-1 lg:self-stretch">
+        <div className="grid min-h-0 flex-1 items-center gap-8 py-3 sm:py-4 lg:py-2 lg:grid-cols-[minmax(0,1.3fr)_minmax(380px,460px)] lg:grid-rows-[minmax(0,1fr)] lg:gap-16">
+          <section className="relative z-10 hidden min-h-0 min-w-0 flex-col lg:flex lg:self-stretch">
             <span className="inline-flex shrink-0 self-start rounded-full bg-[#1D4ED8]/20 px-3 py-1 text-xs font-medium text-ink">
               {t("login.heroBadge")}
             </span>
@@ -283,9 +283,9 @@ function LoginPageInner() {
             <DashboardPreview theme={theme} />
           </section>
 
-          <section className="relative z-30 order-1 mx-auto flex w-full max-w-[420px] lg:order-2 lg:mx-0 lg:self-stretch lg:justify-self-end">
-            <div className="login-card thin-scroll w-full self-center rounded-[28px] p-6 sm:p-8 lg:max-h-full lg:overflow-y-auto">
-              <div className="mb-6 flex items-center justify-between gap-2">
+          <section className="relative z-30 mx-auto flex w-full max-w-[420px] lg:mx-0 lg:self-stretch lg:justify-self-end">
+            <div className="login-card thin-scroll w-full self-center rounded-[28px] p-5 sm:p-6 lg:max-h-full lg:p-5 lg:overflow-y-auto">
+              <div className="mb-4 flex items-center justify-between gap-2">
                 <div className="inline-flex rounded-xl border border-line bg-paperDark/40 p-0.5" role="group" aria-label={t("login.language")}>
                   <button
                     type="button"
@@ -316,8 +316,8 @@ function LoginPageInner() {
                 </button>
               </div>
 
-              <div className="mb-6 text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-line bg-paperDark/40">
+              <div className="mb-5 text-center">
+                <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-line bg-paperDark/40">
                   <BrandLogo compact />
                 </div>
                 <h2 className="text-[22px] font-semibold text-ink">
@@ -338,7 +338,7 @@ function LoginPageInner() {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-3.5">
+              <form onSubmit={handleSubmit} className="space-y-3">
                 {mode === "signup" && (
                   <label className="block">
                     <span className="mb-1.5 block text-xs font-medium text-inkSoft">{t("login.name")}</span>
@@ -436,7 +436,7 @@ function LoginPageInner() {
                   </div>
                 )}
 
-                <div className="grid min-h-11 place-items-center py-1" aria-live="polite">
+                <div className="grid place-items-center" aria-live="polite">
                   {error && (
                     <p className="flex w-full items-center gap-2 rounded-xl border border-[#E85D4C]/30 bg-[#E85D4C]/10 px-3 py-2 text-[13px] font-medium leading-tight text-[#C0483B] dark:text-[#F3A99E]">
                       <AlertCircle size={15} strokeWidth={2.25} className="shrink-0" />
@@ -456,7 +456,7 @@ function LoginPageInner() {
                   variant="primary"
                   fullWidth
                   loading={loading}
-                  className="mt-1 h-12 rounded-xl bg-[#1D4ED8] text-sm font-semibold shadow-[0_10px_24px_-8px_rgba(29, 78, 216,0.85)] hover:bg-[#1E40AF]"
+                  className="mt-1 h-12 rounded-xl bg-[#1D4ED8] lg:h-11 text-sm font-semibold shadow-[0_10px_24px_-8px_rgba(29, 78, 216,0.85)] hover:bg-[#1E40AF]"
                 >
                   {mode === "signin"
                     ? t("login.signIn")
@@ -468,7 +468,7 @@ function LoginPageInner() {
 
               {mode !== "reset" && (
                 <>
-                  <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-wide text-inkFaint">
+                  <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-wide text-inkFaint">
                     <span className="h-px flex-1 bg-line" />
                     {t("login.orContinue")}
                     <span className="h-px flex-1 bg-line" />
@@ -496,7 +496,7 @@ function LoginPageInner() {
                 </>
               )}
 
-              <p className="mt-6 text-center text-sm text-inkSoft">
+              <p className="mt-4 text-center text-sm text-inkSoft">
                 {mode === "reset" ? (
                   <button
                     type="button"
@@ -531,7 +531,7 @@ function LoginPageInner() {
           </section>
         </div>
 
-        <footer className="mt-auto flex flex-col gap-1 border-t border-white/10 py-3 text-xs text-inkFaint sm:flex-row sm:items-center sm:justify-between">
+        <footer className="mt-auto flex flex-col gap-1 border-t border-white/10 py-3 lg:py-2 text-xs text-inkFaint sm:flex-row sm:items-center sm:justify-between">
           <p className="inline-flex items-center gap-1.5">
             <Shield size={13} />
             {t("login.secure")}
