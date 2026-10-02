@@ -559,15 +559,18 @@ html:not(.dark) .login-field {
 
 .login-preview {
   cursor: default;
+}
+
+.login-preview > img {
   transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-.login-preview:hover {
+.login-preview:hover > img {
   transform: scale(1.04);
 }
 
 @media (min-width: 1280px) {
-  .login-preview:hover {
+  .login-preview:hover > img {
     transform: scale(1.06);
   }
 }

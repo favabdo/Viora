@@ -69,16 +69,29 @@ function GithubMark() {
 function DashboardPreview({ theme }: { theme: Theme }) {
   const src = theme === "light" ? "/login-preview-light.png" : "/login-preview-dark.png";
   return (
-    <div className="login-preview relative mt-3 flex min-h-0 flex-1 items-start justify-center lg:justify-start">
+    <div className="login-preview relative mt-3 flex min-h-0 flex-1 flex-col items-start justify-start">
       <Image
         src={src}
         alt=""
         width={1226}
         height={882}
-        className="h-auto max-h-[46vh] w-full max-w-[800px] object-contain lg:h-auto lg:max-h-full lg:w-auto lg:max-w-full"
+        className="h-auto max-h-[46vh] w-full max-w-[800px] object-contain lg:h-auto lg:max-h-[calc(100%-2rem)] lg:w-auto lg:max-w-full"
         priority
       />
+      <TrustLine className="mt-3" />
     </div>
+  );
+}
+
+function TrustLine({ className = "" }: { className?: string }) {
+  const { t } = useTranslation();
+  return (
+    <p className={`login-foot login-secure inline-flex min-w-0 items-center gap-1.5 text-2xs text-inkFaint ${className}`}>
+      <span className="login-secure-badge inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#2563EB]">
+        <ShieldCheck size={12} strokeWidth={2.2} fill="#fff" stroke="#2563EB" />
+      </span>
+      {t("login.secure")}
+    </p>
   );
 }
 
@@ -283,7 +296,7 @@ function LoginPageInner() {
             <DashboardPreview theme={theme} />
           </section>
 
-          <section className="relative z-30 mx-auto flex w-full max-w-[420px] lg:mx-0 lg:self-stretch lg:justify-self-end">
+          <section className="relative z-30 mx-auto flex w-full max-w-[420px] flex-col justify-center lg:mx-0 lg:self-stretch lg:justify-self-end">
             <div className="login-card thin-scroll w-full self-center rounded-[28px] p-5 sm:p-6 lg:max-h-full lg:p-5 lg:overflow-y-auto">
               <div className="mb-4 flex items-center justify-between gap-2">
                 <div className="inline-flex rounded-xl border border-line bg-paperDark/40 p-0.5" role="group" aria-label={t("login.language")}>
@@ -528,17 +541,9 @@ function LoginPageInner() {
                 )}
               </p>
             </div>
+            <TrustLine className="mt-3 w-full justify-center lg:hidden" />
           </section>
         </div>
-
-        <footer className="login-foot mt-auto flex flex-nowrap items-center border-t border-white/10 py-2.5 text-2xs text-inkFaint">
-          <p className="login-secure inline-flex min-w-0 items-center gap-1.5">
-            <span className="login-secure-badge inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#2563EB]">
-              <ShieldCheck size={12} strokeWidth={2.2} fill="#fff" stroke="#2563EB" />
-            </span>
-            {t("login.secure")}
-          </p>
-        </footer>
       </div>
     </main>
   );
