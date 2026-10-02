@@ -4,6 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
+  Activity,
+  AlertTriangle,
+  CalendarClock,
+  CalendarDays,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -22,13 +26,7 @@ import Panel from "./ui/Panel";
 import PlanUsageBar from "./PlanUsageBar";
 import Button from "./ui/Button";
 import ClickableName from "./ClickableName";
-import {
-  addDays,
-  dueLabel,
-  localYmd,
-  priorityOf,
-  startOfDay,
-} from "@/lib/homeDashboard";
+import { addDays, dueLabel, localYmd, priorityOf, startOfDay } from "@/lib/homeDashboard";
 
 export default function HomeDashboard() {
   const router = useRouter();
@@ -99,13 +97,7 @@ export default function HomeDashboard() {
         .sort((a, b) => (a.due_date || "").localeCompare(b.due_date || "")),
     [myOpen, today, weekEndYmd]
   );
-  const myTasks = useMemo(
-    () =>
-      [...myOpen]
-        .sort((a, b) => (a.due_date || "9999").localeCompare(b.due_date || "9999"))
-        .slice(0, 6),
-    [myOpen]
-  );
+  const myTasks = useMemo(() => [...myOpen].sort((a, b) => (a.due_date || "9999").localeCompare(b.due_date || "9999")).slice(0, 6), [myOpen]);
 
   const weekDays = useMemo(() => {
     const start = addDays(cursor, -((cursor.getDay() + 6) % 7));
@@ -122,22 +114,32 @@ export default function HomeDashboard() {
     return Math.max(1, Math.round((b - a) / 86400000));
   }
 
-  function taskRow(task: Task, rightLabel: string) {
+  function scrollToPanel(id: string) {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function taskRow(task: Task, rightLabel: string, rightClass = "text-inkFaint") {
     const pr = priorityOf(task);
-    const color = pr === "high" ? "#EF4444" : pr === "medium" ? "#3B82F6" : "#22C55E";
+    const dot = pr === "high" ? "#EF4444" : pr === "medium" ? "#3B82F6" : "#22C55E";
     return (
       <li key={task.id}>
-        <button type="button" onClick={() => router.push(`${projectPath(task.project_id)}?task=${task.id}`)} className="w-full flex items-start gap-2.5 text-start">
-          <span className="mt-1 h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+        <button type="button" onClick={() => router.push(`${projectPath(task.project_id)}?task=${task.id}`)} className="w-full flex items-start gap-2.5 text-start group">
+          <span className="mt-1 h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: dot }} />
           <span className="min-w-0 flex-1">
-            <span className="block text-sm text-ink truncate">{task.title}</span>
+            <span className="block text-sm text-ink truncate group-hover:text-[#2563EB] transition-colors">{task.title}</span>
             <span className="block text-[11px] text-inkFaint truncate">{projectById.get(task.project_id)?.name}</span>
           </span>
-          <span className="text-[11px] text-inkFaint shrink-0">{rightLabel}</span>
+          <span className={`text-[11px] shrink-0 tabular-nums ${rightClass}`}>{rightLabel}</span>
         </button>
       </li>
     );
   }
+
+  const glance = [
+    { id: "panel-due-today", label: t("home.dueToday"), count: dueToday.length, color: "#2563EB", Icon: CalendarClock, empty: t("home.noDueToday") },
+    { id: "panel-overdue", label: t("home.overdue"), count: overdueTasks.length, color: "#EF4444", Icon: AlertTriangle, empty: t("home.noOverdue") },
+    { id: "panel-upcoming", label: t("home.upcoming"), count: upcomingTasks.length, color: "#22C55E", Icon: CalendarDays, empty: t("home.noUpcoming") },
+  ];
 
   return (
     <>
@@ -173,44 +175,86 @@ export default function HomeDashboard() {
               </div>
             </div>
 
-            <Panel title={t("home.dueToday")} action={dueToday.length > 0 ? <span className="text-[11px] font-medium text-[#2563EB] tabular-nums">{dueToday.length}</span> : undefined}>
-              {dueToday.length === 0 ? (
-                <p className="text-sm text-inkFaint">{t("home.noDueToday")}</p>
-              ) : (
-                <ul className="space-y-2.5">{dueToday.map((task) => taskRow(task, t("home.today")))}</ul>
-              )}
-            </Panel>
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+              {glance.map(({ id, label, count, color, Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => scrollToPanel(id)}
+                  className="min-w-0 rounded-2xl border border-line bg-surface p-2.5 sm:p-3.5 text-start viora-lift"
+                >
+                  <span className="h-8 w-8 rounded-lg inline-flex items-center justify-center" style={{ backgroundColor: `${color}1f`, color }}>
+                    <Icon size={16} />
+                  </span>
+                  <p className="mt-2 text-2xl sm:text-3xl font-semibold tabular-nums leading-none" style={{ color: count ? color : "rgb(var(--color-inkFaint))" }}>
+                    {count}
+                  </p>
+                  <p className="mt-1 text-[11px] sm:text-xs text-inkFaint leading-tight line-clamp-1">{label}</p>
+                </button>
+              ))}
+            </div>
 
-            <Panel title={t("home.overdue")} action={overdueTasks.length > 0 ? <span className="text-[11px] font-medium text-[#EF4444] tabular-nums">{overdueTasks.length}</span> : undefined}>
-              {overdueTasks.length === 0 ? (
-                <p className="text-sm text-inkFaint">{t("home.noOverdue")}</p>
-              ) : (
-                <ul className="space-y-2.5">
-                  {overdueTasks.map((task) => taskRow(task, t("home.daysLate").replace("{n}", String(daysLate(task.due_date!)))))}
-                </ul>
-              )}
-            </Panel>
+            <div id="panel-due-today" className="scroll-mt-4">
+              <Panel
+                title={t("home.dueToday")}
+                icon={<CalendarClock size={15} />}
+                accent="#2563EB"
+                action={dueToday.length > 0 ? <span className="text-[11px] font-semibold text-white bg-[#2563EB] rounded-full px-2 py-0.5 tabular-nums">{dueToday.length}</span> : undefined}
+              >
+                {dueToday.length === 0 ? (
+                  <p className="text-sm text-inkFaint">{t("home.noDueToday")}</p>
+                ) : (
+                  <ul className="space-y-2.5">{dueToday.map((task) => taskRow(task, t("home.today"), "text-[#2563EB] font-medium"))}</ul>
+                )}
+              </Panel>
+            </div>
 
-            <Panel title={t("home.upcoming")} action={upcomingTasks.length > 0 ? <span className="text-[11px] font-medium text-inkFaint tabular-nums">{upcomingTasks.length}</span> : undefined}>
-              {upcomingTasks.length === 0 ? (
-                <p className="text-sm text-inkFaint">{t("home.noUpcoming")}</p>
-              ) : (
-                <ul className="space-y-2.5">{upcomingTasks.map((task) => taskRow(task, dueLabel(task.due_date, today, t, locale)))}</ul>
-              )}
-            </Panel>
+            <div id="panel-overdue" className="scroll-mt-4">
+              <Panel
+                title={t("home.overdue")}
+                icon={<AlertTriangle size={15} />}
+                accent="#EF4444"
+                action={overdueTasks.length > 0 ? <span className="text-[11px] font-semibold text-white bg-[#EF4444] rounded-full px-2 py-0.5 tabular-nums">{overdueTasks.length}</span> : undefined}
+              >
+                {overdueTasks.length === 0 ? (
+                  <p className="text-sm text-inkFaint">{t("home.noOverdue")}</p>
+                ) : (
+                  <ul className="space-y-2.5">
+                    {overdueTasks.map((task) => taskRow(task, t("home.daysLate").replace("{n}", String(daysLate(task.due_date!))), "text-[#EF4444] font-medium"))}
+                  </ul>
+                )}
+              </Panel>
+            </div>
+
+            <div id="panel-upcoming" className="scroll-mt-4">
+              <Panel
+                title={t("home.upcoming")}
+                icon={<CalendarDays size={15} />}
+                accent="#22C55E"
+                action={upcomingTasks.length > 0 ? <span className="text-[11px] font-semibold text-white bg-[#22C55E] rounded-full px-2 py-0.5 tabular-nums">{upcomingTasks.length}</span> : undefined}
+              >
+                {upcomingTasks.length === 0 ? (
+                  <p className="text-sm text-inkFaint">{t("home.noUpcoming")}</p>
+                ) : (
+                  <ul className="space-y-2.5">{upcomingTasks.map((task) => taskRow(task, dueLabel(task.due_date, today, t, locale), "text-inkSoft"))}</ul>
+                )}
+              </Panel>
+            </div>
           </div>
 
           <aside className="min-w-0 space-y-4">
-            <Panel title={t("home.myTasks")}>
+            <Panel title={t("home.myTasks")} icon={<ListTodo size={15} />} accent="#6366F1">
               {myTasks.length === 0 ? (
                 <p className="text-sm text-inkFaint">{t("home.noMyTasks")}</p>
               ) : (
-                <ul className="space-y-2.5">{myTasks.map((task) => taskRow(task, dueLabel(task.due_date, today, t, locale)))}</ul>
+                <ul className="space-y-2.5">{myTasks.map((task) => taskRow(task, dueLabel(task.due_date, today, t, locale), "text-inkSoft"))}</ul>
               )}
             </Panel>
 
             <Panel
               title={t("home.calendar")}
+              icon={<CalendarDays size={15} />}
+              accent="#14B8A6"
               action={
                 <div className="flex items-center gap-1">
                   <button type="button" className="h-6 w-6 inline-flex items-center justify-center rounded-md hover:bg-paperDark" onClick={() => setCursor((d) => addDays(d, -7))}>
@@ -256,7 +300,7 @@ export default function HomeDashboard() {
               )}
             </Panel>
 
-            <Panel title={t("home.recent")}>
+            <Panel title={t("home.recent")} icon={<Activity size={15} />} accent="#3B82F6">
               {activity.length === 0 ? (
                 <p className="text-sm text-inkFaint">{t("home.noActivity")}</p>
               ) : (
