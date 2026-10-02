@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
@@ -23,6 +23,7 @@ import { timeAgo } from "@/lib/timeAgo";
 import { projectPath } from "@/lib/appRoutes";
 import VioraSplash from "./ui/VioraSplash";
 import Panel from "./ui/Panel";
+import AnchorMenu, { type MenuAnchor } from "./ui/AnchorMenu";
 import PlanUsageBar from "./PlanUsageBar";
 import Button from "./ui/Button";
 import ClickableName from "./ClickableName";
@@ -40,7 +41,8 @@ export default function HomeDashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
-  const [showNew, setShowNew] = useState(false);
+  const [showNew, setShowNew] = useState<MenuAnchor | null>(null);
+  const newBtnRef = useRef<HTMLButtonElement>(null);
   const [cursor, setCursor] = useState(() => startOfDay(new Date()));
   const [pickedDay, setPickedDay] = useState(today);
 
@@ -147,9 +149,8 @@ export default function HomeDashboard() {
         {loading && <VioraSplash key="splash" />}
       </AnimatePresence>
       {!loading && (
-        <div className="min-w-0 overflow-x-hidden grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1fr)_20.5rem]">
-          <div className="min-w-0 space-y-4 sm:space-y-5">
-            <PlanUsageBar />
+        <div className="min-w-0 overflow-x-hidden space-y-4 sm:space-y-5">
+          <PlanUsageBar />
             <div className="space-y-3">
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-2xl font-semibold text-ink tracking-tight">{t("home.title")}</h1>
@@ -157,24 +158,38 @@ export default function HomeDashboard() {
                 <p className="text-sm text-inkFaint">{t("home.subtitle")}</p>
               </div>
               <div className="relative w-fit">
-                <Button variant="primary" size="sm" onClick={() => setShowNew((v) => !v)}>
+                <Button
+                  ref={newBtnRef}
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    if (showNew) {
+                      setShowNew(null);
+                      return;
+                    }
+                    const r = newBtnRef.current?.getBoundingClientRect();
+                    if (r) setShowNew({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+                  }}
+                >
                   <Plus size={14} />
                   {t("home.new")}
                   <ChevronDown size={12} />
                 </Button>
                 {showNew && (
-                  <div className="absolute end-0 top-full z-20 mt-1 w-40 rounded-xl border border-line bg-surface shadow-lg overflow-hidden">
-                    <button type="button" className="w-full text-start px-3 py-2 text-xs hover:bg-paperDark" onClick={() => router.push("/projects?new=1")}>
+                  <AnchorMenu anchor={showNew} align={dir === "rtl" ? "end" : "start"} minWidth={160} onClose={() => setShowNew(null)}>
+                    <button type="button" className="block w-full text-start rounded-lg px-3 py-2 text-xs text-ink hover:bg-paperDark" onClick={() => { setShowNew(null); router.push("/projects?new=1"); }}>
                       {t("home.newProject")}
                     </button>
-                    <button type="button" className="w-full text-start px-3 py-2 text-xs hover:bg-paperDark" onClick={() => router.push("/ideas?new=1")}>
+                    <button type="button" className="block w-full text-start rounded-lg px-3 py-2 text-xs text-ink hover:bg-paperDark" onClick={() => { setShowNew(null); router.push("/ideas?new=1"); }}>
                       {t("home.newIdea")}
                     </button>
-                  </div>
+                  </AnchorMenu>
                 )}
               </div>
-            </div>
+          </div>
 
+          <div className="grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1fr)_20.5rem] items-start">
+            <div className="min-w-0 space-y-4 sm:space-y-5">
             <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
               {glance.map(({ id, label, count, color, Icon }) => (
                 <button
@@ -299,39 +314,40 @@ export default function HomeDashboard() {
                 </ul>
               )}
             </Panel>
-
-            <Panel title={t("home.recent")} icon={<Activity size={15} />} accent="#3B82F6">
-              {activity.length === 0 ? (
-                <p className="text-sm text-inkFaint">{t("home.noActivity")}</p>
-              ) : (
-                <ul className="space-y-3">
-                  {activity.slice(0, 8).map((entry) => {
-                    const rendered = renderActivity(entry, t, session.user.id);
-                    return (
-                      <li key={entry.id} className="flex gap-2.5">
-                        <span className="mt-0.5 h-7 w-7 rounded-full bg-paperDark text-[#2563EB] inline-flex items-center justify-center shrink-0">
-                          <ListTodo size={13} />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-xs text-ink leading-snug">
-                            {rendered.actorId ? (
-                              <ClickableName userId={rendered.actorId} className="font-medium">
-                                {rendered.label}
-                              </ClickableName>
-                            ) : (
-                              <span className="font-medium">{rendered.label}</span>
-                            )}
-                            {rendered.rest}
-                          </p>
-                          <p className="text-[11px] text-inkFaint mt-0.5">{timeAgo(entry.created_at, t)}</p>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </Panel>
           </aside>
+          </div>
+
+          <Panel title={t("home.recent")} icon={<Activity size={15} />} accent="#3B82F6">
+            {activity.length === 0 ? (
+              <p className="text-sm text-inkFaint">{t("home.noActivity")}</p>
+            ) : (
+              <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+                {activity.slice(0, 8).map((entry) => {
+                  const rendered = renderActivity(entry, t, session.user.id);
+                  return (
+                    <li key={entry.id} className="flex gap-2.5">
+                      <span className="mt-0.5 h-7 w-7 rounded-full bg-paperDark text-[#2563EB] inline-flex items-center justify-center shrink-0">
+                        <ListTodo size={13} />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-xs text-ink leading-snug">
+                          {rendered.actorId ? (
+                            <ClickableName userId={rendered.actorId} className="font-medium">
+                              {rendered.label}
+                            </ClickableName>
+                          ) : (
+                            <span className="font-medium">{rendered.label}</span>
+                          )}
+                          {rendered.rest}
+                        </p>
+                        <p className="text-[11px] text-inkFaint mt-0.5">{timeAgo(entry.created_at, t)}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Panel>
         </div>
       )}
     </>
