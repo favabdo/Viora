@@ -520,47 +520,28 @@ html:not(.dark) .login-field {
   background: rgb(var(--color-surfaceSunken));
 }
 
-.login-mask {
-  position: absolute;
-  border-radius: 8px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  pointer-events: none;
-}
-
-html.dark .login-mask {
-  background: rgba(13, 20, 38, 0.5);
-}
-
-html:not(.dark) .login-mask {
-  background: rgba(246, 249, 252, 0.48);
-}
-
 .login-preview {
-  transform-origin: 8% 70%;
   cursor: default;
   transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+/* الصورة فيها منظور ثلاثي مرسوم بالفعل — أي ميلان إضافي هنا هيبدّلها */
 .login-preview-frame {
-  transform: perspective(1400px) rotateY(-16deg) rotateX(7deg) rotateZ(-1.5deg);
-  transform-origin: 50% 50%;
   box-shadow: 0 40px 80px -28px rgba(0, 0, 0, 0.55);
-  transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.9s ease;
+  transition: box-shadow 0.9s ease;
 }
 
 .login-preview:hover {
-  transform: scale(1.08);
+  transform: scale(1.04);
 }
 
 .login-preview:hover .login-preview-frame {
-  transform: perspective(1400px) rotateY(-8deg) rotateX(3deg) rotateZ(-0.6deg);
   box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.35);
 }
 
 @media (min-width: 1280px) {
   .login-preview:hover {
-    transform: scale(1.11);
+    transform: scale(1.06);
   }
 }
 

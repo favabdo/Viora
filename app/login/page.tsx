@@ -68,28 +68,17 @@ function GithubMark() {
 
 function DashboardPreview({ theme }: { theme: Theme }) {
   const src = theme === "light" ? "/login-preview-light.png" : "/login-preview-dark.png";
-  const masks = [
-    { left: "0.8%", top: "88%", width: "13.5%", height: "10.5%" },
-    { left: "15.5%", top: "8.5%", width: "36%", height: "7%" },
-    { left: "15.5%", top: "66%", width: "27%", height: "20%" },
-    { left: "43%", top: "78%", width: "13%", height: "10%" },
-    { left: "72.5%", top: "7.5%", width: "26.5%", height: "30%" },
-    { left: "72.5%", top: "46%", width: "26.5%", height: "14%" },
-  ];
   return (
     <div className="login-preview relative mt-6 w-[min(100%,640px)]">
       <div className="login-preview-frame relative overflow-hidden rounded-2xl border border-line">
         <Image
           src={src}
           alt=""
-          width={1600}
-          height={1000}
-          className="h-auto max-h-[42vh] w-full object-contain"
+          width={1315}
+          height={1197}
+          className="h-auto w-full"
           priority
         />
-        {masks.map((box, i) => (
-          <span key={i} className="login-mask" style={box} />
-        ))}
       </div>
     </div>
   );
