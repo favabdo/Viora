@@ -19,6 +19,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import ClickableAvatar from "./ClickableAvatar";
 import ClickableName from "./ClickableName";
 import DonutChart from "./ui/DonutChart";
+import ProjectOverview from "./ProjectOverview";
 import { Input, Textarea } from "./ui/Input";
 import TaskDetailModal from "./TaskDetailModal";
 import { readTaskExtras } from "@/lib/taskExtras";
@@ -184,7 +185,7 @@ export default function ProjectListView({
 
   return (
     <>
-    <div className="flex flex-col xl:flex-row gap-5 items-start">
+    <div className="min-w-0 w-full space-y-6">
       <div className="flex-1 min-w-0 w-full">
         <div className="flex items-center justify-between gap-3 mb-3">
           <div>
@@ -403,43 +404,7 @@ export default function ProjectListView({
         </div>
       </div>
 
-      <aside className="w-full xl:w-64 shrink-0 space-y-4">
-        <div className="rounded-xl border border-line bg-surface p-4">
-          <h3 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-3">{t("list.totalTasks")}</h3>
-          <div className="flex flex-col items-center">
-            <DonutChart
-              segments={statusLegend.filter((s) => s.label !== t("list.overdue")).map((s) => ({ value: s.count, color: s.color }))}
-              size={132}
-              strokeWidth={14}
-              centerLabel={String(tasks.length)}
-              centerSubLabel={t("board.tasksCount")}
-            />
-          </div>
-          <ul className="mt-4 space-y-2">
-            {statusLegend.map((item) => (
-              <li key={item.label} className="flex items-center gap-2 text-xs">
-                <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="flex-1 text-inkSoft truncate">{item.label}</span>
-                <span className="font-medium text-ink">{item.count}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="rounded-xl border border-line bg-surface p-4">
-          <h3 className="text-2xs font-semibold tracking-wide text-inkFaint uppercase mb-3">{t("list.projectsSummary")}</h3>
-          <ul className="space-y-2.5">
-            {projects.map((item) => (
-              <li key={item.id} className="flex items-center justify-between gap-2 text-sm">
-                <span className={`truncate ${item.id === project.id ? "text-ink font-medium" : "text-inkSoft"}`}>
-                  {item.name}
-                </span>
-                <span className="text-inkFaint tabular-nums">{countsByProject[item.id] ?? 0}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
+      <ProjectOverview tasks={tasks} columns={columns} members={members} currentUserId={currentUserId} />
     </div>
     {detailTask && (
       <TaskDetailModal
