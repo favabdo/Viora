@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { supabase, Project, Task, BoardColumn, TASK_COLORS } from "@/lib/supabase";
-import { checkTaskLimit } from "@/lib/planLimits";
+import { checkProjectLimit, checkTaskLimit } from "@/lib/planLimits";
 import UpgradeLimitModal from "./UpgradeLimitModal";
 import { useSettings } from "@/lib/useSettings";
 import BoardView from "./BoardView";
@@ -73,6 +73,7 @@ export default function TasksSection({
   const [newProjectName, setNewProjectName] = useState("");
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [limitOpen, setLimitOpen] = useState(false);
+  const [projectLimitOpen, setProjectLimitOpen] = useState(false);
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
@@ -234,6 +235,10 @@ export default function TasksSection({
   async function addProject() {
     const name = newProjectName.trim();
     if (!name) return;
+    if (!(await checkProjectLimit())) {
+      setProjectLimitOpen(true);
+      return;
+    }
     const { data, error } = await supabase
       .from("projects")
       .insert({ name })
@@ -523,6 +528,10 @@ async function toggleArchive(project: Project) {
 }
 
 async function duplicateProject(project: Project) {
+  if (!(await checkProjectLimit())) {
+    setProjectLimitOpen(true);
+    return;
+  }
   // Create a duplicate of the project
   const { data, error } = await supabase
     .from("projects")
@@ -1136,6 +1145,7 @@ async function duplicateProject(project: Project) {
       )}
 
       <UpgradeLimitModal kind="tasks" open={limitOpen} onClose={() => setLimitOpen(false)} />
+      <UpgradeLimitModal kind="projects" open={projectLimitOpen} onClose={() => setProjectLimitOpen(false)} />
     </div>
   );
 }

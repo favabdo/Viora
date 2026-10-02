@@ -44,7 +44,7 @@ import {
 import { displayName } from "@/lib/displayName";
 import { fmtDate, useDisplay } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { checkTaskLimit, checkStorageUpload } from "@/lib/planLimits";
+import { checkTaskLimit, checkStorageUpload, isPlanLimitError } from "@/lib/planLimits";
 import UpgradeLimitModal from "./UpgradeLimitModal";
 import ClickableAvatar from "./ClickableAvatar";
 import IconButton from "./ui/IconButton";
@@ -821,6 +821,10 @@ export default function BoardView({
   }
 
   async function duplicateTask(task: Task) {
+    if (!(await checkTaskLimit())) {
+      setLimitOpen(true);
+      return;
+    }
     const list = (task.column_id && tasksByColumn.get(task.column_id)) || [];
     const position = list.length > 0 ? list[list.length - 1].position + 1000 : 1000;
     const { data, error } = await supabase
@@ -837,10 +841,12 @@ export default function BoardView({
       })
       .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
       .single();
+    if (error && isPlanLimitError(error)) setLimitOpen(true);
     if (error || !data) return;
     const created = normalizeTask(data);
     copyTaskExtras(task.id, created.id);
-    await copyTaskAttachments(task.id, created.id, projectId, currentUserId);
+    const copied = await copyTaskAttachments(task.id, created.id, projectId, currentUserId);
+    if (!copied) setLimitOpen(true);
     await refreshRemoteAttachments();
     bumpExtras();
     onTasksMutated((prev) => [...prev, created]);

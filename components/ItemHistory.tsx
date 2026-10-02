@@ -7,6 +7,7 @@ import { renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
 import { useDisplay } from "@/lib/displayFormat";
+import { useHistoryCutoff } from "@/lib/planUsage";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import HistoryLimitBanner from "./HistoryLimitBanner";
 
@@ -35,6 +36,7 @@ export default function ItemHistory({
 }) {
   const { t } = useTranslation();
   const { opts } = useDisplay();
+  const { cutoff: historyCutoff, loading: planLoading } = useHistoryCutoff();
   const [open, setOpen] = useState(alwaysOpen);
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -48,30 +50,36 @@ export default function ItemHistory({
         : "id, message, action, action_params, created_at";
     const fallbackColumns =
       table === "activity_log" ? "id, actor_id, actor_name, message, created_at" : "id, message, created_at";
-    const primary = await supabase
+    let primaryQuery = supabase
       .from(table)
       .select(columns)
       .eq(column, id)
       .order("created_at", { ascending: true });
+    if (historyCutoff) primaryQuery = primaryQuery.gte("created_at", historyCutoff);
+    const primary = await primaryQuery;
     let rows: Entry[] | null = !primary.error && primary.data ? (primary.data as unknown as Entry[]) : null;
     if (!rows) {
-      const fallback = await supabase
+      let fallbackQuery = supabase
         .from(table)
         .select(fallbackColumns)
         .eq(column, id)
         .order("created_at", { ascending: true });
+      if (historyCutoff) fallbackQuery = fallbackQuery.gte("created_at", historyCutoff);
+      const fallback = await fallbackQuery;
       if (!fallback.error && fallback.data) rows = fallback.data as unknown as Entry[];
     }
     if (rows) setEntries(rows);
     setLoaded(true);
     setLoading(false);
-  }, [column, id, table]);
+  }, [column, id, table, historyCutoff]);
 
   useEffect(() => {
     setLoaded(false);
     setEntries([]);
-    if (alwaysOpen) void fetchEntries();
-  }, [alwaysOpen, fetchEntries]);
+    if (planLoading) return;
+    if (alwaysOpen || open) void fetchEntries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alwaysOpen, planLoading, fetchEntries]);
 
   async function toggle() {
     const next = !open;

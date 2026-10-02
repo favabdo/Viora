@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 /*
@@ -47,6 +47,11 @@ export async function getMyPlan(): Promise<Plan> {
 // كاش على مستوى السيشن — بيمنع ارتداد الحالة بعد أول جلب (تنقل بين الصفحات من غير reflash)
 let cachedPlan: Plan | null = null;
 
+/** القيمة الكاشلة فورًا (null لو لسه متجلبتش) — للاستخدام في الفلاتر وقت التحميل */
+export function getCachedPlan(): Plan | null {
+  return cachedPlan;
+}
+
 // هوك React — بيرجع null لحد ما الخطة تتأكد فعلًا، فالرسائل التحذيرية
 // الخاصة بفري ما تظهرش لثواني للمستخدمين المدفوعين وقت الريفريش
 export function usePlan(): Plan | null {
@@ -62,6 +67,23 @@ export function usePlan(): Plan | null {
     };
   }, []);
   return plan;
+}
+
+/**
+ * حد السجل حسب الخطة: التاريخ الفاصل (null = بلا حد) + هل الخطة اتأكدت.
+ * بيصفّي السجلات الأقدم من historyDays من العرض فقط — البيانات بتفضل في
+ * القاعدة، فلما المستخدم يترقى للبروه كل السجل القديم بيرجع ظاهر.
+ */
+export function useHistoryCutoff(): { cutoff: string | null; loading: boolean; historyDays: number | null } {
+  const plan = usePlan();
+  const days = limitsFor(plan).historyDays;
+  // ثابتة طالما الخطة نفسها ما اتغيرتش — لو اتحسبت من جديد في كل render
+  // هتبقى قيمة مختلفة كل مرة، وأي useEffect بيحطها في deps هيعيد الجلب بلا نهاية.
+  const cutoff = useMemo(
+    () => (plan !== null && days !== null ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null),
+    [plan, days]
+  );
+  return { cutoff, loading: plan === null, historyDays: days };
 }
 
 // —— عدّادات الاستخدام ——
@@ -109,8 +131,11 @@ export async function countTotalTasks(): Promise<number> {
   return dbTasks + countBacklogItems();
 }
 
-// التخزين المستخدم = مرفقات المهام + ملفات المكتبة (بالبايت)
+// التخزين المستخدم: من القاعدة نفسها (كل الباكِتات) لو الدالة متفعلة،
+// وإلا رجوع لعدّ الجدولَين القديم لحد ما migration plans-enforcement-v2.sql يتشغّل
 export async function getUsedStorageBytes(): Promise<number> {
+  const { data, error } = await supabase.rpc("my_storage_used");
+  if (!error && typeof data === "number") return data;
   const [attachRes, libraryRes] = await Promise.all([
     supabase.from("task_attachments").select("size"),
     supabase.from("library_files").select("size"),

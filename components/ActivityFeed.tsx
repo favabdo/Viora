@@ -7,6 +7,7 @@ import { renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
 import { useDisplay } from "@/lib/displayFormat";
+import { useHistoryCutoff } from "@/lib/planUsage";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export default function ActivityFeed({
@@ -20,19 +21,23 @@ export default function ActivityFeed({
 }) {
   const { t } = useTranslation();
   const { opts } = useDisplay();
+  const { cutoff: historyCutoff, loading: planLoading } = useHistoryCutoff();
   const [entries, setEntries] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(variant === "panel");
 
   useEffect(() => {
+    if (planLoading) return;
     let active = true;
     setLoading(true);
     setOpen(variant === "panel");
-    supabase
+    let query = supabase
       .from("activity_log")
       .select("*")
       .eq("project_id", projectId)
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false });
+    if (historyCutoff) query = query.gte("created_at", historyCutoff);
+    query
       .limit(25)
       .then(({ data, error }) => {
         if (!active) return;
@@ -46,7 +51,9 @@ export default function ActivityFeed({
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "activity_log", filter: `project_id=eq.${projectId}` },
         (payload) => {
-          setEntries((prev) => [payload.new as ActivityEntry, ...prev].slice(0, 25));
+          const row = payload.new as ActivityEntry;
+          if (historyCutoff && new Date(row.created_at).getTime() < new Date(historyCutoff).getTime()) return;
+          setEntries((prev) => [row, ...prev].slice(0, 25));
         }
       )
       .subscribe();
@@ -55,7 +62,7 @@ export default function ActivityFeed({
       active = false;
       supabase.removeChannel(channel);
     };
-  }, [projectId]);
+  }, [projectId, historyCutoff, planLoading]);
 
   const list = (
     <ul className="space-y-2.5 fade-in">

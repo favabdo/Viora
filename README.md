@@ -24,7 +24,8 @@
    - `invite_links` (روابط الدعوة)
    - `activity_log` (سجل نشاط المشروع + سجل كل مهمة لوحدها عبر `task_id`)
    - `link_activity_log` (سجل كل لينك لوحده)
-3. شغّل بعده محتوى ملف `supabase/plans-migration.sql` بنفس الطريقة (نسخ/لصق وRun). ده اللي بيزود عمود `plan` في جدول `profiles` (بقيمة افتراضية `free`) وبيضيف دوال حدود الخطط (`my_plan`, `can_create_project`, `can_create_task`, `can_upload_file`) والـ trigger اللي بيمنع اليوزر يغيّر خطة حسابه بنفسه. آمن تشغّله أكتر من مرة.
+3. شغّل بعده محتوى ملف `supabase/plans-migration.sql` بنفس الطريقة (نسخ/لصق وRun). ده اللي بيزود عمود `plan` في جدول `profiles` (بقيمة افتراضية `free`) وبيضيف دوال حدود الخطط (`my_plan`, `can_create_project`, `can_create_task`) والـ trigger اللي بيمنع اليوزر يغيّر خطة حسابه بنفسه. آمن تشغّله أكتر من مرة.
+3b. شغّل بعده محتوى ملف `supabase/plans-enforcement-v2.sql` بنفس الطريقة (نسخ/لصق وRun). ده اللي بيخلّي الحدود **إلزامية في القاعدة نفسها** بدل المتصفح بس: حد الأفكار (10) بـ trigger، سقف تخزين الخطة المجانية (1 جيجابايت) كـ policy على `storage.objects` بيحسب كل الباكِتات، نافذة الـ 7 أيام على `idea_activity` و `link_activity_log` و `task_comments` (كانت على `activity_log` بس)، وسقف حجم الملف الواحد لكل باكِت. آمن تشغّله أكتر من مرة. **مهم:** السجل القديم مش بيتمسح — هو مستور بصلاحية القراءة بس، فلما أي يوزر يتحوّل لـ pro كل سجله بيرجع ظاهر.
 4. من **Database → Replication** (أو **Table Editor** → أيقونة الـ Realtime)، فعّل الـ Realtime على جدولي `tasks` و `activity_log` عشان التحديثات تظهر لايف لكل أعضاء المشروع من غير ما يعملوا Refresh.
 5. من **Authentication → Providers → Email**، سيب "Confirm email" شغالة (ده اللي بيخلي رسالة التأكيد تتبعت). لو حابب تقفلها، اليوزر هيقدر يسجّل دخول على طول من غير تأكيد إيميل.
 6. من **Authentication → URL Configuration**:
@@ -111,5 +112,6 @@ lib/
 supabase/
   schema.sql          # السكريبت اللي بتشغله في Supabase
   plans-migration.sql # عمود plan + دوال الحدود + trigger منع تعديل اليوزر لخطته
+  plans-enforcement-v2.sql # تنفيذ الحدود في القاعدة: الأفكار، سقف التخزين، نافذة السجل
   promote-user-to-pro.sql # تغيير خطة يوزر بالايميل (يُشغّل في SQL Editor)
 ```

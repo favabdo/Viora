@@ -22,6 +22,7 @@ import { filterTrashed } from "@/lib/taskExtras";
 import { renderActivity, resolveName } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useHistoryCutoff } from "@/lib/planUsage";
 import { fmtDate, useDisplay } from "@/lib/displayFormat";
 import Avatar from "./ui/Avatar";
 
@@ -139,6 +140,7 @@ export default function UserProfileCard({
   const { opts, dateStyle } = useDisplay();
   const isSelf = userId === currentUserId;
 
+  const { cutoff: historyCutoff, loading: planLoading } = useHistoryCutoff();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabId>("overview");
@@ -182,6 +184,7 @@ export default function UserProfileCard({
   }, []);
 
   useEffect(() => {
+    if (planLoading) return;
     let active = true;
     setLoading(true);
     setTab("overview");
@@ -232,22 +235,26 @@ export default function UserProfileCard({
         return;
       }
 
+      let activityQuery = supabase
+        .from("activity_log")
+        .select("*")
+        .eq("actor_id", userId)
+        .in("project_id", sharedIds)
+        .order("created_at", { ascending: false });
+      if (historyCutoff) activityQuery = activityQuery.gte("created_at", historyCutoff);
+      let createdQuery = supabase
+        .from("activity_log")
+        .select("task_id")
+        .eq("actor_id", userId)
+        .eq("action", "task_created")
+        .in("project_id", sharedIds);
+      if (historyCutoff) createdQuery = createdQuery.gte("created_at", historyCutoff);
+
       const [tasksRes, colsRes, actRes, createdRes, commentsRes] = await Promise.all([
         supabase.from("tasks").select("*").in("project_id", sharedIds),
         supabase.from("board_columns").select("*").in("project_id", sharedIds),
-        supabase
-          .from("activity_log")
-          .select("*")
-          .eq("actor_id", userId)
-          .in("project_id", sharedIds)
-          .order("created_at", { ascending: false })
-          .limit(80),
-        supabase
-          .from("activity_log")
-          .select("task_id")
-          .eq("actor_id", userId)
-          .eq("action", "task_created")
-          .in("project_id", sharedIds),
+        activityQuery.limit(80),
+        createdQuery,
         supabase
           .from("task_comments")
           .select("id", { count: "exact", head: true })
@@ -268,7 +275,7 @@ export default function UserProfileCard({
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [userId, historyCutoff, planLoading]);
 
   const name = profile ? resolveName(profile, t("common.user")) : "";
   const skills = parseSkills(profile?.skills);

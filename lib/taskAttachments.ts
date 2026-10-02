@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { checkStorageUpload } from "./planLimits";
 import { patchTaskExtras, type TaskAttachment } from "./taskExtras";
 
 export const TASK_FILES_BUCKET = "task-files";
@@ -79,6 +80,9 @@ export async function uploadTaskFiles(
       skipped += 1;
       continue;
     }
+    if (!(await checkStorageUpload(file.size))) {
+      return { uploaded, skipped, error: "PLAN_LIMIT_STORAGE" };
+    }
     const id = crypto.randomUUID();
     const path = `${projectId}/${taskId}/${id}-${safeName(file.name)}`;
     const { error: storageError } = await supabase.storage.from(TASK_FILES_BUCKET).upload(path, file, {
@@ -139,8 +143,10 @@ export async function copyTaskAttachments(
   toTaskId: string,
   projectId: string,
   userId: string
-) {
+): Promise<boolean> {
   const files = await listTaskAttachments(fromTaskId);
+  const totalBytes = files.reduce((sum, file) => sum + (file.size || 0), 0);
+  if (totalBytes > 0 && !(await checkStorageUpload(totalBytes))) return false;
   const blobs: { name: string; type: string; blob: Blob }[] = [];
   for (const file of files) {
     const src = previewUrl(file);
@@ -153,8 +159,9 @@ export async function copyTaskAttachments(
       /* skip */
     }
   }
-  if (blobs.length === 0) return;
+  if (blobs.length === 0) return true;
   await uploadTaskBlobs(toTaskId, projectId, userId, blobs);
+  return true;
 }
 
 export async function copyRemoteFilesToTask(

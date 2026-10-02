@@ -10,6 +10,8 @@ import { displayName } from "@/lib/displayName";
 import { canHover } from "@/lib/canHover";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useRevealPanelOnMobile } from "@/lib/revealPanel";
+import { checkTaskLimit, isPlanLimitError } from "@/lib/planLimits";
+import UpgradeLimitModal from "./UpgradeLimitModal";
 import Avatar from "./ui/Avatar";
 import DonutChart from "./ui/DonutChart";
 import { Textarea } from "./ui/Input";
@@ -124,6 +126,7 @@ export default function ProjectTimelineView({
   const [dayWidth, setDayWidth] = useState(16);
   const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [limitOpen, setLimitOpen] = useState(false);
   const asideRef = useRef<HTMLElement>(null);
   useRevealPanelOnMobile(asideRef, selectedId);
 
@@ -238,11 +241,16 @@ export default function ProjectTimelineView({
   async function addTask() {
     const title = newTitle.trim();
     if (!title) return;
+    if (!(await checkTaskLimit())) {
+      setLimitOpen(true);
+      return;
+    }
     const { data, error } = await supabase
       .from("tasks")
       .insert({ title, project_id: project.id, position: 1000 })
       .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
       .single();
+    if (error && isPlanLimitError(error)) setLimitOpen(true);
     if (error || !data) return;
     const next = normalizeTask(data);
     onTasksMutated((prev) => [...prev, next]);
@@ -631,6 +639,8 @@ export default function ProjectTimelineView({
           t={t}
         />
       )}
+
+      <UpgradeLimitModal kind="tasks" open={limitOpen} onClose={() => setLimitOpen(false)} />
     </div>
   );
 }

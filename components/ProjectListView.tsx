@@ -17,6 +17,8 @@ import { displayName } from "@/lib/displayName";
 import { isDueAfterCreated, normalizeTask } from "@/lib/taskShape";
 import { fmtDate, useDisplay } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { checkTaskLimit, isPlanLimitError } from "@/lib/planLimits";
+import UpgradeLimitModal from "./UpgradeLimitModal";
 import ClickableAvatar from "./ClickableAvatar";
 import ClickableName from "./ClickableName";
 import DonutChart from "./ui/DonutChart";
@@ -82,6 +84,7 @@ export default function ProjectListView({
   const [countsByProject, setCountsByProject] = useState<Record<string, number>>({});
   const [detailTask, setDetailTask] = useState<Task | null>(null);
   const [extrasTick, setExtrasTick] = useState(0);
+  const [limitOpen, setLimitOpen] = useState(false);
 
   useEffect(() => {
     if (projects.length === 0) return;
@@ -139,6 +142,10 @@ export default function ProjectListView({
   async function addTask(columnId: string | null) {
     const title = newTitle.trim();
     if (!title) return;
+    if (!(await checkTaskLimit())) {
+      setLimitOpen(true);
+      return;
+    }
     const siblings = tasks.filter((task) => (columnId ? task.column_id === columnId : !task.column_id));
     const position = siblings.length > 0 ? Math.max(...siblings.map((task) => task.position)) + 1000 : 1000;
     const { data, error } = await supabase
@@ -146,6 +153,7 @@ export default function ProjectListView({
       .insert({ title, project_id: project.id, column_id: columnId, position })
       .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
       .single();
+    if (error && isPlanLimitError(error)) setLimitOpen(true);
     if (!error && data) {
       onTasksMutated((prev) => [...prev, normalizeTask(data)]);
       setNewTitle("");
@@ -424,6 +432,7 @@ export default function ProjectListView({
         onAssign={(userId) => void assignTask(tasks.find((item) => item.id === detailTask.id) || detailTask, userId)}
       />
     )}
+    <UpgradeLimitModal kind="tasks" open={limitOpen} onClose={() => setLimitOpen(false)} />
     </>
   );
 }

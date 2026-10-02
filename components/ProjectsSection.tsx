@@ -205,6 +205,11 @@ export default function ProjectsSection({
   }
 
   async function duplicateProject(project: Project) {
+    if (!(await checkProjectLimit())) {
+      setLimitOpen(true);
+      setContextMenuProject(null);
+      return;
+    }
     const meta = getProjectMeta(project.id);
     const { data, error } = await supabase
       .from("projects")
@@ -212,6 +217,7 @@ export default function ProjectsSection({
       .select()
       .single();
 
+    if (error && isPlanLimitError(error)) setLimitOpen(true);
     if (error) {
       console.error("Error duplicating project:", error);
       setContextMenuProject(null);

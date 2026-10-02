@@ -318,7 +318,9 @@ button.rounded-2xl.border.bg-surface:hover {
 .upgrade-stage {
   position: relative;
   isolation: isolate;
-  overflow: visible;
+  /* التوهج الزخرفي بيتعدى حواف الصفحة — لازم يقص أفقيًا عشان ما يعملش سكرول يمين/شمال */
+  overflow-x: clip;
+  overflow-y: visible;
   min-height: 100%;
   background: transparent;
 }

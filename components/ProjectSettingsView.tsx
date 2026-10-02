@@ -44,6 +44,7 @@ import { displayName, renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import { fmtDate, useDisplay } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useHistoryCutoff } from "@/lib/planUsage";
 import { deleteOwnedProject } from "@/lib/deletes";
 import ClickableAvatar from "./ClickableAvatar";
 import ClickableName from "./ClickableName";
@@ -220,6 +221,7 @@ export default function ProjectSettingsView({
   onSettingsTabChange?: (tab: string) => void;
 }) {
   const { t } = useTranslation();
+  const { cutoff: historyCutoff, loading: planLoading } = useHistoryCutoff();
   const { opts, dateStyle } = useDisplay();
   const [tab, setTab] = useState<SettingsTab>(
     settingsTab && SETTINGS_TABS.includes(settingsTab as SettingsTab) ? (settingsTab as SettingsTab) : "general"
@@ -278,16 +280,17 @@ export default function ProjectSettingsView({
   }, [members, project.user_id, project.created_at]);
 
   useEffect(() => {
-    supabase
+    if (planLoading) return;
+    let query = supabase
       .from("activity_log")
       .select("id, project_id, task_id, actor_id, actor_name, message, action, action_params, created_at")
       .eq("project_id", project.id)
-      .order("created_at", { ascending: false })
-      .limit(6)
-      .then(({ data, error }) => {
-        if (!error && data) setActivity(data as ActivityEntry[]);
-      });
-  }, [project.id]);
+      .order("created_at", { ascending: false });
+    if (historyCutoff) query = query.gte("created_at", historyCutoff);
+    query.limit(6).then(({ data, error }) => {
+      if (!error && data) setActivity(data as ActivityEntry[]);
+    });
+  }, [project.id, historyCutoff, planLoading]);
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(committed);
   const ownerName = displayName(project.user_id, ownerProfile, currentUserId, t("common.you"));

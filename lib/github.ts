@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { checkProjectLimit } from "./planLimits";
 import { getMyPlan, limitsFor } from "./planUsage";
 
 const GITHUB_API = "https://api.github.com";
@@ -247,6 +248,10 @@ export async function importRepos(repos: GithubRepoSummary[], slots: number | nu
 
   for (const repo of repos) {
     if (slots !== null && created.length >= slots) break;
+    if (!(await checkProjectLimit())) {
+      note("PLAN_LIMIT");
+      break;
+    }
 
     const { data: project, error: projectError } = await supabase
       .from("projects")

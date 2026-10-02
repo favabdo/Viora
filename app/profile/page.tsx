@@ -17,6 +17,7 @@ import { HOME_PATH } from "@/lib/appRoutes";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { fmtDate, useDisplay } from "@/lib/displayFormat";
 import { usePlan } from "@/lib/planUsage";
+import { checkStorageUpload } from "@/lib/planLimits";
 import { FieldRow, SettingsGroup, SettingsGroupTitle, SettingsHeader, SettingsRow } from "@/components/settingsUi";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
@@ -323,6 +324,11 @@ export default function ProfilePage() {
     setCropImageSrc(null);
     setUploadingAvatar(true);
     setAvatarError("");
+    if (!(await checkStorageUpload(blob.size))) {
+      setAvatarError(t("plan.storage.full"));
+      setUploadingAvatar(false);
+      return;
+    }
     try {
       const path = `${profile.id}/avatar.jpg`;
 

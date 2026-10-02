@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
+import { checkStorageUpload } from "./planLimits";
 import { migrateBrandColor } from "./colorCompat";
 
 const META_KEY = "viora-project-meta";
@@ -211,6 +212,7 @@ function fromRow(row: SettingsRow, signedUrl?: string | null): ProjectMeta {
 async function uploadProjectImage(projectId: string, imageUrl: string, previousPath?: string | null) {
   const blob = dataUrlToBlob(imageUrl);
   if (!blob) return previousPath || null;
+  if (!(await checkStorageUpload(blob.size))) return previousPath || null;
   const ext = blob.type.includes("png") ? "png" : "jpg";
   const path = `${projectId}/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from(PROJECT_IMAGES_BUCKET).upload(path, blob, {

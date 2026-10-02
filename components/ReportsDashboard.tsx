@@ -15,6 +15,7 @@ import { filterTrashed } from "@/lib/taskExtras";
 import { colorForProject } from "@/lib/projectColor";
 import { getProjectMeta, hydrateProjectMetas, useProjectMetaTick } from "@/lib/projectMeta";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useHistoryCutoff } from "@/lib/planUsage";
 import { fmtDate, useDisplay, type DisplayOpts } from "@/lib/displayFormat";
 import { useAppSession } from "./AppSession";
 import { displayName } from "@/lib/displayName";
@@ -58,6 +59,7 @@ export default function ReportsDashboard() {
   const { opts } = useDisplay();
   const today = localYmd(new Date());
 
+  const { cutoff: historyCutoff, loading: planLoading } = useHistoryCutoff();
   const [preset, setPreset] = useState<7 | 14 | 30 | "custom">(7);
   const [customFrom, setCustomFrom] = useState(today);
   const [customTo, setCustomTo] = useState(today);
@@ -70,6 +72,7 @@ export default function ReportsDashboard() {
   const metaTick = useProjectMetaTick();
 
   useEffect(() => {
+    if (planLoading) return;
     let cancelled = false;
     (async () => {
       const { data: projectRows } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
@@ -87,15 +90,16 @@ export default function ReportsDashboard() {
       const ids = list.map((p) => p.id);
       await hydrateProjectMetas(ids);
       if (cancelled) return;
+      let activityQuery = supabase
+        .from("activity_log")
+        .select("id, project_id, task_id, actor_id, actor_name, message, action, action_params, created_at")
+        .in("project_id", ids)
+        .order("created_at", { ascending: false });
+      if (historyCutoff) activityQuery = activityQuery.gte("created_at", historyCutoff);
       const [taskRes, colRes, actRes, commentRes] = await Promise.all([
         supabase.from("tasks").select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)").in("project_id", ids),
         supabase.from("board_columns").select("*").in("project_id", ids),
-        supabase
-          .from("activity_log")
-          .select("id, project_id, task_id, actor_id, actor_name, message, action, action_params, created_at")
-          .in("project_id", ids)
-          .order("created_at", { ascending: false })
-          .limit(200),
+        activityQuery.limit(200),
         supabase.from("task_comments").select("id, created_at, project_id").in("project_id", ids),
       ]);
       if (cancelled) return;
@@ -108,7 +112,7 @@ export default function ReportsDashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [historyCutoff, planLoading]);
 
   const columnsById = useMemo(() => new Map(columns.map((c) => [c.id, c])), [columns]);
   const keys = useMemo(() => {

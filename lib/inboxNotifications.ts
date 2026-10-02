@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase, ActivityEntry } from "./supabase";
 import { ideaPath, projectPath } from "./appRoutes";
+import { useHistoryCutoff } from "./planUsage";
 
 export type InboxKind = "activity" | "idea" | "login";
 
@@ -84,18 +85,20 @@ async function projectIdsForUser(userId: string): Promise<string[]> {
   return Array.from(ids);
 }
 
-export async function fetchInboxItems(userId: string): Promise<InboxItem[]> {
+export async function fetchInboxItems(userId: string, historyCutoff?: string | null): Promise<InboxItem[]> {
   const projectIds = await projectIdsForUser(userId);
   const items: InboxItem[] = [...loadLoginNotifications(userId)];
 
   if (projectIds.length > 0) {
+    let logsQuery = supabase
+      .from("activity_log")
+      .select("id, project_id, task_id, actor_id, actor_name, message, action, action_params, created_at")
+      .in("project_id", projectIds)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (historyCutoff) logsQuery = logsQuery.gte("created_at", historyCutoff);
     const [{ data: logs }, { data: projects }] = await Promise.all([
-      supabase
-        .from("activity_log")
-        .select("id, project_id, task_id, actor_id, actor_name, message, action, action_params, created_at")
-        .in("project_id", projectIds)
-        .order("created_at", { ascending: false })
-        .limit(50),
+      logsQuery,
       supabase.from("projects").select("id, name").in("id", projectIds),
     ]);
     const names = new Map((projects || []).map((p) => [p.id, p.name as string]));
@@ -151,17 +154,19 @@ export function useInboxNotifications(userId: string) {
   const [items, setItems] = useState<InboxItem[]>([]);
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
   const [loading, setLoading] = useState(true);
+  const { cutoff: historyCutoff, loading: planLoading } = useHistoryCutoff();
 
   const refresh = useCallback(async () => {
-    const next = await fetchInboxItems(userId);
+    const next = await fetchInboxItems(userId, historyCutoff);
     setItems(next);
     setLoading(false);
-  }, [userId]);
+  }, [userId, historyCutoff]);
 
   useEffect(() => {
+    if (planLoading) return;
     setReadIds(loadReadIds(userId));
     void refresh();
-  }, [userId, refresh]);
+  }, [userId, refresh, planLoading]);
 
   useEffect(() => {
     const channel = supabase

@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase, Project } from "@/lib/supabase";
-import { checkIdeaLimit } from "@/lib/planLimits";
+import { checkIdeaLimit, checkProjectLimit, checkStorageUpload, checkTaskLimit, isPlanLimitError } from "@/lib/planLimits";
 import UpgradeLimitModal from "./UpgradeLimitModal";
 import { patchTaskExtras, type TaskAttachment } from "@/lib/taskExtras";
 import { copyRemoteFilesToTask } from "@/lib/taskAttachments";
@@ -185,6 +185,9 @@ export default function IdeasSection({
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Idea | null>(null);
   const [limitOpen, setLimitOpen] = useState(false);
+  const [convertLimitOpen, setConvertLimitOpen] = useState(false);
+  const [taskLimitOpen, setTaskLimitOpen] = useState(false);
+  const [storageLimitOpen, setStorageLimitOpen] = useState(false);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [converting, setConverting] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
@@ -338,8 +341,17 @@ export default function IdeasSection({
         "updated"
       );
       const fresh = formFiles.filter((file) => file.dataUrl?.startsWith("data:"));
-      if (fresh.length) await uploadIdeaAttachments(editing.id, currentUserId, fresh);
+      if (fresh.length) {
+        const result = await uploadIdeaAttachments(editing.id, currentUserId, fresh);
+        if (result.error) setStorageLimitOpen(true);
+      }
     } else {
+      const fresh = formFiles.filter((file) => file.dataUrl?.startsWith("data:"));
+      const pendingBytes = fresh.reduce((sum, file) => sum + (file.size || 0), 0);
+      if (pendingBytes > 0 && !(await checkStorageUpload(pendingBytes))) {
+        setStorageLimitOpen(true);
+        return;
+      }
       const idea = await createIdea({
         userId: currentUserId,
         title,
@@ -364,8 +376,13 @@ export default function IdeasSection({
       onOpenProject(idea.convertedProjectId);
       return;
     }
+    if (!(await checkProjectLimit())) {
+      setConvertLimitOpen(true);
+      return;
+    }
     setConverting(true);
     const { data: project, error } = await supabase.from("projects").insert({ name: idea.title }).select().single();
+    if (error && isPlanLimitError(error)) setConvertLimitOpen(true);
     if (error || !project) {
       setConverting(false);
       return;
@@ -385,6 +402,11 @@ export default function IdeasSection({
       .select();
     const columns = (cols || []) as { id: string; name: string; is_done_column: boolean }[];
     const startCol = findTodoColumn(columns) || columns[0];
+    if (!(await checkTaskLimit())) {
+      setConverting(false);
+      setTaskLimitOpen(true);
+      return;
+    }
     const { data: task } = await supabase
       .from("tasks")
       .insert({
@@ -944,7 +966,8 @@ export default function IdeasSection({
                   onChange={async (e) => {
                     const { files } = await filesFromList(e.target.files);
                     if (files.length) {
-                      await uploadIdeaAttachments(selected.id, currentUserId, files);
+                      const result = await uploadIdeaAttachments(selected.id, currentUserId, files);
+                      if (result.error) setStorageLimitOpen(true);
                       await refresh();
                     }
                     e.target.value = "";
@@ -1092,6 +1115,9 @@ export default function IdeasSection({
       )}
 
       <UpgradeLimitModal kind="ideas" open={limitOpen} onClose={() => setLimitOpen(false)} />
+      <UpgradeLimitModal kind="projects" open={convertLimitOpen} onClose={() => setConvertLimitOpen(false)} />
+      <UpgradeLimitModal kind="tasks" open={taskLimitOpen} onClose={() => setTaskLimitOpen(false)} />
+      <UpgradeLimitModal kind="storage" open={storageLimitOpen} onClose={() => setStorageLimitOpen(false)} />
     </div>
   );
 }

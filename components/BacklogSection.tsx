@@ -637,6 +637,10 @@ export default function BacklogSection({
   async function sendToProject(item: BacklogItem) {
     const target = item.projectId;
     if (!target) return;
+    if (!(await checkTaskLimit())) {
+      setLimitOpen(true);
+      return;
+    }
     setSending(item.id);
     const column = item.columnId
       ? (await supabase.from("board_columns").select("id").eq("id", item.columnId).maybeSingle()).data

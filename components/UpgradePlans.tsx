@@ -135,28 +135,28 @@ export default function UpgradePlans() {
           <div className="px-5 py-4 border-b border-line">
             <h2 className="text-sm font-semibold text-ink">{t("upgrade.compare.title")}</h2>
           </div>
-          <div className="overflow-x-auto thin-scroll">
-            <table className="w-full min-w-[680px] text-sm">
+          <div className="w-full">
+            <table className="w-full table-fixed text-[12px] sm:text-sm">
               <thead>
                 <tr className="text-inkFaint">
-                  <th className="text-start font-medium px-5 py-3 w-[34%]">{t("upgrade.compare.feature")}</th>
-                  <th className="text-start font-medium px-4 py-3">{t("upgrade.free.name")}</th>
-                  <th className="text-start font-medium px-4 py-3 text-[#2563EB] dark:text-[#BFDBFE]">{t("upgrade.pro.name")}</th>
-                  <th className="text-start font-medium px-4 py-3 text-[#047857] dark:text-[#6EE7B7]">{t("upgrade.team.name")}</th>
+                  <th className="text-start font-medium px-3 sm:px-5 py-3 w-[34%]">{t("upgrade.compare.feature")}</th>
+                  <th className="text-start font-medium px-2 sm:px-4 py-3">{t("upgrade.free.name")}</th>
+                  <th className="text-start font-medium px-2 sm:px-4 py-3 text-[#2563EB] dark:text-[#BFDBFE]">{t("upgrade.pro.name")}</th>
+                  <th className="text-start font-medium px-2 sm:px-4 py-3 text-[#047857] dark:text-[#6EE7B7]">{t("upgrade.team.name")}</th>
                 </tr>
               </thead>
               <tbody>
                 {compareRows.map(({ key, icon: Icon }, i) => (
                   <tr key={key} className={i % 2 === 0 ? "bg-paperDark/50" : "bg-transparent"}>
-                    <td className="px-5 py-3 text-inkSoft">
+                    <td className="px-3 sm:px-5 py-3 text-inkSoft">
                       <span className="inline-flex items-center gap-2">
-                        <Icon size={14} className="text-[#BFDBFE]" />
-                        {t(`upgrade.compare.${key}`)}
+                        <Icon size={14} className="text-[#BFDBFE] shrink-0" />
+                        <span className="min-w-0">{t(`upgrade.compare.${key}`)}</span>
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-ink">{t(`upgrade.compare.v.${key}.free`)}</td>
-                    <td className="px-4 py-3 text-ink font-medium">{t(`upgrade.compare.v.${key}.pro`)}</td>
-                    <td className="px-4 py-3 text-ink">{t(`upgrade.compare.v.${key}.team`)}</td>
+                    <td className="px-2 sm:px-4 py-3 text-ink break-words">{t(`upgrade.compare.v.${key}.free`)}</td>
+                    <td className="px-2 sm:px-4 py-3 text-ink font-medium break-words">{t(`upgrade.compare.v.${key}.pro`)}</td>
+                    <td className="px-2 sm:px-4 py-3 text-ink break-words">{t(`upgrade.compare.v.${key}.team`)}</td>
                   </tr>
                 ))}
               </tbody>

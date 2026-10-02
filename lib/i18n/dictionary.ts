@@ -1562,6 +1562,7 @@ const dict: Record<string, { en: string; ar: string }> = {
   "plan.usage.tasks": { en: "Tasks", ar: "المهام" },
   "plan.usage.ideas": { en: "Ideas", ar: "الأفكار" },
   "plan.usage.upgrade": { en: "Upgrade", ar: "ترقية" },
+  "plan.storage.full": { en: "Storage is full on the free plan. Upgrade for more space.", ar: "مساحة التخزين في الخطة المجانية امتلأت. رقِّ خطتك لمساحة أكبر." },
   "plan.history.title": {
     en: "Showing the last {days} days of activity",
     ar: "عرض آخر {days} أيام من سجل النشاط",

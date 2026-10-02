@@ -18,6 +18,7 @@ import { supabase, ActivityEntry, Project, Task } from "@/lib/supabase";
 import { normalizeTask } from "@/lib/taskShape";
 import { filterTrashed } from "@/lib/taskExtras";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useHistoryCutoff } from "@/lib/planUsage";
 import { useAppSession } from "./AppSession";
 import { renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
@@ -39,6 +40,7 @@ export default function HomeDashboard() {
   const today = localYmd(new Date());
   const firstName = (userName || "").trim().split(/\s+/)[0] || t("common.you");
 
+  const { cutoff: historyCutoff, loading: planLoading } = useHistoryCutoff();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -49,6 +51,7 @@ export default function HomeDashboard() {
   const [pickedDay, setPickedDay] = useState(today);
 
   useEffect(() => {
+    if (planLoading) return;
     let cancelled = false;
     (async () => {
       const { data: projectRows } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
@@ -62,14 +65,15 @@ export default function HomeDashboard() {
         return;
       }
       const ids = list.map((p) => p.id);
+      let activityQuery = supabase
+        .from("activity_log")
+        .select("id, project_id, task_id, actor_id, actor_name, message, action, action_params, created_at")
+        .in("project_id", ids)
+        .order("created_at", { ascending: false });
+      if (historyCutoff) activityQuery = activityQuery.gte("created_at", historyCutoff);
       const [taskRes, actRes] = await Promise.all([
         supabase.from("tasks").select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)").in("project_id", ids),
-        supabase
-          .from("activity_log")
-          .select("id, project_id, task_id, actor_id, actor_name, message, action, action_params, created_at")
-          .in("project_id", ids)
-          .order("created_at", { ascending: false })
-          .limit(200),
+        activityQuery.limit(200),
       ]);
       if (cancelled) return;
       setTasks(filterTrashed((taskRes.data || []).map(normalizeTask)));
@@ -79,7 +83,7 @@ export default function HomeDashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [historyCutoff, planLoading]);
 
   const projectById = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);
 

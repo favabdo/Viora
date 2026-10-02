@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { checkIdeaLimit, checkStorageUpload } from "./planLimits";
 import { migrateBrandColor } from "./colorCompat";
 import type { TaskAttachment } from "./taskExtras";
 
@@ -203,6 +204,7 @@ export async function createIdea(input: {
   projectId: string | null;
   attachments?: TaskAttachment[];
 }): Promise<Idea | null> {
+  if (!(await checkIdeaLimit())) return null;
   const { data, error } = await supabase
     .from("ideas")
     .insert({
@@ -284,12 +286,19 @@ export async function addIdeaNote(ideaId: string, userId: string, message: strin
   await logIdeaActivity(ideaId, "note", userId);
 }
 
-export async function uploadIdeaAttachments(ideaId: string, userId: string, files: TaskAttachment[]) {
+export async function uploadIdeaAttachments(
+  ideaId: string,
+  userId: string,
+  files: TaskAttachment[]
+): Promise<{ uploaded: number; error?: string }> {
   let uploaded = 0;
   for (const file of files) {
     if (!file.dataUrl || file.dataUrl.startsWith("http")) continue;
     const res = await fetch(file.dataUrl);
     const blob = await res.blob();
+    if (!(await checkStorageUpload(blob.size))) {
+      return { uploaded, error: "PLAN_LIMIT_STORAGE" };
+    }
     const path = `${userId}/${ideaId}/${file.id}-${safeName(file.name)}`;
     const { error } = await supabase.storage.from(BUCKET).upload(path, blob, {
       contentType: file.type || blob.type || "application/octet-stream",
@@ -307,6 +316,7 @@ export async function uploadIdeaAttachments(ideaId: string, userId: string, file
     uploaded += 1;
   }
   if (uploaded) await logIdeaActivity(ideaId, "file", userId);
+  return { uploaded };
 }
 
 type LegacyIdea = Idea;

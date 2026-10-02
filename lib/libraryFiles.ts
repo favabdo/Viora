@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { checkStorageUpload } from "./planLimits";
 import {
   copyRemoteFilesToTask,
   deleteTaskAttachment,
@@ -291,6 +292,9 @@ export async function addLibraryFiles(input: {
     if (file.size > MAX_TASK_FILE_BYTES) {
       skipped += 1;
       continue;
+    }
+    if (!(await checkStorageUpload(file.size))) {
+      return { added, skipped, error: "PLAN_LIMIT_STORAGE" };
     }
     const id = crypto.randomUUID();
     const path = `${input.userId}/${id}-${safeName(file.name)}`;

@@ -25,6 +25,7 @@ import { isDueAfterCreated, minDueDate } from "@/lib/taskShape";
 import { timeAgo } from "@/lib/timeAgo";
 import { fmtDate, useDisplay, type DateStyle, type DisplayOpts } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useHistoryCutoff } from "@/lib/planUsage";
 import ClickableAvatar from "./ClickableAvatar";
 import ClickableName from "./ClickableName";
 import FilePreview, { formatFileBytes } from "./FilePreview";
@@ -116,6 +117,7 @@ export default function TaskDetailModal({
 }) {
   const { t } = useTranslation();
   const { opts, dateStyle } = useDisplay();
+  const { cutoff: historyCutoff, loading: planLoading } = useHistoryCutoff();
   const [tab, setTab] = useState<"activity" | "comments" | "history">("activity");
   const [dueError, setDueError] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -143,12 +145,15 @@ export default function TaskDetailModal({
   }, [extras.description, task.id]);
 
   useEffect(() => {
+    if (planLoading) return;
     let cancelled = false;
-    supabase
+    let query = supabase
       .from("activity_log")
       .select("*")
       .eq("task_id", task.id)
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false });
+    if (historyCutoff) query = query.gte("created_at", historyCutoff);
+    query
       .limit(25)
       .then(async ({ data, error }) => {
         if (cancelled) return;
@@ -156,18 +161,19 @@ export default function TaskDetailModal({
           setEntries(data as ActivityEntry[]);
           return;
         }
-        const fallback = await supabase
+        let fallbackQuery = supabase
           .from("activity_log")
           .select("*")
           .eq("project_id", task.project_id)
-          .order("created_at", { ascending: false })
-          .limit(8);
+          .order("created_at", { ascending: false });
+        if (historyCutoff) fallbackQuery = fallbackQuery.gte("created_at", historyCutoff);
+        const fallback = await fallbackQuery.limit(8);
         if (!cancelled && !fallback.error && fallback.data) setEntries(fallback.data as ActivityEntry[]);
       });
     return () => {
       cancelled = true;
     };
-  }, [task.id, task.project_id]);
+  }, [task.id, task.project_id, historyCutoff, planLoading]);
 
   function savePatch(patch: Partial<TaskExtras>) {
     patchTaskExtras(task.id, patch);

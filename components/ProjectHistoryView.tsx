@@ -22,6 +22,7 @@ import {
 import { supabase, ActivityEntry, Project, ProjectMember, Task } from "@/lib/supabase";
 import { displayName, renderActivity } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useHistoryCutoff } from "@/lib/planUsage";
 import { fmtDate, fmtTime, useDisplay, type DateStyle, type DisplayOpts } from "@/lib/displayFormat";
 import HistoryLimitBanner from "./HistoryLimitBanner";
 import ClickableName from "./ClickableName";
@@ -208,6 +209,7 @@ export default function ProjectHistoryView({
 }) {
   const { t } = useTranslation();
   const { opts, dateStyle } = useDisplay();
+  const { cutoff: historyCutoff, loading: planLoading } = useHistoryCutoff();
   const [entries, setEntries] = useState<ActivityEntry[]>([]);
   const [profiles, setProfiles] = useState<Record<string, ProfileBit>>({});
   const [loading, setLoading] = useState(true);
@@ -251,6 +253,7 @@ export default function ProjectHistoryView({
         .order("created_at", { ascending: false });
       const from = startFromRange(appliedRange);
       if (from) q = q.gte("created_at", from);
+      if (historyCutoff) q = q.gte("created_at", historyCutoff);
       if (appliedMember !== "all") q = q.eq("actor_id", appliedMember);
       const typeFilter = tabActions(appliedType);
       if (typeFilter) q = q.in("action", typeFilter);
@@ -262,10 +265,11 @@ export default function ProjectHistoryView({
       setEntries((prev) => (replace ? rows : [...prev, ...rows]));
       return rows;
     },
-    [project.id, appliedRange, appliedMember, appliedType, loadProfiles]
+    [project.id, appliedRange, appliedMember, appliedType, historyCutoff, loadProfiles]
   );
 
   useEffect(() => {
+    if (planLoading) return;
     let active = true;
     setLoading(true);
     fetchPage(0, true).then(() => {
@@ -274,7 +278,7 @@ export default function ProjectHistoryView({
     return () => {
       active = false;
     };
-  }, [fetchPage]);
+  }, [fetchPage, planLoading]);
 
   useEffect(() => {
     const channel = supabase
@@ -284,6 +288,7 @@ export default function ProjectHistoryView({
         { event: "INSERT", schema: "public", table: "activity_log", filter: `project_id=eq.${project.id}` },
         (payload) => {
           const row = payload.new as ActivityEntry;
+          if (historyCutoff && new Date(row.created_at).getTime() < new Date(historyCutoff).getTime()) return;
           setEntries((prev) => [row, ...prev]);
           void loadProfiles([row]);
         }
@@ -292,7 +297,7 @@ export default function ProjectHistoryView({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [project.id, loadProfiles]);
+  }, [project.id, historyCutoff, loadProfiles]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
