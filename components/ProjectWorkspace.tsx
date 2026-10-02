@@ -21,6 +21,7 @@ import { normalizeProjectMember, normalizeTask } from "@/lib/taskShape";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { displayName } from "@/lib/displayName";
 import { deleteOwnedTask } from "@/lib/deletes";
+import { deleteTaskOrMoveToTrash, filterTrashed } from "@/lib/taskExtras";
 import { isFavoriteProject, toggleFavoriteProject } from "@/lib/projectFavorites";
 import { hydrateProjectMetas } from "@/lib/projectMeta";
 import { listLinkedRepos, listProjectCommits, syncRepoCommits, type GithubCommit, type LinkedRepo } from "@/lib/github";
@@ -155,7 +156,7 @@ export default function ProjectWorkspace({
         const fallback = await supabase.from("tasks").select("*").eq("project_id", projectId);
         if (!fallback.error && fallback.data) rows = fallback.data as Record<string, unknown>[];
       }
-      const normalized = rows.map(normalizeTask);
+      const normalized = filterTrashed(rows.map(normalizeTask));
       setTasks(normalized);
       loadCommentCounts(normalized.map((row) => row.id));
 
@@ -193,7 +194,7 @@ export default function ProjectWorkspace({
             .from("tasks")
             .select("*, profiles!tasks_user_id_fkey(username, full_name, avatar_url)")
             .eq("project_id", projectId);
-          if (data) setTasks(data.map(normalizeTask));
+          if (data) setTasks(filterTrashed(data.map(normalizeTask)));
         }
       )
       .subscribe();
@@ -249,10 +250,12 @@ export default function ProjectWorkspace({
   }
 
   async function performDeleteTask(task: Task) {
-    const message = await deleteOwnedTask(task.id);
-    if (message) {
-      alert(message);
-      return;
+    if (!deleteTaskOrMoveToTrash(task.id)) {
+      const message = await deleteOwnedTask(task.id);
+      if (message) {
+        alert(message);
+        return;
+      }
     }
     setTasks((prev) => prev.filter((item) => item.id !== task.id));
     setDeleteTask(null);

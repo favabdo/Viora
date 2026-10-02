@@ -41,9 +41,9 @@ function loadSettings(): VioraSettings {
 
 /**
  * تفضيلات عامة للتطبيق متخزنة محليًا (localStorage) - مش مرتبطة بحساب معيّن.
- * بعض القيم شغالة فعليًا في التطبيق (weekStart, defaultView, timeFormat في الأماكن اللي
- * بتعرض تاريخ/وقت)، وبعضها لسه بس متخزنة كتفضيل مبدئي لحد ما نربطها بمكان استخدام حقيقي
- * (timezone, dateFormat, archiveCompletedTasks, moveTasksToTrash).
+ * كل القيم شغالة فعليًا في التطبيق: timezone/dateFormat/timeFormat عبر lib/displayFormat،
+ * weekStart في التقاويم وشريط الرئيسية، defaultView في projectPath،
+ * وarchiveCompletedTasks/moveTasksToTrash في lib/taskExtras.
  */
 export function useSettings() {
   const [settings, setSettings] = useState<VioraSettings>(DEFAULT_SETTINGS);

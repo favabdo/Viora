@@ -22,6 +22,7 @@ import VLogoLoader from "./ui/VLogoLoader";
 import { Input, Textarea, fieldClass } from "./ui/Input";
 import { SkeletonList } from "./ui/Skeleton";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { fmtDate, fmtDateTime, useDisplay, type DisplayOpts } from "@/lib/displayFormat";
 import { supabase } from "@/lib/supabase";
 
 type HistoryEntry = {
@@ -70,24 +71,14 @@ type Comment = {
 type Agent = { id: number; name: string };
 type Contact = { id: number; name: string };
 
-function formatDateTime(iso: string | null, locale: string): string {
+function formatDateTime(iso: string | null, o: DisplayOpts): string {
   if (!iso) return "—";
-  try {
-    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(
-      new Date(iso)
-    );
-  } catch {
-    return "—";
-  }
+  return fmtDateTime(iso, o, "short") || "—";
 }
 
-function formatDate(iso: string | null, locale: string): string {
+function formatDate(iso: string | null, o: DisplayOpts): string {
   if (!iso) return "—";
-  try {
-    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(iso));
-  } catch {
-    return "—";
-  }
+  return fmtDate(iso, o, "short") || "—";
 }
 
 const FIELD_KEY_MAP: Record<string, string> = {
@@ -109,8 +100,8 @@ export default function RoomsSection({
   initialFilter?: RoomsFilter;
   onFilterChange?: (filter: RoomsFilter) => void;
 }) {
-  const { t, lang } = useTranslation();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { t } = useTranslation();
+  const { opts } = useDisplay();
 
   const [checkingSession, setCheckingSession] = useState(true);
   const [unlocked, setUnlocked] = useState(false);
@@ -815,15 +806,15 @@ export default function RoomsSection({
                       </span>
                       <span className="inline-flex items-center gap-1">
                         <Clock size={11} strokeWidth={1.75} />
-                        {t("rooms.created")} {formatDate(task.createdAt, locale)}
+                        {t("rooms.created")} {formatDate(task.createdAt, opts)}
                       </span>
                       <span className="inline-flex items-center gap-1">
                         <Clock size={11} strokeWidth={1.75} />
-                        {t("rooms.due")} {formatDate(task.dueDate, locale)}
+                        {t("rooms.due")} {formatDate(task.dueDate, opts)}
                       </span>
                       {task.done && task.endedAt && (
                         <span>
-                          {t("rooms.completed")} {formatDate(task.endedAt, locale)}
+                          {t("rooms.completed")} {formatDate(task.endedAt, opts)}
                         </span>
                       )}
                     </div>
@@ -888,7 +879,7 @@ export default function RoomsSection({
                                   )}
                                   {entry.newValue && <span className="text-ink">{entry.newValue}</span>}
                                 </p>
-                                <p className="text-inkFaint mt-0.5">{formatDateTime(entry.changedAt, locale)}</p>
+                                <p className="text-inkFaint mt-0.5">{formatDateTime(entry.changedAt, opts)}</p>
                               </li>
                             ))}
                           </ul>
@@ -910,7 +901,7 @@ export default function RoomsSection({
                                   <span className="text-ink font-medium">{c.createdByName || t("rooms.unknownPerson")}</span>
                                 </p>
                                 <p className="text-ink mt-0.5">{c.commentText}</p>
-                                <p className="text-inkFaint mt-0.5">{formatDateTime(c.createdAt, locale)}</p>
+                                <p className="text-inkFaint mt-0.5">{formatDateTime(c.createdAt, opts)}</p>
                               </li>
                             ))}
                           </ul>

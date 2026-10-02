@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { supabase, ActivityEntry, Project, Task } from "@/lib/supabase";
 import { normalizeTask } from "@/lib/taskShape";
+import { filterTrashed } from "@/lib/taskExtras";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useAppSession } from "./AppSession";
 import { renderActivity } from "@/lib/displayName";
@@ -28,12 +29,13 @@ import PlanUsageBar from "./PlanUsageBar";
 import Button from "./ui/Button";
 import ClickableName from "./ClickableName";
 import { addDays, dueLabel, localYmd, priorityOf, startOfDay } from "@/lib/homeDashboard";
+import { monthLabel, useDisplay, weekdayLabel, type DisplayOpts } from "@/lib/displayFormat";
 
 export default function HomeDashboard() {
   const router = useRouter();
-  const { t, lang, dir } = useTranslation();
+  const { t, dir } = useTranslation();
   const { session, userName } = useAppSession();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { opts, dateStyle, weekStartMonday } = useDisplay();
   const today = localYmd(new Date());
   const firstName = (userName || "").trim().split(/\s+/)[0] || t("common.you");
 
@@ -70,7 +72,7 @@ export default function HomeDashboard() {
           .limit(200),
       ]);
       if (cancelled) return;
-      setTasks((taskRes.data || []).map(normalizeTask));
+      setTasks(filterTrashed((taskRes.data || []).map(normalizeTask)));
       setActivity((actRes.data || []) as ActivityEntry[]);
       setLoading(false);
     })();
@@ -102,9 +104,10 @@ export default function HomeDashboard() {
   const myTasks = useMemo(() => [...myOpen].sort((a, b) => (a.due_date || "9999").localeCompare(b.due_date || "9999")).slice(0, 6), [myOpen]);
 
   const weekDays = useMemo(() => {
-    const start = addDays(cursor, -((cursor.getDay() + 6) % 7));
+    const offset = weekStartMonday ? (cursor.getDay() + 6) % 7 : cursor.getDay();
+    const start = addDays(cursor, -offset);
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
-  }, [cursor]);
+  }, [cursor, weekStartMonday]);
 
   const dayEvents = tasks.filter((task) => task.due_date === pickedDay);
   const Prev = dir === "rtl" ? ChevronRight : ChevronLeft;
@@ -251,7 +254,7 @@ export default function HomeDashboard() {
                 {upcomingTasks.length === 0 ? (
                   <p className="text-sm text-inkFaint">{t("home.noUpcoming")}</p>
                 ) : (
-                  <ul className="space-y-2.5">{upcomingTasks.map((task) => taskRow(task, dueLabel(task.due_date, today, t, locale), "text-inkSoft"))}</ul>
+                  <ul className="space-y-2.5">{upcomingTasks.map((task) => taskRow(task, dueLabel(task.due_date, today, t, opts.locale, opts, dateStyle), "text-inkSoft"))}</ul>
                 )}
               </Panel>
             </div>
@@ -262,7 +265,7 @@ export default function HomeDashboard() {
               {myTasks.length === 0 ? (
                 <p className="text-sm text-inkFaint">{t("home.noMyTasks")}</p>
               ) : (
-                <ul className="space-y-2.5">{myTasks.map((task) => taskRow(task, dueLabel(task.due_date, today, t, locale), "text-inkSoft"))}</ul>
+                <ul className="space-y-2.5">{myTasks.map((task) => taskRow(task, dueLabel(task.due_date, today, t, opts.locale, opts, dateStyle), "text-inkSoft"))}</ul>
               )}
             </Panel>
 
@@ -281,7 +284,7 @@ export default function HomeDashboard() {
                 </div>
               }
             >
-              <p className="text-xs text-inkFaint mb-2">{new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(cursor)}</p>
+              <p className="text-xs text-inkFaint mb-2">{monthLabel(cursor, opts)}</p>
               <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-3 min-w-0">
                 {weekDays.map((day) => {
                   const key = localYmd(day);
@@ -293,7 +296,7 @@ export default function HomeDashboard() {
                       onClick={() => setPickedDay(key)}
                       className={`min-w-0 rounded-lg py-1.5 px-0.5 text-center ${active ? "bg-[#2563EB] text-white" : "bg-paperDark text-inkSoft"}`}
                     >
-                      <span className="block text-[9px] sm:text-[10px] opacity-80 truncate">{weekday(key, locale)}</span>
+                      <span className="block text-[9px] sm:text-[10px] opacity-80 truncate">{weekday(key, opts)}</span>
                       <span className="block text-xs sm:text-sm font-medium">{day.getDate()}</span>
                     </button>
                   );
@@ -340,7 +343,7 @@ export default function HomeDashboard() {
                           )}
                           {rendered.rest}
                         </p>
-                        <p className="text-[11px] text-inkFaint mt-0.5">{timeAgo(entry.created_at, t)}</p>
+                        <p className="text-[11px] text-inkFaint mt-0.5">{timeAgo(entry.created_at, t, opts)}</p>
                       </div>
                     </li>
                   );
@@ -354,6 +357,6 @@ export default function HomeDashboard() {
   );
 }
 
-function weekday(iso: string, locale: string) {
-  return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(new Date(`${iso}T00:00:00`));
+function weekday(iso: string, o: DisplayOpts) {
+  return weekdayLabel(`${iso}T00:00:00`, o);
 }

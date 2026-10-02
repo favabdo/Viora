@@ -1,3 +1,4 @@
+import { fmtDate, type DateStyle } from "./displayFormat";
 import type { ProjectMember, Task } from "@/lib/supabase";
 
 type ProfileBits = { username: string; full_name: string; avatar_url?: string | null };
@@ -26,11 +27,11 @@ export function dateKey(value: unknown): string | null {
   return null;
 }
 
-export function formatTaskDate(value: unknown, locale: string): string {
+export function formatTaskDate(value: unknown, locale: string, style: DateStyle = "short"): string {
   const key = dateKey(value);
   if (!key) return "";
   try {
-    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(`${key}T00:00:00`));
+    return fmtDate(new Date(`${key}T00:00:00`), { locale, timeFormat: "12h" }, style);
   } catch {
     return key;
   }

@@ -1,3 +1,6 @@
+import { getProjectMeta } from "./projectMeta";
+import { getStoredSettings } from "./useSettings";
+
 export type TaskSubtask = {
   text: string;
   done: boolean;
@@ -28,6 +31,7 @@ export type TaskExtras = {
   pinned?: boolean;
   watching?: boolean;
   archived?: boolean;
+  trashedAt?: string | null;
 };
 
 const TASK_META_KEY = "viora-task-meta";
@@ -94,6 +98,7 @@ export function normalizeExtras(value: unknown): TaskExtras {
     pinned: Boolean(row.pinned),
     watching: Boolean(row.watching),
     archived: Boolean(row.archived),
+    trashedAt: typeof row.trashedAt === "string" && row.trashedAt ? row.trashedAt : null,
   };
 }
 
@@ -142,7 +147,53 @@ export function copyTaskExtras(fromId: string, toId: string) {
     pinned: false,
     watching: false,
     archived: false,
+    trashedAt: null,
   });
+}
+
+export function isTaskTrashed(taskId: string): boolean {
+  return Boolean(readTaskExtras(taskId).trashedAt);
+}
+
+/** يستبعد المهام المنقولة إلى سلة المحذوفات من أي قائمة مهام */
+export function filterTrashed<T extends { id: string }>(tasks: T[]): T[] {
+  const all = readAll();
+  return tasks.filter((task) => !all[task.id]?.trashedAt);
+}
+
+export function moveTaskToTrash(taskId: string) {
+  patchTaskExtras(taskId, { trashedAt: new Date().toISOString() });
+}
+
+export function restoreTaskFromTrash(taskId: string) {
+  patchTaskExtras(taskId, { trashedAt: null });
+}
+
+export function listTrashedTasks(): { taskId: string; trashedAt: string }[] {
+  return Object.entries(readAll())
+    .filter(([, extras]) => Boolean(extras.trashedAt))
+    .map(([taskId, extras]) => ({ taskId, trashedAt: extras.trashedAt as string }))
+    .sort((a, b) => b.trashedAt.localeCompare(a.trashedAt));
+}
+
+/** حذف المهمة: إلى السلة (استرجاع لاحقًا) عند تفعيل الإعداد، وإلا حذف نهائي */
+export function deleteTaskOrMoveToTrash(taskId: string): boolean {
+  try {
+    if (getStoredSettings().moveTasksToTrash) {
+      moveTaskToTrash(taskId);
+      return true;
+    }
+  } catch {
+    // تجاهل — المسار الأصلي للحذف
+  }
+  return false;
+}
+
+/** هل تُؤرشف المهمة تلقائيًا عند اكتمالها؟ (إعداد المشروع يتجاوز العام) */
+export function shouldArchiveOnComplete(projectId?: string): boolean {
+  const action = projectId ? getProjectMeta(projectId)?.completionAction : undefined;
+  if (action) return action === "archive";
+  return getStoredSettings().archiveCompletedTasks;
 }
 
 export function subtaskProgress(extras: TaskExtras): { done: number; total: number } {

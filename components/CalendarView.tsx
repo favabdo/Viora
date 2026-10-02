@@ -6,7 +6,7 @@ import { useRevealPanelOnMobile } from "@/lib/revealPanel";
 import IconButton from "./ui/IconButton";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useSettings } from "@/lib/useSettings";
+import { useDisplay, monthLabel, weekdayLabel } from "@/lib/displayFormat";
 import { dateKey } from "@/lib/taskShape";
 import { canHover } from "@/lib/canHover";
 import { TaskDetailsPanel, TaskHoverCard } from "./TaskInspect";
@@ -26,10 +26,8 @@ export default function CalendarView({
   currentUserId: string;
   projectName?: string;
 }) {
-  const { t, lang, dir } = useTranslation();
-  const { settings } = useSettings();
-  const weekStartsOnMonday = settings.weekStart === "monday";
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { t, dir } = useTranslation();
+  const { opts, dateStyle, weekStartMonday } = useDisplay();
   const [cursor, setCursor] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -63,24 +61,24 @@ export default function CalendarView({
     const month = cursor.getMonth();
     const firstOfMonth = new Date(year, month, 1);
     const rawOffset = firstOfMonth.getDay(); // 0 = الأحد
-    const startOffset = weekStartsOnMonday ? (rawOffset + 6) % 7 : rawOffset;
+    const startOffset = weekStartMonday ? (rawOffset + 6) % 7 : rawOffset;
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const cells: (Date | null)[] = [];
     for (let i = 0; i < startOffset; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
     while (cells.length % 7 !== 0) cells.push(null);
     return cells;
-  }, [cursor, weekStartsOnMonday]);
+  }, [cursor, weekStartMonday]);
 
-  const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(cursor);
+  const monthTitle = monthLabel(cursor, opts);
   const weekdayLabels = useMemo(() => {
-    const base = new Date(2024, 0, weekStartsOnMonday ? 8 : 7); // إثنين أو أحد
+    const base = new Date(2024, 0, weekStartMonday ? 8 : 7); // إثنين أو أحد
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(base);
       d.setDate(base.getDate() + i);
-      return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(d);
+      return weekdayLabel(d, opts);
     });
-  }, [locale, weekStartsOnMonday]);
+  }, [opts, weekStartMonday]);
 
   const todayKey = ymd(new Date());
   const selectedTask = selectedId ? openTasks.find((task) => task.id === selectedId) || null : null;
@@ -92,7 +90,7 @@ export default function CalendarView({
     <div className="flex flex-col xl:flex-row gap-5 items-start">
     <div className="flex-1 min-w-0 w-full">
       <div className="flex items-center justify-between gap-3 mb-4">
-        <h3 className="font-display text-base font-medium text-ink">{monthLabel}</h3>
+        <h3 className="font-display text-base font-medium text-ink">{monthTitle}</h3>
         <div className="flex items-center gap-3">
           <label className="inline-flex items-center gap-2 text-xs text-inkSoft">
             <span>{t("calendar.showCompleted")}</span>
@@ -203,7 +201,7 @@ export default function CalendarView({
           <TaskDetailsPanel
             task={selectedTask}
             projectName={projectName}
-            locale={locale}
+            locale={opts.locale}
             currentUserId={currentUserId}
             t={t}
             onClose={() => setSelectedId(null)}
@@ -215,7 +213,7 @@ export default function CalendarView({
           task={hover.task}
           x={hover.x}
           y={hover.y}
-          locale={locale}
+          locale={opts.locale}
           currentUserId={currentUserId}
           t={t}
           projectName={projectName}

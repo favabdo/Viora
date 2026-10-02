@@ -18,12 +18,19 @@ import {
   Keyboard,
   Languages,
   LayoutGrid,
+  Moon,
   AlertTriangle,
+  Sun,
   Timer,
   Trash2,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSettings, DateFormat, TimeFormat, WeekStart, DefaultView } from "@/lib/useSettings";
+import { deleteOwnedTask } from "@/lib/deletes";
+import { listTrashedTasks, restoreTaskFromTrash } from "@/lib/taskExtras";
+import { useDisplay } from "@/lib/displayFormat";
+import { timeAgo } from "@/lib/timeAgo";
+import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
 import { HOME_PATH } from "@/lib/appRoutes";
 import { Segmented, Select, SettingsGroup, SettingsGroupTitle, SettingsHeader, SettingsRow, Toggle } from "@/components/settingsUi";
 
@@ -49,6 +56,35 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showImportNotice, setShowImportNotice] = useState(false);
+  const [theme, setThemeState] = useState<Theme>("dark");
+  const [trashTick, setTrashTick] = useState(0);
+  const [trashed, setTrashed] = useState<{ taskId: string; trashedAt: string; title: string }[]>([]);
+  const { opts } = useDisplay();
+
+  useEffect(() => {
+    setThemeState(getStoredTheme());
+  }, []);
+
+  useEffect(() => {
+    const items = listTrashedTasks();
+    if (items.length === 0) {
+      setTrashed([]);
+      return;
+    }
+    supabase
+      .from("tasks")
+      .select("id, title")
+      .in("id", items.map((item) => item.taskId))
+      .then(({ data }) => {
+        const titles = new Map((data || []).map((row) => [row.id as string, row.title as string]));
+        setTrashed(items.map((item) => ({ ...item, title: titles.get(item.taskId) || "" })));
+      });
+  }, [trashTick, session]);
+
+  function handleThemeChange(next: Theme) {
+    setThemeState(next);
+    applyTheme(next);
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -134,10 +170,24 @@ export default function SettingsPage() {
                     }
                   />
                   <SettingsRow
+                    icon={theme === "dark" ? Moon : Sun}
+                    title={t("settings.appearance")}
+                    hint={t("settings.appearanceHint")}
+                    control={
+                      <Segmented
+                        value={theme}
+                        onChange={(v) => handleThemeChange(v as Theme)}
+                        options={[
+                          { value: "light", label: <span className="inline-flex items-center gap-1"><Sun size={12} />{t("settings.light")}</span> },
+                          { value: "dark", label: <span className="inline-flex items-center gap-1"><Moon size={12} />{t("settings.dark")}</span> },
+                        ]}
+                      />
+                    }
+                  />
+                  <SettingsRow
                     icon={Clock}
                     title={t("settings.timezone")}
                     hint={t("settings.timezoneHint")}
-                    badge={t("settings.comingSoon")}
                     control={
                       <Select value={settings.timezone} onChange={(v) => updateSetting("timezone", v)} ariaLabel={t("settings.timezone")}>
                         {TIMEZONES.map((tz) => (
@@ -152,7 +202,6 @@ export default function SettingsPage() {
                     icon={CalendarDays}
                     title={t("settings.dateFormat")}
                     hint={t("settings.dateFormatHint")}
-                    badge={t("settings.comingSoon")}
                     control={
                       <Select value={settings.dateFormat} onChange={(v) => updateSetting("dateFormat", v as DateFormat)} ariaLabel={t("settings.dateFormat")}>
                         <option value="MMM_D_YYYY">Aug 17, 2026</option>
@@ -234,18 +283,58 @@ export default function SettingsPage() {
                     icon={Archive}
                     title={t("settings.archiveCompleted")}
                     hint={t("settings.archiveCompletedHint")}
-                    badge={t("settings.comingSoon")}
                     control={<Toggle checked={settings.archiveCompletedTasks} onChange={(v) => updateSetting("archiveCompletedTasks", v)} />}
                   />
                   <SettingsRow
                     icon={Trash2}
                     title={t("settings.moveToTrash")}
                     hint={t("settings.moveToTrashHint")}
-                    badge={t("settings.comingSoon")}
                     control={<Toggle checked={settings.moveTasksToTrash} onChange={(v) => updateSetting("moveTasksToTrash", v)} />}
                   />
                 </SettingsGroup>
               </div>
+
+              {trashed.length > 0 && (
+                <div>
+                  <SettingsGroupTitle>{t("settings.trash")}</SettingsGroupTitle>
+                  <SettingsGroup>
+                    {trashed.map((item) => (
+                      <SettingsRow
+                        key={item.taskId}
+                        icon={Trash2}
+                        iconColor="#6B7280"
+                        title={item.title || t("settings.trash.deletedTask")}
+                        hint={timeAgo(item.trashedAt, t, opts)}
+                        control={
+                          <div className="flex items-center gap-1.5">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={async () => {
+                                restoreTaskFromTrash(item.taskId);
+                                setTrashTick((n) => n + 1);
+                              }}
+                            >
+                              {t("settings.trash.restore")}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={async () => {
+                                await deleteOwnedTask(item.taskId);
+                                restoreTaskFromTrash(item.taskId);
+                                setTrashTick((n) => n + 1);
+                              }}
+                            >
+                              {t("settings.trash.deleteForever")}
+                            </Button>
+                          </div>
+                        }
+                      />
+                    ))}
+                  </SettingsGroup>
+                </div>
+              )}
 
               <div className="lg:hidden">{dangerBlock}</div>
             </div>

@@ -1,3 +1,5 @@
+import { getStoredSettings } from "./useSettings";
+
 export const APP_NAV = [
   "dashboard",
   "projects",
@@ -44,8 +46,10 @@ export function isWorkspaceView(value: string): value is WorkspaceView {
   return (WORKSPACE_VIEWS as readonly string[]).includes(value);
 }
 
-export function projectPath(projectId: string, view: WorkspaceView = "board") {
-  return `/projects/${projectId}/${view}`;
+/** يفتح المشروع على العرض الافتراضي المضبوط في الإعدادات (board إذا لم تُضبط) */
+export function projectPath(projectId: string, view?: WorkspaceView) {
+  const fallback = getStoredSettings().defaultView as WorkspaceView;
+  return `/projects/${projectId}/${view ?? fallback}`;
 }
 
 export function ideaPath(ideaId?: string | null) {

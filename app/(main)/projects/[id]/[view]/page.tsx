@@ -12,7 +12,7 @@ function ProjectViewInner({ id, view }: { id: string; view: string }) {
   const { session } = useAppSession();
 
   useEffect(() => {
-    if (!isWorkspaceView(view)) router.replace(projectPath(id, "board"));
+    if (!isWorkspaceView(view)) router.replace(projectPath(id));
   }, [view, id, router]);
 
   if (!isWorkspaceView(view)) return null;

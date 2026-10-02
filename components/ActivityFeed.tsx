@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
+import { useDisplay } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export default function ActivityFeed({
@@ -18,6 +19,7 @@ export default function ActivityFeed({
   variant?: "default" | "panel";
 }) {
   const { t } = useTranslation();
+  const { opts } = useDisplay();
   const [entries, setEntries] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(variant === "panel");
@@ -72,7 +74,7 @@ export default function ActivityFeed({
               {label ? rest.trimStart() : rest}
             </span>
             <span className="text-2xs text-inkFaint whitespace-nowrap shrink-0 font-mono tabular-nums pt-0.5">
-              {timeAgo(e.created_at, t)}
+              {timeAgo(e.created_at, t, opts)}
             </span>
           </li>
         );

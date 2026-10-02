@@ -8,6 +8,7 @@ import Button from "./ui/Button";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { timeAgo } from "@/lib/timeAgo";
+import { useDisplay } from "@/lib/displayFormat";
 import {
   fetchGithubRepos,
   getRepoSlots,
@@ -34,6 +35,7 @@ export default function GitHubImportModal({
   onImported?: () => void;
 }) {
   const { t, lang } = useTranslation();
+  const { opts } = useDisplay();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -213,7 +215,7 @@ export default function GitHubImportModal({
                           {repo.is_private && <Lock size={11} className="shrink-0 text-inkFaint" />}
                         </span>
                         <span className="block truncate text-[11px] text-inkFaint">
-                          {repo.owner_login} · {repo.pushed_at ? timeAgo(repo.pushed_at, t) : "—"}
+                          {repo.owner_login} · {repo.pushed_at ? timeAgo(repo.pushed_at, t, opts) : "—"}
                           {repo.language ? ` · ${repo.language}` : ""}
                         </span>
                         {repo.description && (

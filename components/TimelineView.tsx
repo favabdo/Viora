@@ -6,7 +6,8 @@ import { supabase, Task, BoardColumn } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Modal from "./ui/Modal";
 import Button from "./ui/Button";
-import { dateKey, formatTaskDate, isDueAfterCreated, minDueDate } from "@/lib/taskShape";
+import { dateKey, isDueAfterCreated, minDueDate } from "@/lib/taskShape";
+import { useDisplay, fmtDate, monthLabel } from "@/lib/displayFormat";
 
 const DAY_WIDTH = 34;
 const ROW_HEIGHT = 44;
@@ -42,8 +43,8 @@ export default function TimelineView({
   columns: BoardColumn[];
   onTasksMutated: (updater: (prev: Task[]) => Task[]) => void;
 }) {
-  const { t, lang } = useTranslation();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { t } = useTranslation();
+  const { opts, dateStyle, weekStartMonday } = useDisplay();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [hover, setHover] = useState<{ task: Task; x: number; y: number } | null>(null);
@@ -80,7 +81,7 @@ export default function TimelineView({
     const monthGroups: { label: string; days: number }[] = [];
     let cursor = new Date(min);
     for (let i = 0; i < total; ) {
-      const label = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(cursor);
+      const label = monthLabel(cursor, opts);
       const daysInThisMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate() - cursor.getDate() + 1;
       const span = Math.min(daysInThisMonth, total - i);
       monthGroups.push({ label, days: span });
@@ -89,7 +90,7 @@ export default function TimelineView({
     }
 
     return { rangeStart: min, totalDays: total, months: monthGroups };
-  }, [datedTasks, locale, todayIso]);
+  }, [datedTasks, opts, todayIso]);
 
   const todayOffset = diffDays(rangeStart, new Date(new Date().toDateString()));
 
@@ -237,7 +238,6 @@ export default function TimelineView({
           task={hover.task}
           x={hover.x}
           y={hover.y}
-          locale={locale}
           todayIso={todayIso}
           t={t}
         />
@@ -346,17 +346,16 @@ function TimelineTaskTip({
   task,
   x,
   y,
-  locale,
   todayIso,
   t,
 }: {
   task: Task;
   x: number;
   y: number;
-  locale: string;
   todayIso: string;
   t: (key: string) => string;
 }) {
+  const { opts, dateStyle } = useDisplay();
   const created = dateKey(task.created_at) || dateKey(task.start_date) || todayIso;
   const due = dateKey(task.due_date);
   const late = !task.is_done && due && due < todayIso ? Math.max(diffDays(toDate(due), toDate(todayIso)), 0) : 0;
@@ -393,11 +392,11 @@ function TimelineTaskTip({
       <dl className="mt-2 space-y-1.5 text-[12px]">
         <div className="flex justify-between gap-3">
           <dt className="text-inkFaint">{t("taskDetail.created")}</dt>
-          <dd className="text-ink">{formatTaskDate(created, locale)}</dd>
+          <dd className="text-ink">{fmtDate(created, opts, dateStyle)}</dd>
         </div>
         <div className="flex justify-between gap-3">
           <dt className="text-inkFaint">{t("taskDetail.due")}</dt>
-          <dd className="text-ink">{due ? formatTaskDate(due, locale) : t("board.noDueDate")}</dd>
+          <dd className="text-ink">{due ? fmtDate(due, opts, dateStyle) : t("board.noDueDate")}</dd>
         </div>
         <div className="flex justify-between gap-3">
           <dt className="text-inkFaint">{t("timeline.timeLeft")}</dt>

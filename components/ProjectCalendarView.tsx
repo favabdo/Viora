@@ -4,12 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Filter, MoreHorizontal, ChevronDown } from "lucide-react";
 import { useRevealPanelOnMobile } from "@/lib/revealPanel";
 import { supabase, Project, Task, BoardColumn } from "@/lib/supabase";
-import { dateKey, formatTaskDate, normalizeTask } from "@/lib/taskShape";
+import { dateKey, normalizeTask } from "@/lib/taskShape";
+import { filterTrashed } from "@/lib/taskExtras";
 import { layoutWeekLanes, spanCoversDay, taskBarColor } from "@/lib/calendarLayout";
 import { displayName } from "@/lib/displayName";
 import { canHover } from "@/lib/canHover";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useSettings } from "@/lib/useSettings";
+import { useDisplay, fmtDate, monthLabel, weekdayLabel } from "@/lib/displayFormat";
 import Avatar from "./ui/Avatar";
 import DonutChart from "./ui/DonutChart";
 import { TaskDetailsPanel, TaskHoverCard } from "./TaskInspect";
@@ -59,10 +60,8 @@ export default function ProjectCalendarView({
   currentUserId: string;
   onTasksMutated: (updater: (prev: Task[]) => Task[]) => void;
 }) {
-  const { t, lang, dir } = useTranslation();
-  const { settings } = useSettings();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
-  const weekStartsOnMonday = settings.weekStart === "monday";
+  const { t, dir } = useTranslation();
+  const { opts, dateStyle, weekStartMonday } = useDisplay();
   const [cursor, setCursor] = useState(() => startOfMonth(new Date()));
   const [allTasks, setAllTasks] = useState<Task[]>(projectTasks);
   const [projectFilter, setProjectFilter] = useState(project.id);
@@ -90,7 +89,7 @@ export default function ProjectCalendarView({
       )
       .then(({ data, error }) => {
         if (error || !data) return;
-        setAllTasks(data.map(normalizeTask));
+        setAllTasks(filterTrashed(data.map(normalizeTask)));
       });
   }, [projects]);
 
@@ -134,14 +133,14 @@ export default function ProjectCalendarView({
     const month = cursor.getMonth();
     const first = new Date(year, month, 1);
     const rawOffset = first.getDay();
-    const startOffset = weekStartsOnMonday ? (rawOffset + 6) % 7 : rawOffset;
+    const startOffset = weekStartMonday ? (rawOffset + 6) % 7 : rawOffset;
     const gridStart = new Date(year, month, 1 - startOffset);
     return Array.from({ length: 42 }, (_, i) => {
       const day = new Date(gridStart);
       day.setDate(gridStart.getDate() + i);
       return day;
     });
-  }, [cursor, weekStartsOnMonday]);
+  }, [cursor, weekStartMonday]);
 
   const weekRows = useMemo(() => {
     const rows: { days: Date[]; items: ReturnType<typeof layoutWeekLanes>["items"]; laneCount: number }[] = [];
@@ -154,15 +153,15 @@ export default function ProjectCalendarView({
   }, [days, visibleTasks]);
 
   const weekdayLabels = useMemo(() => {
-    const base = new Date(2024, 0, weekStartsOnMonday ? 8 : 7);
+    const base = new Date(2024, 0, weekStartMonday ? 8 : 7);
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(base);
       d.setDate(base.getDate() + i);
-      return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(d);
+      return weekdayLabel(d, opts);
     });
-  }, [locale, weekStartsOnMonday]);
+  }, [opts, weekStartMonday]);
 
-  const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(cursor);
+  const monthTitle = monthLabel(cursor, opts);
   const todayKey = ymd(new Date());
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -192,7 +191,7 @@ export default function ProjectCalendarView({
     const diff = Math.round((due.getTime() - today.getTime()) / 86400000);
     if (diff === 0) return t("projects.dueToday");
     if (diff === 1) return t("calendar.tomorrow");
-    return formatTaskDate(iso, locale);
+    return fmtDate(iso, opts, dateStyle);
   }
 
   const selectedTask = selectedId ? visibleTasks.find((task) => task.id === selectedId) || null : null;
@@ -203,7 +202,7 @@ export default function ProjectCalendarView({
     <div className="flex flex-col xl:flex-row gap-5 items-start">
       <div className="flex-1 min-w-0 w-full">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h2 className="text-lg font-semibold text-ink capitalize">{monthLabel}</h2>
+          <h2 className="text-lg font-semibold text-ink capitalize">{monthTitle}</h2>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setCursor(startOfMonth(new Date()))}
@@ -352,7 +351,7 @@ export default function ProjectCalendarView({
           <TaskDetailsPanel
             task={selectedTask}
             projectName={projectNameById.get(selectedTask.project_id) || project.name}
-            locale={locale}
+            locale={opts.locale}
             currentUserId={currentUserId}
             t={t}
             onClose={() => setSelectedId(null)}
@@ -362,7 +361,7 @@ export default function ProjectCalendarView({
         <div className="rounded-xl border border-line bg-surface p-3">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-ink capitalize">
-              {new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(cursor)}
+              {monthLabel(cursor, opts)}
             </p>
             <div className="flex gap-1">
               <button onClick={() => setCursor((c) => addMonths(c, -1))} className="text-inkFaint hover:text-ink">
@@ -516,7 +515,7 @@ export default function ProjectCalendarView({
           task={hover.task}
           x={hover.x}
           y={hover.y}
-          locale={locale}
+          locale={opts.locale}
           currentUserId={currentUserId}
           t={t}
           projectName={projectNameById.get(hover.task.project_id) || project.name}

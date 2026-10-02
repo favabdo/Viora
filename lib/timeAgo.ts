@@ -1,6 +1,9 @@
+import { zonedNow, type DisplayOpts } from "./displayFormat";
+
 /** فرق الوقت من الآن، بصياغة موجزة مترجمة حسب لغة الواجهة الحالية (t من useTranslation) */
-export function timeAgo(iso: string, t: (key: string) => string) {
-  const diffMs = Date.now() - new Date(iso).getTime();
+export function timeAgo(iso: string, t: (key: string) => string, opts?: DisplayOpts) {
+  const base = opts ? zonedNow(opts) : new Date();
+  const diffMs = base.getTime() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
   if (mins < 1) return t("time.now");
   if (mins < 60) return t("time.minutesAgo").replace("{n}", String(mins));

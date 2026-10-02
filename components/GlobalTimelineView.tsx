@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FolderKanban, Minus, Plus, X } from "lucide-react";
 import { Task } from "@/lib/supabase";
-import { dateKey, formatTaskDate } from "@/lib/taskShape";
+import { dateKey } from "@/lib/taskShape";
+import { useDisplay, fmtDate, monthLabel } from "@/lib/displayFormat";
 import { displayName } from "@/lib/displayName";
 import { canHover } from "@/lib/canHover";
 import { colorForProject } from "@/lib/projectColor";
@@ -79,8 +80,8 @@ function elapsedDays(created: string, plannedEnd: string, today: string, isDone:
 }
 
 export default function GlobalTimelineView({ currentUserId }: { currentUserId: string }) {
-  const { t, lang } = useTranslation();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { t } = useTranslation();
+  const { opts, dateStyle, weekStartMonday } = useDisplay();
   const { projects, tasks, loading } = useWorkspaceSchedule();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [focusProject, setFocusProject] = useState("all");
@@ -144,7 +145,7 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
     const monthGroups: { label: string; days: number }[] = [];
     let cursor = new Date(min);
     for (let i = 0; i < total; ) {
-      const label = new Intl.DateTimeFormat(locale, { month: "long" }).format(cursor);
+      const label = monthLabel(cursor, opts);
       const leftInMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate() - cursor.getDate() + 1;
       const span = Math.min(leftInMonth, total - i);
       monthGroups.push({ label, days: span });
@@ -152,7 +153,7 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
       i += span;
     }
     return { rangeStart: min, totalDays: total, months: monthGroups };
-  }, [visible, locale, todayDate, today]);
+  }, [visible, opts, todayDate, today]);
 
   const todayOffset = diffDays(rangeStart, todayDate);
   const gridWidth = totalDays * dayWidth;
@@ -394,10 +395,10 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
               {projectById.get(selectedTask.project_id)?.name}
             </p>
             <p className="text-[12px] text-ink">
-              {t("taskDetail.created")}: {formatTaskDate(taskCreated(selectedTask), locale)}
+              {t("taskDetail.created")}: {fmtDate(taskCreated(selectedTask), opts, dateStyle)}
             </p>
             <p className="text-[12px] text-ink">
-              {t("taskDetail.due")}: {taskDue(selectedTask) ? formatTaskDate(taskDue(selectedTask), locale) : t("board.noDueDate")}
+              {t("taskDetail.due")}: {taskDue(selectedTask) ? fmtDate(taskDue(selectedTask) ?? "", opts, dateStyle) : t("board.noDueDate")}
             </p>
             <p className={`text-[12px] ${overdueDays(selectedTask, today) > 0 ? "text-red-500" : "text-ink"}`}>
               {t("timeline.timeLeft")}: {remainingLabel(selectedTask)}
@@ -490,7 +491,6 @@ export default function GlobalTimelineView({ currentUserId }: { currentUserId: s
           projectName={projectById.get(hover.task.project_id)?.name || ""}
           x={hover.x}
           y={hover.y}
-          locale={locale}
           remaining={remainingLabel(hover.task)}
           currentUserId={currentUserId}
           t={t}
@@ -505,7 +505,6 @@ function HoverCard({
   projectName,
   x,
   y,
-  locale,
   remaining,
   currentUserId,
   t,
@@ -514,11 +513,11 @@ function HoverCard({
   projectName: string;
   x: number;
   y: number;
-  locale: string;
   remaining: string;
   currentUserId: string;
   t: (key: string) => string;
 }) {
+  const { opts, dateStyle } = useDisplay();
   const late = overdueDays(task, ymd(new Date()));
   const cardW = 280;
   const cardH = 190;
@@ -541,7 +540,7 @@ function HoverCard({
       </p>
       <p className="text-sm font-medium text-ink mt-0.5">{task.title}</p>
       <p className="text-[12px] text-inkSoft mt-2">
-        {t("taskDetail.due")}: {taskDue(task) ? formatTaskDate(taskDue(task), locale) : t("board.noDueDate")}
+        {t("taskDetail.due")}: {taskDue(task) ? fmtDate(taskDue(task) ?? "", opts, dateStyle) : t("board.noDueDate")}
       </p>
       <p className={`text-[12px] ${late > 0 ? "text-red-500" : "text-ink"}`}>
         {t("timeline.timeLeft")}: {remaining}

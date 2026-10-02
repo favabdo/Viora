@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import { supabase, Project, ProjectMember, Task, BoardColumn, TASK_COLORS } from "@/lib/supabase";
 import { displayName } from "@/lib/displayName";
-import { formatTaskDate, isDueAfterCreated, normalizeTask } from "@/lib/taskShape";
+import { isDueAfterCreated, normalizeTask } from "@/lib/taskShape";
+import { fmtDate, useDisplay } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import ClickableAvatar from "./ClickableAvatar";
 import ClickableName from "./ClickableName";
@@ -68,8 +69,7 @@ export default function ProjectListView({
   onTasksMutated: (updater: (prev: Task[]) => Task[]) => void;
   onCommentCountChange?: (taskId: string, delta: number) => void;
 }) {
-  const { t, lang } = useTranslation();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [groupBy, setGroupBy] = useState<GroupBy>("status");
@@ -334,7 +334,6 @@ export default function ProjectListView({
                         projectName={project.name}
                         currentUserId={currentUserId}
                         commentCount={commentCounts[task.id] ?? 0}
-                        locale={locale}
                         t={t}
                         onOpen={() => setDetailTask(task)}
                       />
@@ -436,7 +435,6 @@ function TaskRow({
   projectName,
   currentUserId,
   commentCount,
-  locale,
   t,
   onOpen,
 }: {
@@ -446,10 +444,10 @@ function TaskRow({
   projectName: string;
   currentUserId: string;
   commentCount: number;
-  locale: string;
   t: (key: string) => string;
   onOpen: () => void;
 }) {
+  const { opts, dateStyle } = useDisplay();
   const priority = priorityOf(task);
   const priorityClass =
     priority === "high"
@@ -460,7 +458,7 @@ function TaskRow({
           ? "bg-[#3B82F6]/15 text-[#2563EB] dark:text-[#60A5FA]"
           : "text-inkFaint";
   const tag = tagLabel(task, t);
-  const due = formatTaskDate(task.due_date, locale);
+  const due = task.due_date ? fmtDate(`${task.due_date.slice(0, 10)}T00:00:00`, opts, dateStyle) : "";
   const overdue = isOverdue(task);
 
   return (

@@ -42,6 +42,7 @@ import {
 } from "@/lib/projectMeta";
 import { displayName, renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
+import { fmtDate, useDisplay } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { deleteOwnedProject } from "@/lib/deletes";
 import ClickableAvatar from "./ClickableAvatar";
@@ -218,7 +219,8 @@ export default function ProjectSettingsView({
   settingsTab?: string | null;
   onSettingsTabChange?: (tab: string) => void;
 }) {
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
+  const { opts, dateStyle } = useDisplay();
   const [tab, setTab] = useState<SettingsTab>(
     settingsTab && SETTINGS_TABS.includes(settingsTab as SettingsTab) ? (settingsTab as SettingsTab) : "general"
   );
@@ -289,11 +291,7 @@ export default function ProjectSettingsView({
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(committed);
   const ownerName = displayName(project.user_id, ownerProfile, currentUserId, t("common.you"));
-  const createdOn = new Date(project.created_at).toLocaleDateString(lang === "ar" ? "ar" : "en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  const createdOn = fmtDate(project.created_at, opts, dateStyle);
   const memberCount = Math.max(1, members.length);
   const isOwner = currentUserId === project.user_id;
 
@@ -717,7 +715,7 @@ export default function ProjectSettingsView({
                           )}
                           <span className="text-[#2563EB] dark:text-[#BFDBFE]">{rest}</span>
                         </p>
-                        <p className="text-[11px] text-inkFaint mt-0.5">{timeAgo(entry.created_at, t)}</p>
+                        <p className="text-[11px] text-inkFaint mt-0.5">{timeAgo(entry.created_at, t, opts)}</p>
                       </div>
                     </li>
                   );

@@ -9,6 +9,7 @@ import ClickableName from "./ClickableName";
 import ClickableAvatar from "./ClickableAvatar";
 import { Textarea } from "./ui/Input";
 import IconButton from "./ui/IconButton";
+import { useDisplay } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 /**
@@ -33,6 +34,7 @@ export default function TaskComments({
   variant?: "inline" | "detail";
 }) {
   const { t } = useTranslation();
+  const { opts } = useDisplay();
   const [open, setOpen] = useState(alwaysOpen);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -133,7 +135,7 @@ export default function TaskComments({
                   <ClickableName previewCard userId={c.user_id} className="text-ink font-medium">
                     {displayName(c.user_id, c.profiles, currentUserId, t("common.you"))}
                   </ClickableName>{" "}
-                  <span className="text-inkFaint">— {timeAgo(c.created_at, t)}</span>
+                  <span className="text-inkFaint">— {timeAgo(c.created_at, t, opts)}</span>
                   <p className="text-inkSoft mt-0.5 break-words leading-relaxed">{c.message}</p>
                 </div>
               </div>

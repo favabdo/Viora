@@ -1,4 +1,5 @@
 import type { BoardColumn, Task } from "@/lib/supabase";
+import { fmtDate, type DateStyle, type DisplayOpts } from "./displayFormat";
 
 export type StatusKind = "todo" | "progress" | "review" | "done";
 export type PriorityKind = "high" | "medium" | "low";
@@ -102,14 +103,17 @@ export function priorityOf(task: Task): PriorityKind {
   return "low";
 }
 
-export function dueLabel(due: string | null | undefined, today: string, t: (key: string) => string, locale: string): string {
+export function dueLabel(
+  due: string | null | undefined,
+  today: string,
+  t: (key: string) => string,
+  locale: string,
+  opts?: DisplayOpts,
+  style: DateStyle = "medium"
+): string {
   if (!due) return t("board.noDueDate");
   if (due === today) return t("home.today");
   const tomorrow = localYmd(addDays(startOfDay(new Date()), 1));
   if (due === tomorrow) return t("home.tomorrow");
-  try {
-    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(`${due}T00:00:00`));
-  } catch {
-    return due;
-  }
+  return fmtDate(`${due}T00:00:00`, opts ?? { locale, timeFormat: "12h" }, style) || due;
 }

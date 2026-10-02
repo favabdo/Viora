@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useDisplay } from "@/lib/displayFormat";
 import { renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import { recordLoginNotification, useInboxNotifications, type InboxItem } from "@/lib/inboxNotifications";
@@ -11,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function NotificationBell({ userId }: { userId: string }) {
   const { t } = useTranslation();
+  const { opts } = useDisplay();
   const router = useRouter();
   const { items, loading, unreadCount, markRead, refresh } = useInboxNotifications(userId);
   const [open, setOpen] = useState(false);
@@ -109,7 +111,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
                       className="w-full text-start px-3.5 py-2.5 hover:bg-paperDark/70"
                     >
                       <p className="text-[13px] text-ink leading-snug">{labelFor(item)}</p>
-                      <p className="mt-0.5 text-[11px] text-inkFaint">{timeAgo(item.createdAt, t)}</p>
+                      <p className="mt-0.5 text-[11px] text-inkFaint">{timeAgo(item.createdAt, t, opts)}</p>
                     </button>
                   </li>
                 ))}

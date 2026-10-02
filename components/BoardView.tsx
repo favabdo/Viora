@@ -27,6 +27,7 @@ import {
   copyTaskExtras,
   patchTaskExtras,
   readTaskExtras,
+  shouldArchiveOnComplete,
   subtaskProgress,
   writeTaskMeta,
   type TaskAttachment,
@@ -41,6 +42,7 @@ import {
   uploadTaskFiles,
 } from "@/lib/taskAttachments";
 import { displayName } from "@/lib/displayName";
+import { fmtDate, useDisplay } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { checkTaskLimit, checkStorageUpload } from "@/lib/planLimits";
 import UpgradeLimitModal from "./UpgradeLimitModal";
@@ -60,15 +62,6 @@ const COLUMN_PALETTE = ["#3b82f6", "#0891B2", "#22c55e", "#3B82F6", "#ef4444", "
 /** إسقاط فقط لو المؤشر فوق العمود أو المهمة فعلًا — مش أقرب عمود في الفاضي */
 const exactDropCollision: CollisionDetection = (args) => pointerWithin(args);
 
-function formatDueDate(iso: string | null | undefined, locale: string): string {
-  if (!iso) return "";
-  try {
-    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`));
-  } catch {
-    return "";
-  }
-}
-
 function isOverdue(iso: string | null | undefined) {
   if (!iso) return false;
   const due = new Date(`${iso.slice(0, 10)}T00:00:00`);
@@ -81,7 +74,6 @@ function TaskCard({
   task,
   extras,
   currentUserId,
-  locale,
   commentCount,
   startEditing,
   onEditingConsumed,
@@ -95,7 +87,6 @@ function TaskCard({
   task: Task;
   extras: TaskExtras;
   currentUserId: string;
-  locale: string;
   commentCount: number;
   startEditing: boolean;
   onEditingConsumed: () => void;
@@ -107,6 +98,7 @@ function TaskCard({
   onOpenDetail: (task: Task) => void;
 }) {
   const { t } = useTranslation();
+  const { opts, dateStyle } = useDisplay();
   const [editing, setEditing] = useState(false);
   const [titleDraft, setTitleDraft] = useState(task.title);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -269,7 +261,7 @@ function TaskCard({
         <div className="relative ms-auto" onPointerDown={(e) => e.stopPropagation()}>
           {task.due_date && (
             <span className={`text-2xs font-medium ${isOverdue(task.due_date) && !task.is_done ? "text-[#EF4444]" : "text-[#3B82F6]"}`}>
-              {formatDueDate(task.due_date, "en-US")}
+              {fmtDate(`${task.due_date.slice(0, 10)}T00:00:00`, opts, dateStyle)}
             </span>
           )}
         </div>
@@ -296,6 +288,7 @@ function TaskCard({
 
 function CommitCard({ commit }: { commit: GithubCommit }) {
   const { t } = useTranslation();
+  const { opts } = useDisplay();
   const author = commit.author_login || commit.author_name;
   return (
     <a
@@ -311,7 +304,7 @@ function CommitCard({ commit }: { commit: GithubCommit }) {
           {commit.sha}
         </span>
         {author && <span className="max-w-[90px] truncate">{author}</span>}
-        <span>{timeAgo(commit.committed_at, t)}</span>
+        <span>{timeAgo(commit.committed_at, t, opts)}</span>
       </p>
     </a>
   );
@@ -322,7 +315,6 @@ function ColumnContainer({
   tasks,
   extrasByTask,
   currentUserId,
-  locale,
   commentCounts,
   editingTaskId,
   onEditingConsumed,
@@ -344,7 +336,6 @@ function ColumnContainer({
   tasks: Task[];
   extrasByTask: Record<string, TaskExtras>;
   currentUserId: string;
-  locale: string;
   commentCounts: Record<string, number>;
   editingTaskId: string | null;
   onEditingConsumed: () => void;
@@ -418,7 +409,6 @@ function ColumnContainer({
               task={task}
               extras={extrasByTask[task.id] || {}}
               currentUserId={currentUserId}
-              locale={locale}
               commentCount={commentCounts[task.id] ?? 0}
               startEditing={editingTaskId === task.id}
               onEditingConsumed={onEditingConsumed}
@@ -504,8 +494,7 @@ export default function BoardView({
   githubSyncing?: boolean;
   onSyncGithub?: () => void;
 }) {
-  const { t, lang } = useTranslation();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [showAddColumn, setShowAddColumn] = useState(false);
@@ -682,6 +671,9 @@ export default function BoardView({
 
     if (activeTaskItem.column_id === targetColumnId && activeTaskItem.position === newPosition) return;
 
+    const droppedOnDone = columns.find((column) => column.id === targetColumnId)?.is_done_column;
+    if (droppedOnDone && shouldArchiveOnComplete(projectId)) patchTaskExtras(activeTaskItem.id, { archived: true });
+
     onTasksMutated((prev) =>
       prev.map((t2) => (t2.id === activeTaskItem.id ? { ...t2, column_id: targetColumnId, position: newPosition } : t2))
     );
@@ -814,6 +806,7 @@ export default function BoardView({
     const list = tasksByColumn.get(columnId) || [];
     const position = list.length > 0 ? list[list.length - 1].position + 1000 : 1000;
     const doneColumn = columns.find((column) => column.id === columnId)?.is_done_column;
+    if (doneColumn && shouldArchiveOnComplete(projectId)) patchTaskExtras(task.id, { archived: true });
     onTasksMutated((prev) =>
       prev.map((item) =>
         item.id === task.id
@@ -963,7 +956,6 @@ export default function BoardView({
             tasks={tasksByColumn.get(column.id) || []}
             extrasByTask={extrasByTask}
             currentUserId={currentUserId}
-            locale={locale}
             commentCounts={commentCounts}
             editingTaskId={editingTaskId}
             onEditingConsumed={() => setEditingTaskId(null)}

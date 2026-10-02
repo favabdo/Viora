@@ -4,14 +4,14 @@ import { useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, FolderKanban } from "lucide-react";
 import { Task } from "@/lib/supabase";
 import { useRevealPanelOnMobile } from "@/lib/revealPanel";
-import { dateKey, formatTaskDate } from "@/lib/taskShape";
+import { dateKey } from "@/lib/taskShape";
 import { spanCoversDay } from "@/lib/calendarLayout";
 import { colorForProject } from "@/lib/projectColor";
 import { displayName } from "@/lib/displayName";
 import { canHover } from "@/lib/canHover";
 import { useWorkspaceSchedule } from "@/lib/useWorkspaceSchedule";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useSettings } from "@/lib/useSettings";
+import { useDisplay, fmtDate, monthLabel, weekdayLabel } from "@/lib/displayFormat";
 import EmptyState from "./ui/EmptyState";
 import { SkeletonList } from "./ui/Skeleton";
 import { TaskDetailsPanel, TaskHoverCard } from "./TaskInspect";
@@ -31,10 +31,8 @@ function addMonths(date: Date, n: number) {
 }
 
 export default function GlobalCalendarView({ currentUserId }: { currentUserId: string }) {
-  const { t, lang, dir } = useTranslation();
-  const { settings } = useSettings();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
-  const weekStartsOnMonday = settings.weekStart === "monday";
+  const { t, dir } = useTranslation();
+  const { opts, dateStyle, weekStartMonday } = useDisplay();
   const { projects, tasks, loading } = useWorkspaceSchedule();
   const [cursor, setCursor] = useState(() => startOfMonth(new Date()));
   const [focusProject, setFocusProject] = useState("all");
@@ -75,25 +73,25 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
     const month = cursor.getMonth();
     const first = new Date(year, month, 1);
     const rawOffset = first.getDay();
-    const startOffset = weekStartsOnMonday ? (rawOffset + 6) % 7 : rawOffset;
+    const startOffset = weekStartMonday ? (rawOffset + 6) % 7 : rawOffset;
     const gridStart = new Date(year, month, 1 - startOffset);
     return Array.from({ length: 42 }, (_, i) => {
       const day = new Date(gridStart);
       day.setDate(gridStart.getDate() + i);
       return day;
     });
-  }, [cursor, weekStartsOnMonday]);
+  }, [cursor, weekStartMonday]);
 
   const weekdayLabels = useMemo(() => {
-    const base = new Date(2024, 0, weekStartsOnMonday ? 8 : 7);
+    const base = new Date(2024, 0, weekStartMonday ? 8 : 7);
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(base);
       d.setDate(base.getDate() + i);
-      return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(d);
+      return weekdayLabel(d, opts);
     });
-  }, [locale, weekStartsOnMonday]);
+  }, [opts, weekStartMonday]);
 
-  const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(cursor);
+  const monthTitle = monthLabel(cursor, opts);
   const todayKey = ymd(new Date());
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -184,8 +182,8 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
     const linkDate = kind === "start" ? due : created && due && created !== due ? created : null;
     const linkLabel = linkDate
       ? kind === "start"
-        ? `${t("calendar.dueShort")} ${formatTaskDate(linkDate, locale)}`
-        : `${t("calendar.fromShort")} ${formatTaskDate(linkDate, locale)}`
+        ? `${t("calendar.dueShort")} ${fmtDate(linkDate, opts, dateStyle)}`
+        : `${t("calendar.fromShort")} ${fmtDate(linkDate, opts, dateStyle)}`
       : "";
     const pillStyle = { backgroundColor: chipColor, color: "#fff" };
     return (
@@ -213,7 +211,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
           <span
             role="button"
             tabIndex={-1}
-            title={kind === "start" ? `${t("taskDetail.due")} ${formatTaskDate(linkDate, locale)}` : `${t("taskDetail.created")} ${formatTaskDate(linkDate, locale)}`}
+            title={kind === "start" ? `${t("taskDetail.due")} ${fmtDate(linkDate, opts, dateStyle)}` : `${t("taskDetail.created")} ${fmtDate(linkDate, opts, dateStyle)}`}
             onClick={() => jumpToDay(linkDate)}
             className="block min-w-0 truncate text-[9px] leading-[12px] cursor-pointer underline decoration-dotted underline-offset-2 px-1.5 hover:brightness-125"
             style={{ color: chipColor }}
@@ -234,7 +232,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
     <div className="flex flex-col xl:flex-row gap-5 items-start">
       <div className="flex-1 min-w-0 w-full">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h1 className="text-lg font-semibold text-ink capitalize">{monthLabel}</h1>
+          <h1 className="text-lg font-semibold text-ink capitalize">{monthTitle}</h1>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setCursor(startOfMonth(new Date()))}
@@ -322,7 +320,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
           <TaskDetailsPanel
             task={selectedTask}
             projectName={projectNameById.get(selectedTask.project_id) || ""}
-            locale={locale}
+            locale={opts.locale}
             currentUserId={currentUserId}
             t={t}
             onClose={() => setSelectedId(null)}
@@ -332,7 +330,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
         <div className="rounded-xl border border-line bg-surface p-3">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-ink capitalize">
-              {new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(cursor)}
+              {monthLabel(cursor, opts)}
             </p>
             <div className="flex gap-1">
               <button onClick={() => setCursor((c) => addMonths(c, -1))} className="text-inkFaint hover:text-ink">
@@ -436,7 +434,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
                   <div className="min-w-0">
                     <p className="text-xs text-ink truncate">{task.title}</p>
                     <p className="text-[11px] text-inkFaint">
-                      {projectNameById.get(task.project_id)} · {formatTaskDate(task.due_date, locale)}
+                      {projectNameById.get(task.project_id)} · {fmtDate(task.due_date ?? "", opts, dateStyle)}
                       {task.profiles ? ` · ${displayName(task.user_id, task.profiles, currentUserId, t("common.you"))}` : ""}
                     </p>
                   </div>
@@ -453,7 +451,7 @@ export default function GlobalCalendarView({ currentUserId }: { currentUserId: s
           task={hover.task}
           x={hover.x}
           y={hover.y}
-          locale={locale}
+          locale={opts.locale}
           currentUserId={currentUserId}
           t={t}
           projectName={projectNameById.get(hover.task.project_id) || ""}

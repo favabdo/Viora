@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { AlertTriangle, CalendarClock, CheckCircle2, CheckSquare, Timer, Users } from "lucide-react";
 import { BoardColumn, Project, ProjectMember, Task } from "@/lib/supabase";
 import { displayName } from "@/lib/displayName";
-import { formatTaskDate } from "@/lib/taskShape";
+import { fmtDate, useDisplay } from "@/lib/displayFormat";
 import { localYmd, statusKind } from "@/lib/homeDashboard";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import DonutChart from "./ui/DonutChart";
@@ -21,8 +21,8 @@ export default function ProjectOverview({
   members: ProjectMember[];
   currentUserId: string;
 }) {
-  const { t, lang } = useTranslation();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { t } = useTranslation();
+  const { opts, dateStyle } = useDisplay();
   const today = localYmd(new Date());
 
   const columnsById = useMemo(() => new Map(columns.map((c) => [c.id, c])), [columns]);
@@ -127,7 +127,9 @@ export default function ProjectOverview({
                 <li key={task.id} className="flex items-center gap-2.5 text-sm">
                   <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: task.color || "#64748B" }} />
                   <span className="flex-1 truncate text-ink">{task.title}</span>
-                  <span className="text-[11px] text-inkFaint shrink-0 tabular-nums">{formatTaskDate(task.due_date, locale)}</span>
+                  <span className="text-[11px] text-inkFaint shrink-0 tabular-nums">
+                    {task.due_date ? fmtDate(`${task.due_date.slice(0, 10)}T00:00:00`, opts, dateStyle) : ""}
+                  </span>
                 </li>
               ))}
             </ul>

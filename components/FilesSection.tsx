@@ -38,6 +38,7 @@ import { limitsFor, usePlan } from "@/lib/planUsage";
 import UpgradeLimitModal from "./UpgradeLimitModal";
 import { projectPath } from "@/lib/appRoutes";
 import { timeAgo } from "@/lib/timeAgo";
+import { fmtDate, fmtTime, useDisplay } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useRouter } from "next/navigation";
 import Button from "./ui/Button";
@@ -101,7 +102,8 @@ export default function FilesSection({
   userName?: string;
   avatarUrl?: string | null;
 }) {
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
+  const { opts, dateStyle } = useDisplay();
   const router = useRouter();
   const [files, setFiles] = useState<LibraryFile[]>([]);
   const [projects, setProjects] = useState<Project[]>(givenProjects || []);
@@ -142,7 +144,6 @@ export default function FilesSection({
 
   const selected = files.find((file) => file.id === selectedId) || null;
   const names = useMemo(() => new Map(projects.map((p) => [p.id, p.name])), [projects]);
-  const locale = lang === "ar" ? "ar" : "en";
 
   async function refresh() {
     setLoading(true);
@@ -315,9 +316,9 @@ export default function FilesSection({
   function modifiedLabel(iso: string) {
     const d = new Date(iso);
     const today = new Date();
-    const time = d.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" });
+    const time = fmtTime(iso, opts);
     if (d.toDateString() === today.toDateString()) return `${t("files.today")}, ${time}`;
-    return d.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" });
+    return fmtDate(iso, opts, dateStyle);
   }
 
   function toggleMeta(id: string, patch: { favorite?: boolean; trash?: boolean }) {
@@ -761,7 +762,7 @@ export default function FilesSection({
                         <p className="text-xs text-ink leading-snug">
                           {uploader} {t("files.uploaded")} <span className="font-medium">{file.name}</span>
                         </p>
-                        <p className="text-[11px] text-inkFaint">{timeAgo(file.createdAt, t)}</p>
+                        <p className="text-[11px] text-inkFaint">{timeAgo(file.createdAt, t, opts)}</p>
                       </div>
                     </li>
                   ))}

@@ -5,15 +5,8 @@ import { supabase, Project, Task, BoardColumn } from "@/lib/supabase";
 import ClickableName from "./ClickableName";
 import DonutChart from "./ui/DonutChart";
 import { CalendarClock } from "lucide-react";
+import { fmtDate, useDisplay } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-
-function formatDate(iso: string, locale: string): string {
-  try {
-    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
-}
 
 export default function BoardAnalytics({
   projects,
@@ -30,8 +23,8 @@ export default function BoardAnalytics({
   compact?: boolean;
   layout?: "default" | "workspace";
 }) {
-  const { t, lang } = useTranslation();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { t } = useTranslation();
+  const { opts, dateStyle } = useDisplay();
   const [progressByProject, setProgressByProject] = useState<Record<string, { done: number; total: number }>>({});
 
   useEffect(() => {
@@ -159,7 +152,9 @@ export default function BoardAnalytics({
               <li key={task.id} className="flex items-center gap-2.5 text-sm">
                 <CalendarClock size={14} strokeWidth={1.75} className="text-inkFaint shrink-0" />
                 <span className="flex-1 truncate text-ink">{task.title}</span>
-                <span className="text-xs text-inkFaint shrink-0">{formatDate(task.due_date as string, locale)}</span>
+                <span className="text-xs text-inkFaint shrink-0">
+                  {task.due_date ? fmtDate(`${task.due_date.slice(0, 10)}T00:00:00`, opts, dateStyle) : ""}
+                </span>
               </li>
             ))}
           </ul>

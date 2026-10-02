@@ -26,7 +26,8 @@ import { useLongPress } from "@/lib/useLongPress";
 import ClickableName from "./ClickableName";
 import ConfirmPasswordModal from "./ConfirmPasswordModal";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { formatTaskDate, normalizeTask } from "@/lib/taskShape";
+import { fmtDate, useDisplay } from "@/lib/displayFormat";
+import { normalizeTask } from "@/lib/taskShape";
 import { deleteOwnedProject, deleteOwnedTask } from "@/lib/deletes";
 
 /** بيرتب المهام: غير المنجزة فوق (حسب position)، والمنجزة تنزل تحت تلقائيًا */
@@ -56,7 +57,8 @@ export default function TasksSection({
     setContextMenuProject(project);
     setContextMenuPosition({ x, y });
   });
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
+  const { opts, dateStyle } = useDisplay();
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -868,7 +870,7 @@ async function duplicateProject(project: Project) {
                                         })()}
                                       {task.due_date && (
                                         <span className="text-[10px] text-inkFaint">
-                                          {formatTaskDate(task.due_date, lang === "ar" ? "ar-EG" : "en-US")}
+                                          {fmtDate(`${task.due_date.slice(0, 10)}T00:00:00`, opts, dateStyle)}
                                         </span>
                                       )}
                                     </div>

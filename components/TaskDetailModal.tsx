@@ -23,6 +23,7 @@ import { patchTaskExtras, subtaskProgress, type TaskAttachment, type TaskExtras,
 import { fileKind, previewUrl } from "@/lib/taskAttachments";
 import { isDueAfterCreated, minDueDate } from "@/lib/taskShape";
 import { timeAgo } from "@/lib/timeAgo";
+import { fmtDate, useDisplay, type DateStyle, type DisplayOpts } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import ClickableAvatar from "./ClickableAvatar";
 import ClickableName from "./ClickableName";
@@ -33,15 +34,9 @@ import { Textarea } from "./ui/Input";
 
 const CATEGORIES = ["dev", "design", "research", "ops"] as const;
 
-function formatLongDate(iso: string | null | undefined) {
+function formatLongDate(iso: string | null | undefined, opts: DisplayOpts, style: DateStyle) {
   if (!iso) return "—";
-  try {
-    return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(
-      new Date(iso.length <= 10 ? `${iso}T00:00:00` : iso)
-    );
-  } catch {
-    return iso;
-  }
+  return fmtDate(iso.length <= 10 ? `${iso}T00:00:00` : iso, opts, style) || iso;
 }
 
 function isOverdue(iso: string | null | undefined, done?: boolean) {
@@ -120,6 +115,7 @@ export default function TaskDetailModal({
   onDeleteAttachment?: (file: TaskAttachment) => void;
 }) {
   const { t } = useTranslation();
+  const { opts, dateStyle } = useDisplay();
   const [tab, setTab] = useState<"activity" | "comments" | "history">("activity");
   const [dueError, setDueError] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -332,7 +328,7 @@ export default function TaskDetailModal({
                 <p className="text-[11px] text-inkFaint mb-1.5">{t("taskDetail.created")}</p>
                 <div className="flex items-center gap-1.5 text-sm font-medium text-ink">
                   <Calendar size={14} className="text-inkSoft" />
-                  {formatLongDate(task.created_at)}
+                  {formatLongDate(task.created_at, opts, dateStyle)}
                 </div>
               </div>
             </div>
@@ -627,7 +623,7 @@ export default function TaskDetailModal({
                             )}{" "}
                             {label ? rest.trimStart() : rest}
                           </p>
-                          <p className="text-[10px] text-inkFaint mt-1">{timeAgo(entry.created_at, t)}</p>
+                          <p className="text-[10px] text-inkFaint mt-1">{timeAgo(entry.created_at, t, opts)}</p>
                         </li>
                       );
                     })

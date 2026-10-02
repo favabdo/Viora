@@ -18,10 +18,11 @@ import {
 } from "lucide-react";
 import { supabase, ActivityEntry, BoardColumn, Profile, Project, Task } from "@/lib/supabase";
 import { normalizeTask } from "@/lib/taskShape";
+import { filterTrashed } from "@/lib/taskExtras";
 import { renderActivity, resolveName } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { getStoredSettings } from "@/lib/useSettings";
+import { fmtDate, useDisplay } from "@/lib/displayFormat";
 import Avatar from "./ui/Avatar";
 
 type AccessRole = "viewer" | "commenter" | "editor" | "admin";
@@ -134,8 +135,8 @@ export default function UserProfileCard({
   onClose: () => void;
 }) {
   const router = useRouter();
-  const { t, lang } = useTranslation();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { t } = useTranslation();
+  const { opts, dateStyle } = useDisplay();
   const isSelf = userId === currentUserId;
 
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -255,7 +256,7 @@ export default function UserProfileCard({
       ]);
 
       if (!active) return;
-      setTasks((tasksRes.data || []).map((row) => normalizeTask(row as Record<string, unknown>)));
+      setTasks(filterTrashed((tasksRes.data || []).map((row) => normalizeTask(row as Record<string, unknown>))));
       setColumns((colsRes.data || []) as BoardColumn[]);
       setActivity((actRes.data || []) as ActivityEntry[]);
       setCreatedTaskIds(new Set((createdRes.data || []).map((r) => r.task_id as string).filter(Boolean)));
@@ -273,11 +274,7 @@ export default function UserProfileCard({
   const skills = parseSkills(profile?.skills);
   const timezone =
     profile?.timezone ||
-    (isSelf
-      ? getStoredSettings().timezone === "auto"
-        ? Intl.DateTimeFormat().resolvedOptions().timeZone
-        : getStoredSettings().timezone
-      : "");
+    (isSelf ? opts.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone : "");
 
   const headerRole = useMemo(() => {
     if (projects.some((p) => p.role === "owner")) return "owner";
@@ -338,13 +335,7 @@ export default function UserProfileCard({
 
   function joinedLabel() {
     if (!profile?.created_at) return "—";
-    try {
-      return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(
-        new Date(profile.created_at)
-      );
-    } catch {
-      return profile.created_at.slice(0, 10);
-    }
+    return fmtDate(profile.created_at, opts, dateStyle) || profile.created_at.slice(0, 10);
   }
 
   const shownProjects = showAllProjects ? projects : projects.slice(0, 4);
@@ -768,7 +759,7 @@ export default function UserProfileCard({
                           {projectName ? ` ${t("userCard.inProject").replace("{name}", projectName)}` : ""}
                         </p>
                         <span className="text-[11px] text-inkFaint whitespace-nowrap font-mono pt-0.5">
-                          {timeAgo(entry.created_at, t)}
+                          {timeAgo(entry.created_at, t, opts)}
                         </span>
                       </li>
                     );

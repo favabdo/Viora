@@ -11,9 +11,11 @@ import {
 } from "lucide-react";
 import { supabase, ActivityEntry, BoardColumn, Project, Task, TaskComment } from "@/lib/supabase";
 import { normalizeTask } from "@/lib/taskShape";
+import { filterTrashed } from "@/lib/taskExtras";
 import { colorForProject } from "@/lib/projectColor";
 import { getProjectMeta, hydrateProjectMetas, useProjectMetaTick } from "@/lib/projectMeta";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { fmtDate, useDisplay, type DisplayOpts } from "@/lib/displayFormat";
 import { useAppSession } from "./AppSession";
 import { displayName } from "@/lib/displayName";
 import { projectPath } from "@/lib/appRoutes";
@@ -51,9 +53,9 @@ const PRIORITY = [
 
 export default function ReportsDashboard() {
   const router = useRouter();
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
   const { session } = useAppSession();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { opts } = useDisplay();
   const today = localYmd(new Date());
 
   const [preset, setPreset] = useState<7 | 14 | 30 | "custom">(7);
@@ -97,7 +99,7 @@ export default function ReportsDashboard() {
         supabase.from("task_comments").select("id, created_at, project_id").in("project_id", ids),
       ]);
       if (cancelled) return;
-      setTasks((taskRes.data || []).map(normalizeTask));
+      setTasks(filterTrashed((taskRes.data || []).map(normalizeTask)));
       setColumns((colRes.data || []) as BoardColumn[]);
       setActivity((actRes.data || []) as ActivityEntry[]);
       setComments((commentRes.data || []) as Pick<TaskComment, "id" | "created_at" | "project_id">[]);
@@ -335,7 +337,7 @@ export default function ReportsDashboard() {
           )}
         </Panel>
         <Panel title={t("home.tasksCompleted")} action={<span className="text-[11px] text-inkFaint">{periodLabel}</span>}>
-          <BarChart values={sparkDone} labels={keys.map((key) => weekday(key, locale))} color="#2563EB" />
+          <BarChart values={sparkDone} labels={keys.map((key) => dayLabel(key, opts))} color="#2563EB" />
         </Panel>
       </div>
 
@@ -424,7 +426,7 @@ export default function ReportsDashboard() {
 
       <Panel title={t("home.activityOverview")}>
         <AreaChart
-          labels={keys.map((key) => weekday(key, locale))}
+          labels={keys.map((key) => dayLabel(key, opts))}
           series={[
             { label: t("home.created"), color: "#2563EB", values: sparkTasks },
             { label: t("home.completedLine"), color: "#22C55E", values: sparkDone },
@@ -559,6 +561,6 @@ function AreaChart({
   );
 }
 
-function weekday(iso: string, locale: string) {
-  return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(new Date(`${iso}T00:00:00`));
+function dayLabel(iso: string, o: DisplayOpts) {
+  return fmtDate(`${iso}T00:00:00`, o, "short");
 }

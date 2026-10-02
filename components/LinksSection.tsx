@@ -28,6 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { fmtDate, fmtDateTime, useDisplay, type DateStyle, type DisplayOpts } from "@/lib/displayFormat";
 
 const PAGE_SIZE = 7;
 const META_KEY = "viora-link-meta";
@@ -98,20 +99,12 @@ function linkTitle(link: LinkItem) {
   return text.split("\n")[0];
 }
 
-function formatAdded(iso: string, locale: string) {
-  try {
-    return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(new Date(iso));
-  } catch {
-    return iso.slice(0, 10);
-  }
+function formatAdded(iso: string, o: DisplayOpts) {
+  return fmtDate(iso, o, "short") || iso.slice(0, 10);
 }
 
-function formatStamp(iso: string, locale: string) {
-  try {
-    return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
+function formatStamp(iso: string, o: DisplayOpts, style: DateStyle) {
+  return fmtDateTime(iso, o, style) || iso;
 }
 
 export default function LinksSection({
@@ -125,6 +118,7 @@ export default function LinksSection({
 }) {
   const { t, lang } = useTranslation();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { opts, dateStyle } = useDisplay();
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [meta, setMeta] = useState<Record<string, LinkMeta>>({});
@@ -493,7 +487,7 @@ export default function LinksSection({
                                     {projectName(extra.projectId)}
                                   </span>
                                 )}
-                                <span>{formatAdded(link.created_at, locale)}</span>
+                                <span>{formatAdded(link.created_at, opts)}</span>
                                 <span className="inline-flex items-center gap-1">
                                   <Bookmark
                                     size={14}
@@ -727,13 +721,13 @@ export default function LinksSection({
                         <Avatar name={userName || t("common.you")} src={avatarUrl} size="sm" />
                         <div>
                           <p className="text-sm text-ink">{userName || t("common.you")}</p>
-                          <p className="text-[11px] text-inkFaint">{formatStamp(selected.created_at, locale)}</p>
+                          <p className="text-[11px] text-inkFaint">{formatStamp(selected.created_at, opts, dateStyle)}</p>
                         </div>
                       </div>
                     </div>
                     <div>
                       <p className="text-[11px] font-medium uppercase tracking-wide text-inkFaint mb-1.5">{t("links.lastUpdated")}</p>
-                      <p className="text-xs text-inkSoft">{formatStamp(selected.created_at, locale)}</p>
+                      <p className="text-xs text-inkSoft">{formatStamp(selected.created_at, opts, dateStyle)}</p>
                     </div>
                     <ItemHistory table="link_activity_log" column="link_id" id={selected.id} currentUserId={currentUserId} />
                   </div>

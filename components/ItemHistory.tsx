@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { renderActivity } from "@/lib/displayName";
 import { timeAgo } from "@/lib/timeAgo";
 import ClickableName from "./ClickableName";
+import { useDisplay } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import HistoryLimitBanner from "./HistoryLimitBanner";
 
@@ -33,6 +34,7 @@ export default function ItemHistory({
   alwaysOpen?: boolean;
 }) {
   const { t } = useTranslation();
+  const { opts } = useDisplay();
   const [open, setOpen] = useState(alwaysOpen);
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -97,7 +99,7 @@ export default function ItemHistory({
                   </>
                 )}
                 {label ? rest.trimStart() : rest}{" "}
-                <span className="text-inkFaint">— {timeAgo(e.created_at, t)}</span>
+                <span className="text-inkFaint">— {timeAgo(e.created_at, t, opts)}</span>
               </p>
             );
           })}

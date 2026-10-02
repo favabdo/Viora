@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Plus, Check, Minus, Filter, MoreHorizontal, ArrowDown, X } from "lucide-react";
 import { supabase, Project, Task } from "@/lib/supabase";
-import { dateKey, formatTaskDate, normalizeTask } from "@/lib/taskShape";
+import { dateKey, normalizeTask } from "@/lib/taskShape";
+import { useDisplay, fmtDate, monthLabel } from "@/lib/displayFormat";
 import { displayName } from "@/lib/displayName";
 import { canHover } from "@/lib/canHover";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -112,8 +113,8 @@ export default function ProjectTimelineView({
   currentUserId: string;
   onTasksMutated: (updater: (prev: Task[]) => Task[]) => void;
 }) {
-  const { t, lang } = useTranslation();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { t } = useTranslation();
+  const { opts, dateStyle, weekStartMonday } = useDisplay();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [assigneeFilter, setAssigneeFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -168,7 +169,7 @@ export default function ProjectTimelineView({
     const monthGroups: { label: string; days: number }[] = [];
     let cursor = new Date(min);
     for (let i = 0; i < total; ) {
-      const label = new Intl.DateTimeFormat(locale, { month: "long" }).format(cursor);
+      const label = monthLabel(cursor, opts);
       const leftInMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate() - cursor.getDate() + 1;
       const span = Math.min(leftInMonth, total - i);
       monthGroups.push({ label, days: span });
@@ -176,7 +177,7 @@ export default function ProjectTimelineView({
       i += span;
     }
     return { rangeStart: min, totalDays: total, months: monthGroups };
-  }, [visible, locale, todayDate, today]);
+  }, [visible, opts, todayDate, today]);
 
   const todayOffset = diffDays(rangeStart, todayDate);
   const gridWidth = totalDays * dayWidth;
@@ -352,7 +353,7 @@ export default function ProjectTimelineView({
                   style={{ insetInlineStart: LABEL_WIDTH + todayOffset * dayWidth }}
                 >
                   <div className="absolute -top-0 -translate-x-1/2 rounded-md bg-[#2563EB] px-1.5 py-0.5 text-[9px] text-white whitespace-nowrap">
-                    {formatTaskDate(today, locale)}
+                    {fmtDate(today, opts, dateStyle)}
                   </div>
                   <div className="h-full w-px bg-[#2563EB]" />
                 </div>
@@ -524,7 +525,6 @@ export default function ProjectTimelineView({
           <TimelineTaskSidebar
             task={selectedTask}
             projectName={project.name}
-            locale={locale}
             today={today}
             currentUserId={currentUserId}
             remaining={remainingLabel(selectedTask)}
@@ -602,7 +602,7 @@ export default function ProjectTimelineView({
                       <p className={`text-[11px] mt-0.5 ${late > 0 ? "text-red-500" : "text-inkFaint"}`}>
                         {late > 0
                           ? overdueLabel(late)
-                          : `${formatTaskDate(taskCreated(task), locale)} – ${formatTaskDate(taskDue(task), locale)}`}
+                          : `${fmtDate(taskCreated(task), opts, dateStyle)} – ${fmtDate(taskDue(task) ?? "", opts, dateStyle)}`}
                       </p>
                     </div>
                     {index < critical.length - 1 && (
@@ -625,7 +625,6 @@ export default function ProjectTimelineView({
           task={hover.task}
           x={hover.x}
           y={hover.y}
-          locale={locale}
           today={today}
           currentUserId={currentUserId}
           remaining={remainingLabel(hover.task)}
@@ -640,7 +639,6 @@ function TaskHoverCard({
   task,
   x,
   y,
-  locale,
   today,
   currentUserId,
   remaining,
@@ -649,12 +647,12 @@ function TaskHoverCard({
   task: Task;
   x: number;
   y: number;
-  locale: string;
   today: string;
   currentUserId: string;
   remaining: string;
   t: (key: string) => string;
 }) {
+  const { opts, dateStyle } = useDisplay();
   const created = taskCreated(task);
   const due = taskDue(task);
   const late = overdueDays(task, today);
@@ -694,11 +692,11 @@ function TaskHoverCard({
       <dl className="mt-2.5 space-y-1.5 text-[12px]">
         <div className="flex justify-between gap-3">
           <dt className="text-inkFaint">{t("taskDetail.created")}</dt>
-          <dd className="text-ink">{formatTaskDate(created, locale)}</dd>
+          <dd className="text-ink">{fmtDate(created, opts, dateStyle)}</dd>
         </div>
         <div className="flex justify-between gap-3">
           <dt className="text-inkFaint">{t("taskDetail.due")}</dt>
-          <dd className="text-ink">{due ? formatTaskDate(due, locale) : t("board.noDueDate")}</dd>
+          <dd className="text-ink">{due ? fmtDate(due, opts, dateStyle) : t("board.noDueDate")}</dd>
         </div>
         <div className="flex justify-between gap-3">
           <dt className="text-inkFaint">{t("timeline.timeLeft")}</dt>
@@ -743,7 +741,6 @@ function DetailRow({ label, value, danger }: { label: string; value: string; dan
 function TimelineTaskSidebar({
   task,
   projectName,
-  locale,
   today,
   currentUserId,
   remaining,
@@ -752,13 +749,13 @@ function TimelineTaskSidebar({
 }: {
   task: Task;
   projectName: string;
-  locale: string;
   today: string;
   currentUserId: string;
   remaining: string;
   t: (key: string) => string;
   onClose: () => void;
 }) {
+  const { opts, dateStyle } = useDisplay();
   const created = taskCreated(task);
   const due = taskDue(task);
   const start = dateKey(task.start_date);
@@ -804,10 +801,10 @@ function TimelineTaskSidebar({
       <p className={`text-[11px] font-medium ${late > 0 ? "text-red-500" : "text-inkSoft"}`}>{status}</p>
       <div className="space-y-1.5">
         <DetailRow label={t("taskDetail.project")} value={projectName} />
-        <DetailRow label={t("taskDetail.created")} value={formatTaskDate(created, locale)} />
-        {start && <DetailRow label={t("board.startDate")} value={formatTaskDate(start, locale)} />}
-        <DetailRow label={t("taskDetail.due")} value={due ? formatTaskDate(due, locale) : t("board.noDueDate")} />
-        {completed && <DetailRow label={t("timeline.completed")} value={formatTaskDate(completed, locale)} />}
+        <DetailRow label={t("taskDetail.created")} value={fmtDate(created, opts, dateStyle)} />
+        {start && <DetailRow label={t("board.startDate")} value={fmtDate(start, opts, dateStyle)} />}
+        <DetailRow label={t("taskDetail.due")} value={due ? fmtDate(due, opts, dateStyle) : t("board.noDueDate")} />
+        {completed && <DetailRow label={t("timeline.completed")} value={fmtDate(completed, opts, dateStyle)} />}
         <DetailRow label={t("timeline.timeLeft")} value={remaining} danger={late > 0} />
         <DetailRow label={t("list.col.assignee")} value={assignee} />
         <DetailRow label={t("taskDetail.priority")} value={priorityLabel} />

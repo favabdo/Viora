@@ -8,16 +8,16 @@ import { supabase, Profile } from "@/lib/supabase";
 import Button from "@/components/ui/Button";
 import Avatar from "@/components/ui/Avatar";
 import { Input, Textarea } from "@/components/ui/Input";
-import { AlertCircle, Camera, CheckCircle2, DoorOpen, KeyRound, Languages, Lock, Moon, Sun } from "lucide-react";
+import { AlertCircle, Camera, CheckCircle2, DoorOpen, KeyRound, Lock } from "lucide-react";
 import VLogoLoader from "@/components/ui/VLogoLoader";
 import VioraSplash from "@/components/ui/VioraSplash";
 import AvatarCropModal from "@/components/AvatarCropModal";
 import ConfirmPasswordModal from "@/components/ConfirmPasswordModal";
 import { HOME_PATH } from "@/lib/appRoutes";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { applyTheme, getStoredTheme, Theme } from "@/lib/theme";
+import { fmtDate, useDisplay } from "@/lib/displayFormat";
 import { usePlan } from "@/lib/planUsage";
-import { FieldRow, Segmented, SettingsGroup, SettingsGroupTitle, SettingsHeader, SettingsRow } from "@/components/settingsUi";
+import { FieldRow, SettingsGroup, SettingsGroupTitle, SettingsHeader, SettingsRow } from "@/components/settingsUi";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 
@@ -40,18 +40,9 @@ function Notice({ kind, text }: { kind: "error" | "success"; text: string }) {
 export default function ProfilePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { t, lang, setLang } = useTranslation();
+  const { t } = useTranslation();
+  const { opts, dateStyle } = useDisplay();
   const plan = usePlan();
-  const [theme, setThemeState] = useState<Theme>("dark");
-
-  useEffect(() => {
-    setThemeState(getStoredTheme());
-  }, []);
-
-  function handleThemeChange(next: Theme) {
-    setThemeState(next);
-    applyTheme(next);
-  }
 
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
@@ -393,7 +384,7 @@ export default function ProfilePage() {
   }
 
   const joinedLabel = profile?.created_at
-    ? t("profile.joined").replace("{date}", new Intl.DateTimeFormat(lang === "ar" ? "ar-EG" : "en-US", { month: "long", year: "numeric" }).format(new Date(profile.created_at)))
+    ? t("profile.joined").replace("{date}", fmtDate(profile.created_at, opts, dateStyle))
     : "";
 
   const dangerBlock = (
@@ -556,42 +547,6 @@ export default function ProfilePage() {
                         {passwordMsg && <Notice kind="success" text={passwordMsg} />}
                       </div>
                     )}
-                  </SettingsGroup>
-                </div>
-
-                <div>
-                  <SettingsGroupTitle>{t("profile.preferences")}</SettingsGroupTitle>
-                  <SettingsGroup>
-                    <SettingsRow
-                      icon={Languages}
-                      title={t("profile.language")}
-                      hint={t("profile.languageHint")}
-                      control={
-                        <Segmented
-                          value={lang}
-                          onChange={(v) => setLang(v)}
-                          options={[
-                            { value: "en", label: "EN" },
-                            { value: "ar", label: "ع" },
-                          ]}
-                        />
-                      }
-                    />
-                    <SettingsRow
-                      icon={theme === "dark" ? Moon : Sun}
-                      title={t("profile.appearance")}
-                      hint={t("profile.appearanceHint")}
-                      control={
-                        <Segmented
-                          value={theme}
-                          onChange={(v) => handleThemeChange(v)}
-                          options={[
-                            { value: "light", label: <span className="inline-flex items-center gap-1"><Sun size={12} />{t("profile.light")}</span> },
-                            { value: "dark", label: <span className="inline-flex items-center gap-1"><Moon size={12} />{t("profile.dark")}</span> },
-                          ]}
-                        />
-                      }
-                    />
                   </SettingsGroup>
                 </div>
 

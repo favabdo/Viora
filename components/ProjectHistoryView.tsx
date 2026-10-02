@@ -22,6 +22,7 @@ import {
 import { supabase, ActivityEntry, Project, ProjectMember, Task } from "@/lib/supabase";
 import { displayName, renderActivity } from "@/lib/displayName";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { fmtDate, fmtTime, useDisplay, type DateStyle, type DisplayOpts } from "@/lib/displayFormat";
 import HistoryLimitBanner from "./HistoryLimitBanner";
 import ClickableName from "./ClickableName";
 import Avatar from "./ui/Avatar";
@@ -149,10 +150,10 @@ function priorityMeta(color: string, t: (k: string) => string): { label: string;
   return { label: t("list.priority.low"), className: "bg-[#22C55E]/15 text-[#16A34A]" };
 }
 
-function formatStamp(iso: string, locale: string, t: (k: string) => string): string {
+function formatStamp(iso: string, o: DisplayOpts, style: DateStyle, t: (k: string) => string): string {
   const date = new Date(iso);
   const now = new Date();
-  const time = new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(date);
+  const time = fmtTime(iso, o);
   const startToday = new Date(now);
   startToday.setHours(0, 0, 0, 0);
   const startThat = new Date(date);
@@ -160,10 +161,10 @@ function formatStamp(iso: string, locale: string, t: (k: string) => string): str
   const diffDays = Math.round((startToday.getTime() - startThat.getTime()) / 86400000);
   if (diffDays === 0) return time;
   if (diffDays === 1) return `${t("history.yesterday")}, ${time}`;
-  return `${new Intl.DateTimeFormat(locale, { month: "short", day: "numeric", year: "numeric" }).format(date)}, ${time}`;
+  return `${fmtDate(iso, o, style)}, ${time}`;
 }
 
-function groupLabel(iso: string, locale: string, t: (k: string) => string): string {
+function groupLabel(iso: string, o: DisplayOpts, style: DateStyle, t: (k: string) => string): string {
   const date = new Date(iso);
   const startToday = new Date();
   startToday.setHours(0, 0, 0, 0);
@@ -173,7 +174,7 @@ function groupLabel(iso: string, locale: string, t: (k: string) => string): stri
   if (diffDays === 0) return t("history.today");
   if (diffDays === 1) return t("history.yesterday");
   if (diffDays < 7) return t("history.daysAgo").replace("{n}", String(diffDays));
-  return new Intl.DateTimeFormat(locale, { month: "long", day: "numeric", year: "numeric" }).format(date);
+  return fmtDate(iso, o, style);
 }
 
 function Sparkline({ values, color }: { values: number[]; color: string }) {
@@ -205,8 +206,8 @@ export default function ProjectHistoryView({
   tasks: Task[];
   currentUserId: string;
 }) {
-  const { t, lang } = useTranslation();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const { t } = useTranslation();
+  const { opts, dateStyle } = useDisplay();
   const [entries, setEntries] = useState<ActivityEntry[]>([]);
   const [profiles, setProfiles] = useState<Record<string, ProfileBit>>({});
   const [loading, setLoading] = useState(true);
@@ -483,7 +484,7 @@ export default function ProjectHistoryView({
             <div className="absolute top-3 bottom-3 w-px bg-line" style={{ insetInlineStart: 15 }} />
             {groups.map(([key, list]) => (
               <div key={key} className="mb-5">
-                <p className="relative z-[1] mb-3 text-xs font-medium text-inkFaint">{groupLabel(list[0].created_at, locale, t)}</p>
+                <p className="relative z-[1] mb-3 text-xs font-medium text-inkFaint">{groupLabel(list[0].created_at, opts, dateStyle, t)}</p>
                 <ul className="space-y-3">
                   {list.map((entry) => {
                     const action = inferAction(entry);
@@ -588,7 +589,7 @@ export default function ProjectHistoryView({
                             </div>
                             <div className="flex items-start gap-1 shrink-0">
                               <span className="text-[11px] text-inkFaint whitespace-nowrap pt-0.5">
-                                {formatStamp(entry.created_at, locale, t)}
+                                {formatStamp(entry.created_at, opts, dateStyle, t)}
                               </span>
                               <button className="text-inkFaint hover:text-ink" aria-label={t("workspace.more")}>
                                 <MoreHorizontal size={14} />

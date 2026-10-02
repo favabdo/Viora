@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase, Project, Task } from "@/lib/supabase";
 import { hydrateProjectMetas } from "@/lib/projectMeta";
+import { filterTrashed } from "@/lib/taskExtras";
 import { normalizeTask } from "@/lib/taskShape";
 
 export function useWorkspaceSchedule() {
@@ -38,7 +39,7 @@ export function useWorkspaceSchedule() {
           list.map((p) => p.id)
         );
       if (cancelled) return;
-      setTasks((taskRows || []).map(normalizeTask));
+      setTasks(filterTrashed((taskRows || []).map(normalizeTask)));
       setLoading(false);
     })();
     return () => {

@@ -50,6 +50,7 @@ import {
   type IdeaStatus,
 } from "@/lib/ideas";
 import { timeAgo } from "@/lib/timeAgo";
+import { fmtDate, fmtDateTime, useDisplay } from "@/lib/displayFormat";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import ClickableAvatar from "./ClickableAvatar";
 import Button from "./ui/Button";
@@ -159,7 +160,8 @@ export default function IdeasSection({
   onSelectIdea?: (id: string | null) => void;
   onOpenProject: (projectId: string) => void;
 }) {
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
+  const { opts, dateStyle } = useDisplay();
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -431,13 +433,7 @@ export default function IdeasSection({
   }
 
   function formatDate(iso: string, withTime = false) {
-    const date = new Date(iso);
-    const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" };
-    if (withTime) {
-      opts.hour = "numeric";
-      opts.minute = "2-digit";
-    }
-    return date.toLocaleString(lang === "ar" ? "ar" : "en-US", opts);
+    return withTime ? fmtDateTime(iso, opts, dateStyle) : fmtDate(iso, opts, dateStyle);
   }
 
   const hasFilters = categoryFilter !== "all" || projectFilter !== "all" || statusFilter !== "all" || tagFilter.trim();
@@ -872,7 +868,7 @@ export default function IdeasSection({
                     <div className="flex items-start gap-2">
                       <ClickableAvatar userId={selected.notes[selected.notes.length - 1].userId} name={selected.notes[selected.notes.length - 1].authorName} size="xs" />
                       <div>
-                        <p className="text-xs text-ink">{selected.notes[selected.notes.length - 1].authorName} <span className="text-inkFaint">{timeAgo(selected.notes[selected.notes.length - 1].createdAt, t)}</span></p>
+                        <p className="text-xs text-ink">{selected.notes[selected.notes.length - 1].authorName} <span className="text-inkFaint">{timeAgo(selected.notes[selected.notes.length - 1].createdAt, t, opts)}</span></p>
                         <p className="text-xs text-inkSoft mt-0.5">{selected.notes[selected.notes.length - 1].message}</p>
                       </div>
                     </div>
@@ -889,7 +885,7 @@ export default function IdeasSection({
                     <li key={note.id} className="flex items-start gap-2">
                       <ClickableAvatar userId={note.userId} name={note.authorName || currentUserName} src={note.avatarUrl} size="xs" />
                       <div>
-                        <p className="text-xs text-ink">{note.authorName || currentUserName} <span className="text-inkFaint">{timeAgo(note.createdAt, t)}</span></p>
+                        <p className="text-xs text-ink">{note.authorName || currentUserName} <span className="text-inkFaint">{timeAgo(note.createdAt, t, opts)}</span></p>
                         <p className="text-sm text-inkSoft mt-0.5">{note.message}</p>
                       </div>
                     </li>
@@ -915,7 +911,7 @@ export default function IdeasSection({
                 {selected.activity.map((item) => (
                   <li key={item.id} className="flex items-center justify-between gap-2 text-sm">
                     <span className="text-inkSoft">{ideaActivityLabel(item.message, t)}</span>
-                    <span className="text-[11px] text-inkFaint whitespace-nowrap">{timeAgo(item.createdAt, t)}</span>
+                    <span className="text-[11px] text-inkFaint whitespace-nowrap">{timeAgo(item.createdAt, t, opts)}</span>
                   </li>
                 ))}
               </ul>

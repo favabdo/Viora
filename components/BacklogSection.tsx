@@ -51,6 +51,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { getProjectMeta, hydrateProjectMetas, useProjectMetaTick } from "@/lib/projectMeta";
 import { colorForProject } from "@/lib/projectColor";
 import { timeAgo } from "@/lib/timeAgo";
+import { useDisplay } from "@/lib/displayFormat";
 import AddTaskModal, { type NewTaskDraft } from "./AddTaskModal";
 import Badge from "./ui/Badge";
 import Button from "./ui/Button";
@@ -486,6 +487,7 @@ export default function BacklogSection({
   onOpenProject: (projectId: string) => void;
 }) {
   const { t } = useTranslation();
+  const { opts } = useDisplay();
   const metaTick = useProjectMetaTick();
   const [items, setItems] = useState<BacklogItem[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -957,7 +959,7 @@ export default function BacklogSection({
                       </span>
                       <div className="min-w-0">
                         <p className="truncate text-xs text-ink">{item.title}</p>
-                        <p className="text-2xs text-inkFaint">{timeAgo(item.createdAt, t)}</p>
+                        <p className="text-2xs text-inkFaint">{timeAgo(item.createdAt, t, opts)}</p>
                       </div>
                     </li>
                   ))}
