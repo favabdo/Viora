@@ -15,8 +15,15 @@ export default function AuthCallback() {
   useEffect(() => {
     (async () => {
       const hash = typeof window !== "undefined" ? window.location.hash : "";
-      if (/type=recovery/i.test(hash)) {
-        router.replace(`/auth/reset-password${hash}`);
+      const query = typeof window !== "undefined" ? window.location.search : "";
+      const recoveryParams = new URLSearchParams(
+        [hash.replace(/^#/, ""), query.replace(/^\?/, "")].filter(Boolean).join("&")
+      );
+      // لينك الاستعادة ممكن يوصل بارامترات في الهاش أو في الـ query حسب الـ redirect URL المضبوط
+      if (/recovery/i.test(recoveryParams.get("type") || "")) {
+        router.replace(
+          `/auth/reset-password${recoveryParams.toString() ? `?${recoveryParams.toString()}` : ""}`
+        );
         return;
       }
 
