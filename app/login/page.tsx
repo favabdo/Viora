@@ -6,7 +6,8 @@ import Image from "next/image";
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail, Moon, ShieldCheck, Sun } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { HOME_PATH } from "@/lib/appRoutes";
-import { applyTheme, getStoredTheme, type Theme } from "@/lib/theme";
+import { useThemePreference } from "@/lib/userSettings";
+import type { Theme } from "@/lib/theme";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Button from "@/components/ui/Button";
 
@@ -23,23 +24,12 @@ function nextDestination() {
 }
 
 function BrandLogo({ compact = false }: { compact?: boolean }) {
-  const { lang } = useTranslation();
   const mark = <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />;
   if (compact) return mark;
-  const word = <span className="viora-wordmark text-xl">iora</span>;
   return (
-    <div className="flex items-center gap-1">
-      {lang === "ar" ? (
-        <>
-          {word}
-          {mark}
-        </>
-      ) : (
-        <>
-          {mark}
-          {word}
-        </>
-      )}
+    <div className="flex items-center gap-1" dir="ltr">
+      {mark}
+      <span className="viora-wordmark text-xl">iora</span>
     </div>
   );
 }
@@ -110,7 +100,7 @@ function LoginPageInner() {
   const [oauthLoading, setOauthLoading] = useState<OAuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useThemePreference();
 
   const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
   const hasInvite = searchParams.get("invite") === "1";
@@ -126,7 +116,6 @@ function LoginPageInner() {
   }
 
   useEffect(() => {
-    setTheme(getStoredTheme());
     try {
       const saved = localStorage.getItem(REMEMBER_KEY);
       if (saved) {
@@ -160,9 +149,7 @@ function LoginPageInner() {
   }, [router, searchParams]);
 
   function toggleTheme() {
-    const next: Theme = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    applyTheme(next);
+    setTheme(theme === "dark" ? "light" : "dark");
   }
 
   async function oauth(provider: OAuthProvider) {

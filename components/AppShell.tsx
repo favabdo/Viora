@@ -54,7 +54,7 @@ export default function AppShell({
   const router = useRouter();
   const pathname = usePathname();
   const isUpgrade = pathname.startsWith("/upgrade");
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
   const [theme, setTheme] = useThemePreference();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
@@ -137,18 +137,9 @@ export default function AppShell({
   }
 
   const Logo = (
-    <div className="flex items-center gap-1">
-      {lang === "ar" ? (
-        <>
-          <span className="viora-wordmark text-xl">iora</span>
-          <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
-        </>
-      ) : (
-        <>
-          <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
-          <span className="viora-wordmark text-xl">iora</span>
-        </>
-      )}
+    <div className="flex items-center gap-1" dir="ltr">
+      <Image src="/logo-icon.png" alt="Viora" width={28} height={28} priority className="h-7 w-auto" />
+      <span className="viora-wordmark text-xl">iora</span>
     </div>
   );
 
