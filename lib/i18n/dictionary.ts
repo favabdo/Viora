@@ -1601,8 +1601,9 @@ const dict: Record<string, { en: string; ar: string }> = {
   "github.linked": { en: "Linked", ar: "مرتبطة" },
   "github.unlinkKeep": { en: "Unlink", ar: "فك الربط" },
   "github.unlinkDelete": { en: "Delete project", ar: "حذف المشروع" },
-  "github.sync": { en: "Sync commits", ar: "مزامنة الكوميتات" },
+  "github.sync": { en: "Sync GitHub", ar: "مزامنة جيت هب" },
   "github.commitsIn": { en: "Commits · {repo}", ar: "كوميتات · {repo}" },
+  "github.issuesIn": { en: "Issues · {repo}", ar: "إيشوز · {repo}" },
   "github.needGithub": {
     en: "Sign in with GitHub so Viora can pull your repositories.",
     ar: "سجّل الدخول بجيت هب عشان فيورا تجيب الريبوزيتوريات بتاعتك.",

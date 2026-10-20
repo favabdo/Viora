@@ -30,9 +30,25 @@ type PushPayload = {
   commits?: PushCommit[] | null;
 };
 
+type IssuePayload = {
+  action?: string;
+  issue?: {
+    number?: number;
+    title?: string | null;
+    state?: string;
+    html_url?: string;
+    pull_request?: unknown;
+    user?: { login?: string; avatar_url?: string } | null;
+    created_at?: string;
+    updated_at?: string;
+  } | null;
+  repository?: { id?: number; html_url?: string } | null;
+};
+
 /**
- * مستقبِل Webhook جيت هب (push). بيحقق التوقيع بـ GITHUB_WEBHOOK_SECRET وبعدين
- * يخزّن عناوين الكوميتات في github_commits، والواجهة بتعرضها في عمود Done.
+ * مستقبِل Webhook جيت هب (push + issues). بيحقق التوقيع بـ GITHUB_WEBHOOK_SECRET
+ * بعدين يخزّن الكوميتات في github_commits (عمود Done) والإيشوز في github_issues
+ * (عمود To Do) من غير ما المستخدم يضغط مزامنة.
  */
 export async function POST(request: Request) {
   const secret = process.env.GITHUB_WEBHOOK_SECRET;
@@ -46,25 +62,80 @@ export async function POST(request: Request) {
     return NextResponse.json({ errorCode: "invalid_signature" }, { status: 401 });
   }
 
-  if ((request.headers.get("x-github-event") || "") !== "push") {
+  const event = request.headers.get("x-github-event") || "";
+  if (event !== "push" && event !== "issues") {
     return NextResponse.json({ ignored: true });
   }
 
-  let payload: PushPayload;
+  let payload: PushPayload | IssuePayload;
   try {
-    payload = JSON.parse(raw) as PushPayload;
+    payload = JSON.parse(raw) as PushPayload | IssuePayload;
   } catch {
     return NextResponse.json({ errorCode: "invalid_payload" }, { status: 400 });
   }
 
-  const repoGithubId = payload.repository?.id;
-  const commits = payload.commits || [];
-  const branch = (payload.ref || "").replace("refs/heads/", "") || null;
-  if (!repoGithubId || !commits.length || ZERO_SHA.test(payload.after || "")) {
+  const supabase = supabaseAdmin();
+
+  if (event === "issues") {
+    const data = payload as IssuePayload;
+    const repoGithubId = data.repository?.id;
+    const issue = data.issue;
+    const number = issue?.number;
+    // إيشوز مش مرتبطة بمشروع مستورد أو بتاعة PR: اتجاهلها
+    if (!repoGithubId || !number || issue?.pull_request) return NextResponse.json({ stored: 0 });
+
+    const { data: link, error: linkError } = await supabase
+      .from("github_repos")
+      .select("id, project_id")
+      .eq("repo_id", repoGithubId)
+      .maybeSingle();
+    if (linkError || !link) return NextResponse.json({ stored: 0 });
+
+    if (data.action === "deleted") {
+      await supabase
+        .from("github_issues")
+        .delete()
+        .eq("repo_row", link.id)
+        .eq("issue_number", number);
+      return NextResponse.json({ stored: 1 });
+    }
+
+    const row = {
+      repo_row: link.id,
+      project_id: link.project_id,
+      issue_number: number,
+      title: (issue?.title || "").trim() || `#${number}`,
+      state: "open",
+      author_login: issue?.user?.login ?? null,
+      avatar_url: issue?.user?.avatar_url ?? null,
+      html_url: issue?.html_url || null,
+      opened_at: issue?.created_at || new Date().toISOString(),
+      updated_at: issue?.updated_at || new Date().toISOString(),
+      pulled_at: new Date().toISOString(),
+    };
+    if (data.action === "closed") {
+      // قفل الإيشو = يختفي من To Do
+      await supabase
+        .from("github_issues")
+        .delete()
+        .eq("repo_row", link.id)
+        .eq("issue_number", number);
+      return NextResponse.json({ stored: 1 });
+    }
+
+    const { error } = await supabase.from("github_issues").upsert(row, { onConflict: "repo_row,issue_number" });
+    if (error) return NextResponse.json({ errorCode: "storage_failed" }, { status: 500 });
+    return NextResponse.json({ stored: 1 });
+  }
+
+  const push = payload as PushPayload;
+  const repoGithubId = push.repository?.id;
+  const commits = push.commits || [];
+  const branch = (push.ref || "").replace("refs/heads/", "") || null;
+  if (!repoGithubId || !commits.length || ZERO_SHA.test(push.after || "")) {
     return NextResponse.json({ stored: 0 });
   }
 
-  const supabase = supabaseAdmin();
   const { data: link, error: linkError } = await supabase
     .from("github_repos")
     .select("id, project_id")

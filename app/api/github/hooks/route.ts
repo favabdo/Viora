@@ -42,7 +42,9 @@ function parseBody(body: unknown) {
 }
 
 /**
- * POST: يخلق Webhook push على كل ريبو مستوردة عشان الكوميتات توصل لحظيًا.
+ * POST: يخلق Webhook (push + issues) على كل ريبو مستوردة عشان الكوميتات والإيشوز
+ * توصل لحظيًا. لو الهوك موجود بالفعل على نفس الـ endpoint بيفدّعه بـ PATCH بدل
+ * ما يفشل بالتكرار — كده الريپوز القديمة تتراق عليها أحداث الإيشوز من غير إعادة ربط.
  * توكن جيت هب بييجي من الجلسة ويستخدم هنا مرة واحدة بس ولا يُخزَّن في القاعدة.
  */
 export async function POST(request: NextRequest) {
@@ -63,28 +65,41 @@ export async function POST(request: NextRequest) {
   if (!ghToken || !repos.length) return NextResponse.json({ errorCode: "repos_required" }, { status: 400 });
 
   const endpoint = `${request.nextUrl.origin}/api/github/webhook`;
+  const events = ["push", "issues"];
   const supabase = supabaseForToken(bearer(request) as string);
   const linked: Record<string, number> = {};
   const failed: string[] = [];
 
   for (const repo of repos) {
     try {
-      const res = await fetch(`https://api.github.com/repos/${repo.full_name}/hooks`, {
-        method: "POST",
+      const hooksRes = await fetch(`https://api.github.com/repos/${repo.full_name}/hooks`, {
         headers: { ...GH_HEADERS, Authorization: `Bearer ${ghToken}` },
-        body: JSON.stringify({
-          name: "web",
-          active: true,
-          events: ["push"],
-          config: { url: endpoint, content_type: "json", secret, insecure_ssl: "0" },
-        }),
       });
+      const existing = hooksRes.ok ? ((await hooksRes.json()) as Array<{ id?: number; config?: { url?: string } }>) : [];
+      const hook = existing.find((h) => h?.config?.url === endpoint && typeof h.id === "number");
+
+      const res = hook
+        ? await fetch(`https://api.github.com/repos/${repo.full_name}/hooks/${hook.id}`, {
+            method: "PATCH",
+            headers: { ...GH_HEADERS, Authorization: `Bearer ${ghToken}` },
+            body: JSON.stringify({ active: true, events }),
+          })
+        : await fetch(`https://api.github.com/repos/${repo.full_name}/hooks`, {
+            method: "POST",
+            headers: { ...GH_HEADERS, Authorization: `Bearer ${ghToken}` },
+            body: JSON.stringify({
+              name: "web",
+              active: true,
+              events,
+              config: { url: endpoint, content_type: "json", secret, insecure_ssl: "0" },
+            }),
+          });
       if (!res.ok) {
         failed.push(repo.full_name);
         continue;
       }
-      const hook = (await res.json()) as { id?: number };
-      if (typeof hook.id === "number") linked[repo.id] = hook.id;
+      const saved = (await res.json()) as { id?: number };
+      if (typeof saved.id === "number") linked[repo.id] = saved.id;
     } catch {
       failed.push(repo.full_name);
     }

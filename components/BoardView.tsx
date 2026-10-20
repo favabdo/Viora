@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -17,12 +17,12 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { useSearchParams } from "next/navigation";
-import { Eye, Paperclip, Pin, Plus, X, Check, Palette, MessageCircle, GitCommitHorizontal, RefreshCw, Github, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Paperclip, Pin, Plus, X, Check, Palette, MessageCircle, GitCommitHorizontal, CircleDot, RefreshCw, Github, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase, Task, BoardColumn, Project, ProjectMember, TASK_COLORS } from "@/lib/supabase";
-import type { GithubCommit } from "@/lib/github";
+import type { GithubCommit, GithubIssue } from "@/lib/github";
 import { timeAgo } from "@/lib/timeAgo";
 import { isDueAfterCreated, minDueDate, normalizeTask } from "@/lib/taskShape";
-import { ensureTodoColumn } from "@/lib/boardColumns";
+import { ensureTodoColumn, findTodoColumn } from "@/lib/boardColumns";
 import {
   copyTaskExtras,
   patchTaskExtras,
@@ -310,6 +310,64 @@ function CommitCard({ commit }: { commit: GithubCommit }) {
   );
 }
 
+function IssueCard({ issue }: { issue: GithubIssue }) {
+  const { t } = useTranslation();
+  const { opts } = useDisplay();
+  return (
+    <a
+      href={issue.html_url || issue.github_repos?.html_url || "#"}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block shrink-0 rounded-lg border border-line bg-paperDark/40 p-2.5 transition-colors hover:border-[#2563EB]/60"
+    >
+      <p className="text-sm text-ink break-words line-clamp-2">{issue.title}</p>
+      <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] text-inkFaint">
+        <span className="inline-flex items-center gap-1">
+          <CircleDot size={11} strokeWidth={1.75} />
+          {`#${issue.issue_number}`}
+        </span>
+        {issue.author_login && <span className="max-w-[90px] truncate">{issue.author_login}</span>}
+        <span>{timeAgo(issue.opened_at, t, opts)}</span>
+      </p>
+    </a>
+  );
+}
+
+/** عناوين قسم جيت هب جوه العمود: أيقونة + اسم الريبو + زرار المزامنة */
+function FeedSection({
+  label,
+  syncing,
+  onSync,
+  children,
+}: {
+  label: string;
+  syncing?: boolean;
+  onSync?: () => void;
+  children: ReactNode;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="mt-1 shrink-0 space-y-2 border-t border-line pt-2.5">
+      <div className="flex items-center gap-1.5">
+        <Github size={12} className="shrink-0 text-inkFaint" />
+        <span className="min-w-0 flex-1 truncate text-[10px] uppercase tracking-wide text-inkFaint">{label}</span>
+        {onSync && (
+          <button
+            type="button"
+            onClick={onSync}
+            disabled={syncing}
+            aria-label={t("github.sync")}
+            className="shrink-0 rounded-md p-1 text-inkFaint hover:text-[#2563EB] hover:bg-paperDark"
+          >
+            <RefreshCw size={11} strokeWidth={1.75} className={syncing ? "animate-spin" : ""} />
+          </button>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 function ColumnContainer({
   column,
   tasks,
@@ -328,6 +386,7 @@ function ColumnContainer({
   onContextMenu,
   onOpenDetail,
   commits,
+  issues,
   repoName,
   syncing,
   onSync,
@@ -349,6 +408,7 @@ function ColumnContainer({
   onContextMenu: (task: Task, x: number, y: number) => void;
   onOpenDetail: (task: Task) => void;
   commits?: GithubCommit[];
+  issues?: GithubIssue[];
   repoName?: string | null;
   syncing?: boolean;
   onSync?: () => void;
@@ -423,28 +483,19 @@ function ColumnContainer({
         </SortableContext>
 
         {commits && commits.length > 0 && (
-          <div className="mt-1 shrink-0 space-y-2 border-t border-line pt-2.5">
-            <div className="flex items-center gap-1.5">
-              <Github size={12} className="shrink-0 text-inkFaint" />
-              <span className="min-w-0 flex-1 truncate text-[10px] uppercase tracking-wide text-inkFaint">
-                {t("github.commitsIn").replace("{repo}", repoName || "")}
-              </span>
-              {onSync && (
-                <button
-                  type="button"
-                  onClick={onSync}
-                  disabled={syncing}
-                  aria-label={t("github.sync")}
-                  className="shrink-0 rounded-md p-1 text-inkFaint hover:text-[#2563EB] hover:bg-paperDark"
-                >
-                  <RefreshCw size={11} strokeWidth={1.75} className={syncing ? "animate-spin" : ""} />
-                </button>
-              )}
-            </div>
+          <FeedSection label={t("github.commitsIn").replace("{repo}", repoName || "")} syncing={syncing} onSync={onSync}>
             {commits.map((commit) => (
               <CommitCard key={commit.id} commit={commit} />
             ))}
-          </div>
+          </FeedSection>
+        )}
+
+        {issues && issues.length > 0 && (
+          <FeedSection label={t("github.issuesIn").replace("{repo}", repoName || "")} syncing={syncing} onSync={onSync}>
+            {issues.map((issue) => (
+              <IssueCard key={issue.id} issue={issue} />
+            ))}
+          </FeedSection>
         )}
       </div>
 
@@ -473,6 +524,7 @@ export default function BoardView({
   onCommentCountChange,
   onInvitePeople,
   githubCommits,
+  githubIssues,
   githubRepoName,
   githubSyncing,
   onSyncGithub,
@@ -490,6 +542,7 @@ export default function BoardView({
   onCommentCountChange: (taskId: string, delta: number) => void;
   onInvitePeople: () => void;
   githubCommits?: GithubCommit[];
+  githubIssues?: GithubIssue[];
   githubRepoName?: string | null;
   githubSyncing?: boolean;
   onSyncGithub?: () => void;
@@ -601,6 +654,9 @@ export default function BoardView({
     }
     return map;
   }, [tasks, extrasTick, extrasReady, remoteAttachments]);
+
+  /** الإيشوز بتنزل في عمود To Do زي ما الكوميتات بتنزل في Done */
+  const todoColumnId = useMemo(() => findTodoColumn(columns)?.id ?? null, [columns]);
 
   const tasksByColumn = useMemo(() => {
     const map = new Map<string, Task[]>();
@@ -978,9 +1034,10 @@ export default function BoardView({
               setDetailTask(task);
             }}
             commits={column.is_done_column ? githubCommits : undefined}
-            repoName={column.is_done_column ? githubRepoName : undefined}
-            syncing={column.is_done_column ? githubSyncing : undefined}
-            onSync={column.is_done_column ? onSyncGithub : undefined}
+            issues={column.id === todoColumnId && githubRepoName ? githubIssues : undefined}
+            repoName={githubRepoName}
+            syncing={githubSyncing}
+            onSync={onSyncGithub}
           />
         ))}
 

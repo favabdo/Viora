@@ -24,7 +24,15 @@ import { deleteOwnedTask } from "@/lib/deletes";
 import { deleteTaskOrMoveToTrash, filterTrashed } from "@/lib/taskExtras";
 import { isFavoriteProject, toggleFavoriteProject } from "@/lib/projectFavorites";
 import { hydrateProjectMetas } from "@/lib/projectMeta";
-import { listLinkedRepos, listProjectCommits, syncRepoCommits, type GithubCommit, type LinkedRepo } from "@/lib/github";
+import {
+  listLinkedRepos,
+  listProjectCommits,
+  listProjectIssues,
+  syncRepoGithub,
+  type GithubCommit,
+  type GithubIssue,
+  type LinkedRepo,
+} from "@/lib/github";
 import BoardView from "./BoardView";
 import ProjectListView from "./ProjectListView";
 import ProjectCalendarView from "./ProjectCalendarView";
@@ -83,24 +91,30 @@ export default function ProjectWorkspace({
   const [deleteTask, setDeleteTask] = useState<Task | null>(null);
   const [githubRepo, setGithubRepo] = useState<LinkedRepo | null>(null);
   const [githubCommits, setGithubCommits] = useState<GithubCommit[]>([]);
-  const [syncingCommits, setSyncingCommits] = useState(false);
+  const [githubIssues, setGithubIssues] = useState<GithubIssue[]>([]);
+  const [syncingGithub, setSyncingGithub] = useState(false);
 
-  async function loadGithubCommits() {
-    const [rows, repos] = await Promise.all([listProjectCommits(projectId), listLinkedRepos()]);
+  async function loadGithubFeed() {
+    const [rows, issues, repos] = await Promise.all([
+      listProjectCommits(projectId),
+      listProjectIssues(projectId),
+      listLinkedRepos(),
+    ]);
     setGithubCommits(rows);
+    setGithubIssues(issues);
     setGithubRepo(repos.find((repo) => repo.project_id === projectId) || null);
   }
 
   useEffect(() => {
-    void loadGithubCommits();
+    void loadGithubFeed();
   }, [projectId]);
 
-  async function syncGithubCommits() {
+  async function syncGithubFeed() {
     if (!githubRepo) return;
-    setSyncingCommits(true);
-    await syncRepoCommits(githubRepo);
-    await loadGithubCommits();
-    setSyncingCommits(false);
+    setSyncingGithub(true);
+    await syncRepoGithub(githubRepo);
+    await loadGithubFeed();
+    setSyncingGithub(false);
   }
 
   useEffect(() => {
@@ -213,20 +227,30 @@ export default function ProjectWorkspace({
         }
       )
       .subscribe();
+    const reloadFeed = () => {
+      void loadGithubFeed();
+    };
     const commitsChannel = supabase
       .channel(`workspace-commits-${projectId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "github_commits", filter: `project_id=eq.${projectId}` },
-        () => {
-          void loadGithubCommits();
-        }
+        reloadFeed
+      )
+      .subscribe();
+    const issuesChannel = supabase
+      .channel(`workspace-issues-${projectId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "github_issues", filter: `project_id=eq.${projectId}` },
+        reloadFeed
       )
       .subscribe();
     return () => {
       supabase.removeChannel(tasksChannel);
       supabase.removeChannel(colsChannel);
       supabase.removeChannel(commitsChannel);
+      supabase.removeChannel(issuesChannel);
     };
   }, [projectId]);
 
@@ -471,8 +495,9 @@ export default function ProjectWorkspace({
             onInvitePeople={() => setShowTeam(true)}
             githubRepoName={githubRepo?.full_name || null}
             githubCommits={githubCommits}
-            githubSyncing={syncingCommits}
-            onSyncGithub={() => void syncGithubCommits()}
+            githubIssues={githubIssues}
+            githubSyncing={syncingGithub}
+            onSyncGithub={() => void syncGithubFeed()}
           />
           <div className="mt-6">
             <ProjectOverview

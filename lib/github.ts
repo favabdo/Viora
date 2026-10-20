@@ -37,6 +37,20 @@ export type GithubCommit = {
   github_repos: { repo_name: string; full_name: string; default_branch: string; html_url: string } | null;
 };
 
+export type GithubIssue = {
+  id: string;
+  issue_number: number;
+  title: string;
+  state: string;
+  author_login: string | null;
+  avatar_url: string | null;
+  html_url: string | null;
+  opened_at: string;
+  updated_at: string;
+  repo_row: string;
+  github_repos: { repo_name: string; full_name: string; html_url: string } | null;
+};
+
 type RawRepo = {
   id: number;
   name: string;
@@ -228,10 +242,104 @@ export async function listProjectCommits(projectId: string, limit = 60): Promise
     .map((row) => ({ ...row, sha: row.sha.slice(0, 7) }));
 }
 
+type IssuePayload = {
+  repo_row: string;
+  project_id: string;
+  issue_number: number;
+  title: string;
+  state: string;
+  author_login: string | null;
+  avatar_url: string | null;
+  html_url: string | null;
+  opened_at: string;
+  updated_at: string;
+  pulled_at: string;
+};
+
+type RawIssue = {
+  number: number;
+  title: string | null;
+  state?: string;
+  html_url?: string;
+  pull_request?: unknown;
+  user?: { login?: string; avatar_url?: string } | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+function toIssues(rows: RawIssue[], repo: LinkedRepo, pulledAt: string): IssuePayload[] {
+  return rows
+    .filter((i) => i.number && !i.pull_request)
+    .map((i) => ({
+      repo_row: repo.id,
+      project_id: repo.project_id,
+      issue_number: i.number,
+      title: (i.title || "").trim() || `#${i.number}`,
+      state: i.state === "closed" ? "closed" : "open",
+      author_login: i.user?.login ?? null,
+      avatar_url: i.user?.avatar_url ?? null,
+      html_url: i.html_url || `${repo.html_url}/issues/${i.number}`,
+      opened_at: i.created_at || pulledAt,
+      updated_at: i.updated_at || pulledAt,
+      pulled_at: pulledAt,
+    }));
+}
+
+/**
+ * سحب الإيشوز المفتوحة من جيت هب وتخزينها — بتظهر في عمود To Do.
+ * الإيشو اللي اتقفل فوق بيتمسح لأن طابع السحب بتاعه اتحدّث في الجولة اللي فاتت.
+ */
+export async function syncRepoIssues(repo: LinkedRepo, perPage = 50): Promise<number> {
+  const token = await getGithubToken();
+  if (!token) return 0;
+
+  const collected: RawIssue[] = [];
+  let reachedGithub = false;
+  for (let page = 1; page <= 3; page++) {
+    const res = await fetch(
+      `${GITHUB_API}/repos/${repo.full_name}/issues?state=open&sort=updated&direction=desc&per_page=${perPage}&page=${page}`,
+      { headers: ghHeaders(token) }
+    );
+    if (!res.ok) break;
+    reachedGithub = true;
+    const rows = (await res.json()) as RawIssue[];
+    if (!Array.isArray(rows) || rows.length === 0) break;
+    collected.push(...rows);
+    if (rows.length < perPage) break;
+  }
+  // فشل النداء نفسه = ماتلمسش المخزون، عشان السجل القديم يفضل ظاهر
+  if (!reachedGithub) return 0;
+
+  const syncAt = new Date().toISOString();
+  const payload = toIssues(collected, repo, syncAt);
+  if (payload.length) {
+    const { error } = await supabase.from("github_issues").upsert(payload, { onConflict: "repo_row,issue_number" });
+    if (error) return 0;
+  }
+  await supabase.from("github_issues").delete().eq("repo_row", repo.id).lt("pulled_at", syncAt);
+  return payload.length;
+}
+
+export async function listProjectIssues(projectId: string, limit = 60): Promise<GithubIssue[]> {
+  const { data } = await supabase
+    .from("github_issues")
+    .select("id, issue_number, title, state, author_login, avatar_url, html_url, opened_at, updated_at, repo_row, github_repos(repo_name, full_name, html_url)")
+    .eq("project_id", projectId)
+    .eq("state", "open")
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+  return (data as unknown as GithubIssue[]) || [];
+}
+
+/** مزامنة كل ما يخص جيت هب في المشروع: الكوميتات والإيشوز */
+export async function syncRepoGithub(repo: LinkedRepo): Promise<void> {
+  await Promise.all([syncRepoCommits(repo), syncRepoIssues(repo)]);
+}
+
 export type ImportResult = { created: LinkedRepo[]; failed: string[]; reasons: string[] };
 
 /**
- * استيراد ريبوز كمشاريع: ينشئ المشروع، يربطه بالريبو، يعمل Webhook، ويجيب آخر الكوميتات.
+ * استيراد ريبوز كمشاريع: ينشئ المشروع، يربطه بالريبو، يعمل Webhook، ويجيب آخر الكوميتات والإيشوز.
  * slots = حد الاختيارات اللي الواجهة اتفقت عليه مع خطة المستخدم.
  */
 export async function importRepos(repos: GithubRepoSummary[], slots: number | null): Promise<ImportResult> {
@@ -290,7 +398,7 @@ export async function importRepos(repos: GithubRepoSummary[], slots: number | nu
 
     const row = { ...(link as LinkedRepo), ...repo };
     created.push(row);
-    void syncRepoCommits(row);
+    void syncRepoGithub(row);
   }
 
   if (created.length) {
